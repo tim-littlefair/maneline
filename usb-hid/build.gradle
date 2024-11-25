@@ -2,11 +2,11 @@ apply plugin: 'com.android.library'
 //apply plugin: 'com.novoda.bintray-release'
 
 android {
-    compileSdk 30
+    compileSdk 34
 
     defaultConfig {
         minSdkVersion 12
-        targetSdkVersion 24
+        targetSdkVersion 33
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
