@@ -15,6 +15,30 @@ import com.benlypan.usbhid.UsbHidDevice;
 // For the moment this still seems to work.
 import com.example.usbhid.R;
 
+class ByteArrayTranslator {
+    static byte[] hexToBytes(String hexByteArrayString) {
+        byte[] byteBuffer = new byte[64];
+        String[] hexByteStrings = hexByteArrayString.split(":");
+        System.out.println(hexByteStrings[0]);
+        for(int i=0; i<hexByteStrings.length; ++i)
+        {
+            assert hexByteStrings[i].length() == 2;
+            int byteAsInt = Integer.parseInt(hexByteStrings[i],16);
+            byteBuffer[i] = (byte)byteAsInt;
+        }
+        return byteBuffer;
+    }
+
+    static String bytesToHex(byte[] byteBuffer) {
+        assert byteBuffer.length == 64;
+        String[] hexByteStrings = new String[64];
+        for(int i=0; i<64; ++i)
+        {
+            hexByteStrings[i] = String.format("%02x", ( 0xFF & (int)byteBuffer[i] ));
+        }
+        return String.join(":",hexByteStrings);
+    }
+}
 public class MainActivity extends AppCompatActivity {
 
     @Override
@@ -32,6 +56,20 @@ public class MainActivity extends AppCompatActivity {
 
     private void test() {
         StringBuilder sb = new StringBuilder();
+
+        String[] commandHexStrings = new String[]{
+            "35:09:08:00:8a:07:04:08:00:10:00",
+        };
+        /*
+        for(int i=0; i<commandHexStrings.length; ++i)
+        {
+            byte[] requestBytes = ByteArrayTranslator.hexToBytes(commandHexStrings[i]);
+            String requestHexString = ByteArrayTranslator.bytesToHex(requestBytes);
+            sb.append("R1: " + commandHexStrings[i] + "\n");
+            sb.append("R2: " + requestHexString + "\n");
+        }
+        */
+
         TextView report_tv = (TextView) findViewById(R.id.textview_report);
         sb.append("Starting\n");
         report_tv.setText(sb.toString());
@@ -59,6 +97,15 @@ public class MainActivity extends AppCompatActivity {
             public void onUsbHidDeviceConnected(UsbHidDevice device) {
                 sb.append("Device HID connection succeeded\n");
                 report_tv.setText(sb.toString());
+
+                for(int i=0; i<commandHexStrings.length; ++i)
+                {
+                    device.write(ByteArrayTranslator.hexToBytes(commandHexStrings[i]));
+                    byte[] responseBytes  = device.read(64);
+                    sb.append("Sent " + commandHexStrings[i] + "\n");
+                    sb.append("Received " + ByteArrayTranslator.bytesToHex(responseBytes) + "\n");
+                    report_tv.setText(sb.toString());
+                }
 
                 /*
                  * The upstream example was intended for a specific
