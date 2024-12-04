@@ -31,21 +31,28 @@ public class MainActivity extends AppCompatActivity {
         // Upstream UsbHid project searched for this VID/PID
         // UsbHidDevice device = UsbHidDevice.factory(this, 0x0680, 0x0180);
         // This fork searches for any device associated with the Fender VID
-        UsbHidDevice device = UsbHidDevice.factory(this, 0x1ed8, 0x0);
+        UsbHidDevice device = UsbHidDevice.factory(this, 0x0, 0x0);
         if (device == null) {
             sb.append("No device found\n");
             report_tv.setText(sb.toString());
             return;
         }
         sb.append(String.format(
-            "Device found: id=%16x\n",
-            device.getDeviceId()
+            "Device found: id=%16x sn=%s\n",
+            device.getDeviceId(), device.getSerialNumber()
+        ));
+        report_tv.setText(sb.toString());
+        sb.append(String.format(
+            "Device found: vid=%04x pid=%04x pname=%s\n",
+            device.getUsbDevice().getVendorId(),
+            device.getUsbDevice().getProductId(),
+            device.getUsbDevice().getProductName()
         ));
         report_tv.setText(sb.toString());
         device.open(this, new OnUsbHidDeviceListener() {
             @Override
             public void onUsbHidDeviceConnected(UsbHidDevice device) {
-                sb.append("Device connected\n");
+                sb.append("Device HID connection succeeded\n");
                 report_tv.setText(sb.toString());
                 /*
                 byte[] sendBuffer = new byte[64];
@@ -58,7 +65,8 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onUsbHidDeviceConnectFailed(UsbHidDevice device) {
-
+                sb.append("Device HID connection failed\n");
+                report_tv.setText(sb.toString());
             }
         });
     }
