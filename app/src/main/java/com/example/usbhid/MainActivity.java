@@ -1,5 +1,6 @@
 package com.example.usbhid;
 
+import android.hardware.usb.UsbDevice;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -37,16 +38,14 @@ public class MainActivity extends AppCompatActivity {
             report_tv.setText(sb.toString());
             return;
         }
+        UsbDevice usbDevice = device.getUsbDevice();
         sb.append(String.format(
-            "Device found: id=%16x sn=%s\n",
-            device.getDeviceId(), device.getSerialNumber()
-        ));
-        report_tv.setText(sb.toString());
-        sb.append(String.format(
-            "Device found: vid=%04x pid=%04x pname=%s\n",
-            device.getUsbDevice().getVendorId(),
-            device.getUsbDevice().getProductId(),
-            device.getUsbDevice().getProductName()
+            "Device found: id=%d sn=%s vid=%04x pid=%04x pname=%s\n",
+            device.getDeviceId(),
+            device.getSerialNumber(),
+            usbDevice.getVendorId(),
+            usbDevice.getProductId(),
+            usbDevice.getProductName()
         ));
         report_tv.setText(sb.toString());
         device.open(this, new OnUsbHidDeviceListener() {
@@ -54,7 +53,13 @@ public class MainActivity extends AppCompatActivity {
             public void onUsbHidDeviceConnected(UsbHidDevice device) {
                 sb.append("Device HID connection succeeded\n");
                 report_tv.setText(sb.toString());
+
                 /*
+                 * The upstream example was intended for a specific
+                 * device, so presumably sending this message would
+                 * do no harm.
+                 * As this fork will connect to the first device found,
+                 * it is safer not to send anything
                 byte[] sendBuffer = new byte[64];
                 sendBuffer[0] = 0x01;
                 sendBuffer[1] = 0x03;
