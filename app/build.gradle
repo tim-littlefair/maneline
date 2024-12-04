@@ -3,7 +3,8 @@ apply plugin: 'com.android.application'
 android {
     compileSdk 35
     defaultConfig {
-        applicationId "com.example.usbhid"
+        applicationId "net.heretical_camelid.android_fhau"
+        namespace "net.heretical_camelid.android_fhau"
         minSdkVersion 21
         targetSdkVersion 33
         versionCode 1
@@ -19,6 +20,9 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
+    }
+    buildFeatures {
+        viewBinding true
     }
 }
 

@@ -1,4 +1,4 @@
-package com.example.usbhid;
+package net.heretical_camelid.android_fhau;
 
 import android.hardware.usb.UsbDevice;
 import android.support.v7.app.AppCompatActivity;
@@ -8,6 +8,12 @@ import android.widget.TextView;
 
 import com.benlypan.usbhid.OnUsbHidDeviceListener;
 import com.benlypan.usbhid.UsbHidDevice;
+
+// It is a mystery why the resource class is still being
+// generated under com.example.usbhid.R rather than
+// net.heretical_camelid.android_fhau.R.
+// For the moment this still seems to work.
+import com.example.usbhid.R;
 
 public class MainActivity extends AppCompatActivity {
 
