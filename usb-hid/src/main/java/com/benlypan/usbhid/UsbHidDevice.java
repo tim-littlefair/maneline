@@ -13,7 +13,6 @@ import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
 import android.os.Build;
 import android.os.Handler;
-import android.support.annotation.RequiresApi;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -89,7 +88,6 @@ public class UsbHidDevice {
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public static UsbHidDevice factory(Context context, int vid, int pid, String serialNumber) {
         try {
             UsbHidDevice[] devices = enumerate(context, vid, pid);
@@ -142,7 +140,6 @@ public class UsbHidDevice {
         return mUsbDevice;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public String getSerialNumber() {
         return mUsbDevice.getSerialNumber();
     }
