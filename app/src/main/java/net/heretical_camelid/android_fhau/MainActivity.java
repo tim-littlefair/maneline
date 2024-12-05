@@ -15,30 +15,8 @@ import com.benlypan.usbhid.UsbHidDevice;
 // For the moment this still seems to work.
 import com.example.usbhid.R;
 
-class ByteArrayTranslator {
-    static byte[] hexToBytes(String hexByteArrayString) {
-        byte[] byteBuffer = new byte[64];
-        String[] hexByteStrings = hexByteArrayString.split(":");
-        System.out.println(hexByteStrings[0]);
-        for(int i=0; i<hexByteStrings.length; ++i)
-        {
-            assert hexByteStrings[i].length() == 2;
-            int byteAsInt = Integer.parseInt(hexByteStrings[i],16);
-            byteBuffer[i] = (byte)byteAsInt;
-        }
-        return byteBuffer;
-    }
+import net.heretical_camelid.fhau.lib.ByteArrayTranslator;
 
-    static String bytesToHex(byte[] byteBuffer) {
-        assert byteBuffer.length == 64;
-        String[] hexByteStrings = new String[64];
-        for(int i=0; i<64; ++i)
-        {
-            hexByteStrings[i] = String.format("%02x", ( 0xFF & (int)byteBuffer[i] ));
-        }
-        return String.join(":",hexByteStrings);
-    }
-}
 public class MainActivity extends AppCompatActivity {
 
     @Override
@@ -68,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
                 //"35:07:08:00:ca:06:02:08:01",
                 //"35:07:08:00:ca:06:02:08:02",
                 //..
+                /*
                 "35:07:08:00:f2:03:02:08:01",
                 "35:07:08:00:d2:06:02:08:01",
                 "35:07:08:00:e2:06:02:08:01",
@@ -78,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
                 "35:07:08:00:8a:02:02:08:04",
                 "35:07:08:00:8a:02:02:08:01",
                 "35:07:08:00:8a:02:02:08:02",
+                 */
         };
         /*
         for(int i=0; i<commandHexStrings.length; ++i)
