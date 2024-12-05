@@ -1,10 +1,12 @@
 package net.heretical_camelid.android_fhau;
 
 import android.hardware.usb.UsbDevice;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 import com.benlypan.usbhid.OnUsbHidDeviceListener;
 import com.benlypan.usbhid.UsbHidDevice;
@@ -23,6 +25,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        setSupportActionBar(findViewById(R.id.toolbar_fhau));
 
         findViewById(R.id.button_test).setOnClickListener(new View.OnClickListener() {
             @Override
