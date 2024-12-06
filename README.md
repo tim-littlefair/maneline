@@ -4,8 +4,18 @@ A collection of code and data related to the protocols used to control Fender Mu
 
 # Abbreviations
 
-FHAU = Feral Horse Amp Utils
-FMIC = Fender Musical Instrument Corporation
++ FHAU = Feral Horse Amp Utils
+
+  How to pronounce FHAU:
+  - Pronounce as 'fwaw', rhyming with 'awe';
+  - or you could use the sound clip at 
+    https://en.wiktionary.org/wiki/phwoar
+    (the FHAU developer does not endorse the sexist overtones of
+    this term, but has a sneaking affection for
+    [Viz Comic](https://en.wikipedia.org/wiki/Viz_(comics)).
+
++ FMIC = Fender Musical Instrument Corporation
+
 
 # Credits
 
