@@ -186,11 +186,47 @@
         android:scrollbars="vertical"
         android:textSize="20sp"
 
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toStartOf="@id/ll_simulator"
         app:layout_constraintTop_toBottomOf="@id/tbl_presets"
 
         />
+
+    <LinearLayout
+        android:id="@+id/ll_simulator"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textview_report">
+
+        <EditText
+            android:id="@+id/tv_amp_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="30sp"
+            android:ems="40"
+            android:inputType="text"
+            android:text="FHAU Simulated Amplifier" />
+
+        <EditText
+            android:id="@+id/et_amp_slot_number"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="30sp"
+            android:ems="4"
+            android:inputType="number"
+            android:text="1"/>
+
+        <EditText
+            android:id="@+id/editTextText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ems="20"
+            android:inputType="text"
+            android:text="COOL\nSOUND"
+            android:textSize="30sp" />
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
