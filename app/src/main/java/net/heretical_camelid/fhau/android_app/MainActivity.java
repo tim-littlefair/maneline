@@ -2,8 +2,13 @@ package net.heretical_camelid.fhau.android_app;
 
 import android.os.Bundle;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import net.heretical_camelid.fhau.lib.AndroidUsbProvider;
@@ -13,11 +18,28 @@ import net.heretical_camelid.fhau.lib.IProvider;
 public class MainActivity extends AppCompatActivity {
 
     IProvider m_provider = null;
+    Button m_btnConnectionStatus;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu, menu);
         return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        int itemId = item.getItemId();
+        /*
+        if (itemId==R.id.action_connect) {
+            m_btnConnectionStatus.callOnClick();
+        } else if (itemId==R.id.action_disconnect) {
+            Toast.makeText(this, "TODO: Implement disconnect", Toast.LENGTH_LONG).show();
+        } else
+        */
+        if (itemId==R.id.action_settings) {
+            Toast.makeText(this, "TODO: Implement settings dialog", Toast.LENGTH_LONG).show();
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -31,7 +53,8 @@ public class MainActivity extends AppCompatActivity {
 
         setSupportActionBar(findViewById(R.id.toolbar_fhau));
 
-        findViewById(R.id.button_test).setOnClickListener(new View.OnClickListener() {
+        m_btnConnectionStatus = findViewById(R.id.btn_cxn_status);
+        m_btnConnectionStatus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 test();
