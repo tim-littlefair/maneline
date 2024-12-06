@@ -9,7 +9,7 @@
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
         <activity
             android:exported="true"
-            android:name="net.heretical_camelid.android_fhau.MainActivity"
+            android:name="net.heretical_camelid.fhau.android_app.MainActivity"
             >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>

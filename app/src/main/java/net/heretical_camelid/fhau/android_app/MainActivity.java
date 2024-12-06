@@ -1,23 +1,17 @@
-package net.heretical_camelid.android_fhau;
+package net.heretical_camelid.fhau.android_app;
 
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
-
-// It is a mystery why the resource class is still being
-// generated under com.example.usbhid.R rather than
-// net.heretical_camelid.android_fhau.R.
-// For the moment this still seems to work.
-import com.example.usbhid.R;
-
 import net.heretical_camelid.fhau.lib.AndroidUsbProvider;
-import net.heretical_camelid.fhau.lib.ByteArrayTranslator;
+import net.heretical_camelid.fhau.lib.AndroidSimulatorProvider;
+import net.heretical_camelid.fhau.lib.IProvider;
 
 public class MainActivity extends AppCompatActivity {
 
-    AndroidUsbProvider m_provider = null;
+    IProvider m_provider = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,7 +19,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         if (m_provider == null) {
-           m_provider = new AndroidUsbProvider();
+           m_provider = new AndroidSimulatorProvider();
         }
 
         setSupportActionBar(findViewById(R.id.toolbar_fhau));

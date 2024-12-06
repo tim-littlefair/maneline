@@ -1,14 +1,12 @@
 package net.heretical_camelid.fhau.lib;
 
 import android.content.Context;
-import android.hardware.usb.UsbDevice;
-import com.benlypan.usbhid.OnUsbHidDeviceListener;
-import com.benlypan.usbhid.UsbHidDevice;
 
-public class AndroidUsbProvider implements IProvider {
+public class AndroidSimulatorProvider implements IProvider {
 
     @Override
     public void connect(Context context, String[] commandHexStrings, StringBuilder sb) {
+        /*
         // Upstream UsbHid project searched for this VID/PID
         // UsbHidDevice device = UsbHidDevice.factory(this, 0x0680, 0x0180);
         // This fork searches for any device associated with the Fender VID
@@ -49,5 +47,8 @@ public class AndroidUsbProvider implements IProvider {
                 sb.append("Device HID connection failed\n");
             }
         });
+         */
+
+        sb.append("Simulated device connected\n");
     }
 }
