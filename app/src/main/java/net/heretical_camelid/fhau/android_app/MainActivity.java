@@ -1,6 +1,7 @@
 package net.heretical_camelid.fhau.android_app;
 
 import android.os.Bundle;
+import android.view.Menu;
 import android.view.View;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
@@ -12,6 +13,12 @@ import net.heretical_camelid.fhau.lib.IProvider;
 public class MainActivity extends AppCompatActivity {
 
     IProvider m_provider = null;
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu, menu);
+        return true;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
