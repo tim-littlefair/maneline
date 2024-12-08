@@ -11,7 +11,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import net.heretical_camelid.fhau.lib.AndroidUsbProvider;
 import net.heretical_camelid.fhau.lib.AndroidSimulatorProvider;
 import net.heretical_camelid.fhau.lib.IProvider;
 
@@ -99,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
         }
         */
 
-        TextView report_tv = (TextView) findViewById(R.id.textview_report);
+        TextView report_tv = (TextView) findViewById(R.id.tv_log);
         sb.append("Starting\n");
         m_provider.connect(this, commandHexStrings, sb);
         report_tv.setText(sb.toString());

@@ -40,7 +40,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@id/btn_cxn_status"
-        app:layout_constraintBottom_toTopOf="@id/tbl_simulator"
+        app:layout_constraintBottom_toTopOf="@id/tv_log"
         >
 
         <TableRow
@@ -50,35 +50,24 @@
         >
             <Button
                 android:id="@+id/button1"
+                style="@style/PresetButtonStyle"
 
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:text="@string/unused_slot"
-                android:textSize="24sp"
                 app:layout_constraintEnd_toStartOf="@id/button2"
                 app:layout_constraintStart_toStartOf="parent"
-                tools:ignore="DuplicateSpeakableTextCheck" />
+                tools:ignore="DuplicateSpeakableTextCheck"
+                />
 
             <Button
                 android:id="@+id/button2"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:text="@string/unused_slot"
+                style="@style/PresetButtonStyle"
 
-                android:textSize="24sp"
                 app:layout_constraintEnd_toStartOf="@id/button3"
                 app:layout_constraintStart_toEndOf="@id/button1" />
 
             <Button
                 android:id="@+id/button3"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:text="@string/unused_slot"
+                style="@style/PresetButtonStyle"
 
-                android:textSize="24sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@id/button2" />
 
@@ -93,34 +82,22 @@
 
             <Button
                 android:id="@+id/button4"
+                style="@style/PresetButtonStyle"
 
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:minWidth="100dp"
-
-                android:minHeight="100dp"
-                android:text="@string/unused_slot"
-                android:textSize="24sp"
                 app:layout_constraintEnd_toStartOf="@id/button5"
                 app:layout_constraintStart_toStartOf="parent" />
 
             <Button
                 android:id="@+id/button5"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:text="@string/unused_slot"
+                style="@style/PresetButtonStyle"
 
-                android:textSize="24sp"
                 app:layout_constraintEnd_toStartOf="@id/button6"
                 app:layout_constraintStart_toEndOf="@id/button4" />
 
             <Button
                 android:id="@+id/button6"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:text="@string/unused_slot"
+                style="@style/PresetButtonStyle"
 
-                android:textSize="24sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@id/button5" />
 
@@ -134,31 +111,22 @@
 
             <Button
                 android:id="@+id/button7"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:text="@string/unused_slot"
+                style="@style/PresetButtonStyle"
 
-                android:textSize="24sp"
                 app:layout_constraintEnd_toStartOf="@id/button8"
                 app:layout_constraintStart_toStartOf="parent" />
 
             <Button
                 android:id="@+id/button8"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:text="@string/unused_slot"
+                style="@style/PresetButtonStyle"
 
-                android:textSize="24sp"
                 app:layout_constraintEnd_toStartOf="@id/button9"
                 app:layout_constraintStart_toEndOf="@id/button7" />
 
             <Button
                 android:id="@+id/button9"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:text="@string/unused_slot"
+                style="@style/PresetButtonStyle"
 
-                android:textSize="24sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@id/button2" />
 
@@ -166,70 +134,106 @@
 
     </TableLayout>
 
+    <TextView
+        android:id="@+id/tv_log"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="fill"
+        android:scrollbarSize="10dp"
+        android:scrollbars="vertical"
+        android:textSize="20sp"
+
+        app:layout_constraintBottom_toTopOf="@id/tbl_simulator"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tbl_presets"
+
+        />
+
     <TableLayout
         android:id="@+id/tbl_simulator"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/tbl_presets"
-        app:layout_constraintBottom_toTopOf="@id/textview_report"
+        app:layout_constraintTop_toBottomOf="@id/tv_log"
+        app:layout_constraintBottom_toBottomOf="parent"
         >
 
         <TableRow
             android:id="@id/tbl_simulator"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="fill"
             >
 
+            <TextView
+                android:id="@+id/lbl_amp_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="0"
+                android:text="Amp Model: "
+
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="@id/tv_amp_name"
+                />
             <EditText
                 android:id="@+id/tv_amp_name"
-                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="24sp"
-                android:ems="40"
+                android:layout_weight="1"
                 android:inputType="text"
-                android:text="FHAU Simulated Amplifier" />
+                android:text="FHAU Simulated Amplifier"
+                app:layout_constraintStart_toEndOf="@id/lbl_amp_name"
+                app:layout_constraintEnd_toEndOf="@id/parent"
+                />
             </TableRow>
 
         <TableRow>
-            <EditText
-                android:id="@+id/et_amp_slot_number"
-                android:layout_width="match_parent"
+            <TextView
+                android:id="@+id/lbl_slot_number_1"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="24sp"
-                android:ems="4"
-                android:inputType="number"
-                android:text="1"/>
+                android:layout_weight="0"
+                android:text="SLOT 01: "
+
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/et_slot_name_1"
+                />
+
+            <EditText
+                android:id="@+id/et_slot_name_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:inputType="text"
+                android:text="COOL SOUND"
+                app:layout_constraintEnd_toEndOf="@id/parent"
+                app:layout_constraintStart_toEndOf="@id/lbl_slot_number_1" />
         </TableRow>
 
         <TableRow>
-            <EditText
-                android:id="@+id/editTextText"
-                android:layout_width="match_parent"
+            <TextView
+                android:id="@+id/lbl_slot_number_2"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:ems="20"
+                android:layout_weight="0"
+                android:text="SLOT 02: "
+
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/et_slot_name_2"
+                />
+
+            <EditText
+                android:id="@+id/et_slot_name_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:inputType="text"
-                android:text="COOL SOUND"
-                android:textSize="24sp" />
+                android:text="WARM SOUND"
+                app:layout_constraintEnd_toEndOf="@id/parent"
+                app:layout_constraintStart_toEndOf="@id/lbl_slot_number_2" />
         </TableRow>
+
     </TableLayout>
 
-    <TextView
-        android:id="@+id/textview_report"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:gravity="fill"
-        android:layout_weight="1"
-        android:scrollbarSize="10dp"
-        android:scrollbars="vertical"
-        android:textSize="20sp"
-
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tbl_simulator"
-        app:layout_constraintBottom_toTopOf="parent"
-
-        />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

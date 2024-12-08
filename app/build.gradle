@@ -5,9 +5,12 @@ android {
     defaultConfig {
         applicationId "net.heretical_camelid.fhau.android_app"
         minSdkVersion 21
-        targetSdkVersion 35
+        compileSdkVersion 35
         versionCode 1
         versionName "1.0"
+    }
+    defaultConfig {
+        targetSdkVersion 35
     }
     buildTypes {
         release {
@@ -27,12 +30,11 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'androidx.appcompat:appcompat:1.7.0'
-    implementation 'androidx.test.espresso:espresso-core:3.6.1'
-    //implementation 'com.android.support.constraint:constraint-layout:2.0.4'
-    implementation "androidx.constraintlayout:constraintlayout:2.2.0"
-    // To use constraintlayout in compose
-    implementation "androidx.constraintlayout:constraintlayout-compose:1.1.0"
-    implementation project(':usb-hid')
+    implementation 'com.google.android.material:material:1.12.0'
     implementation 'androidx.compose.material:material:1.7.5'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation "androidx.constraintlayout:constraintlayout:2.2.0"
+    implementation "androidx.constraintlayout:constraintlayout-compose:1.1.0"
+    testImplementation 'androidx.test.espresso:espresso-core:3.6.1'
+    implementation project(':usb-hid')
 }
