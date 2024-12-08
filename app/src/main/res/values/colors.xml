@@ -4,10 +4,9 @@
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
 
-    <color name="colorCxnRed">#CC0000</color>
-    <color name="colorCxnAmber">#FF9900</color>
-    <color name="colorCxnGreen">#00CC00</color>
-
-    <color name="colorGrey">#AAAAAA</color>
+    <color name="fhauRed">#CC0000</color>
+    <color name="fhauAmber">#FF9900</color>
+    <color name="fhauGreen">#00CC00</color>
+    <color name="fhauGrey">#AAAAAA</color>
 
 </resources>

@@ -1,5 +1,6 @@
 package net.heretical_camelid.fhau.android_app;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -11,13 +12,36 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import net.heretical_camelid.fhau.lib.AndroidSimulatorProvider;
-import net.heretical_camelid.fhau.lib.IProvider;
+import com.benlypan.usbhid.OnUsbHidDeviceListener;
+import com.benlypan.usbhid.UsbHidDevice;
 
-public class MainActivity extends AppCompatActivity {
+import net.heretical_camelid.fhau.lib.AndroidUsbAmplifierProvider;
+import net.heretical_camelid.fhau.lib.PresetInfo;
+import net.heretical_camelid.fhau.lib.SimulatorAmplifierProvider;
+import net.heretical_camelid.fhau.lib.IAmplifierProvider;
 
-    IProvider m_provider = null;
+public class MainActivity
+        extends AppCompatActivity
+        implements PresetInfo.IVisitor, OnUsbHidDeviceListener
+{
+
+    IAmplifierProvider m_provider = null;
     Button m_btnConnectionStatus;
+    StringBuilder m_sbLog;
+    TextView m_tvLog;
+    void appendToLog(String message) {
+        if(message!=null) {
+            m_sbLog.append(message + "\n");
+        } else {
+            // A null message can be appended to trigger re-display
+            // of the content of m_sbLog if it has been passed to
+            // another class and may have been appended.
+        }
+        m_tvLog.setText(m_sbLog.toString());
+    }
+
+    int m_lastPresetInUse = 0;
+    final static int MAX_PRESET = 3;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -46,9 +70,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        if (m_provider == null) {
-           m_provider = new AndroidSimulatorProvider();
-        }
+        m_provider = null;
+
+        m_sbLog = new StringBuilder();
+        m_tvLog = (TextView) findViewById(R.id.tv_log);
+        appendToLog("Starting up");
 
         setSupportActionBar(findViewById(R.id.toolbar_fhau));
 
@@ -56,38 +82,16 @@ public class MainActivity extends AppCompatActivity {
         m_btnConnectionStatus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                test();
+                connect();
             }
         });
     }
 
-    private void test() {
-        StringBuilder sb = new StringBuilder();
+    private void connect() {
+        if (m_provider == null) {
+            m_provider = new AndroidUsbAmplifierProvider();
+        }
 
-        String[] commandHexStrings = new String[]{
-            "35:09:08:00:8a:07:04:08:00:10:00",
-                "35:07:08:00:b2:06:02:08:01",
-                // Next 60 + 1 commands get
-                // the JSON descriptions of the 60 stored
-                // and 1 active presets
-                // We can't handle these until we have support
-                // for multi-frame responses
-                //"35:07:08:00:ca:06:02:08:01",
-                //"35:07:08:00:ca:06:02:08:02",
-                //..
-                /*
-                "35:07:08:00:f2:03:02:08:01",
-                "35:07:08:00:d2:06:02:08:01",
-                "35:07:08:00:e2:06:02:08:01",
-                "35:07:08:00:d2:0c:02:08:01",
-                "35:09:08:00:8a:07:04:08:01:10:00",
-                "35:07:08:00:8a:02:02:08:02",
-                "35:07:08:00:8a:02:02:08:03",
-                "35:07:08:00:8a:02:02:08:04",
-                "35:07:08:00:8a:02:02:08:01",
-                "35:07:08:00:8a:02:02:08:02",
-                 */
-        };
         /*
         for(int i=0; i<commandHexStrings.length; ++i)
         {
@@ -98,10 +102,93 @@ public class MainActivity extends AppCompatActivity {
         }
         */
 
-        TextView report_tv = (TextView) findViewById(R.id.tv_log);
-        sb.append("Starting\n");
-        m_provider.connect(this, commandHexStrings, sb);
-        report_tv.setText(sb.toString());
+        appendToLog("Starting");
+        boolean cxnSucceeded = m_provider.connect(this, this, m_sbLog);
+        appendToLog("Started");
+    }
 
+    private void switchPreset(int whichSlot) {
+        String commandHexString = String.format(
+                "35:07:08:00:8a:02:02:08:%02x",
+                whichSlot
+        );
+        appendToLog(String.format("Requesting switch to preset %02d",whichSlot));
+        m_provider.sendCommandAndReceiveResponse(commandHexString, m_sbLog);
+        appendToLog("Preset switch request completed");
+    }
+
+    @Override
+    public void visit(PresetInfo.PresetRecord pr) {
+        if (m_lastPresetInUse == MAX_PRESET) {
+            return;
+        }
+        m_lastPresetInUse++;
+        String presetButtonName = String.format("button%d", m_lastPresetInUse);
+        @SuppressLint("DiscouragedApi")
+        int buttonId = getResources().getIdentifier(
+                presetButtonName, "id", getPackageName()
+        );
+        Button presetButton = findViewById(buttonId);
+        presetButton.setText(pr.m_name);
+        presetButton.setEnabled(true);
+        presetButton.setClickable(true);
+        presetButton.setOnClickListener((new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                switchPreset(pr.m_slotNumber);
+            }
+        }));
+    }
+
+
+    @Override
+    public void onUsbHidDeviceConnected(UsbHidDevice device) {
+        String[] commandHexStrings = new String[]{
+                "35:09:08:00:8a:07:04:08:00:10:00",
+                "35:07:08:00:b2:06:02:08:01",
+                // Next 60 + 1 commands get
+                // the JSON descriptions of the 60 stored
+                // and 1 active presets
+                // We can't handle these until we have support
+                // for multi-frame responses
+                //"35:07:08:00:ca:06:02:08:01",
+                //"35:07:08:00:ca:06:02:08:02",
+                //..
+                "35:07:08:00:f2:03:02:08:01",
+                "35:07:08:00:d2:06:02:08:01",
+                "35:07:08:00:e2:06:02:08:01",
+                "35:07:08:00:d2:0c:02:08:01",
+                "35:09:08:00:8a:07:04:08:01:10:00",
+                /*
+                "35:07:08:00:8a:02:02:08:02",
+                "35:07:08:00:8a:02:02:08:03",
+                "35:07:08:00:8a:02:02:08:04",
+                "35:07:08:00:8a:02:02:08:01",
+                "35:07:08:00:8a:02:02:08:02",
+                 */
+        };
+        appendToLog("Device HID connection succeeded");
+        int i=0;
+        try {
+            for (i = 0; i < commandHexStrings.length; ++i) {
+                m_provider.sendCommandAndReceiveResponse(commandHexStrings[i], m_sbLog);
+            }
+            PresetInfo pi = m_provider.getPresets(null);
+            pi.acceptVisitor(this);
+        }
+        catch(Exception e) {
+            appendToLog(String.format(
+                    "Exception caught processing command %d: %s",
+                    i, e.toString()
+            ));
+        }
+    }
+
+    @Override
+    public void onUsbHidDeviceConnectFailed(UsbHidDevice device) {
+        appendToLog("Failed to connect to physical amp, trying simulator...");
+        m_provider = new SimulatorAmplifierProvider();
+        m_provider.connect(this, this, m_sbLog);
+        appendToLog(null);
     }
 }

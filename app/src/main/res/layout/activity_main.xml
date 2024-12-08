@@ -24,7 +24,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="2sp"
-        android:background="@color/colorCxnAmber"
+        android:backgroundTint="@color/fhauAmber"
         android:text="@string/press_to_connect"
         android:textSize="20sp"
         app:layout_constraintBottom_toTopOf="@id/tbl_presets"
