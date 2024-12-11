@@ -1,13 +1,9 @@
 package net.heretical_camelid.fhau.lib;
 
-import android.content.Context;
-
-import com.benlypan.usbhid.OnUsbHidDeviceListener;
-
 public class SimulatorAmplifierProvider implements IAmplifierProvider {
 
     @Override
-    public boolean connect(Context context, OnUsbHidDeviceListener usbHidDeviceListener, StringBuilder sb) {
+    public boolean connect(StringBuilder sb) {
         sb.append("Simulated device connected\n");
         return true;
     }

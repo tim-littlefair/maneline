@@ -15,7 +15,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.benlypan.usbhid.OnUsbHidDeviceListener;
 import com.benlypan.usbhid.UsbHidDevice;
 
-import net.heretical_camelid.fhau.lib.AndroidUsbAmplifierProvider;
 import net.heretical_camelid.fhau.lib.PresetInfo;
 import net.heretical_camelid.fhau.lib.SimulatorAmplifierProvider;
 import net.heretical_camelid.fhau.lib.IAmplifierProvider;
@@ -89,7 +88,7 @@ public class MainActivity
 
     private void connect() {
         if (m_provider == null) {
-            m_provider = new AndroidUsbAmplifierProvider();
+            m_provider = new AndroidUsbAmplifierProvider(this);
         }
 
         /*
@@ -103,7 +102,7 @@ public class MainActivity
         */
 
         appendToLog("Starting");
-        boolean cxnSucceeded = m_provider.connect(this, this, m_sbLog);
+        boolean cxnSucceeded = m_provider.connect(m_sbLog);
         appendToLog("Started");
     }
 
@@ -188,7 +187,7 @@ public class MainActivity
     public void onUsbHidDeviceConnectFailed(UsbHidDevice device) {
         appendToLog("Failed to connect to physical amp, trying simulator...");
         m_provider = new SimulatorAmplifierProvider();
-        m_provider.connect(this, this, m_sbLog);
+        m_provider.connect(m_sbLog);
         appendToLog(null);
     }
 }

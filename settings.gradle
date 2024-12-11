@@ -1,1 +1,3 @@
-include ':app', ':usb-hid'
+include ':lib'
+include ':usb-hid'
+include ':android-app'
