@@ -1,3 +1,4 @@
 include ':lib'
 include ':usb-hid'
 include ':android-app'
+include ':desktop-app'
