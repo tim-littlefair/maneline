@@ -5,8 +5,11 @@
 # Script to extract Bluetooth traffic between an Android Phone
 # running the Fender Tone application and a Fender Mustang Micro Plus
 
+import os
 import subprocess
 import sys
+import shutil
+import time
 import zipfile
 
 def _run_tshark_with_args(btsnoop_log_bytes,tshark_args):
@@ -49,29 +52,40 @@ def extract_values_from_btsnoop_log_bytes(btsnoop_log_bytes):
     ).split("\n")
     return tshark_output_lines
 
+def dump_requests_and_responses(btsnoop_log_bytes, outdir, msg_len_histogram, req_num):
+    lb_lines = extract_values_from_btsnoop_log_bytes(btsnoop_log_bytes)
+    for lb_line in lb_lines:
+        fields = lb_line.split("\t")
+        if len(fields)<2:
+            continue
+        elif len(fields[1])==0:
+            continue
+        elif fields[1]=="3500050a03c20100":
+            # app -> mpp ping
+            continue
+        elif fields[0] == "Mustang Micro Plus":
+            print(">MPP " + fields[1])
+        else:
+            print("<MPP " + fields[1])
+        value_len = len(fields[1])
+        prv_len_frequency = msg_len_histogram.get(value_len,0)
+        msg_len_histogram[value_len] = prv_len_frequency + 1
+
+
 
 if __name__ == "__main__":
+
+    outpath = "_work/pabb_%d" % ( int(time.time()), )
+    os.makedirs(outpath)
+    print(f"Dumped data will be in {outpath}")
+
     for brzippath in sys.argv[1:]:
         logbyte_list = extract_logstreams_from_bugreport(brzippath)
+
     msg_len_histogram = {}
+    req_num = 0
     for lb in logbyte_list:
-        lb_lines = extract_values_from_btsnoop_log_bytes(lb)
-        for lb_line in lb_lines:
-            fields = lb_line.split("\t")
-            if len(fields)<2:
-                continue
-            elif len(fields[1])==0:
-                continue
-            elif fields[1]=="3500050a03c20100":
-                # app -> mpp ping
-                continue
-            elif fields[0] == "Mustang Micro Plus":
-                print(">MPP " + fields[1])
-            else:
-                print("<MPP " + fields[1])
-            value_len = len(fields[1])
-            prv_len_frequency = msg_len_histogram.get(value_len,0)
-            msg_len_histogram[value_len] = prv_len_frequency + 1
+        dump_requests_and_responses(lb,outpath, msg_len_histogram, req_num)
     for k in sorted(msg_len_histogram.keys()):
         print(k,msg_len_histogram[k])
 
