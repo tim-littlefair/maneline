@@ -6,3 +6,10 @@ java {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
 }
+
+dependencies {
+    implementation project(':lib')
+    implementation 'net.java.dev.jna:jna:5.15.0'
+    implementation 'org.hid4java:hid4java:0.8.0'
+    implementation 'org.usb4java:usb4java:1.3.0'
+}

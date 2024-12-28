@@ -10,7 +10,6 @@ public class ByteArrayTranslator {
     public static byte[] hexToBytes(String hexByteArrayString) {
         byte[] byteBuffer = new byte[64];
         String[] hexByteStrings = hexByteArrayString.split(":");
-        System.out.println(hexByteStrings[0]);
         for (int i = 0; i < hexByteStrings.length; ++i) {
             assert hexByteStrings[i].length() == 2;
             int byteAsInt = Integer.parseInt(hexByteStrings[i], 16);

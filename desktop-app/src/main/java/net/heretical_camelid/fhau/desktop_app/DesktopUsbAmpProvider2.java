@@ -1,31 +1,93 @@
 package net.heretical_camelid.fhau.desktop_app;
 
-import net.heretical_camelid.fhau.lib.ByteArrayTranslator;
 import net.heretical_camelid.fhau.lib.IAmplifierProvider;
 import net.heretical_camelid.fhau.lib.PresetInfo;
 
-import com.sun.jna.Platform;
-import com.sun.jna.Pointer;
-import com.sun.jna.WString;
-import com.sun.jna.Native;
-
-import org.hid4java.HidDevice;
-import org.hid4java.HidManager;
-import org.hid4java.HidServices;
-import org.hid4java.HidServicesListener;
-import org.hid4java.HidServicesSpecification;
-import org.hid4java.event.HidServicesEvent;
-import org.hid4java.jna.HidApi;
+import org.usb4java.Device;
+import org.usb4java.DeviceDescriptor;
+import org.usb4java.DeviceHandle;
+import org.usb4java.DeviceList;
+import org.usb4java.LibUsb;
+import org.usb4java.LibUsbException;
 
 import java.io.PrintStream;
 
-public class DesktopUsbAmpProvider
-        implements IAmplifierProvider, HidServicesListener
+/**
+ * ref: http://usb4java.org/quickstart/libusb.html
+ */
+public class DesktopUsbAmpProvider2
+        implements IAmplifierProvider
 {
-    HidDevice m_fmicAmp;
+    enum InitializationPhase {
+        INITIAL,
+        LIBUSB_INITIALIZED,
+        DEVICE_FOUND,
+        HANDLE_ACQUIRED,
 
-    public DesktopUsbAmpProvider(PrintStream out) {
-        out.println("Platform architecture: " + Platform.ARCH);
+
+    }
+    Device m_fmicAmpDevice;
+    DeviceHandle m_fmicAmpHandle;
+
+    public DesktopUsbAmpProvider2(PrintStream out) {
+        int libusbInitStatus = LibUsb.init(null);
+        if (libusbInitStatus == LibUsb.SUCCESS) {
+            out.println("libusb initialisation succeeded");
+        } else {
+            out.println("libusb initialisation failed with status " + libusbInitStatus);
+            System.exit(1);
+        }
+
+        try {
+            m_fmicAmpDevice = null;
+            DeviceList list = new DeviceList();
+            int result = LibUsb.getDeviceList(null, list);
+            if (result < 0) throw new LibUsbException("Unable to get device list", result);
+            try {
+                for (Device device : list) {
+                    DeviceDescriptor descriptor = new DeviceDescriptor();
+                    result = LibUsb.getDeviceDescriptor(device, descriptor);
+                    if (result != LibUsb.SUCCESS)
+                        throw new LibUsbException("Unable to read device descriptor", result);
+                    if (descriptor.idVendor() == 0x1ed8) {
+                        m_fmicAmpDevice = device;
+                        break;
+                    }
+                }
+            } finally {
+                // Ensure the allocated device list is freed
+                LibUsb.freeDeviceList(list, true);
+            }
+
+            if (m_fmicAmpDevice != null) {
+                out.println("FMIC amp found: ");
+            } else {
+                out.println("No FMIC amp found");
+                LibUsb.exit(null);
+                System.exit(2);
+            }
+
+            m_fmicAmpHandle = new DeviceHandle();
+            int dhStatus = LibUsb.open(m_fmicAmpDevice, m_fmicAmpHandle);
+            if(dhStatus == LibUsb.SUCCESS) {
+                out.println("Device handle opened");
+            } else {
+                throw new LibUsbException("Unable to open device handle", dhStatus);
+            }
+        } catch (LibUsbException e) {
+            out.println("LibUsbException caught with message " + e.getMessage());
+            LibUsb.exit(null);
+            System.exit(3);
+        }
+    }
+
+
+
+
+/*
+
+
+
         out.println("Resource prefix: " + Platform.RESOURCE_PREFIX);
         out.println("Libusb activation: " + Platform.isLinux());
         HidServicesSpecification hidServicesSpecification = new HidServicesSpecification();
@@ -65,10 +127,11 @@ public class DesktopUsbAmpProvider
         if (m_fmicAmp == null) {
            out.println("Fender amplifier not found");
         }
-    }
+ */
     @Override
     public boolean connect(StringBuilder sb) {
         boolean retval = false;
+/*
         if (m_fmicAmp == null) {
             sb.append("Fender amplifier not attached");
         } else if (m_fmicAmp.isClosed()) {
@@ -98,11 +161,13 @@ public class DesktopUsbAmpProvider
             sb.append("Amp was open, has been closed, retry open");
             sb.append("Last error message: " + m_fmicAmp.getLastErrorMessage());
         }
+    */
         return retval;
     }
 
     @Override
     public byte[] sendCommandAndReceiveResponse(String commandHexString, StringBuilder sb) {
+        /*
         byte[] commandBytes = ByteArrayTranslator.hexToBytes(commandHexString);
         sb.append("Sending " + commandHexString + "\n");
         m_fmicAmp.write(commandBytes,64,(byte) 0x00,true);
@@ -113,40 +178,12 @@ public class DesktopUsbAmpProvider
             sb.append("Receive error: " + m_fmicAmp.getLastErrorMessage());
         }
         return responseBytes;
+         */
+        return null;
     }
 
     @Override
     public PresetInfo getPresets(PresetInfo requestedPresets) {
         return null;
-    }
-
-    @Override
-    public void hidDeviceAttached(HidServicesEvent event) {
-        System.out.println("Amp has become attached");
-    }
-
-    @Override
-    public void hidDeviceDetached(HidServicesEvent event) {
-        System.out.println("Amp has become detached");
-    }
-
-    @Override
-    public void hidFailure(HidServicesEvent event) {
-
-    }
-
-    @Override
-    public void hidDataReceived(HidServicesEvent event) {
-        byte[] responseBytes = event.getDataReceived();
-        if(responseBytes!=null && responseBytes.length>0) {
-            System.out.println("hdrReceived " + ByteArrayTranslator.bytesToHex(responseBytes));
-        } else {
-            System.out.println("hdrReceive error: " + m_fmicAmp.getLastErrorMessage());
-        }
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            System.out.println("hdrSleep interrupted");
-        }
     }
 }
