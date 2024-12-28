@@ -154,7 +154,7 @@ public class UsbHidDevice {
         if (!mUsbManager.hasPermission(mUsbDevice)) {
             PendingIntent permissionIntent = PendingIntent.getBroadcast(context, 0, new Intent(ACTION_USB_PERMISSION), 0);
             IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
-            context.registerReceiver(mUsbReceiver, filter);
+            context.registerReceiver(mUsbReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
             mUsbManager.requestPermission(mUsbDevice, permissionIntent);
         } else {
             openDevice();
