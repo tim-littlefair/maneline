@@ -5,6 +5,14 @@
 /build
 /captures
 .externalNativeBuild
-
 /.idea
+
+# Ignore patterns added by Tim L specific to this project
+
+# Directory for input and output files I don't want in version control
+_work
+
+
+
+
 
