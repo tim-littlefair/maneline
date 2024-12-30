@@ -5,12 +5,15 @@
 # Script to extract Bluetooth traffic between an Android Phone
 # running the Fender Tone application and a Fender Mustang Micro Plus
 
+import calendar
 import os
 import subprocess
+import re
 import sys
-import shutil
 import time
 import zipfile
+
+_TIMESTAMP_PATTERN = re.compile(r"(\w+) (\d+), 20(\d+) (\d+:\d+:\d+)\.\d+ (\w+)")
 
 def _run_tshark_with_args(btsnoop_log_bytes,tshark_args):
     cli_args = [ "tshark", "-r", "-" ]
@@ -25,25 +28,48 @@ def _run_tshark_with_args(btsnoop_log_bytes,tshark_args):
     assert len(completed_process.stderr)==0
     return str(completed_process.stdout, "UTF-8")
 
+
 def extract_logstreams_from_bugreport(brzippath):
     retval = []
     with zipfile.ZipFile(brzippath,"r") as brzip:
         for fn in ( 'btsnoop_hci.log.last', 'btsnoop_hci.log'):
             try:
                 btsnoop_log_bytes = brzip.read(f"FS/data/misc/bluetooth/logs/{fn}")
-                ts_begin, ts_end = extract_bounds_from_btsnoop_log_bytes(btsnoop_log_bytes)
-                print(f"{brzippath}:{fn} starts at {ts_begin} and ends at {ts_end}")
+                dump_btsnoop_log_bytes(btsnoop_log_bytes,fn,"json")
+                time_range = extract_time_range_from_btsnoop_log_bytes(btsnoop_log_bytes)
+                print(f"{brzippath}:{fn} time range: {time_range}")
                 retval += [ btsnoop_log_bytes ]
+                json = dump_btsnoop_log_bytes(
+                    btsnoop_log_bytes,
+                    time_range + "_" + fn,
+                    wshark_dump_type="json"
+                )
             except KeyError:
                 print(f"{brzipppath} does not contain {fn}")
     return retval
 
-def extract_bounds_from_btsnoop_log_bytes(btsnoop_log_bytes):
+def dump_btsnoop_log_bytes(btsnoop_log_bytes,fn,wshark_dump_type):
+    global outpath
+    tshark_dump_utf8 = _run_tshark_with_args(
+        btsnoop_log_bytes,
+        ["-T", wshark_dump_type]
+    )
+    open(outpath+"/"+fn+"."+wshark_dump_type,"wt").write(tshark_dump_utf8)
+
+def extract_time_range_from_btsnoop_log_bytes(btsnoop_log_bytes):
     tshark_output_lines = _run_tshark_with_args(
         btsnoop_log_bytes,
-        ["-Tfields", "-eframe.time_epoch"]
+        ["-Tfields", "-eframe.time"]
     ).split("\n")
-    return tshark_output_lines[0], tshark_output_lines[-2]
+    begin_match = _TIMESTAMP_PATTERN.search(tshark_output_lines[0]);
+    run_date = begin_match.group(3) + begin_match.group(1) + begin_match.group(2)
+    for i in range(1,13):
+        run_date=run_date.replace(calendar.month_abbr[i],"%02d"%(i,))
+    run_begin_tod = begin_match.group(4).replace(":", "")
+    run_tz = begin_match.group(5)
+    end_match = _TIMESTAMP_PATTERN.search(tshark_output_lines[-2]);
+    run_end_tod = end_match.group(4).replace(":", "")
+    return run_date + "_" + run_begin_tod + "-" + run_end_tod + "_" + run_tz
 
 def extract_values_from_btsnoop_log_bytes(btsnoop_log_bytes):
     tshark_output_lines = _run_tshark_with_args(
@@ -75,6 +101,7 @@ def dump_requests_and_responses(btsnoop_log_bytes, outdir, msg_len_histogram, re
 
 if __name__ == "__main__":
 
+    global outpath
     outpath = "_work/pabb_%d" % ( int(time.time()), )
     os.makedirs(outpath)
     print(f"Dumped data will be in {outpath}")
