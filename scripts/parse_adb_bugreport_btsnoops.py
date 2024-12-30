@@ -15,6 +15,8 @@ import time
 import traceback
 import zipfile
 
+import pb_utils
+
 _TIMESTAMP_PATTERN = re.compile(r"(\w+) (\d+), 20(\d+) (\d+:\d+:\d+)\.\d+ (\w+)")
 
 def _run_tshark_with_args(btsnoop_log_bytes,tshark_args):
@@ -138,6 +140,8 @@ def dump_requests_and_responses(btsnoop_log_bytes, outdir, msg_len_histogram, re
             if last_packet is False:
                 pass
             else:
+                if(len(message)>2):
+                    print(pb_utils.parse(message))
                 message=None
                 message_id = None
                 if rsp_seq is not None:
