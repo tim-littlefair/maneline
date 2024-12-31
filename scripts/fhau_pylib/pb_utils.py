@@ -35,6 +35,7 @@ def _extract_varint(byte_stream):
     return varint_value, byte_stream
 
 def parse(message_bytes):
+    assert isinstance(message_bytes,bytes)
     # The Mustang message format appears to consist of:
     # + constant tag 0x12; followed by
     # + the message length expressed as a varint; followed by
@@ -42,7 +43,8 @@ def parse(message_bytes):
     #assert message_bytes[0] == 0x12
     message_length, protobuf_bytes = _extract_varint(message_bytes[1:])
     print(message_bytes[0],message_length,len(protobuf_bytes))
-    return _run_protoc_with_args(protobuf_bytes,[ "--decode_raw" ] )
+    raw_pb_parse = _run_protoc_with_args(protobuf_bytes,[ "--decode_raw" ] )
+    return raw_pb_parse, protobuf_bytes
 
 
 ## Unit tests

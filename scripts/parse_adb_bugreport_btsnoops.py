@@ -62,7 +62,7 @@ def dump_requests_and_responses(btsnoop_log_bytes, outdir, msg_len_histogram, re
             if rsp_seq is None:
                 rsp_seq=1
             message_id = (req_seq,rsp_seq)
-        print(f"{message_id}" + fields[1])
+        # print(f"{message_id}" + fields[1])
         packet_bytes = binascii.a2b_hex(fields[1])
         last_packet = False
         while True:
@@ -88,20 +88,24 @@ def dump_requests_and_responses(btsnoop_log_bytes, outdir, msg_len_histogram, re
             if message is None:
                 message = b''
             message += packet_bytes[3:]
-            print(f"{message_id}" + str(binascii.b2a_hex(message),'utf-8'))
+            #print(f"{message_id}" + str(binascii.b2a_hex(message),'utf-8'))
             if last_packet is False:
                 pass
             else:
                 if(len(message)>2):
-                    print(pb_utils.parse(message))
+                    msg_basename=".".join(["%02d"%(i,) for i in message_id])
+                    print(f"Saving message {msg_basename}")
+                    msg_path_prefix = f"{outpath}/{msg_basename}"
+                    msg_raw_pb_parse, msg_bytes = pb_utils.parse(message)
+                    open(msg_path_prefix + ".bin","wb").write(msg_bytes)
+                    open(msg_path_prefix + ".hex","wb").write(binascii.b2a_hex(msg_bytes))
+                    print(msg_raw_pb_parse,file=open(msg_path_prefix + ".raw_pb_parse.txt","wt"))
+
                 message=None
                 message_id = None
                 if rsp_seq is not None:
                     rsp_seq+=1
             break
-            value_len = len(fields[1])
-            prv_len_frequency = msg_len_histogram.get(value_len,0)
-            msg_len_histogram[value_len] = prv_len_frequency + 1
 
 if __name__ == "__main__":
     # TODO:
