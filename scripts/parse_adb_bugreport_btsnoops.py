@@ -7,7 +7,6 @@
 
 import binascii
 import os
-import re
 import sys
 import time
 import traceback
@@ -32,7 +31,7 @@ def extract_logstreams_from_bugreport(brzippath):
                     wshark_dump_type="json"
                 )
             except KeyError:
-                print(f"{brzipppath} does not contain {fn}")
+                print(f"{brzippath} does not contain {fn}")
     return retval
 
 def dump_requests_and_responses(btsnoop_log_bytes, outdir, msg_len_histogram, req_num):
