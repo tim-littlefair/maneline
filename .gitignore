@@ -1,3 +1,4 @@
+# Generic ignore patterns associated with Android, Python platforms etc
 *.iml
 .gradle
 /local.properties
@@ -6,6 +7,7 @@
 /captures
 .externalNativeBuild
 /.idea
+**/__pycache__
 
 # Ignore patterns added by Tim L specific to this project
 
