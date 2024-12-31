@@ -15,7 +15,7 @@ import time
 import traceback
 import zipfile
 
-import pb_utils
+from fhau_pylib import pb_utils
 
 _TIMESTAMP_PATTERN = re.compile(r"(\w+) (\d+), 20(\d+) (\d+:\d+:\d+)\.\d+ (\w+)")
 
