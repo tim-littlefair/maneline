@@ -12,8 +12,7 @@ import time
 import traceback
 import zipfile
 
-from fhau_pylib import pb_utils
-from fhau_pylib import tshark_utils
+from fhau_pylib import pb_utils, tshark_utils
 
 def extract_logstreams_from_bugreport(brzippath):
     retval = []
@@ -95,8 +94,13 @@ def dump_requests_and_responses(btsnoop_log_bytes, outdir, msg_len_histogram, re
                 if(len(message)>2):
                     msg_basename=".".join(["%02d"%(i,) for i in message_id])
                     print(f"Saving message {msg_basename}")
+                    msg_raw_pb_parse, msg_bytes = None, None
+                    try:
+                        msg_raw_pb_parse, msg_bytes = pb_utils.parse_message_frame(message)
+                    except pb_utils.IncompleteFrameException as e:
+                        msg_raw_pb_parse = "Incomplete frame - no protobuf parse attempted"
+                        msg_bytes = e.incomplete_frame_bytes
                     msg_path_prefix = f"{outpath}/{msg_basename}"
-                    msg_raw_pb_parse, msg_bytes = pb_utils.parse(message)
                     open(msg_path_prefix + ".bin","wb").write(msg_bytes)
                     open(msg_path_prefix + ".hex","wb").write(binascii.b2a_hex(msg_bytes))
                     print(msg_raw_pb_parse,file=open(msg_path_prefix + ".raw_pb_parse.txt","wt"))
