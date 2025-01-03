@@ -55,16 +55,16 @@ def extract_values_from_btsnoop_log_bytes(btsnoop_log_bytes):
     ).split("\n")
     return tshark_output_lines
 
-def extract_csv(btsnoop_log_bytes, field_list=",".join([
+_DEFAULT_FIELDS_BLUETOOTH = ",".join([
     "frame.number,frame.time_relative",
     "hci_h4.direction,hci_h4.type,bthci_cmd.opcode,bthci_evt.code,bthci_evt.opcode",
     "btatt.opcode,btatt.handle,btatt.value"
-])):
+])
+def extract_csv(btsnoop_log_bytes, field_list=_DEFAULT_FIELDS_BLUETOOTH):
     tshark_args = [ "-Tfields", "-Eseparator=," ]
     tshark_args += [
         "-e"+ field_name for field_name in field_list.split(",")
     ]
-    print(tshark_args)
-    return _run_tshark_with_args(
+    return field_list + "\n" + _run_tshark_with_args(
         btsnoop_log_bytes, tshark_args
     )

@@ -1,9 +1,18 @@
 #! python3
 
-# parse_adb_bugreport_btsnoops.py
+# parse_captures.py
 # Author: Tim Littlefair (https://github.com/tim-littlefair)
-# Script to extract Bluetooth traffic between an Android Phone
-# running the Fender Tone application and a Fender Mustang Micro Plus
+# Script to extract traffic between one of the Fender Tone
+# applications and a Fender device.
+# As of this version, the script can parse wireshark format
+# dumps.
+# Supported app/device pairs tested to date
+# + Fender Tone for Android driving Mustang Micro Plus (using Developer
+#   Mode Bluetooth Snoop on Android)
+# + Fender Tone Desktop for macOS driving Mustang LT40S (using Wireshark
+#   running on macOS)
+# + Fender Tone Desktop for Windows driving Mustang LT40S (using
+#   Wireshark running on Windows Virtual Box VM)
 
 import binascii
 import os
@@ -34,7 +43,7 @@ def extract_logstreams_from_bugreport(brzippath):
     return retval
 
 
-def dump_requests_and_responses(btsnoop_log_bytes, outdir, msg_len_histogram, req_num):
+def dump_requests_and_responses(btsnoop_log_bytes, outdir, req_num):
     global req_seq, rsp_seq, message, message_id
     lb_lines = tshark_utils.extract_values_from_btsnoop_log_bytes(btsnoop_log_bytes)
     for lb_line in lb_lines:
@@ -113,7 +122,6 @@ def dump_requests_and_responses(btsnoop_log_bytes, outdir, msg_len_histogram, re
                 if rsp_seq is not None:
                     rsp_seq+=1
             break
-        open(outdir + "/packets.csv","wt").write(tshark_utils.extract_csv(btsnoop_log_bytes))
 
 if __name__ == "__main__":
     # TODO:
@@ -130,16 +138,15 @@ if __name__ == "__main__":
     os.makedirs(outpath)
     print(f"Dumped data will be in {outpath}")
 
-    for brzippath in sys.argv[1:]:
-        logbyte_list = extract_logstreams_from_bugreport(brzippath)
-
+    for snoop_path in sys.argv[1:]:
+        logbyte_list = extract_logstreams_from_bugreport(snoop_path)
     try:
-        msg_len_histogram = {}
         req_num = 0, 0
+        start_reqseq = req_seq
         for lb in logbyte_list:
-            dump_requests_and_responses(lb,outpath, msg_len_histogram, req_num)
-        for k in sorted(msg_len_histogram.keys()):
-            print(k,msg_len_histogram[k])
+            dump_requests_and_responses(lb,outpath, req_num)
+            open(outpath + f"/requests_{start_reqseq}-{req_seq}.csv","wt").write(tshark_utils.extract_csv(lb))
+            start_reqseq=req_seq
     except AssertionError as e:
         print(req_seq, rsp_seq, message_id, message)
         traceback.print_exception(e,limit=4)
