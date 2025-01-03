@@ -28,7 +28,7 @@ def _run_tshark_with_args(btsnoop_log_bytes,tshark_args):
     assert len(completed_process.stderr)==0
     return str(completed_process.stdout, "UTF-8")
 
-def dump_btsnoop_log_bytes(btsnoop_log_bytes,dump_path,wshark_dump_type):
+def dump_capture(btsnoop_log_bytes, dump_path, wshark_dump_type):
     global outpath
     tshark_dump_utf8 = _run_tshark_with_args(
         btsnoop_log_bytes,
@@ -36,9 +36,9 @@ def dump_btsnoop_log_bytes(btsnoop_log_bytes,dump_path,wshark_dump_type):
     )
     open(dump_path,"wt").write(tshark_dump_utf8)
 
-def extract_time_range_from_btsnoop_log_bytes(btsnoop_log_bytes):
+def extract_time_range_from_capture(capture_bytes):
     tshark_output_lines = _run_tshark_with_args(
-        btsnoop_log_bytes,
+        capture_bytes,
         ["-Tfields", "-eframe.time"]
     ).split("\n")
     begin_match = _TIMESTAMP_PATTERN.search(tshark_output_lines[0]);
@@ -51,13 +51,23 @@ def extract_time_range_from_btsnoop_log_bytes(btsnoop_log_bytes):
     run_end_tod = end_match.group(4).replace(":", "")
     return run_date + "_" + run_begin_tod + "-" + run_end_tod + "_" + run_tz
 
-def extract_values_from_btsnoop_log_bytes(btsnoop_log_bytes):
+_CAPTURE_MESSAGE_FIELDS = {
+    ADB_BLUETOOTH_CAPTURE: "bthci_acl.dst.name,btatt.value",
+    WIRESHARK_USB_CAPTURE: "usb.dst,usbhid.data",
+}
+
+def extract_messages_from_capture(btsnoop_log_bytes, field_list):
+    if field_list in _CAPTURE_MESSAGE_FIELDS.keys():
+        field_list = _CAPTURE_MESSAGE_FIELDS[field_list]
+    tshark_args = [ "-Tfields", "-Eseparator=," ]
+    tshark_args += [
+        "-e"+ field_name for field_name in field_list.split(",")
+    ]
     tshark_output_lines = _run_tshark_with_args(
         btsnoop_log_bytes,
-        ["-Tfields", "-ebthci_acl.dst.name", "-ebtatt.value"]
+        tshark_args
     ).split("\n")
     return tshark_output_lines
-
 
 _CAPTURE_DEFAULT_FIELDS = {
     ADB_BLUETOOTH_CAPTURE: ",".join([

@@ -23,14 +23,13 @@ import zipfile
 
 from fhau_pylib import pb_utils, tshark_utils, hexdump
 
-
 def extract_logstreams_from_adb_bugreport(bugreport_path):
     retval=[]
     with zipfile.ZipFile(bugreport_path, "r") as brzip:
         for fn in ( 'btsnoop_hci.log.last', 'btsnoop_hci.log'):
             try:
-                btsnoop_log_bytes = brzip.read(f"FS/data/misc/bluetooth/logs/{fn}")
-                retval += [ btsnoop_log_bytes ]
+                capture_bytes = brzip.read(f"FS/data/misc/bluetooth/logs/{fn}")
+                retval += [ capture_bytes ]
             except KeyError:
                 print(f"{bugreport_path} does not contain {fn}",file=sys.stderr)
     if len(retval)==0:
@@ -43,19 +42,19 @@ def extract_logstreams_from_capture(capture_path):
     retval = []
     if capture_path.endswith(".zip"):
         retval += [
-            (logstream, tshark_utils.ADB_BLUETOOTH_CAPTURE)
-            for logstream in extract_logstreams_from_adb_bugreport(capture_path)
+            (capture_bytes, tshark_utils.ADB_BLUETOOTH_CAPTURE)
+            for capture_bytes in extract_logstreams_from_adb_bugreport(capture_path)
         ]
     elif capture_path.endswith(".pcapng"):
-        logstream = open(capture_path,mode="rb").read()
+        capture_bytes = open(capture_path,mode="rb").read()
         retval += [
-            ( logstream, tshark_utils.WIRESHARK_USB_CAPTURE )
+            ( capture_bytes, tshark_utils.WIRESHARK_USB_CAPTURE )
         ]
     for capture_bytes, _ in retval:
-        time_range = tshark_utils.extract_time_range_from_btsnoop_log_bytes(capture_bytes)
-        tshark_utils.dump_btsnoop_log_bytes(capture_bytes, time_range,"json")
+        time_range = tshark_utils.extract_time_range_from_capture(capture_bytes)
+        tshark_utils.dump_capture(capture_bytes, time_range, "json")
         # print(f"{brzippath}:{fn} time range: {time_range}")
-        tshark_utils.dump_btsnoop_log_bytes(
+        tshark_utils.dump_capture(
             capture_bytes,
             outpath+"/"+time_range+".json",
             wshark_dump_type="json"
@@ -63,11 +62,11 @@ def extract_logstreams_from_capture(capture_path):
     return retval
 
 
-def dump_requests_and_responses(btsnoop_log_bytes, outdir, req_num):
+def dump_requests_and_responses(capture_bytes, capture_type):
     global req_seq, rsp_seq, message, message_id
-    lb_lines = tshark_utils.extract_values_from_btsnoop_log_bytes(btsnoop_log_bytes)
+    lb_lines = tshark_utils.extract_messages_from_capture(capture_bytes, capture_type)
     for lb_line in lb_lines:
-        fields = lb_line.split("\t")
+        fields = lb_line.split(",")
         if len(fields)<2:
             continue
         elif len(fields[1])==0:
@@ -80,7 +79,7 @@ def dump_requests_and_responses(btsnoop_log_bytes, outdir, req_num):
         # We assign a message id which also tells us the direction - requests from the Plug/Tone app
         # to the Mustang get a single part message id, but the Mustang can send more than one
         # response after a request, so responses get a two part message id
-        if fields[0] == "Mustang Micro Plus":
+        if fields[0] == "Mustang Micro Plus" or fields[0].startswith("1"):
             if message_id is None:
                 req_seq += 1
                 rsp_seq = None
@@ -112,11 +111,16 @@ def dump_requests_and_responses(btsnoop_log_bytes, outdir, req_num):
                 packet_bytes = packet_bytes[1:]
                 continue
             # if we get here we probably have a packet
-            assert packet_bytes[1]==0x00
-            assert packet_bytes[2]==len(packet_bytes)-3
+            length_index = None
+            if capture_type == tshark_utils.ADB_BLUETOOTH_CAPTURE:
+                assert packet_bytes[1]==0x00
+                length_index = 2
+            else:
+                length_index = 1
+            #assert packet_bytes[length_index]==len(packet_bytes)-(length_index+1)
             if message is None:
                 message = b''
-            message += packet_bytes[3:]
+            message += packet_bytes[length_index+1:]
             #print(f"{message_id}" + str(binascii.b2a_hex(message),'utf-8'))
             if last_packet is False:
                 pass
@@ -164,7 +168,7 @@ if __name__ == "__main__":
         req_num = 0, 0
         start_reqseq = req_seq
         for lb in logbyte_list:
-            dump_requests_and_responses(lb[0],outpath, req_num)
+            dump_requests_and_responses(lb[0],lb[1])
             open(
                 outpath + f"/requests_{start_reqseq}-{req_seq}.csv","wt"
             ).write(tshark_utils.extract_csv(lb[0],lb[1]))
