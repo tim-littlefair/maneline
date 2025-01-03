@@ -23,23 +23,43 @@ import zipfile
 
 from fhau_pylib import pb_utils, tshark_utils, hexdump
 
-def extract_logstreams_from_bugreport(brzippath):
-    retval = []
-    with zipfile.ZipFile(brzippath,"r") as brzip:
+
+def extract_logstreams_from_adb_bugreport(bugreport_path):
+    retval=[]
+    with zipfile.ZipFile(bugreport_path, "r") as brzip:
         for fn in ( 'btsnoop_hci.log.last', 'btsnoop_hci.log'):
             try:
                 btsnoop_log_bytes = brzip.read(f"FS/data/misc/bluetooth/logs/{fn}")
-                tshark_utils.dump_btsnoop_log_bytes(btsnoop_log_bytes,fn,"json")
-                time_range = tshark_utils.extract_time_range_from_btsnoop_log_bytes(btsnoop_log_bytes)
-                print(f"{brzippath}:{fn} time range: {time_range}")
                 retval += [ btsnoop_log_bytes ]
-                json = tshark_utils.dump_btsnoop_log_bytes(
-                    btsnoop_log_bytes,
-                    outpath+"/"+time_range+".json",
-                    wshark_dump_type="json"
-                )
             except KeyError:
-                print(f"{brzippath} does not contain {fn}")
+                print(f"{bugreport_path} does not contain {fn}",file=sys.stderr)
+    if len(retval)==0:
+        print(f"No Bluetooth logs found in {fn}", file=sys.stderr)
+        print(f"Is this file an ADB bugreport?", file=sys.stderr)
+        print(f"Was Bluetooth snooping turned on in Developer settings?", file=sys.stderr)
+    return retval
+
+def extract_logstreams_from_capture(capture_path):
+    retval = []
+    if capture_path.endswith(".zip"):
+        retval += [
+            (logstream, tshark_utils.ADB_BLUETOOTH_CAPTURE)
+            for logstream in extract_logstreams_from_adb_bugreport(capture_path)
+        ]
+    elif capture_path.endswith(".pcapng"):
+        logstream = open(capture_path,mode="rb").read()
+        retval += [
+            ( logstream, tshark_utils.WIRESHARK_USB_CAPTURE )
+        ]
+    for capture_bytes, _ in retval:
+        time_range = tshark_utils.extract_time_range_from_btsnoop_log_bytes(capture_bytes)
+        tshark_utils.dump_btsnoop_log_bytes(capture_bytes, time_range,"json")
+        # print(f"{brzippath}:{fn} time range: {time_range}")
+        tshark_utils.dump_btsnoop_log_bytes(
+            capture_bytes,
+            outpath+"/"+time_range+".json",
+            wshark_dump_type="json"
+        )
     return retval
 
 
@@ -139,13 +159,15 @@ if __name__ == "__main__":
     print(f"Dumped data will be in {outpath}")
 
     for snoop_path in sys.argv[1:]:
-        logbyte_list = extract_logstreams_from_bugreport(snoop_path)
+        logbyte_list = extract_logstreams_from_capture(snoop_path)
     try:
         req_num = 0, 0
         start_reqseq = req_seq
         for lb in logbyte_list:
-            dump_requests_and_responses(lb,outpath, req_num)
-            open(outpath + f"/requests_{start_reqseq}-{req_seq}.csv","wt").write(tshark_utils.extract_csv(lb))
+            dump_requests_and_responses(lb[0],outpath, req_num)
+            open(
+                outpath + f"/requests_{start_reqseq}-{req_seq}.csv","wt"
+            ).write(tshark_utils.extract_csv(lb[0],lb[1]))
             start_reqseq=req_seq
     except AssertionError as e:
         print(req_seq, rsp_seq, message_id, message)
