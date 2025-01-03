@@ -12,7 +12,7 @@ import time
 import traceback
 import zipfile
 
-from fhau_pylib import pb_utils, tshark_utils
+from fhau_pylib import pb_utils, tshark_utils, hexdump
 
 def extract_logstreams_from_bugreport(brzippath):
     retval = []
@@ -93,6 +93,8 @@ def dump_requests_and_responses(btsnoop_log_bytes, outdir, msg_len_histogram, re
             else:
                 if(len(message)>2):
                     msg_basename=".".join(["%02d"%(i,) for i in message_id])
+                    if len(message_id)==1:
+                        msg_basename += '.'
                     print(f"Saving message {msg_basename}")
                     msg_raw_pb_parse, msg_bytes = None, None
                     try:
@@ -102,7 +104,7 @@ def dump_requests_and_responses(btsnoop_log_bytes, outdir, msg_len_histogram, re
                         msg_bytes = e.incomplete_frame_bytes
                     msg_path_prefix = f"{outpath}/{msg_basename}"
                     open(msg_path_prefix + ".bin","wb").write(msg_bytes)
-                    open(msg_path_prefix + ".hex","wb").write(binascii.b2a_hex(msg_bytes))
+                    open(msg_path_prefix + ".hexdump","wt").write(hexdump.hexdump(msg_bytes))
                     print(msg_raw_pb_parse,file=open(msg_path_prefix + ".raw_pb_parse.txt","wt"))
 
                 message=None
