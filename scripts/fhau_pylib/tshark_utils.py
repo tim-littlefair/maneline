@@ -19,6 +19,8 @@ def _run_tshark_with_args(btsnoop_log_bytes,tshark_args):
         capture_output = True,
         timeout = 10
     )
+    if len(completed_process.stderr)>0:
+        print(str(completed_process.stderr,"UTF-8"))
     assert completed_process.returncode==0
     assert len(completed_process.stderr)==0
     return str(completed_process.stdout, "UTF-8")
@@ -53,3 +55,16 @@ def extract_values_from_btsnoop_log_bytes(btsnoop_log_bytes):
     ).split("\n")
     return tshark_output_lines
 
+def extract_csv(btsnoop_log_bytes, field_list=",".join([
+    "frame.number,frame.time_relative",
+    "hci_h4.direction,hci_h4.type,bthci_cmd.opcode,bthci_evt.code,bthci_evt.opcode",
+    "btatt.opcode,btatt.handle,btatt.value"
+])):
+    tshark_args = [ "-Tfields", "-Eseparator=," ]
+    tshark_args += [
+        "-e"+ field_name for field_name in field_list.split(",")
+    ]
+    print(tshark_args)
+    return _run_tshark_with_args(
+        btsnoop_log_bytes, tshark_args
+    )

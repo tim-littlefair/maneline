@@ -33,6 +33,7 @@ def extract_logstreams_from_bugreport(brzippath):
                 print(f"{brzippath} does not contain {fn}")
     return retval
 
+
 def dump_requests_and_responses(btsnoop_log_bytes, outdir, msg_len_histogram, req_num):
     global req_seq, rsp_seq, message, message_id
     lb_lines = tshark_utils.extract_values_from_btsnoop_log_bytes(btsnoop_log_bytes)
@@ -112,6 +113,7 @@ def dump_requests_and_responses(btsnoop_log_bytes, outdir, msg_len_histogram, re
                 if rsp_seq is not None:
                     rsp_seq+=1
             break
+        open(outdir + "/packets.csv","wt").write(tshark_utils.extract_csv(btsnoop_log_bytes))
 
 if __name__ == "__main__":
     # TODO:
