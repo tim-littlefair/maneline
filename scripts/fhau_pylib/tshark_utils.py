@@ -6,8 +6,13 @@
 # Wireshark-format dumps using the Wireshark CLI tool tshark.
 
 import calendar
-import subprocess
 import re
+import subprocess
+import sys
+
+class TsharkExtractionException(Exception):
+    def __init__(self, exception_message, ):
+        super(TsharkExtractionException, self).__init__(exception_message)
 
 _TIMESTAMP_PATTERN = re.compile(r"(\w+)\s+(\d+), 20(\d+) (\d+:\d+:\d+)\.\d+ (\w+)")
 
@@ -41,13 +46,33 @@ def extract_time_range_from_capture(capture_bytes):
         capture_bytes,
         ["-Tfields", "-eframe.time"]
     ).split("\n")
-    begin_match = _TIMESTAMP_PATTERN.search(tshark_output_lines[0]);
+    begin_match = _TIMESTAMP_PATTERN.search(tshark_output_lines[0])
+    if begin_match is None:
+        exception_message = f"\n".join([
+            "Failed to find begin timestamp in line:",
+            tshark_output_lines[0]
+        ])
+        print(exception_message,file=sys.stderr)
+        # raise TsharkExtractionException(exception_message)
+        return None
+        #raise TsharkExtractionException(f"\n".join([
+        #    "Failed to find begin timestamp in line:",
+        #    tshark_output_lines[0]
+        #]))
     run_date = begin_match.group(3) + begin_match.group(1) + begin_match.group(2)
     for i in range(1,13):
         run_date=run_date.replace(calendar.month_abbr[i],"%02d"%(i,))
     run_begin_tod = begin_match.group(4).replace(":", "")
     run_tz = begin_match.group(5)
     end_match = _TIMESTAMP_PATTERN.search(tshark_output_lines[-2]);
+    if end_match is None:
+        exception_message = f"\n".join([
+            "Failed to find end timestamp in line:",
+            tshark_output_lines[0]
+        ])
+        print(exception_message,file=sys.stderr)
+        # raise TsharkExtractionException(exception_message)
+        return None
     run_end_tod = end_match.group(4).replace(":", "")
     return run_date + "_" + run_begin_tod + "-" + run_end_tod + "_" + run_tz
 
