@@ -13,5 +13,7 @@ public class MessageConstants_LT40S {
 
     public static void main(String[] args) {
         System.out.println("HW");
+
+
     }
 }

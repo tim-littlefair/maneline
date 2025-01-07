@@ -4,9 +4,20 @@ package net.heretical_camelid.fhau.lib;
 public class RawProtobufUtilities {
 
 
-    public static final int getMainMessageTag(byte[] pbuf_array) {
-        // assert mpd==MustangProtobufDialect.MPD_LT40S;
-        return 0;
+    public static final int getMainMessageTag(String messageAsHex) {
+        final int retval;
+        if(messageAsHex.substring(0,4).equals("0800")) {
+            int viBounds[] = new int[] { 0x02, };
+            int tagAndType = extractVarint(hexToBytes(messageAsHex),viBounds);
+            assert (tagAndType & 0x07) == 2: "Unexpected main message type";
+            retval = (tagAndType & 0xFFFFFFF8) >> 3;
+        } else {
+            throw new UnsupportedOperationException(String.format(
+                "message prefix is %s, the only supported prefix at present is %s",
+                messageAsHex.substring(0,4), "0800"
+            ));
+        }
+        return retval;
     };
 
     public static byte[] hexToBytes(String hexString) {
@@ -20,17 +31,16 @@ public class RawProtobufUtilities {
         return retval;
     }
     private static int extractVarint(byte[] pbuf_array, int viBounds[]) {
-        assert viBounds[0] == viBounds[1];
         assert viBounds[0] < pbuf_array.length;
         int viValue = 0;
         int itemMultiplier = 1;
-        while( ( ((byte)0x80)&pbuf_array[viBounds[1]] ) != (byte)0x00 ) {
-            viValue += itemMultiplier * (0x7F&pbuf_array[viBounds[1]]);
-            viBounds[1]+=1;
+        while( ( ((byte)0x80)&pbuf_array[viBounds[0]] ) != (byte)0x00 ) {
+            viValue += itemMultiplier * (0x7F&pbuf_array[viBounds[0]]);
+            viBounds[0]+=1;
             itemMultiplier <<=7;
         }
-        viValue += itemMultiplier*pbuf_array[viBounds[1]];
-        viBounds[1]+=1;
+        viValue += itemMultiplier*pbuf_array[viBounds[0]];
+        viBounds[0]+=1;
         return viValue;
     }
 
@@ -54,25 +64,34 @@ public class RawProtobufUtilities {
             }
             System.out.println("hexToBytes ok");
 
-            System.out.println("Checking extract_varint");
+            System.out.println("Checking extractVarint");
             // Attempting to interpret the varint 8a 07 starting at
             // offset 2 into the message
-            int viBounds[] = { 2, 2 };
+            int viBounds[] = { 2 };
             int evResult = extractVarint(h2bExpected, viBounds);
             int evExpected = 906;
             assert evResult == evExpected: String.format(
                 "extractVarint returned unexpected value (actual:%d, expected:%d)",
                 evResult,evExpected
             );
-            // We expect that viBounds[1] has been updated as a side effect to reflect the
+            // We expect that viBounds[0] has been updated as a side effect to reflect the
             // number of bytes consumed to decode the varint
-            int viBounds1Expected = 4;
-            assert viBounds[1] == viBounds1Expected: String.format(
-                "extractVarint viBounds[1] unexpected value (actual:%d, expected:%d)",
-                viBounds[1],viBounds1Expected
+            int viBounds0Expected = 4;
+            assert viBounds[0] == viBounds0Expected: String.format(
+                "extractVarint viBounds[0] unexpected value (actual:%d, expected:%d)",
+                viBounds[0],viBounds0Expected
             );
-
             System.out.println("extractVarint ok");
+
+            System.out.println("checking getMainMessageTag");
+            int gmmtResult = getMainMessageTag(TEST_MESSAGE);
+            int gmmtExpected = 113;
+            assert gmmtResult == gmmtExpected: String.format(
+                "getMainMessageTag unexpected value (actual:%d, expected:%d)",
+                gmmtResult,gmmtExpected
+            );
+            System.out.println("getMainMessageTag ok");
+
 
         }
         catch(Exception e) {
