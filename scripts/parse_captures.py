@@ -26,6 +26,15 @@ import zipfile
 
 from fhau_pylib import pb_utils, tshark_utils, hexdump
 
+def log(message,is_error=False):
+    global _log_stream
+    prefix = ""
+    if is_error is True:
+        print(message, file=sys.stderr)
+        prefix = "STDERR: "
+    else:
+        print(message)
+    print(prefix + message, file=_log_stream)
 def extract_logstreams_from_adb_bugreport(bugreport_path):
     retval=[]
     with zipfile.ZipFile(bugreport_path, "r") as brzip:
@@ -49,11 +58,11 @@ def extract_logstreams_from_adb_bugreport(bugreport_path):
                 capture_bytes = brzip.read(f"{brzip_btlog_dirpath}/{fn}")
                 retval += [ [ capture_bytes, fn ], ]
             except KeyError:
-                print(f"{bugreport_path} does not contain {fn}",file=sys.stderr)
+                log(f"{bugreport_path} does not contain {fn}",is_error=True)
     if len(retval)==0:
-        print(f"No Bluetooth logs found in {fn}", file=sys.stderr)
-        print(f"Is this file an ADB bugreport?", file=sys.stderr)
-        print(f"Was Bluetooth snooping turned on in Developer options?", file=sys.stderr)
+        log(f"No Bluetooth logs found in {fn}", is_error=True)
+        log(f"Is this file an ADB bugreport?", is_error=True)
+        log(f"Was Bluetooth snooping turned on in Developer options?", is_error=True)
     return retval
 
 def extract_logstreams_from_capture(capture_path):
@@ -73,9 +82,9 @@ def extract_logstreams_from_capture(capture_path):
         time_range = tshark_utils.extract_time_range_from_capture(capture_bytes)
         capture_details += [ time_range ]
         if time_range is None:
-            print(f"No time range found for capture {capture_path_extended}",file=sys.stderr)
+            log(f"No time range found for capture {capture_path_extended}",is_error=True)
             continue
-        print(f"Processing file {capture_path_extended} covering time range {time_range}")
+        log(f"Processing file {capture_path_extended} covering time range {time_range}")
         tshark_utils.dump_capture(
             capture_bytes,
             outpath+"/"+time_range+".json",
@@ -152,19 +161,19 @@ def dump_requests_and_responses(capture_bytes, capture_type, time_range):
             if message is None:
                 message = b''
             message += packet_bytes[length_index+1:]
-            #print(f"{message_id}" + str(binascii.b2a_hex(message),'utf-8'))
+            message_prefix = message[0:packet_bytes[length_index]]
+            if len(message_prefix)>32:
+                message_prefix = message_prefix[0:32]
+            #logf"{message_id}" + str(binascii.b2a_hex(message),'utf-8'))
             if last_packet is False:
                 pass
             else:
                 if(len(message)>2):
                     msg_type = None
-                    msg_basename=".".join(["%02d"%(i,) for i in message_id])
+                    msg_basename="-report-".join(["%02d"%(i,) for i in message_id])
                     if len(message_id)==1:
-                        msg_type = "command"
-                        msg_basename += '-command'
-                    else:
-                        msg_type = "report"
-                    print(f"Saving {msg_type} {msg_basename}")
+                        msg_basename += '-command-' + str(binascii.b2a_hex(message_prefix),"utf-8")
+                    log(f"Saving {msg_basename} ({len(message)} bytes)")
                     msg_raw_pb_parse, msg_bytes = None, None
                     try:
                         msg_raw_pb_parse, msg_bytes = pb_utils.parse_message_frame(message)
@@ -196,6 +205,8 @@ if __name__ == "__main__":
 
     os.makedirs(outpath)
     print(f"Dumped data will be in {outpath}")
+    global _log_stream
+    _log_stream = open(outpath+"/log.txt","wt")
 
     for snoop_path in sys.argv[1:]:
         req_seq=0
@@ -212,8 +223,8 @@ if __name__ == "__main__":
                 ).write(tshark_utils.extract_csv(lb[0],lb[1]))
                 start_reqseq=req_seq
         except AssertionError as e:
-            print(req_seq, rsp_seq, message_id, message)
-            traceback.print_exception(e,limit=4)
+            print(",".join([req_seq, rsp_seq, message_id, message]),is_error=True)
+            traceback.print_exception(e,limit=4,file=_log_stream)
 
 
 

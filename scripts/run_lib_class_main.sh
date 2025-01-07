@@ -7,5 +7,5 @@
 
 javac -d _work lib/src/main/java/net/heretical_camelid/fhau/lib/$1.java
 
-java -cp _work net.heretical_camelid.fhau.lib.$1
+java -ea -cp _work net.heretical_camelid.fhau.lib.$1
 
