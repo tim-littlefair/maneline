@@ -1,7 +1,11 @@
 #! python3
 
-# tshark_utils.py
+# parse_captures.py
 # Author: Tim Littlefair (https://github.com/tim-littlefair)
+# COPYRIGHT: 
+# To the extent possible, the intent of the author Tim Littlefair 
+# is that this script should become part of the public domain.
+
 # Library of functions useful in performing extractions from
 # Wireshark-format dumps using the Wireshark CLI tool tshark.
 

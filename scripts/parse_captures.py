@@ -2,6 +2,10 @@
 
 # parse_captures.py
 # Author: Tim Littlefair (https://github.com/tim-littlefair)
+# COPYRIGHT: 
+# To the extent possible, the intent of the author Tim Littlefair 
+# is that this script should become part of the public domain.
+
 # Script to extract traffic between one of the Fender Tone
 # applications and a Fender device.
 # As of this version, the script can parse wireshark format
@@ -16,6 +20,7 @@
 #   Wireshark running on Windows Virtual Box VM)
 # + Fender Tone for Android driving Mustang Micro Plus (using Developer
 #   Mode Bluetooth Snoop on Android)
+
 
 import binascii
 import os

@@ -1,7 +1,11 @@
 #! python3
 
-# protobuf_utils.py
+# parse_captures.py
 # Author: Tim Littlefair (https://github.com/tim-littlefair)
+# COPYRIGHT: 
+# To the extent possible, the intent of the author Tim Littlefair 
+# is that this script should become part of the public domain.
+
 
 import enum
 import subprocess
@@ -86,54 +90,55 @@ def _extract_varint(byte_stream):
 
 
 ## Unit tests
-import pytest
+if __name__ == "__main__":
+    import pytest
 
-def test_extract_varint_01():
-    value, remaining_bytes = _extract_varint(b'\x01')
-    assert value==1
-    assert remaining_bytes == b''
+    def test_extract_varint_01():
+        value, remaining_bytes = _extract_varint(b'\x01')
+        assert value==1
+        assert remaining_bytes == b''
 
-def test_extract_varint_7f():
-    value, remaining_bytes = _extract_varint(b'\x7f')
-    assert value==127
-    assert remaining_bytes == b''
+    def test_extract_varint_7f():
+        value, remaining_bytes = _extract_varint(b'\x7f')
+        assert value==127
+        assert remaining_bytes == b''
 
-def test_extract_varint_80():
-    # Invalid input stream - if varint contains byte >= 0x80
-    # that must not be the last byte
-    with pytest.raises(IndexError):
-        value, remaining_bytes = _extract_varint(b'\x80')
+    def test_extract_varint_80():
+        # Invalid input stream - if varint contains byte >= 0x80
+        # that must not be the last byte
+        with pytest.raises(IndexError):
+            value, remaining_bytes = _extract_varint(b'\x80')
 
-def test_extract_varint_8000():
-    # valid but stupid way of encoding 0
-    value, remaining_bytes = _extract_varint(b'\x80\x00')
-    assert value==0
-    assert remaining_bytes == b''
+    def test_extract_varint_8000():
+        # valid but stupid way of encoding 0
+        value, remaining_bytes = _extract_varint(b'\x80\x00')
+        assert value==0
+        assert remaining_bytes == b''
 
-def test_extract_varint_8001():
-    value, remaining_bytes = _extract_varint(b'\x80\x01')
-    assert value==128
-    assert remaining_bytes == b''
+    def test_extract_varint_8001():
+        value, remaining_bytes = _extract_varint(b'\x80\x01')
+        assert value==128
+        assert remaining_bytes == b''
 
-def test_extract_varint_8101():
-    value, remaining_bytes = _extract_varint(b'\x81\x01')
-    assert value==129
-    assert remaining_bytes == b''
+    def test_extract_varint_8101():
+        value, remaining_bytes = _extract_varint(b'\x81\x01')
+        assert value==129
+        assert remaining_bytes == b''
 
-def test_extract_varint_ff7f():
-    value, remaining_bytes = _extract_varint(b'\xff\x7f')
-    assert value==16383
-    assert remaining_bytes == b''
+    def test_extract_varint_ff7f():
+        value, remaining_bytes = _extract_varint(b'\xff\x7f')
+        assert value==16383
+        assert remaining_bytes == b''
 
-def test_extract_varint_ffff():
-    # Invalid input stream - if varint contains byte >= 0x80
-    # that must not be the last byte
-    with pytest.raises(IndexError):
-        value, remaining_bytes = _extract_varint(b'\xff\xff')
+    def test_extract_varint_ffff():
+        # Invalid input stream - if varint contains byte >= 0x80
+        # that must not be the last byte
+        with pytest.raises(IndexError):
+            value, remaining_bytes = _extract_varint(b'\xff\xff')
 
-def test_extract_varint_ffff7f():
-    value, remaining_bytes = _extract_varint(b'\xff\xff\x7f')
-    assert value==2097151
-    assert remaining_bytes == b''
+    def test_extract_varint_ffff7f():
+        value, remaining_bytes = _extract_varint(b'\xff\xff\x7f')
+        assert value==2097151
+        assert remaining_bytes == b''
 
 

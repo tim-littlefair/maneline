@@ -1,7 +1,11 @@
 #! python3
 
-# tshark_utils.py
+# parse_captures.py
 # Author: Tim Littlefair (https://github.com/tim-littlefair)
+# COPYRIGHT: 
+# To the extent possible, the intent of the author Tim Littlefair 
+# is that this script should become part of the public domain.
+
 # Utility to dump binary data in a format comparable to 'hexdump -C'.
 # TODO: Re-implement so that Windows users can run scripts that use this.
 
