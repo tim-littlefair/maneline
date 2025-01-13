@@ -15,17 +15,18 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.benlypan.usbhid.OnUsbHidDeviceListener;
 import com.benlypan.usbhid.UsbHidDevice;
 
+import net.heretical_camelid.fhau.lib.AmpManager;
+import net.heretical_camelid.fhau.lib.IAmpProvider;
 import net.heretical_camelid.fhau.lib.PresetInfo;
 import net.heretical_camelid.fhau.lib.PresetRecord;
 import net.heretical_camelid.fhau.lib.SimulatorAmpProvider;
-import net.heretical_camelid.fhau.lib.IAmpProvider;
 
 public class MainActivity
         extends AppCompatActivity
         implements PresetInfo.IVisitor, OnUsbHidDeviceListener
 {
 
-    IAmpProvider m_provider = null;
+    AmpManager m_ampManager = null;
     Button m_btnConnectionStatus;
     StringBuilder m_sbLog;
     TextView m_tvLog;
@@ -41,6 +42,8 @@ public class MainActivity
     }
 
     int m_lastPresetInUse = 0;
+
+    int m_piSlotIndex = -1;
     final static int MAX_PRESET = 3;
 
     @Override
@@ -70,7 +73,7 @@ public class MainActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        m_provider = null;
+        m_ampManager = null;
 
         m_sbLog = new StringBuilder();
         m_tvLog = (TextView) findViewById(R.id.tv_log);
@@ -88,9 +91,15 @@ public class MainActivity
     }
 
     private void connect() {
-        if (m_provider == null) {
-            m_provider = new AndroidUsbAmpProvider(this);
+        appendToLog("Starting");
+        if (m_ampManager == null) {
+            // m_provider = new AndroidUsbAmpProvider(this);
+            IAmpProvider provider = new SimulatorAmpProvider(
+                SimulatorAmpProvider.SimulationMode.NO_DEVICE
+            );
+            m_ampManager = new AmpManager(provider);
         }
+        m_ampManager.getPresets().acceptVisitor(this);
 
         /*
         for(int i=0; i<commandHexStrings.length; ++i)
@@ -102,19 +111,7 @@ public class MainActivity
         }
         */
 
-        appendToLog("Starting");
-        boolean cxnSucceeded = m_provider.connect(m_sbLog);
         appendToLog("Started");
-    }
-
-    private void switchPreset(int whichSlot) {
-        String commandHexString = String.format(
-                "35:07:08:00:8a:02:02:08:%02x",
-                whichSlot
-        );
-        appendToLog(String.format("Requesting switch to preset %02d",whichSlot));
-        m_provider.sendCommand(commandHexString, m_sbLog);
-        appendToLog("Preset switch command sent");
     }
 
     @Override
@@ -132,12 +129,18 @@ public class MainActivity
         presetButton.setText(pr.m_name);
         presetButton.setEnabled(true);
         presetButton.setClickable(true);
-        presetButton.setOnClickListener((new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                switchPreset(pr.m_slotNumber);
-            }
-        }));
+        if(m_piSlotIndex==pr.m_slotNumber) {
+            presetButton.setAlpha(1.0F);
+            presetButton.setOnClickListener(null);
+        } else {
+            presetButton.setAlpha(0.5F);
+            presetButton.setOnClickListener((new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    m_ampManager.switchPreset(pr.m_slotNumber);
+                }
+            }));
+        }
     }
 
     @Override
@@ -173,12 +176,13 @@ public class MainActivity
                  */
         };
         appendToLog("Device HID connection succeeded");
+/*
         int i=0;
         try {
             for (i = 0; i < commandHexStrings.length; ++i) {
-                m_provider.sendCommand(commandHexStrings[i], m_sbLog);
+                m_ampManager.sendCommand(commandHexStrings[i], m_sbLog);
             }
-            PresetInfo pi = m_provider.getPresetInfo(null);
+            PresetInfo pi = m_ampManager.getPresetInfo(null);
             pi.acceptVisitor(this);
         }
         catch(Exception e) {
@@ -187,13 +191,15 @@ public class MainActivity
                     i, e.toString()
             ));
         }
+    */
     }
 
     @Override
     public void onUsbHidDeviceConnectFailed(UsbHidDevice device) {
         appendToLog("Failed to connect to physical amp, trying simulator...");
-        m_provider = new SimulatorAmpProvider(SimulatorAmpProvider.SimulationMode.NO_DEVICE);
-        m_provider.connect(m_sbLog);
+        m_ampManager = null;
+        IAmpProvider provider = new SimulatorAmpProvider(SimulatorAmpProvider.SimulationMode.NO_DEVICE);
+        m_ampManager = new AmpManager(provider);
         appendToLog(null);
     }
 }

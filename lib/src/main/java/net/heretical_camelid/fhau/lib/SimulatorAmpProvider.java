@@ -74,6 +74,13 @@ public class SimulatorAmpProvider implements IAmpProvider {
                 PresetRecord pr2 = new PresetRecord("WARM SOUND",2);
                 pr2.m_state = PresetRecord.PresetState.ACCEPTED;
                 m_presetInfo.add(pr2);
+
+                // We want to support sparse instances of PresetInfo, so
+                // this one is an example
+                PresetRecord pr5 = new PresetRecord("SPARSE SOUND",5);
+                pr5.m_state = PresetRecord.PresetState.ACCEPTED;
+                m_presetInfo.add(pr5);
+
                 break;
 
             case LT40S:
