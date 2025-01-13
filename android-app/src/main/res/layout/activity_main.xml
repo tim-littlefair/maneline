@@ -15,31 +15,16 @@
         android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
 
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/btn_cxn_status"
+        app:layout_constraintBottom_toTopOf="@id/tbl_presets"
 
         app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
-
-    <Button
-        android:id="@+id/btn_cxn_status"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="2sp"
-        android:backgroundTint="@color/fhauAmber"
-        android:text="@string/press_to_connect"
-        android:textSize="20sp"
-        app:layout_constraintBottom_toTopOf="@id/tbl_presets"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toolbar_fhau"
-
-        />
 
 
     <TableLayout
         android:id="@+id/tbl_presets"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/btn_cxn_status"
+        app:layout_constraintTop_toBottomOf="@id/toolbar_fhau"
         app:layout_constraintBottom_toTopOf="@id/tv_log"
         >
 
@@ -139,10 +124,11 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:gravity="fill"
+        android:gravity="top"
         android:scrollbarSize="10dp"
         android:scrollbars="vertical"
         android:textSize="20sp"
+        android:background="@color/fhauCyan"
 
         app:layout_constraintBottom_toTopOf="@id/tbl_simulator"
         app:layout_constraintEnd_toEndOf="parent"
@@ -155,7 +141,11 @@
         android:id="@+id/tbl_simulator"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:gravity="fill"
         app:layout_constraintTop_toBottomOf="@id/tv_log"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         >
 
@@ -163,75 +153,30 @@
             android:id="@id/tbl_simulator"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="fill"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             >
 
-            <TextView
-                android:id="@+id/lbl_amp_name"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="0"
-                android:text="Amp Model: "
-
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="@id/tv_amp_name"
-                />
-            <EditText
-                android:id="@+id/tv_amp_name"
+            <Button
+                android:id="@+id/btn_cxn_status"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:inputType="text"
-                android:text="FHAU Simulated Amplifier"
-                app:layout_constraintStart_toEndOf="@id/lbl_amp_name"
-                app:layout_constraintEnd_toEndOf="@id/parent"
-                />
-            </TableRow>
-
-        <TableRow>
-            <TextView
-                android:id="@+id/lbl_slot_number_1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="0"
-                android:text="SLOT 01: "
-
+                android:gravity="fill"
+                android:layout_margin="2sp"
+                android:backgroundTint="@color/fhauAmber"
+                android:text="@string/press_to_connect"
+                android:textSize="20sp"
+                app:layout_constraintBottom_toTopOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toStartOf="@id/et_slot_name_1"
+                app:layout_constraintBottom_toBottomOf="parent"
+
                 />
 
-            <EditText
-                android:id="@+id/et_slot_name_1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:inputType="text"
-                android:text="COOL SOUND"
-                app:layout_constraintEnd_toEndOf="@id/parent"
-                app:layout_constraintStart_toEndOf="@id/lbl_slot_number_1" />
         </TableRow>
-
-        <TableRow>
-            <TextView
-                android:id="@+id/lbl_slot_number_2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="0"
-                android:text="SLOT 02: "
-
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toStartOf="@id/et_slot_name_2"
-                />
-
-            <EditText
-                android:id="@+id/et_slot_name_2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:inputType="text"
-                android:text="WARM SOUND"
-                app:layout_constraintEnd_toEndOf="@id/parent"
-                app:layout_constraintStart_toEndOf="@id/lbl_slot_number_2" />
-        </TableRow>
-
     </TableLayout>
 
 

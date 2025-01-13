@@ -14,6 +14,8 @@
         <item name="android:layout_height">match_parent</item>
         <item name="android:layout_weight">1</item>
         <item name="android:text">@string/unused_slot</item>
+        <item name="android:alpha">0.2</item>
+        <item name="android:textSize">20sp</item>
     </style>
 
 </resources>
