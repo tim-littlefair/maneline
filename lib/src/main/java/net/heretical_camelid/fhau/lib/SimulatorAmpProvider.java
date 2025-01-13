@@ -81,6 +81,10 @@ public class SimulatorAmpProvider implements IAmpProvider {
                 pr5.m_state = PresetRecord.PresetState.ACCEPTED;
                 m_presetInfo.add(pr5);
 
+                PresetRecord pr10 = new PresetRecord("NEW SOUND",10);
+                pr10.m_state = PresetRecord.PresetState.TENTATIVE;
+                m_presetInfo.add(pr10);
+
                 break;
 
             case LT40S:

@@ -8,6 +8,8 @@
     <color name="fhauAmber">#FF9900</color>
     <color name="fhauGreen">#00CC00</color>
     <color name="fhauCyan">#44FFFF</color>
+    <color name="fhauCream">#FFFFAA</color>
+    <color name="fhauBlue">#4444FF</color>
     <color name="fhauGrey">#AAAAAA</color>
 
 </resources>
