@@ -152,7 +152,17 @@ public class UsbHidDevice {
         mListener = listener;
         mHandler = new Handler(context.getMainLooper());
         if (!mUsbManager.hasPermission(mUsbDevice)) {
-            PendingIntent permissionIntent = PendingIntent.getBroadcast(context, 0, new Intent(ACTION_USB_PERMISSION), 0);
+            // TODO:
+            // As a courtesy, I should raise a Pull Request
+            // on the repository owned by GitHub user @benlypan
+            // which this library is copied from, to update the parameters
+            // here as required by modern Android SDKs targets
+            PendingIntent permissionIntent = PendingIntent.getBroadcast(
+                context,
+                0,
+                new Intent(ACTION_USB_PERMISSION),
+                PendingIntent.FLAG_IMMUTABLE
+            );
             IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
             context.registerReceiver(mUsbReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
             mUsbManager.requestPermission(mUsbDevice, permissionIntent);
