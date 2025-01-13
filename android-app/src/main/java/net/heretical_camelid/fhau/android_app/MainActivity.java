@@ -140,6 +140,10 @@ public class MainActivity
         }));
     }
 
+    @Override
+    public void setActivePresetIndex(int activePresetIndex) {
+
+    }
 
     @SuppressLint("DefaultLocale")
     @Override
@@ -188,7 +192,7 @@ public class MainActivity
     @Override
     public void onUsbHidDeviceConnectFailed(UsbHidDevice device) {
         appendToLog("Failed to connect to physical amp, trying simulator...");
-        m_provider = new SimulatorAmpProvider();
+        m_provider = new SimulatorAmpProvider(SimulatorAmpProvider.SimulationMode.NO_DEVICE);
         m_provider.connect(m_sbLog);
         appendToLog(null);
     }
