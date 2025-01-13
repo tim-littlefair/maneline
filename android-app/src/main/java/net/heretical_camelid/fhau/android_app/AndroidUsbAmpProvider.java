@@ -5,18 +5,18 @@ import android.hardware.usb.UsbDevice;
 import com.benlypan.usbhid.UsbHidDevice;
 
 import net.heretical_camelid.fhau.lib.ByteArrayTranslator;
-import net.heretical_camelid.fhau.lib.IAmplifierProvider;
+import net.heretical_camelid.fhau.lib.IAmpProvider;
 import net.heretical_camelid.fhau.lib.PresetInfo;
 import net.heretical_camelid.fhau.lib.PresetRecord;
 
 import java.util.regex.Pattern;
 
-public class AndroidUsbAmplifierProvider implements IAmplifierProvider {
+public class AndroidUsbAmpProvider implements IAmpProvider {
     UsbHidDevice m_device;
     UsbDevice m_usbDevice;
     MainActivity m_mainActivity;
 
-    AndroidUsbAmplifierProvider(MainActivity mainActivity) {
+    AndroidUsbAmpProvider(MainActivity mainActivity) {
         m_mainActivity = mainActivity;
     }
     @Override

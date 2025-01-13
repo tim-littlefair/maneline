@@ -2,7 +2,7 @@ package net.heretical_camelid.fhau.lib;
 
 import java.util.regex.Pattern;
 
-public class SimulatorAmplifierProvider implements IAmplifierProvider {
+public class SimulatorAmpProvider implements IAmpProvider {
 
     @Override
     public boolean connect(StringBuilder sb) {

@@ -1,6 +1,6 @@
 package net.heretical_camelid.fhau.desktop_app;
 
-import net.heretical_camelid.fhau.lib.IAmplifierProvider;
+import net.heretical_camelid.fhau.lib.IAmpProvider;
 import net.heretical_camelid.fhau.lib.PresetInfo;
 
 import org.usb4java.Device;
@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
  * ref: http://usb4java.org/quickstart/libusb.html
  */
 public class DesktopUsbAmpProvider2
-        implements IAmplifierProvider
+        implements IAmpProvider
 {
     enum InitializationPhase {
         INITIAL,

@@ -1,7 +1,7 @@
 package net.heretical_camelid.fhau.desktop_app;
 
 import net.heretical_camelid.fhau.lib.ByteArrayTranslator;
-import net.heretical_camelid.fhau.lib.IAmplifierProvider;
+import net.heretical_camelid.fhau.lib.IAmpProvider;
 import net.heretical_camelid.fhau.lib.PresetInfo;
 
 import com.sun.jna.Platform;
@@ -12,13 +12,12 @@ import org.hid4java.HidServices;
 import org.hid4java.HidServicesListener;
 import org.hid4java.HidServicesSpecification;
 import org.hid4java.event.HidServicesEvent;
-import org.hid4java.jna.HidDeviceInfoStructure;
 
 import java.io.PrintStream;
 import java.util.regex.Pattern;
 
 public class DesktopUsbAmpProvider
-        implements IAmplifierProvider, HidServicesListener
+        implements IAmpProvider, HidServicesListener
 {
     final private static int VID_FMIC = 0x1ed8;
     HidDevice m_fmicAmp;

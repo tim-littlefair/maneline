@@ -17,15 +17,15 @@ import com.benlypan.usbhid.UsbHidDevice;
 
 import net.heretical_camelid.fhau.lib.PresetInfo;
 import net.heretical_camelid.fhau.lib.PresetRecord;
-import net.heretical_camelid.fhau.lib.SimulatorAmplifierProvider;
-import net.heretical_camelid.fhau.lib.IAmplifierProvider;
+import net.heretical_camelid.fhau.lib.SimulatorAmpProvider;
+import net.heretical_camelid.fhau.lib.IAmpProvider;
 
 public class MainActivity
         extends AppCompatActivity
         implements PresetInfo.IVisitor, OnUsbHidDeviceListener
 {
 
-    IAmplifierProvider m_provider = null;
+    IAmpProvider m_provider = null;
     Button m_btnConnectionStatus;
     StringBuilder m_sbLog;
     TextView m_tvLog;
@@ -89,7 +89,7 @@ public class MainActivity
 
     private void connect() {
         if (m_provider == null) {
-            m_provider = new AndroidUsbAmplifierProvider(this);
+            m_provider = new AndroidUsbAmpProvider(this);
         }
 
         /*
@@ -188,7 +188,7 @@ public class MainActivity
     @Override
     public void onUsbHidDeviceConnectFailed(UsbHidDevice device) {
         appendToLog("Failed to connect to physical amp, trying simulator...");
-        m_provider = new SimulatorAmplifierProvider();
+        m_provider = new SimulatorAmpProvider();
         m_provider.connect(m_sbLog);
         appendToLog(null);
     }
