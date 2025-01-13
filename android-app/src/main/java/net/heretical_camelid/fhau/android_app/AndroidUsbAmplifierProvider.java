@@ -1,13 +1,15 @@
 package net.heretical_camelid.fhau.android_app;
 
-import android.content.Context;
 import android.hardware.usb.UsbDevice;
-import com.benlypan.usbhid.OnUsbHidDeviceListener;
+
 import com.benlypan.usbhid.UsbHidDevice;
 
 import net.heretical_camelid.fhau.lib.ByteArrayTranslator;
 import net.heretical_camelid.fhau.lib.IAmplifierProvider;
 import net.heretical_camelid.fhau.lib.PresetInfo;
+import net.heretical_camelid.fhau.lib.PresetRecord;
+
+import java.util.regex.Pattern;
 
 public class AndroidUsbAmplifierProvider implements IAmplifierProvider {
     UsbHidDevice m_device;
@@ -43,7 +45,7 @@ public class AndroidUsbAmplifierProvider implements IAmplifierProvider {
     }
 
     @Override
-    public byte[] sendCommandAndReceiveResponse(String commandHexString, StringBuilder sb) {
+    public void sendCommand(String commandHexString, StringBuilder sb) {
         m_device.write(ByteArrayTranslator.hexToBytes(commandHexString));
         byte[] responseBytes = m_device.read(64);
         sb.append("Sent " + commandHexString + "\n");
@@ -53,16 +55,20 @@ public class AndroidUsbAmplifierProvider implements IAmplifierProvider {
         } catch (InterruptedException e) {
             sb.append("sleep interrupted\n");
         }
-        return responseBytes;
     }
 
     @Override
-    public PresetInfo getPresets(PresetInfo requestedPresets) {
+    public void expectReports(Pattern[] reportHexStringPatterns, StringBuilder sb) {
+
+    }
+
+    @Override
+    public PresetInfo getPresetInfo(PresetInfo requestedPresets) {
         assert requestedPresets == null;
         PresetInfo retval = new PresetInfo();
-        PresetInfo.PresetRecord pr1 = new PresetInfo.PresetRecord("FENDER CLEAN",1);
-        PresetInfo.PresetRecord pr2 = new PresetInfo.PresetRecord("SILKY SOLO",2);
-        PresetInfo.PresetRecord pr3 = new PresetInfo.PresetRecord("CHICAGO BLUES",3);
+        PresetRecord pr1 = new PresetRecord("FENDER CLEAN",1);
+        PresetRecord pr2 = new PresetRecord("SILKY SOLO",2);
+        PresetRecord pr3 = new PresetRecord("CHICAGO BLUES",3);
         retval.add(pr1);
         retval.add(pr2);
         retval.add(pr3);

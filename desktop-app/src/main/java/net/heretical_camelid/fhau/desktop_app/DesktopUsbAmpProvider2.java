@@ -11,6 +11,7 @@ import org.usb4java.LibUsb;
 import org.usb4java.LibUsbException;
 
 import java.io.PrintStream;
+import java.util.regex.Pattern;
 
 /**
  * ref: http://usb4java.org/quickstart/libusb.html
@@ -166,7 +167,7 @@ public class DesktopUsbAmpProvider2
     }
 
     @Override
-    public byte[] sendCommandAndReceiveResponse(String commandHexString, StringBuilder sb) {
+    public void sendCommand(String commandHexString, StringBuilder sb) {
         /*
         byte[] commandBytes = ByteArrayTranslator.hexToBytes(commandHexString);
         sb.append("Sending " + commandHexString + "\n");
@@ -179,11 +180,15 @@ public class DesktopUsbAmpProvider2
         }
         return responseBytes;
          */
-        return null;
     }
 
     @Override
-    public PresetInfo getPresets(PresetInfo requestedPresets) {
+    public void expectReports(Pattern[] reportHexStringPatterns, StringBuilder sb) {
+
+    }
+
+    @Override
+    public PresetInfo getPresetInfo(PresetInfo requestedPresets) {
         return null;
     }
 }

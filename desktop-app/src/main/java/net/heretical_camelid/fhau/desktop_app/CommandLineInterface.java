@@ -47,9 +47,9 @@ public class CommandLineInterface {
                 System.out.println("Interrupted sleep!");
             }
             logSb = new StringBuilder();
-            byte[] bytesReceived = provider.sendCommandAndReceiveResponse(commandHexString, logSb);
+            provider.sendCommand(commandHexString, logSb);
             System.out.println(logSb.toString());
-            statusOk = (bytesReceived!=null);
+            // statusOk = (bytesReceived!=null);
         }
         System.exit(0);
     }

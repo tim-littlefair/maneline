@@ -15,6 +15,7 @@ import org.hid4java.event.HidServicesEvent;
 import org.hid4java.jna.HidDeviceInfoStructure;
 
 import java.io.PrintStream;
+import java.util.regex.Pattern;
 
 public class DesktopUsbAmpProvider
         implements IAmplifierProvider, HidServicesListener
@@ -136,7 +137,7 @@ public class DesktopUsbAmpProvider
     }
 
     @Override
-    public byte[] sendCommandAndReceiveResponse(String commandHexString, StringBuilder sb) {
+    public void sendCommand(String commandHexString, StringBuilder sb) {
         byte[] commandBytes = ByteArrayTranslator.hexToBytes(commandHexString);
         sb.append("Sending " + commandHexString + "\n");
         m_fmicAmp.write(commandBytes,64,(byte) 0x00,true);
@@ -146,11 +147,15 @@ public class DesktopUsbAmpProvider
         } else {
             sb.append("Receive error: " + m_fmicAmp.getLastErrorMessage());
         }
-        return responseBytes;
     }
 
     @Override
-    public PresetInfo getPresets(PresetInfo requestedPresets) {
+    public void expectReports(Pattern[] reportHexStringPatterns, StringBuilder sb) {
+
+    }
+
+    @Override
+    public PresetInfo getPresetInfo(PresetInfo requestedPresets) {
         return null;
     }
 

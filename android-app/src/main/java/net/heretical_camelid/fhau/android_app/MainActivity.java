@@ -16,6 +16,7 @@ import com.benlypan.usbhid.OnUsbHidDeviceListener;
 import com.benlypan.usbhid.UsbHidDevice;
 
 import net.heretical_camelid.fhau.lib.PresetInfo;
+import net.heretical_camelid.fhau.lib.PresetRecord;
 import net.heretical_camelid.fhau.lib.SimulatorAmplifierProvider;
 import net.heretical_camelid.fhau.lib.IAmplifierProvider;
 
@@ -112,12 +113,12 @@ public class MainActivity
                 whichSlot
         );
         appendToLog(String.format("Requesting switch to preset %02d",whichSlot));
-        m_provider.sendCommandAndReceiveResponse(commandHexString, m_sbLog);
-        appendToLog("Preset switch request completed");
+        m_provider.sendCommand(commandHexString, m_sbLog);
+        appendToLog("Preset switch command sent");
     }
 
     @Override
-    public void visit(PresetInfo.PresetRecord pr) {
+    public void visit(PresetRecord pr) {
         if (m_lastPresetInUse == MAX_PRESET) {
             return;
         }
@@ -140,6 +141,7 @@ public class MainActivity
     }
 
 
+    @SuppressLint("DefaultLocale")
     @Override
     public void onUsbHidDeviceConnected(UsbHidDevice device) {
         String[] commandHexStrings = new String[]{
@@ -170,9 +172,9 @@ public class MainActivity
         int i=0;
         try {
             for (i = 0; i < commandHexStrings.length; ++i) {
-                m_provider.sendCommandAndReceiveResponse(commandHexStrings[i], m_sbLog);
+                m_provider.sendCommand(commandHexStrings[i], m_sbLog);
             }
-            PresetInfo pi = m_provider.getPresets(null);
+            PresetInfo pi = m_provider.getPresetInfo(null);
             pi.acceptVisitor(this);
         }
         catch(Exception e) {

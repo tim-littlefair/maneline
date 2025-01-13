@@ -4,8 +4,7 @@ android {
     compileSdk 35
     defaultConfig {
         applicationId "net.heretical_camelid.fhau.android_app"
-        minSdkVersion 21
-        compileSdkVersion 35
+        minSdkVersion 26
         versionCode 1
         versionName "1.0"
     }
