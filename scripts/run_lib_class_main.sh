@@ -5,7 +5,7 @@
 # lib/src/main/java/net/heretical_camelid/fhau/lib by adding a
 # public static void main(String[] args) to those classes
 
-javac -d _work lib/src/main/java/net/heretical_camelid/fhau/lib/$1.java
-
-java -ea -cp _work net.heretical_camelid.fhau.lib.$1
+rm _work/net/heretical_camelid/fhau/lib/$1.class
+javac -cp ./_work -d ./_work lib/src/main/java/net/heretical_camelid/fhau/lib/$1.java
+java -cp ./_work -ea  net.heretical_camelid.fhau.lib.$1
 
