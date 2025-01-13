@@ -44,7 +44,7 @@ public class MainActivity
     int m_lastPresetInUse = 0;
 
     int m_piSlotIndex = -1;
-    final static int MAX_PRESET = 3;
+    final static int MAX_PRESET = 9;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -129,11 +129,30 @@ public class MainActivity
         presetButton.setText(pr.m_name);
         presetButton.setEnabled(true);
         presetButton.setClickable(true);
+        int buttonColour = R.color.fhauGrey;
+        switch(pr.m_state) {
+            case ACCEPTED:
+                buttonColour = R.color.fhauGreen;
+                break;
+            case TENTATIVE:
+                buttonColour = R.color.fhauAmber;
+                break;
+            default:
+                m_tvLog.append(String.format(
+                    "Cannot offer preset with slot=%d, name='%s' because it is in state %s",
+                    pr.m_slotNumber, pr.m_name, pr.m_state
+                ));
+                m_lastPresetInUse--;
+                return;
+        }
+        presetButton.setBackgroundColor(
+            getResources().getColor(buttonColour,null)
+        );
         if(m_piSlotIndex==pr.m_slotNumber) {
-            presetButton.setAlpha(1.0F);
+            presetButton.setAlpha(0.5F);
             presetButton.setOnClickListener(null);
         } else {
-            presetButton.setAlpha(0.5F);
+            presetButton.setAlpha(1.0F);
             presetButton.setOnClickListener((new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
