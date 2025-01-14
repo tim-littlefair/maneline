@@ -130,7 +130,7 @@ public class DesktopUsbAmpProvider2
         }
  */
     @Override
-    public boolean connect(StringBuilder sb) {
+    public boolean connect() {
         boolean retval = false;
 /*
         if (m_fmicAmp == null) {
@@ -167,7 +167,7 @@ public class DesktopUsbAmpProvider2
     }
 
     @Override
-    public void sendCommand(String commandHexString, StringBuilder sb) {
+    public void sendCommand(String commandHexString) {
         /*
         byte[] commandBytes = ByteArrayTranslator.hexToBytes(commandHexString);
         sb.append("Sending " + commandHexString + "\n");
@@ -183,7 +183,7 @@ public class DesktopUsbAmpProvider2
     }
 
     @Override
-    public void expectReports(Pattern[] reportHexStringPatterns, StringBuilder sb) {
+    public void expectReports(Pattern[] reportHexStringPatterns) {
 
     }
 

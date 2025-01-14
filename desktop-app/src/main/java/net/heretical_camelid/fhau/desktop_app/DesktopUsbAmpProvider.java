@@ -1,7 +1,9 @@
 package net.heretical_camelid.fhau.desktop_app;
 
 import net.heretical_camelid.fhau.lib.ByteArrayTranslator;
+import net.heretical_camelid.fhau.lib.DefaultLoggingAgent;
 import net.heretical_camelid.fhau.lib.IAmpProvider;
+import net.heretical_camelid.fhau.lib.ILoggingAgent;
 import net.heretical_camelid.fhau.lib.PresetInfo;
 
 import com.sun.jna.Platform;
@@ -20,12 +22,15 @@ public class DesktopUsbAmpProvider
         implements IAmpProvider, HidServicesListener
 {
     final private static int VID_FMIC = 0x1ed8;
+    static ILoggingAgent s_loggingAgent;
     HidDevice m_fmicAmp;
 
-    public DesktopUsbAmpProvider(PrintStream out) {
-        out.println("Platform architecture: " + Platform.ARCH);
-        out.println("Resource prefix: " + Platform.RESOURCE_PREFIX);
-        out.println("Libusb activation: " + Platform.isLinux());
+    public DesktopUsbAmpProvider() {
+        s_loggingAgent = new DefaultLoggingAgent();
+        
+        s_loggingAgent.appendToLog(0,"Platform architecture: " + Platform.ARCH);
+        s_loggingAgent.appendToLog(0,"Resource prefix: " + Platform.RESOURCE_PREFIX);
+        s_loggingAgent.appendToLog(0,"Libusb activation: " + Platform.isLinux());
         HidServicesSpecification hidServicesSpecification = new HidServicesSpecification();
 // /*
         hidServicesSpecification.setAutoStart(true);
@@ -51,11 +56,11 @@ public class DesktopUsbAmpProvider
 
         waitForCondition("amp attached and opened",10000);
         if (m_fmicAmp==null) {
-            out.println("Amp not attached");
+            m_loggingAgent.appendToLog(0,"Amp not attached");
         } else if (m_fmicAmp.isClosed()) {
-            out.println("Amp not opened");
+            m_loggingAgent.appendToLog(0,"Amp not opened");
         } else {
-            out.println("Amp opened successfully");
+            m_loggingAgent.appendToLog(0,"Amp opened successfully");
         }
 */
         /*
@@ -75,31 +80,31 @@ public class DesktopUsbAmpProvider
                 hdis.interface_number = 0;
                 m_fmicAmp = hidDevice; // new HidDevice(hdis, hidServices, new HidManager())
 
-                out.println(String.format(
+                m_loggingAgent.appendToLog(0,String.format(
                         "Fender amplifier found with VID:PID=%04x:%04x serial=%s",
                         hidDevice.getVendorId(), hidDevice.getProductId(),
                         hidDevice.getSerialNumber()
                 ));
-                out.println(String.format("Report:\n%s",m_fmicAmp.toString()));
+                m_loggingAgent.appendToLog(0,String.format("Report:\n%s",m_fmicAmp.toString()));
                 break;
             }
         }
         if (m_fmicAmp == null) {
-           out.println("Fender amplifier not found");
+           m_loggingAgent.appendToLog(0,"Fender amplifier not found");
         }
          */
     }
     @Override
-    public boolean connect(StringBuilder sb) {
+    public boolean connect() {
         boolean retval = false;
         if (m_fmicAmp == null) {
-            sb.append("Fender amplifier not attached");
+            s_loggingAgent.appendToLog(0,"Fender amplifier not attached");
         } else if (m_fmicAmp.isClosed()) {
             openAmpInThread();
             waitForCondition("amp opened",10000);
         } else {
-            sb.append("Amp was open, has been closed, retry open");
-            sb.append("Last error message: " + m_fmicAmp.getLastErrorMessage());
+            s_loggingAgent.appendToLog(0,"Amp was open, has been closed, retry open");
+            s_loggingAgent.appendToLog(0,"Last error message: " + m_fmicAmp.getLastErrorMessage());
         }
         return retval;
     }
@@ -107,13 +112,13 @@ public class DesktopUsbAmpProvider
     private static void waitForCondition(String conditionDescription, int waitTimeMillis) {
         try {
             Thread.yield();
-            System.out.println("Waiting for " + conditionDescription);
+            s_loggingAgent.appendToLog(0,"Waiting for " + conditionDescription);
             Thread.yield();
             Thread.sleep(waitTimeMillis);
             Thread.yield();
-            System.out.println("Timed out waiting for " + conditionDescription);
+            s_loggingAgent.appendToLog(0,"Timed out waiting for " + conditionDescription);
         } catch (InterruptedException e) {
-            System.out.println("Interrupted waiting for " + conditionDescription);
+            s_loggingAgent.appendToLog(0,"Interrupted waiting for " + conditionDescription);
         }
     }
 
@@ -123,33 +128,33 @@ public class DesktopUsbAmpProvider
             public void run() {
                 boolean openSuccess = m_fmicAmp.open();
                 if(openSuccess==true) {
-                    System.out.println("open succeeded");
+                    s_loggingAgent.appendToLog(0,"open succeeded");
                 } else {
-                    System.out.println(
+                    s_loggingAgent.appendToLog(0,
                             "open failed with message " + m_fmicAmp.getLastErrorMessage()
                     );
                 }
             }
         }).start();
-        System.out.println("open started");
+        s_loggingAgent.appendToLog(0,"open started");
         Thread.yield();
     }
 
     @Override
-    public void sendCommand(String commandHexString, StringBuilder sb) {
+    public void sendCommand(String commandHexString) {
         byte[] commandBytes = ByteArrayTranslator.hexToBytes(commandHexString);
-        sb.append("Sending " + commandHexString + "\n");
+        s_loggingAgent.appendToLog(0,"Sending " + commandHexString + "\n");
         m_fmicAmp.write(commandBytes,64,(byte) 0x00,true);
         byte[] responseBytes = m_fmicAmp.readAll(1000);
         if(responseBytes!=null && responseBytes.length>0) {
-            sb.append("Received " + ByteArrayTranslator.bytesToHex(responseBytes));
+            s_loggingAgent.appendToLog(0,"Received " + ByteArrayTranslator.bytesToHex(responseBytes));
         } else {
-            sb.append("Receive error: " + m_fmicAmp.getLastErrorMessage());
+            s_loggingAgent.appendToLog(0,"Receive error: " + m_fmicAmp.getLastErrorMessage());
         }
     }
 
     @Override
-    public void expectReports(Pattern[] reportHexStringPatterns, StringBuilder sb) {
+    public void expectReports(Pattern[] reportHexStringPatterns) {
 
     }
 
@@ -163,20 +168,20 @@ public class DesktopUsbAmpProvider
         if(event.getHidDevice().getVendorId() == VID_FMIC) {
             m_fmicAmp = event.getHidDevice();
             try {
-                System.out.println("Waiting for amp to become open ...");
+                s_loggingAgent.appendToLog(0,"Waiting for amp to become open ...");
                 Thread.sleep(10000);
             } catch (InterruptedException e) {
-                System.out.println("Interrupted...");
+                s_loggingAgent.appendToLog(0,"Interrupted...");
             }
-            System.out.println("Amp has become attached");
+            s_loggingAgent.appendToLog(0,"Amp has become attached");
         } else {
-            System.out.println("Non-FMIC device attached: " + event.getHidDevice().toString());
+            s_loggingAgent.appendToLog(0,"Non-FMIC device attached: " + event.getHidDevice().toString());
         }
     }
 
     @Override
     public void hidDeviceDetached(HidServicesEvent event) {
-        System.out.println("Amp has become detached");
+        s_loggingAgent.appendToLog(0,"Amp has become detached");
     }
 
     @Override
@@ -188,14 +193,14 @@ public class DesktopUsbAmpProvider
     public void hidDataReceived(HidServicesEvent event) {
         byte[] responseBytes = event.getDataReceived();
         if(responseBytes!=null && responseBytes.length>0) {
-            System.out.println("hdrReceived " + ByteArrayTranslator.bytesToHex(responseBytes));
+            s_loggingAgent.appendToLog(0,"hdrReceived " + ByteArrayTranslator.bytesToHex(responseBytes));
         } else {
-            System.out.println("hdrReceive error: " + m_fmicAmp.getLastErrorMessage());
+            s_loggingAgent.appendToLog(0,"hdrReceive error: " + m_fmicAmp.getLastErrorMessage());
         }
         try {
             Thread.sleep(5000);
         } catch (InterruptedException e) {
-            System.out.println("hdrSleep interrupted");
+            s_loggingAgent.appendToLog(0,"hdrSleep interrupted");
         }
     }
 }

@@ -29,13 +29,8 @@ public class CommandLineInterface {
     };
 
     static public void main(String[] args)  {
-        DesktopUsbAmpProvider provider = new DesktopUsbAmpProvider(System.out);
-        StringBuilder logSb;
-
-        logSb = new StringBuilder();
-
-        boolean statusOk = provider.connect(logSb);
-        System.out.println(logSb.toString());
+        DesktopUsbAmpProvider provider = new DesktopUsbAmpProvider();
+        boolean statusOk = provider.connect();
 
         for (String commandHexString : commandHexStrings) {
             if(statusOk!=true) {
@@ -46,9 +41,7 @@ public class CommandLineInterface {
             } catch (InterruptedException e) {
                 System.out.println("Interrupted sleep!");
             }
-            logSb = new StringBuilder();
-            provider.sendCommand(commandHexString, logSb);
-            System.out.println(logSb.toString());
+            provider.sendCommand(commandHexString);
             // statusOk = (bytesReceived!=null);
         }
         System.exit(0);
