@@ -11,6 +11,9 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.MenuProvider;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleOwner;
 
 import com.benlypan.usbhid.OnUsbHidDeviceListener;
 import com.benlypan.usbhid.UsbHidDevice;
@@ -80,6 +83,8 @@ public class MainActivity
         m_btnConnectionStatus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                m_btnConnectionStatus.setOnClickListener(null);
+                m_btnConnectionStatus.setText("CONNECTED!");
                 connect();
             }
         });
@@ -90,6 +95,7 @@ public class MainActivity
         if (m_ampManager == null) {
             // m_provider = new AndroidUsbAmpProvider(this);
             IAmpProvider provider = new SimulatorAmpProvider(
+                m_loggingAgent,
                 SimulatorAmpProvider.SimulationMode.NO_DEVICE
             );
             m_ampManager = new AmpManager(provider);
@@ -211,8 +217,13 @@ public class MainActivity
     public void onUsbHidDeviceConnectFailed(UsbHidDevice device) {
         appendToLog("Failed to connect to physical amp, trying simulator...");
         m_ampManager = null;
-        IAmpProvider provider = new SimulatorAmpProvider(SimulatorAmpProvider.SimulationMode.NO_DEVICE);
+        IAmpProvider provider = new SimulatorAmpProvider(null, SimulatorAmpProvider.SimulationMode.NO_DEVICE);
         m_ampManager = new AmpManager(provider);
         appendToLog(null);
+    }
+
+    @Override
+    public void addMenuProvider(@NonNull MenuProvider provider, @NonNull LifecycleOwner owner, @NonNull Lifecycle.State state) {
+
     }
 }

@@ -6,6 +6,7 @@ public class AmpManager {
     PresetInfo m_presetInfo;
     public AmpManager(IAmpProvider provider) {
         m_provider = provider;
+        m_provider.connect();
     }
 
     public PresetInfo getPresets() {

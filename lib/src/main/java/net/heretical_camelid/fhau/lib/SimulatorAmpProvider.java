@@ -14,6 +14,7 @@ interface IDeviceDelegate {
     void startup();
 }
 public class SimulatorAmpProvider implements IAmpProvider {
+    private final ILoggingAgent m_loggingAgent;
     PresetInfo m_presetInfo;
 
     String m_deviceDescription = null;
@@ -57,7 +58,15 @@ public class SimulatorAmpProvider implements IAmpProvider {
         MMP
     }
 
-    public SimulatorAmpProvider(SimulationMode requiredMode) {
+    public SimulatorAmpProvider(
+        ILoggingAgent loggingAgent,
+        SimulationMode requiredMode
+    ) {
+        if(loggingAgent!=null) {
+            m_loggingAgent = loggingAgent;
+        } else {
+            m_loggingAgent = new DefaultLoggingAgent();
+        }
         PresetInfo pi = new PresetInfo();
         switch(requiredMode)
         {
@@ -66,28 +75,7 @@ public class SimulatorAmpProvider implements IAmpProvider {
                 m_presetInfo = new PresetInfo();
                 m_deviceDescription = "SimulatedAmplifier SN 123456";
                 m_firmwareVersion = "99.00.13";
-
-                PresetRecord pr1 = new PresetRecord("COOL SOUND",1);
-                pr1.m_state = PresetRecord.PresetState.ACCEPTED;
-                m_presetInfo.add(pr1);
-
-                PresetRecord pr2 = new PresetRecord("WARM SOUND",2);
-                pr2.m_state = PresetRecord.PresetState.ACCEPTED;
-                m_presetInfo.add(pr2);
-
-                // We want to support sparse instances of PresetInfo, so
-                // this one is an example
-                PresetRecord pr5 = new PresetRecord("SPARSE SOUND",5);
-                pr5.m_state = PresetRecord.PresetState.ACCEPTED;
-                m_presetInfo.add(pr5);
-
-                PresetRecord pr10 = new PresetRecord("NEW SOUND",10);
-                pr10.m_state = PresetRecord.PresetState.TENTATIVE;
-                m_presetInfo.add(pr10);
-
-                PresetRecord pr11 = new PresetRecord("NASTY SOUND",11);
-                pr11.m_state = PresetRecord.PresetState.REJECTED;
-                m_presetInfo.add(pr11);
+                m_presetInfo = PresetInfo.piMixedBag();
                 break;
 
             case LT40S:
@@ -99,16 +87,19 @@ public class SimulatorAmpProvider implements IAmpProvider {
         }
     }
     @Override
-    public boolean connect(StringBuilder sb) {
-        sb.append("Simulated device connected\n");
+    public boolean connect() {
+        m_loggingAgent.appendToLog(0,String.format(
+            "Connected to device '%s', firmware version '%s'",
+            m_deviceDescription, m_firmwareVersion
+        ));
         return true;
     }
 
     @Override
-    public void sendCommand(String commandHexString, StringBuilder sb) { }
+    public void sendCommand(String commandHexString) { }
 
     @Override
-    public void expectReports(Pattern[] reportHexStringPatterns, StringBuilder sb) {  }
+    public void expectReports(Pattern[] reportHexStringPatterns) {  }
 
     @Override
     public PresetInfo getPresetInfo(PresetInfo requestedPresets) {
@@ -117,7 +108,7 @@ public class SimulatorAmpProvider implements IAmpProvider {
     }
 
     public static void main(String[] args) {
-        SimulatorAmpProvider sap = new SimulatorAmpProvider(SimulationMode.NO_DEVICE);
+        SimulatorAmpProvider sap = new SimulatorAmpProvider(null, SimulationMode.NO_DEVICE);
         SimulatorAmpProvider.IVisitor testVisitor = new IVisitor() {
 
             @Override

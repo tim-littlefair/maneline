@@ -3,13 +3,11 @@ package net.heretical_camelid.fhau.lib;
 import java.util.regex.Pattern;
 
 public interface IAmpProvider {
-    boolean connect(
-        StringBuilder sb
-    );
+    boolean connect();
 
-    void sendCommand(String commandHexString, StringBuilder sb);
+    void sendCommand(String commandHexString);
 
-    void expectReports(Pattern[] reportHexStringPatterns, StringBuilder sb);
+    void expectReports(Pattern[] reportHexStringPatterns);
 
     PresetInfo getPresetInfo(PresetInfo requestedPresets);
 
