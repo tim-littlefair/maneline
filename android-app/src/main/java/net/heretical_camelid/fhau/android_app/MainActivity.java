@@ -27,18 +27,13 @@ public class MainActivity
 {
 
     AmpManager m_ampManager = null;
+
+    LoggingAgent m_loggingAgent = null;
     Button m_btnConnectionStatus;
-    StringBuilder m_sbLog;
-    TextView m_tvLog;
     void appendToLog(String message) {
-        if(message!=null) {
-            m_sbLog.append(message + "\n");
-        } else {
-            // A null message can be appended to trigger re-display
-            // of the content of m_sbLog if it has been passed to
-            // another class and may have been appended.
+        if(m_loggingAgent!=null) {
+            m_loggingAgent.appendToLog(0,message);
         }
-        m_tvLog.setText(m_sbLog.toString());
     }
 
     int m_lastPresetInUse = 0;
@@ -75,8 +70,8 @@ public class MainActivity
 
         m_ampManager = null;
 
-        m_sbLog = new StringBuilder();
-        m_tvLog = (TextView) findViewById(R.id.tv_log);
+        TextView tvLog = (TextView) findViewById(R.id.tv_log);
+        m_loggingAgent = new LoggingAgent(tvLog);
         appendToLog("Starting up");
 
         setSupportActionBar(findViewById(R.id.toolbar_fhau));
@@ -138,7 +133,7 @@ public class MainActivity
                 buttonColour = R.color.fhauAmber;
                 break;
             default:
-                m_tvLog.append(String.format(
+                appendToLog(String.format(
                     "Cannot offer preset with slot=%d, name='%s' because it is in state %s",
                     pr.m_slotNumber, pr.m_name, pr.m_state
                 ));
