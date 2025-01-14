@@ -2,6 +2,7 @@ package net.heretical_camelid.fhau.android_app;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
+import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -59,10 +60,10 @@ public class MainActivity
         } else if (itemId==R.id.action_disconnect) {
             Toast.makeText(this, "TODO: Implement disconnect", Toast.LENGTH_LONG).show();
         } else
-        */
         if (itemId==R.id.action_settings) {
             Toast.makeText(this, "TODO: Implement settings dialog", Toast.LENGTH_LONG).show();
         }
+        */
         return super.onOptionsItemSelected(item);
     }
 
@@ -79,6 +80,7 @@ public class MainActivity
 
         setSupportActionBar(findViewById(R.id.toolbar_fhau));
 
+
         m_btnConnectionStatus = findViewById(R.id.btn_cxn_status);
         m_btnConnectionStatus.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -89,6 +91,14 @@ public class MainActivity
             }
         });
     }
+/*
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        //Menu menu = (Menu) findViewById(R.id.menu_providers);
+        menu.setGroupCheckable(R.id.group_providers,false,true);
+        super.onCreateContextMenu(menu, v, menuInfo);
+    }
+*/
 
     private void connect() {
         appendToLog("Starting");
