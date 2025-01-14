@@ -114,16 +114,6 @@ public class MainActivity
         if (m_lastPresetInUse == MAX_PRESET) {
             return;
         }
-        m_lastPresetInUse++;
-        String presetButtonName = String.format("button%d", m_lastPresetInUse);
-        @SuppressLint("DiscouragedApi")
-        int buttonId = getResources().getIdentifier(
-                presetButtonName, "id", getPackageName()
-        );
-        Button presetButton = findViewById(buttonId);
-        presetButton.setText(pr.m_name);
-        presetButton.setEnabled(true);
-        presetButton.setClickable(true);
         int buttonColour = R.color.fhauGrey;
         switch(pr.m_state) {
             case ACCEPTED:
@@ -134,12 +124,21 @@ public class MainActivity
                 break;
             default:
                 appendToLog(String.format(
-                    "Cannot offer preset with slot=%d, name='%s' because it is in state %s",
+                    "Preset with slot=%d, name='%s' not offered because it is in state %s",
                     pr.m_slotNumber, pr.m_name, pr.m_state
                 ));
-                m_lastPresetInUse--;
                 return;
         }
+        m_lastPresetInUse++;
+        String presetButtonName = String.format("button%d", m_lastPresetInUse);
+        @SuppressLint("DiscouragedApi")
+        int buttonId = getResources().getIdentifier(
+                presetButtonName, "id", getPackageName()
+        );
+        Button presetButton = findViewById(buttonId);
+        presetButton.setText(pr.m_name);
+        presetButton.setEnabled(true);
+        presetButton.setClickable(true);
         presetButton.setBackgroundColor(
             getResources().getColor(buttonColour,null)
         );
