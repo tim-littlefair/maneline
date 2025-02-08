@@ -3,32 +3,23 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     >
 
-    <!--
-    <item
-        android:id="@+id/action_connect"
-        android:icon="@drawable/baseline_usb_24"
-        android:title="@string/action_connect"
-        app:showAsAction="ifRoom"/>
-
     <item
         android:id="@+id/action_disconnect"
         android:icon="@drawable/baseline_usb_off_24"
         android:title="@string/action_disconnect"
-        app:showAsAction="ifRoom"/>
-    <item android:id="@+id/action_settings"
-        android:title="@string/action_settings"
-        app:showAsAction="never"/>
-    -->
+        app:showAsAction="never"
+    />
     <item android:title="@string/select_provider" app:showAsAction="never">
         <menu android:id="@+id/menu_providers" >
             <group android:id="@+id/group_providers"
                 android:checkableBehavior="single"
                 >
-                <item android:id="@+id/action_provider_sim_nodev" android:title="Simulator (no device)" android:checked="true" />
-                <item android:id="@+id/action_provider_sim_lt40s" android:title="Simulator (LT40S)" />
-                <item android:id="@+id/action_provider_sim_mmp" android:title="Simulator (MMP)" />
+                <item android:id="@+id/action_provider_auto" android:title="Autodetect" />
                 <item android:id="@+id/action_provider_lt40s" android:title="LT40S over USB" />
                 <item android:id="@+id/action_provider_mmp" android:title="MMP over BLE" />
+                <item android:id="@+id/action_provider_sim_lt40s" android:title="Simulator (LT40S)" />
+                <item android:id="@+id/action_provider_sim_mmp" android:title="Simulator (MMP)" />
+                <item android:id="@+id/action_provider_sim_nodev" android:title="Simulator (no device)" android:checked="true" />
             </group>
         </menu>
     </item>

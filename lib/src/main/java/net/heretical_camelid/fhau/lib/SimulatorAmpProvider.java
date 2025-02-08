@@ -4,14 +4,28 @@ import java.util.regex.Pattern;
 
 /**
  * TODO:
- * Implementations of this interface will be defined at
+ * Implementations of this abstract base class will be defined at
  * some time in the future so that logic specific to either
  * LT40S or MMP can be kept outside the publicly visible class.
  * For now there are no implementations and the only simulation
  * mode offered is the constant-returning stateless one.
  */
-interface IDeviceDelegate {
-    void startup();
+abstract class DeviceDelegateBase {
+    public String m_deviceDescription;
+    public String m_firmwareVersion;
+    public PresetInfo m_presetInfo;
+    abstract void startup();
+}
+
+class DeviceDelegateLT40S extends DeviceDelegateBase {
+    public DeviceDelegateLT40S() {
+        m_deviceDescription = "Simulated LT40S";
+        m_firmwareVersion = "99.11.13";
+        m_presetInfo = PresetInfo.piMixedBag();
+    }
+    public void startup() {
+
+    }
 }
 public class SimulatorAmpProvider implements IAmpProvider {
     private final ILoggingAgent m_loggingAgent;
@@ -31,7 +45,7 @@ public class SimulatorAmpProvider implements IAmpProvider {
     public void acceptVisitor(IVisitor visitor) {
         visitor.setAmpState(m_deviceDescription, m_firmwareVersion, m_presetInfo);
     }
-    final private IDeviceDelegate m_delegate;
+    final private DeviceDelegateBase m_delegate;
 
 
     /**
@@ -79,11 +93,19 @@ public class SimulatorAmpProvider implements IAmpProvider {
                 break;
 
             case LT40S:
+                m_delegate = new DeviceDelegateLT40S();
+                break;
+
             case MMP:
             default:
                 throw new UnsupportedOperationException(
                     "The only simulation mode supported at present is SimulationMode.NO_DEVICE"
                 );
+        }
+        if(m_delegate != null) {
+            m_deviceDescription = m_delegate.m_deviceDescription;
+            m_firmwareVersion = m_delegate.m_firmwareVersion;
+            m_presetInfo = m_delegate.m_presetInfo;
         }
     }
     @Override

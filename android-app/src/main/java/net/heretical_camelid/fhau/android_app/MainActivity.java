@@ -25,11 +25,22 @@ import net.heretical_camelid.fhau.lib.PresetInfo;
 import net.heretical_camelid.fhau.lib.PresetRecord;
 import net.heretical_camelid.fhau.lib.SimulatorAmpProvider;
 
+class MainActivityError extends UnsupportedOperationException {
+    public MainActivityError(String message) {
+        super(message);
+    }
+    public void display(MainActivity mainActivity) {
+        Toast.makeText(mainActivity,
+            "MainActivityError: " + getLocalizedMessage(),
+            Toast.LENGTH_LONG
+        ).show();
+    }
+};
+
 public class MainActivity
         extends AppCompatActivity
         implements PresetInfo.IVisitor, OnUsbHidDeviceListener
 {
-
     AmpManager m_ampManager = null;
 
     LoggingAgent m_loggingAgent = null;
@@ -53,17 +64,46 @@ public class MainActivity
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        int itemId = item.getItemId();
-        /*
-        if (itemId==R.id.action_connect) {
-            m_btnConnectionStatus.callOnClick();
-        } else if (itemId==R.id.action_disconnect) {
-            Toast.makeText(this, "TODO: Implement disconnect", Toast.LENGTH_LONG).show();
-        } else
-        if (itemId==R.id.action_settings) {
-            Toast.makeText(this, "TODO: Implement settings dialog", Toast.LENGTH_LONG).show();
+        try {
+            int itemId = item.getItemId();
+            if (itemId == R.id.action_disconnect) {
+                throw new MainActivityError("TODO: Implement disconnect");
+            } else {
+                // Items on second level menu handled here
+                // These select a provider, and should only be selectable
+                // if no provider is presently connected
+                if(m_ampManager!=null) {
+                    throw new MainActivityError(String.format(
+                        "Can't select provider %s when another provider is already connected",
+                        item.getTitle()
+                    ));
+                } else if(itemId == R.id.action_provider_sim_nodev) {
+                    m_ampManager = new AmpManager(new SimulatorAmpProvider(
+                        m_loggingAgent,
+                        SimulatorAmpProvider.SimulationMode.NO_DEVICE
+                    ));
+                } else if(itemId == R.id.action_provider_sim_lt40s) {
+                    m_ampManager = new AmpManager(new SimulatorAmpProvider(
+                        m_loggingAgent,
+                        SimulatorAmpProvider.SimulationMode.LT40S
+                    ));
+                } else if(itemId == R.id.action_provider_sim_mmp) {
+                    m_ampManager = new AmpManager(new SimulatorAmpProvider(
+                        m_loggingAgent,
+                        SimulatorAmpProvider.SimulationMode.MMP
+                    ));
+                } else {
+                    throw new MainActivityError(String.format(
+                        "Provider %s not implemented yet",
+                        item.getTitle()
+                    ));
+                }
+                item.setChecked(true);
+            }
         }
-        */
+        catch(MainActivityError mae) {
+            mae.display(this);
+        }
         return super.onOptionsItemSelected(item);
     }
 
@@ -86,8 +126,8 @@ public class MainActivity
             @Override
             public void onClick(View v) {
                 m_btnConnectionStatus.setOnClickListener(null);
-                m_btnConnectionStatus.setText("CONNECTED!");
                 connect();
+                m_btnConnectionStatus.setText("CONNECTED!");
             }
         });
     }
