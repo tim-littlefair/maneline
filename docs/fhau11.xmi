@@ -35,7 +35,7 @@
       <packagedElement xmi:type="uml:Class" xmi:id="us3BmNShweNsK" name="User"/>
       <xmi:Extension extender="umbrello">
         <diagrams resolution="96">
-          <diagram xmi.id="uwmsHBGwMsoip" name="startup" type="3" documentation="" backgroundcolor="#ffffff" fillcolor="#ffffc0" font="Noto Sans,10,-1,5,50,0,0,0,0,0,Regular" griddotcolor="#1e1e1e" linecolor="#990000" linewidth="0" textcolor="#000000" usefillcolor="1" showattribassocs="1" showatts="1" showattsig="1" showops="1" showopsig="1" showpackage="1" showpubliconly="0" showscope="1" showstereotype="2" localid="-1" showgrid="0" snapgrid="0" snapcsgrid="0" snapx="25" snapy="25" zoom="93" canvasheight="875.093" canvaswidth="1283.61" isopen="0" autoincrementsequence="1">
+          <diagram xmi.id="uwmsHBGwMsoip" name="startup" type="3" documentation="" backgroundcolor="#ffffff" fillcolor="#ffffc0" font="Noto Sans,10,-1,5,50,0,0,0,0,0,Regular" griddotcolor="#1e1e1e" linecolor="#990000" linewidth="0" textcolor="#000000" usefillcolor="1" showattribassocs="1" showatts="1" showattsig="1" showops="1" showopsig="1" showpackage="1" showpubliconly="0" showscope="1" showstereotype="2" localid="-1" showgrid="0" snapgrid="0" snapcsgrid="0" snapx="25" snapy="25" zoom="93" canvasheight="875.093" canvaswidth="1283.61" isopen="1" autoincrementsequence="1">
             <widgets>
               <objectwidget xmi.id="uYKlQQZtlggIE" localid="u1tkKShNlpkXM" textcolor="#000000" linecolor="#990000" linewidth="0" usefillcolor="1" usesdiagramfillcolor="1" usesdiagramusefillcolor="1" fillcolor="none" font="Noto Sans,10,-1,5,50,0,0,0,0,0,Regular" autoresize="1" x="315.7" y="229.023" width="104" height="28" isinstance="0" showstereotype="2" drawasactor="0" multipleinstance="0" decon="0"/>
               <objectwidget xmi.id="uy48firWO0tbD" localid="u9FZsdckH70dr" textcolor="#000000" linecolor="#990000" linewidth="0" usefillcolor="1" usesdiagramfillcolor="1" usesdiagramusefillcolor="1" fillcolor="none" font="Noto Sans,10,-1,5,50,0,0,0,0,0,Regular" autoresize="1" x="1084.7" y="464.623" width="115" height="28" isinstance="0" showstereotype="2" drawasactor="0" multipleinstance="0" decon="0"/>
@@ -209,16 +209,6 @@
         <packagedElement xmi:type="uml:Dependency" xmi:id="uMrRklZn0V8u8" name="" client="uAdLFsgUNxIWa" supplier="u5dDSkmPeWVYM"/>
         <packagedElement xmi:type="uml:Dependency" xmi:id="uJHtdzfGZYsOJ" name="" client="uAdLFsgUNxIWa" supplier="uilfoJ0NG7cSs"/>
         <packagedElement xmi:type="uml:Dependency" xmi:id="ujVWad2VsFbjv" name="" client="uAdLFsgUNxIWa" supplier="uua0WOadZ3JHX"/>
-        <packagedElement xmi:type="uml:Dependency" xmi:id="ukbkxmFc89iJz" name="" client="ul0I23RArmvor" supplier="uAdLFsgUNxIWa"/>
-        <packagedElement xmi:type="uml:Dependency" xmi:id="udrN8AsRlCx3V" name="" client="ul5hb4ggs4rlb" supplier="uAdLFsgUNxIWa"/>
-        <packagedElement xmi:type="uml:Dependency" xmi:id="uMrRklZn0V8u8" name="" client="uAdLFsgUNxIWa" supplier="u5dDSkmPeWVYM"/>
-        <packagedElement xmi:type="uml:Dependency" xmi:id="uJHtdzfGZYsOJ" name="" client="uAdLFsgUNxIWa" supplier="uilfoJ0NG7cSs"/>
-        <packagedElement xmi:type="uml:Dependency" xmi:id="ujVWad2VsFbjv" name="" client="uAdLFsgUNxIWa" supplier="uua0WOadZ3JHX"/>
-        <packagedElement xmi:type="uml:Dependency" xmi:id="ukbkxmFc89iJz" name="" client="ul0I23RArmvor" supplier="uAdLFsgUNxIWa"/>
-        <packagedElement xmi:type="uml:Dependency" xmi:id="udrN8AsRlCx3V" name="" client="ul5hb4ggs4rlb" supplier="uAdLFsgUNxIWa"/>
-        <packagedElement xmi:type="uml:Dependency" xmi:id="uMrRklZn0V8u8" name="" client="uAdLFsgUNxIWa" supplier="u5dDSkmPeWVYM"/>
-        <packagedElement xmi:type="uml:Dependency" xmi:id="uJHtdzfGZYsOJ" name="" client="uAdLFsgUNxIWa" supplier="uilfoJ0NG7cSs"/>
-        <packagedElement xmi:type="uml:Dependency" xmi:id="ujVWad2VsFbjv" name="" client="uAdLFsgUNxIWa" supplier="uua0WOadZ3JHX"/>
       </packagedElement>
       <packagedElement xmi:type="uml:Artifact" xmi:id="uilfoJ0NG7cSs" name="Android Application" drawas="0"/>
       <packagedElement xmi:type="uml:Artifact" xmi:id="u5dDSkmPeWVYM" name="Workstation CLI Java Application" drawas="0"/>
@@ -288,7 +278,7 @@
     <packagedElement xmi:type="uml:Model" xmi:id="Entity_Relationship_Model" name="Entity Relationship Model"/>
   </uml:Model>
   <xmi:Extension extender="umbrello">
-    <docsettings viewid="u4R8sofwwHv7j" documentation="" uniqueid="udAcfP07OFzKt"/>
+    <docsettings viewid="uwmsHBGwMsoip" documentation="" uniqueid="uXI7xM7nG2ilR"/>
     <listview>
       <listitem id="Views" type="800" open="1">
         <listitem id="Component_View" type="821" open="1">
@@ -308,7 +298,6 @@
           <listitem id="uYKlQQZtlggIE" type="813" open="1"/>
           <listitem id="Datatypes" type="830" open="0">
             <listitem id="u88xZ6bujBHOm" type="829" open="0"/>
-            <listitem id="upwSIsl1BLLcy" type="829" open="0"/>
             <listitem id="uZRd6xmxRRwaY" type="829" open="0"/>
             <listitem id="uHgDZ95THlO8v" type="829" open="0"/>
             <listitem id="u89xtD6puZv2u" type="829" open="0"/>
