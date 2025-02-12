@@ -9,6 +9,7 @@
 set -e
 
 debug_echo() {
+  # Comment the return statement to reveal messages posted via this function
   return
   echo $*
 }
@@ -17,7 +18,7 @@ debug_echo 1
 if [ ! -z "$1" ]
 then
   # Run a single class
-  set CLASSES=$1
+  CLASSES="$1"
 else
   # Run all classes for which tests (including empty placeholders) exist
   CLASSES=""
