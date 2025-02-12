@@ -1,6 +1,7 @@
 package net.heretical_camelid.fhau.lib;
 
 import java.util.HashMap;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 class SimulatorTransportDelegate extends TransportDelegateBase {
@@ -15,7 +16,19 @@ class SimulatorTransportDelegate extends TransportDelegateBase {
     }
 
     public String[] processCommand(String commandHexString, DeviceDelegateBase deviceDelegate) {
-        return new String[] { "XXXX" };
+        for(Pattern p: m_programmedResponses.keySet()) {
+            Matcher m = p.matcher(commandHexString);
+            if( m.matches() != true ) {
+                continue;
+            } else if(m.groupCount()>1) {
+                throw new UnsupportedOperationException(
+                    "SimulatorTransportDelegate does not support complex patterns yet"
+                );
+            } else {
+                return m_programmedResponses.get(p);
+            }
+        }
+        return null;
     }
 
     public static void main(String[] args) {
@@ -40,9 +53,9 @@ class SimulatorTransportDelegate extends TransportDelegateBase {
         assert lt40sRsp1Actual.length == 1;
         assert lt40sRsp1Actual[0].equals(lt40sRsp1_1Expected);
 
-        String[] lt40sRsp2Actual = std.processCommand(lt40sCmd1, null);
+        String[] lt40sRsp2Actual = std.processCommand(lt40sCmd2, null);
         assert lt40sRsp2Actual.length == 1;
-        assert lt40sRsp2Actual[0].equals(lt40sRsp1_1Expected);
+        assert lt40sRsp2Actual[0].equals(lt40sRsp2_1Expected);
 
         // Test based on unexpected command
         String[] unexpectedActual = std.processCommand("01:02:03", null);
