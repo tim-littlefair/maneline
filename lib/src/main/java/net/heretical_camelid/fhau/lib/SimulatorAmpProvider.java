@@ -2,20 +2,6 @@ package net.heretical_camelid.fhau.lib;
 
 import java.util.regex.Pattern;
 
-abstract class TransportDelegateBase {
-    abstract public String processCommand(String commandHexString, DeviceDelegateBase deviceDelegate);
-}
-
-class SimulatorTransportDelegate extends TransportDelegateBase {
-
-    public SimulatorTransportDelegate(MessageProtocolBase messageProtocol) {
-
-    }
-    public String processCommand(String commandHexString, DeviceDelegateBase deviceDelegate) {
-        return "XXXX";
-    }
-}
-
 public class SimulatorAmpProvider implements IAmpProvider {
     private final ILoggingAgent m_loggingAgent;
     PresetInfo m_presetInfo;
@@ -34,8 +20,9 @@ public class SimulatorAmpProvider implements IAmpProvider {
     public void acceptVisitor(IVisitor visitor) {
         visitor.setAmpState(m_deviceDescription, m_firmwareVersion, m_presetInfo);
     }
-    final private DeviceDelegateBase m_deviceDelegate;
+    final private MessageProtocolBase m_protocolDelegate;
     final private TransportDelegateBase m_transportDelegate;
+    final private DeviceDelegateBase m_deviceDelegate;
 
 
     /**
@@ -66,7 +53,6 @@ public class SimulatorAmpProvider implements IAmpProvider {
         ILoggingAgent loggingAgent,
         SimulationMode requiredMode
     ) {
-        m_transportDelegate = null;
         if(loggingAgent!=null) {
             m_loggingAgent = loggingAgent;
         } else {
@@ -76,6 +62,8 @@ public class SimulatorAmpProvider implements IAmpProvider {
         switch(requiredMode)
         {
             case NO_DEVICE:
+                m_transportDelegate = new SimulatorTransportDelegate();
+                m_protocolDelegate = null;
                 m_deviceDelegate = null;
                 m_presetInfo = new PresetInfo();
                 m_deviceDescription = "SimulatedAmplifier SN 123456";
@@ -84,11 +72,15 @@ public class SimulatorAmpProvider implements IAmpProvider {
                 break;
 
             case LT40S:
+                m_protocolDelegate = null;
+                m_transportDelegate = null;
                 m_deviceDelegate = new DeviceDelegateLT40S();
                 break;
 
             case MMP:
             default:
+                m_protocolDelegate = null;
+                m_transportDelegate = null;
                 throw new UnsupportedOperationException(
                     "The only simulation modes supported at present are " +
                     "SimulationMode.NO_DEVICE and SimulationMode.LT40S"

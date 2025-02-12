@@ -10,4 +10,8 @@ class DeviceDelegateLT40S extends DeviceDelegateBase {
     public void startup() {
 
     }
+
+    public static void main(String[] args) {
+        System.out.println("TODO: tests for DeviceDelegateLT40S");
+    }
 }

@@ -9,5 +9,9 @@ public interface ILoggingAgent {
     void setLevel(int loggingLevel);
 
     void appendToLog(int loggingLevel, String messageToAppend);
+
+    public static void main(String[] args) {
+        System.out.println("TODO: tests for ILoggingAgent");
+    }
 }
 

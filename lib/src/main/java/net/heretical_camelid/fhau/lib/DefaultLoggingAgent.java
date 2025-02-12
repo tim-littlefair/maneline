@@ -16,4 +16,8 @@ public class DefaultLoggingAgent implements ILoggingAgent {
     public void appendToLog(int loggingLevel, String messageToAppend) {
         System.out.println(messageToAppend);
     }
+
+    public static void main(String[] args) {
+        System.out.println("TODO: tests");
+    }
 }
