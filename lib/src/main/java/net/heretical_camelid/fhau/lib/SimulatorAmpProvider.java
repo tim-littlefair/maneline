@@ -2,31 +2,20 @@ package net.heretical_camelid.fhau.lib;
 
 import java.util.regex.Pattern;
 
-/**
- * TODO:
- * Implementations of this abstract base class will be defined at
- * some time in the future so that logic specific to either
- * LT40S or MMP can be kept outside the publicly visible class.
- * For now there are no implementations and the only simulation
- * mode offered is the constant-returning stateless one.
- */
-abstract class DeviceDelegateBase {
-    public String m_deviceDescription;
-    public String m_firmwareVersion;
-    public PresetInfo m_presetInfo;
-    abstract void startup();
+abstract class TransportDelegateBase {
+    abstract public String processCommand(String commandHexString, DeviceDelegateBase deviceDelegate);
 }
 
-class DeviceDelegateLT40S extends DeviceDelegateBase {
-    public DeviceDelegateLT40S() {
-        m_deviceDescription = "Simulated LT40S";
-        m_firmwareVersion = "99.11.13";
-        m_presetInfo = PresetInfo.piMixedBag();
-    }
-    public void startup() {
+class SimulatorTransportDelegate extends TransportDelegateBase {
+
+    public SimulatorTransportDelegate(MessageProtocolBase messageProtocol) {
 
     }
+    public String processCommand(String commandHexString, DeviceDelegateBase deviceDelegate) {
+        return "XXXX";
+    }
 }
+
 public class SimulatorAmpProvider implements IAmpProvider {
     private final ILoggingAgent m_loggingAgent;
     PresetInfo m_presetInfo;
@@ -45,7 +34,8 @@ public class SimulatorAmpProvider implements IAmpProvider {
     public void acceptVisitor(IVisitor visitor) {
         visitor.setAmpState(m_deviceDescription, m_firmwareVersion, m_presetInfo);
     }
-    final private DeviceDelegateBase m_delegate;
+    final private DeviceDelegateBase m_deviceDelegate;
+    final private TransportDelegateBase m_transportDelegate;
 
 
     /**
@@ -76,6 +66,7 @@ public class SimulatorAmpProvider implements IAmpProvider {
         ILoggingAgent loggingAgent,
         SimulationMode requiredMode
     ) {
+        m_transportDelegate = null;
         if(loggingAgent!=null) {
             m_loggingAgent = loggingAgent;
         } else {
@@ -85,7 +76,7 @@ public class SimulatorAmpProvider implements IAmpProvider {
         switch(requiredMode)
         {
             case NO_DEVICE:
-                m_delegate = null;
+                m_deviceDelegate = null;
                 m_presetInfo = new PresetInfo();
                 m_deviceDescription = "SimulatedAmplifier SN 123456";
                 m_firmwareVersion = "99.00.13";
@@ -93,19 +84,20 @@ public class SimulatorAmpProvider implements IAmpProvider {
                 break;
 
             case LT40S:
-                m_delegate = new DeviceDelegateLT40S();
+                m_deviceDelegate = new DeviceDelegateLT40S();
                 break;
 
             case MMP:
             default:
                 throw new UnsupportedOperationException(
-                    "The only simulation mode supported at present is SimulationMode.NO_DEVICE"
+                    "The only simulation modes supported at present are " +
+                    "SimulationMode.NO_DEVICE and SimulationMode.LT40S"
                 );
         }
-        if(m_delegate != null) {
-            m_deviceDescription = m_delegate.m_deviceDescription;
-            m_firmwareVersion = m_delegate.m_firmwareVersion;
-            m_presetInfo = m_delegate.m_presetInfo;
+        if(m_deviceDelegate != null) {
+            m_deviceDescription = m_deviceDelegate.m_deviceDescription;
+            m_firmwareVersion = m_deviceDelegate.m_firmwareVersion;
+            m_presetInfo = m_deviceDelegate.m_presetInfo;
         }
     }
     @Override
