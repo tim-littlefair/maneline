@@ -56,7 +56,7 @@ public class SimulatorAmpProvider implements IAmpProvider {
         if(loggingAgent!=null) {
             m_loggingAgent = loggingAgent;
         } else {
-            m_loggingAgent = new DefaultLoggingAgent();
+            m_loggingAgent = new DefaultLoggingAgent(2);
         }
         PresetInfo pi = new PresetInfo();
         switch(requiredMode)

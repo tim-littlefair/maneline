@@ -11,7 +11,7 @@ public interface ILoggingAgent {
     void appendToLog(int loggingLevel, String messageToAppend);
 
     public static void main(String[] args) {
-        System.out.println("TODO: tests for ILoggingAgent");
+        System.out.println("No tests for ILoggingAgent");
     }
 }
 

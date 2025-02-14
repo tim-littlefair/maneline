@@ -7,17 +7,31 @@ package net.heretical_camelid.fhau.lib;
  * as the loggingAgent parameter to the AmpManager constructor.
  */
 public class DefaultLoggingAgent implements ILoggingAgent {
-    public DefaultLoggingAgent() { }
+    int m_maxVisibleLoggingLevel;
+    public DefaultLoggingAgent(int initialMVLL) {
+        m_maxVisibleLoggingLevel = initialMVLL;
+    }
     @Override
     public void clearLog() { }
     @Override
-    public void setLevel(int loggingLevel) { }
+    public void setLevel(int loggingLevel) {
+        m_maxVisibleLoggingLevel = loggingLevel;
+    }
     @Override
     public void appendToLog(int loggingLevel, String messageToAppend) {
-        System.out.println(messageToAppend);
+        if(loggingLevel<=m_maxVisibleLoggingLevel) {
+            System.out.println(String.format("%1d %s", loggingLevel, messageToAppend));
+        }
     }
 
     public static void main(String[] args) {
-        System.out.println("TODO: tests");
+        System.out.println("Tests for DefaultLoggingAgent");
+        DefaultLoggingAgent dla = new DefaultLoggingAgent(2);
+        dla.appendToLog(4,"Should not be visible");
+        dla.appendToLog(0, "Should be first visible message");
+        dla.appendToLog(1,"Should be second visible message");
+        dla.appendToLog(2,"Should be third and last visible message");
+        dla.appendToLog(3,"Should not be visible");
+
     }
 }

@@ -9,6 +9,8 @@ abstract public class MessageProtocolBase {
     Matcher prefixMatchTest(Pattern pattern, String reportHexString) {
         return pattern.matcher(reportHexString);
     }
+    abstract public String[] composeResponses(Matcher m);
+
     public static void main(String[] args) {
         System.out.println("TODO: tests");
     }
