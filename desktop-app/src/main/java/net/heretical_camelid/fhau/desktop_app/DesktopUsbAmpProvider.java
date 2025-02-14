@@ -26,7 +26,7 @@ public class DesktopUsbAmpProvider
     HidDevice m_fmicAmp;
 
     public DesktopUsbAmpProvider() {
-        s_loggingAgent = new DefaultLoggingAgent();
+        s_loggingAgent = new DefaultLoggingAgent(2);
         
         s_loggingAgent.appendToLog(0,"Platform architecture: " + Platform.ARCH);
         s_loggingAgent.appendToLog(0,"Resource prefix: " + Platform.RESOURCE_PREFIX);

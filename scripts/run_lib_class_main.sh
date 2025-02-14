@@ -27,12 +27,12 @@ else
   CLASSES+=" PresetInfo"
   CLASSES+=" ILoggingAgent"
   CLASSES+=" IAmpProvider"
-  CLASSES+=" MessageConstants_LT40S"
-  CLASSES+=" MessageProtocol_LT40S"
-  CLASSES+=" MessageProtocol_NoDev"
   CLASSES+=" RawProtobufUtilities"
   CLASSES+=" TransportDelegateBase"
   CLASSES+=" MessageProtocolBase"
+  CLASSES+=" MessageConstants_LT40S"
+  CLASSES+=" MessageProtocol_LT40S"
+  CLASSES+=" MessageProtocol_NoDev"
   CLASSES+=" DefaultLoggingAgent"
   CLASSES+=" SimulatorTransportDelegate"
   CLASSES+=" DeviceDelegateLT40S"
@@ -43,14 +43,16 @@ debug_echo 2 $CLASSES
 for c in $CLASSES
 do
   debug_echo 3 $c
-  rm _work/net/heretical_camelid/fhau/lib/$c.class || true
+  rm _work/net/heretical_camelid/fhau/lib/$c.class && true
   debug_echo 4 $c
 done
 
 for c in $CLASSES
 do
   debug_echo 5 $c
+  ls -l ./lib/src/main/java/net/heretical_camelid/fhau/lib/$c.java
   javac -cp ./_work -d ./_work lib/src/main/java/net/heretical_camelid/fhau/lib/$c.java
+  ls -l ./_work/net/heretical_camelid/fhau/lib/$c.class
   debug_echo 6 $c
   echo "Running $c.main()"
   java -cp ./_work -ea  net.heretical_camelid.fhau.lib.$c

@@ -13,12 +13,12 @@ class SimulatorTransportDelegate extends TransportDelegateBase {
     HashMap<Pattern,String[]> m_programmedResponses;
 
     // Both commands and responses can contain placeholders.
-    final static public String PLACEHOLDER = "%%";
+    final static public String PLACEHOLDER = ":%%";
 
     // In regex patterns to recognize commands, each placeholder
     // is replaced by a pattern which matches 1 or more colon-separated
     // hex bytes as a group.
-    final static private String PATTERN_REPLACEMENT = "([0-9a-f]{2}(:[0-9a-f]{2})*)";
+    final static private String PATTERN_REPLACEMENT = ")((:[0-9a-f]{2})+)";
 
     // In responses, the placeholder is replaced by a value derived
     // from the values of placeholder groups seen in the command
@@ -38,7 +38,9 @@ class SimulatorTransportDelegate extends TransportDelegateBase {
     }
 
     public void addProgrammedResponse(String commandPatternRegex, String[] responses ) {
-        commandPatternRegex = commandPatternRegex.replace(PLACEHOLDER, PATTERN_REPLACEMENT);
+        if(commandPatternRegex.contains(PLACEHOLDER)) {
+            commandPatternRegex = "(" + commandPatternRegex.replace(PLACEHOLDER, PATTERN_REPLACEMENT);
+        }
         Pattern commandPattern = Pattern.compile("^" + commandPatternRegex);
         m_programmedResponses.put(commandPattern, responses);
     }
@@ -48,14 +50,17 @@ class SimulatorTransportDelegate extends TransportDelegateBase {
             Matcher m = p.matcher(commandHexString);
             if( m.find() != true ) {
                 continue;
-            } else if(m.groupCount()==1) {
+            }
+            /*
+            for(int i=0; i<m.groupCount(); ++i) {
+                System.out.println(m.group(i));
+            }
+             */
+            if(m.groupCount()==0) {
                 return m_programmedResponses.get(p);
             } else if(m_messageProtocol != null) {
                 return m_messageProtocol.composeResponses(m);
             } else {
-                for(int i=0; i<m.groupCount(); ++i) {
-                    System.out.println(m.group(i));
-                }
                 throw new UnsupportedOperationException(
                     "SimulatorTransportDelegate requires a message protocol object to  support patterns containing placeholders"
                 );
@@ -67,6 +72,7 @@ class SimulatorTransportDelegate extends TransportDelegateBase {
     public static void main(String[] args) {
         // train the delegate to respond to a selection of messages
         SimulatorTransportDelegate std = new SimulatorTransportDelegate();
+        std.setMessageProtocol(new STDTest_MessageProtocol());
 
         // Taken from captures of LT40S startup
         String lt40sCmd1 = "08:00:8a:07:04:08:00:10:00:00:00";
@@ -80,7 +86,7 @@ class SimulatorTransportDelegate extends TransportDelegateBase {
         // Presently throws UnsupportedOperationException
         String lt40sCmd3Pattern = "08:00:ca:06:02:08:%%";
         String lt40sCmd3Value = "08:00:ca:06:02:08:01";
-        String lt40sRsp3_1Expected = "08:02:fa:01:87:11:0a:82:11:%%:10:01:01:49:64:22:3a:20:22";
+        String lt40sRsp3_1Expected = "08:02:fa:01:87:11:0a:82:11:01:10:01:01:49:64:22:3a:20:22";
         std.addProgrammedResponse(lt40sCmd3Pattern, new String[] {lt40sRsp3_1Expected});
 
         // Tests based on expected commands
@@ -103,5 +109,33 @@ class SimulatorTransportDelegate extends TransportDelegateBase {
 
         // TODO: Write tests for lt40sCmd3 when regex pattern matching in place
         System.out.println("All tests passed");
+    }
+}
+
+class STDTest_MessageProtocol extends MessageProtocolBase {
+
+    @Override
+    String[] generateStartupCommands() {
+        return new String[0];
+    }
+
+    @Override
+    void parseReport(String report, DeviceDelegateBase deviceDelegate) {
+
+    }
+
+    @Override
+    public String[] composeResponses(Matcher m) {
+        switch(m.group(1)) {
+            case "08:00:ca:06:02:08":
+                assert m.groupCount() == 3;
+                return new String[] {
+                    "08:02:fa:01:87:11:0a:82:11:%%:10:01:01:49:64:22:3a:20:22".replace(
+                        SimulatorTransportDelegate.PLACEHOLDER, m.group(2)
+                    )
+                };
+            default:
+                return new String[] { };
+        }
     }
 }
