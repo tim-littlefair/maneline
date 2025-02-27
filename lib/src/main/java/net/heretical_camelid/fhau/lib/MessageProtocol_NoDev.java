@@ -9,6 +9,16 @@ public class MessageProtocol_NoDev extends MessageProtocolBase
     }
 
     @Override
+    String[] generatePresetChangeCommands() {
+        return new String[0];
+    }
+
+    @Override
+    String[] generatePresetChangeCommands(int presetIndex) {
+        return new String[0];
+    }
+
+    @Override
     void parseReport(String report, DeviceDelegateBase deviceDelegate) {
 
     }

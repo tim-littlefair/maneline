@@ -1,5 +1,6 @@
 package com.benlypan.usbhid;
 
+import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -148,6 +149,9 @@ public class UsbHidDevice {
         return mUsbDevice.getDeviceId();
     }
 
+    // TODO: the call context.registerReceiver is only valid from API 26
+    // One of my test devices is a Nexus 7 which is at Android 8.1.2/API 25
+    @SuppressLint("NewApi")
     public void open(Context context, OnUsbHidDeviceListener listener) {
         mListener = listener;
         mHandler = new Handler(context.getMainLooper());
