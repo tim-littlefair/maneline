@@ -2,7 +2,6 @@ package net.heretical_camelid.fhau.desktop_app;
 
 import net.heretical_camelid.fhau.lib.IAmpProvider;
 import net.heretical_camelid.fhau.lib.PresetInfo;
-
 import org.usb4java.Device;
 import org.usb4java.DeviceDescriptor;
 import org.usb4java.DeviceHandle;

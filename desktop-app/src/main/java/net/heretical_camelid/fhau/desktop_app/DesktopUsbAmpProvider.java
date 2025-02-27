@@ -33,7 +33,7 @@ public class DesktopUsbAmpProvider
         s_loggingAgent.appendToLog(0,"Libusb activation: " + Platform.isLinux());
         HidServicesSpecification hidServicesSpecification = new HidServicesSpecification();
 // /*
-        hidServicesSpecification.setAutoStart(true);
+        hidServicesSpecification.setAutoStart(false);
         hidServicesSpecification.setAutoDataRead(false);
         hidServicesSpecification.setDataReadInterval(500);
 
@@ -45,13 +45,15 @@ public class DesktopUsbAmpProvider
         HidServices hidServices = HidManager.getHidServices(hidServicesSpecification);
         hidServices.addHidServicesListener(this);
         hidServices.start();
-        hidServices.scan();
+
+        /*
         new Thread(new Runnable() {
             public void run() {
                 hidServices.getAttachedHidDevices();
             }
         }).run();
         waitForCondition("device",10000);
+         */
         /*
 
         waitForCondition("amp attached and opened",10000);
@@ -63,9 +65,17 @@ public class DesktopUsbAmpProvider
             m_loggingAgent.appendToLog(0,"Amp opened successfully");
         }
 */
-        /*
+//        /*
         for (HidDevice hidDevice : hidServices.getAttachedHidDevices()) {
-            if(hidDevice.getVendorId()== 0x1ed8)
+            if (hidDevice.getVendorId() != 0x1ed8) {
+                continue;
+            }
+            if (hidDevice.getUsage() == 0x01 && hidDevice.getUsagePage() == 0xffffff00) {
+                System.out.println("Using FMIC device: " + hidDevice.getPath());
+                m_fmicAmp = hidDevice;
+                break;
+            }
+/*
             //if(hidDevice.getVendorId()== 0x046d)
             {
                 HidDeviceInfoStructure hdis = new HidDeviceInfoStructure();
@@ -93,6 +103,7 @@ public class DesktopUsbAmpProvider
            m_loggingAgent.appendToLog(0,"Fender amplifier not found");
         }
          */
+        }
     }
     @Override
     public boolean connect() {
