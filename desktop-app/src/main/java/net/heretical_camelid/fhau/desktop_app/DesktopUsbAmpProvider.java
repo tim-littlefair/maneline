@@ -41,6 +41,10 @@ public class DesktopUsbAmpProvider
     public DesktopUsbAmpProvider() {
         s_loggingAgent = new DefaultLoggingAgent(2);
         
+        // Demonstrate low level traffic logging
+        HidApi.logTraffic = false;
+
+        // Configure to use custom specification
         HidServicesSpecification hidServicesSpecification = new HidServicesSpecification();
 
         // Use manual start
@@ -53,6 +57,7 @@ public class DesktopUsbAmpProvider
         HidServices hidServices = HidManager.getHidServices(hidServicesSpecification);
         // Register for service events
         hidServices.addHidServicesListener(this);
+
         // Manually start HID services
         hidServices.start();
 
@@ -69,12 +74,12 @@ public class DesktopUsbAmpProvider
             }
         }
         int productId = fmicDevice.getProductId();
-    if (productId==0x0046) {
-        // Mustang LT40S - tested with firmware 1.0.7
-        System.out.println(
-            String.format("Connected FMIC device is %s, expected to work providing firmware is version 1.0.7",fmicDevice.getProduct())
-         );
-    } else if(productId>=0x0037 && productId<0x0046) {
+        if (productId==0x0046) {
+            // Mustang LT40S - tested with firmware 1.0.7
+            System.out.println(
+                String.format("Connected FMIC device is %s, expected to work providing firmware is version 1.0.7",fmicDevice.getProduct())
+            );
+        } else if(productId>=0x0037 && productId<0x0046) {
             // See incomplete list of VID/PIDs for Mustang products at 
             // https://github.com/offa/plug/blob/master/doc/USB.md
             // This range appears to be where the LT-series devices lie historically.    
@@ -140,89 +145,10 @@ public class DesktopUsbAmpProvider
     }
 
     @Override
-    public boolean connect() {         // Set the libusb variant (only needed for older Linux platforms)
-        //HidApi.useLibUsbVariant = true;
-
-        System.out.println("Pausing for connection");
-        try {
-            Thread.sleep(5000);
-            System.out.println("Continuing normally...");
-        }
-        catch(InterruptedException e) {
-            System.out.println("Continuing after interruption...");
-        }
-
-        return true; 
-    }
-    @Override
-    public void sendCommand(String commandHexString) { }
-/* 
-        byte[] commandBytes = ByteArrayTranslator.hexToBytes(commandHexString);
-        s_loggingAgent.appendToLog(0,"Sending " + commandHexString + "\n");
-        fmicDevice.write(commandBytes,64,(byte) 0x00,true);
-        byte[] responseBytes = fmicDevice.readAll(1000);
-        if(responseBytes!=null && responseBytes.length>0) {
-            s_loggingAgent.appendToLog(0,"Received " + ByteArrayTranslator.bytesToHex(responseBytes));
-        } else {
-            s_loggingAgent.appendToLog(0,"Receive error: " + fmicDevice.getLastErrorMessage());
-        }
-    }
-*/
-    @Override
-    public void expectReports(Pattern[] reportHexStringPatterns) {
-
-    }
-
-    @Override
-    public PresetInfo getPresetInfo(PresetInfo requestedPresets) {
-        return null;
-    }
-
-    @Override
-    public void hidDeviceAttached(HidServicesEvent event) {
-        System.out.println("Device attached: ");
-        if(event.getHidDevice().getVendorId() == VID_FMIC) {
-            HidDevice fmicDevice = event.getHidDevice();
-/*
-            try {
-                s_loggingAgent.appendToLog(0,"Waiting for amp to become open ...");
-                Thread.sleep(10000);
-            } catch (InterruptedException e) {
-                s_loggingAgent.appendToLog(0,"Interrupted...");
-            }
-*/
-            s_loggingAgent.appendToLog(0,"Amp has become attached");
-        } else {
-            s_loggingAgent.appendToLog(0,"Non-FMIC device attached: " + event.getHidDevice().toString());
-        }
-    }
-
-    @Override
-    public void hidDeviceDetached(HidServicesEvent event) {
-        s_loggingAgent.appendToLog(0,"Amp has become detached");
-    }
-
-    @Override
-    public void hidFailure(HidServicesEvent event) {
-
-    }
-
-    @Override
-    public void hidDataReceived(HidServicesEvent event) { }
-/*
+    public void hidDataReceived(HidServicesEvent event) {
+        System.out.println("hidDataReceived: " + event);
         byte[] responseBytes = event.getDataReceived();
-        if(responseBytes!=null && responseBytes.length>0) {
-            s_loggingAgent.appendToLog(0,"hdrReceived " + ByteArrayTranslator.bytesToHex(responseBytes));
-        } else {
-            s_loggingAgent.appendToLog(0,"hdrReceive error: " + fmicDevice.getLastErrorMessage());
-        }
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            s_loggingAgent.appendToLog(0,"hdrSleep interrupted");
-        }
     }
- */    
 
     // This function is based on upstream hid4java's BaseExample.printAsHex()
     // The original prints a buffer in full regardless of whether
@@ -254,18 +180,51 @@ public class DesktopUsbAmpProvider
             }
         }
     }
+
+    private int sendCommand(String commandBytesHex, String commandDescription) {
+        return 0;
+    }    
+
+    @Override
+    public PresetInfo getPresetInfo(PresetInfo requestedPresets) {
+        return null;
+    }
+
+    @Override
+    public void hidDeviceAttached(HidServicesEvent event) {
+        System.out.println("hidDeviceAttached: " + event);
+    }
+
+    @Override
+    public void hidDeviceDetached(HidServicesEvent event) {
+        System.out.println("hidDeviceDetached: " + event);
+    }
+
+    @Override
+    public void hidFailure(HidServicesEvent event) {
+        System.out.println("hidFailure: " + event);
+    }
+
+    @Override
+    public boolean connect() {         // Set the libusb variant (only needed for older Linux platforms)
+        System.out.println("Connect! (unexpected)");
+        return true; 
+    }
+    @Override
+    public void sendCommand(String commandHexString) { 
+        System.out.println("sendCommand! (unexpected)");
+    }
+    @Override
+    public void expectReports(Pattern[] reportHexStringPatterns) {
+
+    }
+
+
+
 }
 
 abstract class FMICProtocolBase {
-    public static final String ANSI_RESET = "\u001B[0m";
-    public static final String ANSI_BLACK = "\u001B[30m";
-    public static final String ANSI_RED = "\u001B[31m";
-    public static final String ANSI_GREEN = "\u001B[32m";
-    public static final String ANSI_YELLOW = "\u001B[33m";
-    public static final String ANSI_BLUE = "\u001B[34m";
-    public static final String ANSI_PURPLE = "\u001B[35m";
-    public static final String ANSI_CYAN = "\u001B[36m";
-    public static final String ANSI_WHITE = "\u001B[37m";
+
     public final int STATUS_OK = 0;
 
     public final int STATUS_WRITE_FAIL = -101;
@@ -327,10 +286,10 @@ class LTSeriesProtocol extends FMICProtocolBase {
             byte[] packetBuffer = new byte[64];
             int packetBytesRead = m_device.read(packetBuffer,500);
             if (packetBytesRead < 0) {
-                log(ANSI_RED,"read failed, error=" + m_device.getLastErrorMessage());
+                log("","read failed, error=" + m_device.getLastErrorMessage());
                 return STATUS_READ_FAIL;
             } else if(packetBytesRead!=64) {
-                log(ANSI_RED,"read incomplete, error=" + m_device.getLastErrorMessage());
+                log("","read incomplete, error=" + m_device.getLastErrorMessage());
                 return STATUS_READ_FAIL;
             } else {
                 DesktopUsbAmpProvider.printAsHex2(packetBuffer,">");
@@ -342,17 +301,17 @@ class LTSeriesProtocol extends FMICProtocolBase {
             switch(packetBuffer[1]) {
                 case 0x33: // first packet
                     assert assemblyBufferOffset == 0;
-                    assert contentLength == 0x3c;
+                    //assert contentLength == 0x3c;
                     messageComplete = false;
                     break;
 
                 case 0x34: // middle packet
-                    assert contentLength == 0x3c;
+                    //assert contentLength == 0x3c;
                     messageComplete = false;
                     break;
 
                 case 0x35:
-                    assert contentLength <= 0x3c;
+                    //assert contentLength <= 0x3c;
                     messageComplete = true;
                     break;
 
@@ -379,32 +338,34 @@ class LTSeriesProtocol extends FMICProtocolBase {
         for(int i=1; i<=60; ++i) {
             StringBuilder presetJsonSB = new StringBuilder();
             int psJsonStatus = getPresetJson(i, presetJsonSB);
-      if (psJsonStatus!=STATUS_OK) {
+            if (psJsonStatus!=STATUS_OK) {
                 return psJsonStatus;
             }
-            log(ANSI_BLUE,presetJsonSB.toString());
+            log("",presetJsonSB.toString());
         }
         // We don't expect to get this far
-        return STATUS_OTHER_FAIL;
+        return STATUS_OK;
     }
 
     private int sendCommand(String commandBytesHex, String commandDescription) {
         byte[] commandBytes = new byte[64];
         colonSeparatedHexToByteArray(commandBytesHex, commandBytes);
-        log(ANSI_GREEN, "Sending " + commandDescription);
+        log("", "Sending " + commandDescription);
         DesktopUsbAmpProvider.printAsHex2(commandBytes,"<");
         int bytesWritten = m_device.write(commandBytes, 64, (byte) 0x00, true);
         if (bytesWritten < 0) {
-            log(ANSI_RED,m_device.getLastErrorMessage());
+            log("",m_device.getLastErrorMessage());
             return STATUS_WRITE_FAIL;
         }
         int bytesRead = readAndAssembleResponsePackets();
         if (bytesRead < 0) {
-            log(ANSI_RED,m_device.getLastErrorMessage());
+            log("",m_device.getLastErrorMessage());
             return STATUS_REASSEMBLY_FAIL;
         }
         return STATUS_OK;
-    }
+    }     
+
+
 
     private int parseResponse(byte[] assembledResponseMessage) {
         // LT series responses are broadly based on Google protobuf
@@ -443,7 +404,7 @@ class LTSeriesProtocol extends FMICProtocolBase {
             assert payloadLength == firmwareVersionLength + 2;
 
             String firmwareVersion=new String(assembledResponseMessage,7,firmwareVersionLength);
-            log(ANSI_BLUE,"Firmware version: " + firmwareVersion);
+            log("","Firmware version: " + firmwareVersion);
         } else if(
             (0xfa == (0xff & assembledResponseMessage[2]) ) &&
                 (0x01 == (0xff & assembledResponseMessage[3]) )
@@ -459,7 +420,7 @@ class LTSeriesProtocol extends FMICProtocolBase {
             // varint, which it always is).
 
             // byte 6 is protobuf tag+type for the JSON definition field
-            assert 0x0a == assembledResponseMessage[5];
+            // assert 0x0a == assembledResponseMessage[5];
 
             // bytes 7 and 8 are a varint giving the length of the JSON field
             // (again, this field is always long enough to require two bytes)
