@@ -30,7 +30,6 @@ public class DesktopUsbAmpProvider
 {
     final private static int VID_FMIC = 0x1ed8;
     static ILoggingAgent s_loggingAgent;
-    HidDevice m_fmicAmp;
 
     public DesktopUsbAmpProvider() {
         s_loggingAgent = new DefaultLoggingAgent(2);
@@ -39,83 +38,80 @@ public class DesktopUsbAmpProvider
         s_loggingAgent.appendToLog(0,"Resource prefix: " + Platform.RESOURCE_PREFIX);
         s_loggingAgent.appendToLog(0,"Libusb activation: " + Platform.isLinux());
         HidServicesSpecification hidServicesSpecification = new HidServicesSpecification();
-// /*
+
         hidServicesSpecification.setAutoStart(false);
         hidServicesSpecification.setAutoDataRead(false);
         hidServicesSpecification.setDataReadInterval(500);
-
-        // Set the libusb variant (only needed for older Linux platforms)
-        //HidApi.useLibUsbVariant = true;
- // */
 
         // Get HID services using custom specification
         HidServices hidServices = HidManager.getHidServices(hidServicesSpecification);
         hidServices.addHidServicesListener(this);
         hidServices.start();
 
+        HidDevice fmicDevice = null;
         for (HidDevice hidDevice : hidServices.getAttachedHidDevices()) {
             if (hidDevice.getVendorId() != 0x1ed8) {
                 continue;
             }
             if (hidDevice.getUsage() == 0x01 && hidDevice.getUsagePage() == 0xffffff00) {
                 System.out.println("Using FMIC device: " + hidDevice.getPath());
-                m_fmicAmp = hidDevice;
+                fmicDevice = hidDevice;
                 break;
             }
-            int productId = m_fmicAmp.getProductId();
-            if (productId == 0x0046) {
-                // Mustang LT40S - tested with firmware 1.0.7
-                System.out.println(String.format(
-                    "Connected FMIC device is %s, expected to work providing firmware is version 1.0.7",
-                    m_fmicAmp.getProduct()
-                ));
-            } else if (productId >= 0x0037 && productId < 0x0046) {
-                // See incomplete list of VID/PIDs for Mustang products at 
-                // https://github.com/offa/plug/blob/master/doc/USB.md
-                // This range appears to be where the LT-series devices lie historically.    
-                System.out.println(String.format(
-                    "Connected FMIC device is %s, probably LT series but not tested, may or may not work",
-                    m_fmicAmp.getProduct()
-                ));
-            } else {
-                System.out.println(String.format(
-                    "Connected FMIC device is %s, outside VID range for LT series, not expected to work",
-                    m_fmicAmp.getProduct()
-                ));
-                m_fmicAmp = null;
-            }
-
-            if (m_fmicAmp == null) {
-                // Shut down and rely on auto-shutdown hook to clear HidApi resources
-                System.out.println("No relevant devices attached.");
-            } else {
-                // Open the device
-                if (m_fmicAmp.isClosed()) {
-                    System.out.println("Need to open device.");
-                    if (!m_fmicAmp.open()) {
-                        throw new IllegalStateException("Unable to open device.");
-                    }
-                    System.out.println("Device opened.");
-                } else {
-                    System.out.println("No need to open device because it is already open.");
-                }
-
-                // Perform a USB ReportDescriptor operation to determine general device capabilities
-                // Reports can be up to 4096 bytes for complex devices.
-                // Probably won't need this but allocate max capacity anyway.
-                byte[] reportDescriptor = new byte[4096];
-                if (m_fmicAmp.getReportDescriptor(reportDescriptor) > 0) {
-                    System.out.println("FMIC device report descriptor: " + m_fmicAmp.getPath());
-                    printAsHex2(reportDescriptor, "<");
-                }
-
-                // Initialise the Fender Mustang/Rumble device
-                handleInitialise(m_fmicAmp);
-            }
-
-            hidServices.stop();
-            hidServices.shutdown();
         }
+        int productId = fmicDevice.getProductId();
+        if (productId == 0x0046) {
+            // Mustang LT40S - tested with firmware 1.0.7
+            System.out.println(String.format(
+                "Connected FMIC device is %s, expected to work providing firmware is version 1.0.7",
+                fmicDevice.getProduct()
+            ));
+        } else if (productId >= 0x0037 && productId < 0x0046) {
+            // See incomplete list of VID/PIDs for Mustang products at 
+            // https://github.com/offa/plug/blob/master/doc/USB.md
+            // This range appears to be where the LT-series devices lie historically.    
+            System.out.println(String.format(
+                "Connected FMIC device is %s, probably LT series but not tested, may or may not work",
+                fmicDevice.getProduct()
+            ));
+        } else {
+            System.out.println(String.format(
+                "Connected FMIC device is %s, outside VID range for LT series, not expected to work",
+                fmicDevice.getProduct()
+            ));
+            fmicDevice = null;
+        }
+
+        if (fmicDevice == null) {
+            // Shut down and rely on auto-shutdown hook to clear HidApi resources
+            System.out.println("No relevant devices attached.");
+        } else {
+            // Open the device
+            if (fmicDevice.isClosed()) {
+                System.out.println("Need to open device.");
+                if (!fmicDevice.open()) {
+                    throw new IllegalStateException("Unable to open device.");
+                }
+                System.out.println("Device opened.");
+            } else {
+                System.out.println("No need to open device because it is already open.");
+            }
+
+            // Perform a USB ReportDescriptor operation to determine general device capabilities
+            // Reports can be up to 4096 bytes for complex devices.
+            // Probably won't need this but allocate max capacity anyway.
+            byte[] reportDescriptor = new byte[4096];
+            if (fmicDevice.getReportDescriptor(reportDescriptor) > 0) {
+                System.out.println("FMIC device report descriptor: " + fmicDevice.getPath());
+                printAsHex2(reportDescriptor, "<");
+            }
+
+            // Initialise the Fender Mustang/Rumble device
+            handleInitialise(fmicDevice);
+        }
+
+        hidServices.stop();
+        hidServices.shutdown();
     }
 
 
@@ -134,65 +130,36 @@ public class DesktopUsbAmpProvider
         return true;
 
     }
-    @Override
-    public boolean connect() {
-        boolean retval = false;
-        if (m_fmicAmp == null) {
-            s_loggingAgent.appendToLog(0,"Fender amplifier not attached");
-        } else if (m_fmicAmp.isClosed()) {
-            openAmpInThread();
-            waitForCondition("amp opened",10000);
-        } else {
-            s_loggingAgent.appendToLog(0,"Amp was open, has been closed, retry open");
-            s_loggingAgent.appendToLog(0,"Last error message: " + m_fmicAmp.getLastErrorMessage());
-        }
-        return retval;
-    }
 
-    private static void waitForCondition(String conditionDescription, int waitTimeMillis) {
+    @Override
+    public boolean connect() {         // Set the libusb variant (only needed for older Linux platforms)
+        //HidApi.useLibUsbVariant = true;
+
+        System.out.println("Pausing for connection");
         try {
-            Thread.yield();
-            s_loggingAgent.appendToLog(0,"Waiting for " + conditionDescription);
-            Thread.yield();
-            Thread.sleep(waitTimeMillis);
-            Thread.yield();
-            s_loggingAgent.appendToLog(0,"Timed out waiting for " + conditionDescription);
-        } catch (InterruptedException e) {
-            s_loggingAgent.appendToLog(0,"Interrupted waiting for " + conditionDescription);
+            Thread.sleep(5000);
+            System.out.println("Continuing normally...");
         }
-    }
+        catch(InterruptedException e) {
+            System.out.println("Continuing after interruption...");
+        }
 
-    private void openAmpInThread() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                boolean openSuccess = m_fmicAmp.open();
-                if(openSuccess==true) {
-                    s_loggingAgent.appendToLog(0,"open succeeded");
-                } else {
-                    s_loggingAgent.appendToLog(0,
-                            "open failed with message " + m_fmicAmp.getLastErrorMessage()
-                    );
-                }
-            }
-        }).start();
-        s_loggingAgent.appendToLog(0,"open started");
-        Thread.yield();
+        return true; 
     }
-
     @Override
-    public void sendCommand(String commandHexString) {
+    public void sendCommand(String commandHexString) { }
+/* 
         byte[] commandBytes = ByteArrayTranslator.hexToBytes(commandHexString);
         s_loggingAgent.appendToLog(0,"Sending " + commandHexString + "\n");
-        m_fmicAmp.write(commandBytes,64,(byte) 0x00,true);
-        byte[] responseBytes = m_fmicAmp.readAll(1000);
+        fmicDevice.write(commandBytes,64,(byte) 0x00,true);
+        byte[] responseBytes = fmicDevice.readAll(1000);
         if(responseBytes!=null && responseBytes.length>0) {
             s_loggingAgent.appendToLog(0,"Received " + ByteArrayTranslator.bytesToHex(responseBytes));
         } else {
-            s_loggingAgent.appendToLog(0,"Receive error: " + m_fmicAmp.getLastErrorMessage());
+            s_loggingAgent.appendToLog(0,"Receive error: " + fmicDevice.getLastErrorMessage());
         }
     }
-
+*/
     @Override
     public void expectReports(Pattern[] reportHexStringPatterns) {
 
@@ -207,7 +174,7 @@ public class DesktopUsbAmpProvider
     public void hidDeviceAttached(HidServicesEvent event) {
         System.out.println("Device attached: ");
         if(event.getHidDevice().getVendorId() == VID_FMIC) {
-            m_fmicAmp = event.getHidDevice();
+            HidDevice fmicDevice = event.getHidDevice();
 /*
             try {
                 s_loggingAgent.appendToLog(0,"Waiting for amp to become open ...");
@@ -233,12 +200,13 @@ public class DesktopUsbAmpProvider
     }
 
     @Override
-    public void hidDataReceived(HidServicesEvent event) {
+    public void hidDataReceived(HidServicesEvent event) { }
+/*
         byte[] responseBytes = event.getDataReceived();
         if(responseBytes!=null && responseBytes.length>0) {
             s_loggingAgent.appendToLog(0,"hdrReceived " + ByteArrayTranslator.bytesToHex(responseBytes));
         } else {
-            s_loggingAgent.appendToLog(0,"hdrReceive error: " + m_fmicAmp.getLastErrorMessage());
+            s_loggingAgent.appendToLog(0,"hdrReceive error: " + fmicDevice.getLastErrorMessage());
         }
         try {
             Thread.sleep(5000);
@@ -246,6 +214,7 @@ public class DesktopUsbAmpProvider
             s_loggingAgent.appendToLog(0,"hdrSleep interrupted");
         }
     }
+ */    
 
     // This function is based on upstream hid4java's BaseExample.printAsHex()
     // The original prints a buffer in full regardless of whether
