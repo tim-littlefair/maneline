@@ -144,6 +144,7 @@ public class DesktopUsbAmpProvider
 
     }
 
+  // Override functions specific to this example beyond this point
     @Override
     public void hidDataReceived(HidServicesEvent event) {
         System.out.println("hidDataReceived: " + event);
@@ -253,10 +254,8 @@ abstract class FMICProtocolBase {
         }
     }
 
-    protected static void log(String ansiPrefix, String message) {
-        System.out.println(
-            ansiPrefix + message
-        );
+    protected static void log(String message) {
+        System.out.println(message);
     }
 }
 
@@ -286,10 +285,10 @@ class LTSeriesProtocol extends FMICProtocolBase {
             byte[] packetBuffer = new byte[64];
             int packetBytesRead = m_device.read(packetBuffer,500);
             if (packetBytesRead < 0) {
-                log("","read failed, error=" + m_device.getLastErrorMessage());
+                log("read failed, error=" + m_device.getLastErrorMessage());
                 return STATUS_READ_FAIL;
             } else if(packetBytesRead!=64) {
-                log("","read incomplete, error=" + m_device.getLastErrorMessage());
+                log("read incomplete, error=" + m_device.getLastErrorMessage());
                 return STATUS_READ_FAIL;
             } else {
                 DesktopUsbAmpProvider.printAsHex2(packetBuffer,">");
@@ -341,25 +340,24 @@ class LTSeriesProtocol extends FMICProtocolBase {
             if (psJsonStatus!=STATUS_OK) {
                 return psJsonStatus;
             }
-            log("",presetJsonSB.toString());
+            log(presetJsonSB.toString());
         }
-        // We don't expect to get this far
         return STATUS_OK;
     }
 
     private int sendCommand(String commandBytesHex, String commandDescription) {
         byte[] commandBytes = new byte[64];
         colonSeparatedHexToByteArray(commandBytesHex, commandBytes);
-        log("", "Sending " + commandDescription);
+        log( "Sending " + commandDescription);
         DesktopUsbAmpProvider.printAsHex2(commandBytes,"<");
         int bytesWritten = m_device.write(commandBytes, 64, (byte) 0x00, true);
         if (bytesWritten < 0) {
-            log("",m_device.getLastErrorMessage());
+            log(m_device.getLastErrorMessage());
             return STATUS_WRITE_FAIL;
         }
         int bytesRead = readAndAssembleResponsePackets();
         if (bytesRead < 0) {
-            log("",m_device.getLastErrorMessage());
+            log(m_device.getLastErrorMessage());
             return STATUS_REASSEMBLY_FAIL;
         }
         return STATUS_OK;
@@ -404,7 +402,7 @@ class LTSeriesProtocol extends FMICProtocolBase {
             assert payloadLength == firmwareVersionLength + 2;
 
             String firmwareVersion=new String(assembledResponseMessage,7,firmwareVersionLength);
-            log("","Firmware version: " + firmwareVersion);
+            log("Firmware version: " + firmwareVersion);
         } else if(
             (0xfa == (0xff & assembledResponseMessage[2]) ) &&
                 (0x01 == (0xff & assembledResponseMessage[3]) )
