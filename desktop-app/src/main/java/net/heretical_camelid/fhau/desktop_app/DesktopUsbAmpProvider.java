@@ -1,29 +1,36 @@
 package net.heretical_camelid.fhau.desktop_app;
 
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.io.PrintStream;
+
+import org.hid4java.HidDevice;
+import org.hid4java.HidException;
+import org.hid4java.HidManager;
+import org.hid4java.HidServices;
+import org.hid4java.HidServicesListener;
+import org.hid4java.HidServicesSpecification;
+import org.hid4java.event.HidServicesEvent;
+import org.hid4java.jna.HidApi;
+
 import net.heretical_camelid.fhau.lib.ByteArrayTranslator;
 import net.heretical_camelid.fhau.lib.DefaultLoggingAgent;
 import net.heretical_camelid.fhau.lib.IAmpProvider;
 import net.heretical_camelid.fhau.lib.ILoggingAgent;
 import net.heretical_camelid.fhau.lib.PresetInfo;
 
-import com.sun.jna.Platform;
 
-import org.hid4java.HidDevice;
-import org.hid4java.HidManager;
-import org.hid4java.HidServices;
-import org.hid4java.HidServicesListener;
-import org.hid4java.HidServicesSpecification;
-import org.hid4java.event.HidServicesEvent;
 
-import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.ArrayList;
+
+
 
 public class DesktopUsbAmpProvider
         implements IAmpProvider, HidServicesListener
@@ -34,20 +41,22 @@ public class DesktopUsbAmpProvider
     public DesktopUsbAmpProvider() {
         s_loggingAgent = new DefaultLoggingAgent(2);
         
-        s_loggingAgent.appendToLog(0,"Platform architecture: " + Platform.ARCH);
-        s_loggingAgent.appendToLog(0,"Resource prefix: " + Platform.RESOURCE_PREFIX);
-        s_loggingAgent.appendToLog(0,"Libusb activation: " + Platform.isLinux());
         HidServicesSpecification hidServicesSpecification = new HidServicesSpecification();
 
+        // Use manual start
         hidServicesSpecification.setAutoStart(false);
+        // Responses will be read synchronously
         hidServicesSpecification.setAutoDataRead(false);
         hidServicesSpecification.setDataReadInterval(500);
 
         // Get HID services using custom specification
         HidServices hidServices = HidManager.getHidServices(hidServicesSpecification);
+        // Register for service events
         hidServices.addHidServicesListener(this);
+        // Manually start HID services
         hidServices.start();
 
+        // Enumerate devices looking for FMIC vendor id and LT series usage page
         HidDevice fmicDevice = null;
         for (HidDevice hidDevice : hidServices.getAttachedHidDevices()) {
             if (hidDevice.getVendorId() != 0x1ed8) {
@@ -60,13 +69,12 @@ public class DesktopUsbAmpProvider
             }
         }
         int productId = fmicDevice.getProductId();
-        if (productId == 0x0046) {
-            // Mustang LT40S - tested with firmware 1.0.7
-            System.out.println(String.format(
-                "Connected FMIC device is %s, expected to work providing firmware is version 1.0.7",
-                fmicDevice.getProduct()
-            ));
-        } else if (productId >= 0x0037 && productId < 0x0046) {
+    if (productId==0x0046) {
+        // Mustang LT40S - tested with firmware 1.0.7
+        System.out.println(
+            String.format("Connected FMIC device is %s, expected to work providing firmware is version 1.0.7",fmicDevice.getProduct())
+         );
+    } else if(productId>=0x0037 && productId<0x0046) {
             // See incomplete list of VID/PIDs for Mustang products at 
             // https://github.com/offa/plug/blob/master/doc/USB.md
             // This range appears to be where the LT-series devices lie historically.    
@@ -103,7 +111,7 @@ public class DesktopUsbAmpProvider
             byte[] reportDescriptor = new byte[4096];
             if (fmicDevice.getReportDescriptor(reportDescriptor) > 0) {
                 System.out.println("FMIC device report descriptor: " + fmicDevice.getPath());
-                printAsHex2(reportDescriptor, "<");
+                printAsHex2(reportDescriptor,"<");
             }
 
             // Initialise the Fender Mustang/Rumble device
@@ -371,14 +379,7 @@ class LTSeriesProtocol extends FMICProtocolBase {
         for(int i=1; i<=60; ++i) {
             StringBuilder presetJsonSB = new StringBuilder();
             int psJsonStatus = getPresetJson(i, presetJsonSB);
-            if(psJsonStatus==STATUS_PRESET_WRAP_WARN) {
-                // The preset index in the response does not map
-                // the one requested.
-                // This indicates that all presets have been supplied
-                // and the firmware has wrapped around and is returning
-                // the first preset.
-                return STATUS_OK;
-            } else if (psJsonStatus!=STATUS_OK) {
+      if (psJsonStatus!=STATUS_OK) {
                 return psJsonStatus;
             }
             log(ANSI_BLUE,presetJsonSB.toString());
@@ -509,16 +510,24 @@ class FMICDevice {
         String jsonDefinitionText, String attributeName
     ) {
         Pattern attrDefinitionPattern = Pattern.compile(
-            String.format("\"%s\": \"([^\"]*)\"", attributeName)
+            String.format("\"%s\":\\s*\"([^\"]*)\"", attributeName)
         );
         Matcher m = attrDefinitionPattern.matcher(jsonDefinitionText);
-        m.find();
-        assert m.groupCount() == 1;
-        return m.group(1);
+
+        if (m.find()) {
+            assert m.groupCount() == 1;
+            return m.group(1);
+        } else {
+            return null;
+        }
     }
 
     static String extendedName(String jsonDefinitionText) {
         String name = getStringAttribute(jsonDefinitionText,"displayName");
+        if(name==null) {
+            System.out.println("No name found in: " + jsonDefinitionText);
+            name = "_noname_";
+        }
         try {
             String hash = Base64.getUrlEncoder().encodeToString(
                 MessageDigest.getInstance("SHA-256").digest(
