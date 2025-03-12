@@ -68,55 +68,66 @@ public class DesktopUsbAmpProvider
                 continue;
             }
             if (hidDevice.getUsage() == 0x01 && hidDevice.getUsagePage() == 0xffffff00) {
-                System.out.println("Using FMIC device: " + hidDevice.getPath());
                 fmicDevice = hidDevice;
                 break;
             }
         }
-        int productId = fmicDevice.getProductId();
-        if (productId==0x0046) {
-            // Mustang LT40S - tested with firmware 1.0.7
-            System.out.println(
-                String.format("Connected FMIC device is %s, expected to work providing firmware is version 1.0.7",fmicDevice.getProduct())
-            );
-        } else if(productId>=0x0037 && productId<0x0046) {
-            // See incomplete list of VID/PIDs for Mustang products at 
-            // https://github.com/offa/plug/blob/master/doc/USB.md
-            // This range appears to be where the LT-series devices lie historically.    
-            System.out.println(String.format(
-                "Connected FMIC device is %s, probably LT series but not tested, may or may not work",
-                fmicDevice.getProduct()
-            ));
-        } else {
-            System.out.println(String.format(
-                "Connected FMIC device is %s, outside VID range for LT series, not expected to work",
-                fmicDevice.getProduct()
-            ));
-            fmicDevice = null;
-        }
-
         if (fmicDevice == null) {
             // Shut down and rely on auto-shutdown hook to clear HidApi resources
             System.out.println("No relevant devices attached.");
         } else {
+            int productId = fmicDevice.getProductId();
+            System.out.println(String.format(
+                "Using FMIC device with VID/PID=%04x:%04x product='%s' serial#=%s release=%d path=%s",
+                fmicDevice.getVendorId(), productId, fmicDevice.getProduct(),
+                fmicDevice.getSerialNumber(), fmicDevice.getReleaseNumber(), fmicDevice.getPath()
+            ));
+            if (productId==0x0046) {
+                // Mustang LT40S - tested with firmware 1.0.7
+                System.out.println("Mustang LT40S - tested with firmware 1.0.7 - expected to work");
+            } else if (productId==0x0046) {
+                // Original Mustang Micro - with 2024/2025 firmware this does not enumerate as an 
+                // HID Device - including it here in the distant hope that a future firmware might
+                System.out.println("Original Mustang Micro - not tested - may or may not work");                
+            } else if (productId==0x003a) {
+                // Mustang Micro Plus - with 2024/2025 firmware this does not enumerate as an 
+                // HID Device - including it here in the distant hope that a future firmware might
+                System.out.println("Mustang Micro Plus - not tested - may or may not work");                
+            } else if(productId>=0x0037 && productId<0x0046) {
+                // See incomplete list of VID/PIDs for Mustang products at 
+                // https://github.com/offa/plug/blob/master/doc/USB.md
+                // This range appears to be where the LT-series devices lie historically.    
+                System.out.println("Probably LT series device - not tested - may or may not work");
+            } else {
+                System.out.println(
+                    "Outside VID range for LT series - not tested - disabled because not expected to work"
+                );
+                fmicDevice = null;
+            }
+
             // Open the device
             if (fmicDevice.isClosed()) {
-                System.out.println("Need to open device.");
                 if (!fmicDevice.open()) {
                     throw new IllegalStateException("Unable to open device.");
                 }
-                System.out.println("Device opened.");
-            } else {
-                System.out.println("No need to open device because it is already open.");
-            }
+            } 
 
             // Perform a USB ReportDescriptor operation to determine general device capabilities
             // Reports can be up to 4096 bytes for complex devices.
             // Probably won't need this but allocate max capacity anyway.
             byte[] reportDescriptor = new byte[4096];
             if (fmicDevice.getReportDescriptor(reportDescriptor) > 0) {
-                System.out.println("FMIC device report descriptor: " + fmicDevice.getPath());
+                // There is an online HTML/JS tool written by Frank Zao which can 
+                // parse USB HID report descriptor.
+                // https://eleccelerator.com/usbdescreqparser/
+                // I'm not yet sure whether there is anything useful to us here.
+                // This Git repo contains a reference copy of the tool in 
+                // the assets directory in case the original URL gets bit-rot.
+                boolean e_pah2_prev_state = enable_printAsHex2;
+                enable_printAsHex2 = true;
+                System.out.println("FMIC device report descriptor: ");
                 printAsHex2(reportDescriptor,"<");
+                enable_printAsHex2 = e_pah2_prev_state;
             }
 
             // Initialise the Fender Mustang/Rumble device
@@ -139,9 +150,10 @@ public class DesktopUsbAmpProvider
         System.out.println("doStartup returned " + startupStatus);
         int presetNamesStatus = protocol.getPresetNamesList();
         System.out.println("getPresetNamesList returned " + presetNamesStatus);
-        System.out.println("Last error: " + hidDevice.getLastErrorMessage());
+        if(presetNamesStatus!=0) {
+            System.out.println("Last error: " + hidDevice.getLastErrorMessage());
+        }
         return true;
-
     }
 
   // Override functions specific to this example beyond this point
@@ -189,12 +201,12 @@ public class DesktopUsbAmpProvider
 
     @Override
     public void hidDeviceAttached(HidServicesEvent event) {
-        System.out.println("hidDeviceAttached: " + event);
+        //System.out.println("hidDeviceAttached: " + event);
     }
 
     @Override
     public void hidDeviceDetached(HidServicesEvent event) {
-        System.out.println("hidDeviceDetached: " + event);
+        //System.out.println("hidDeviceDetached: " + event);
     }
 
     @Override
