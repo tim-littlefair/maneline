@@ -1,16 +1,13 @@
 package net.heretical_camelid.fhau.desktop_app;
 
-import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.io.PrintStream;
 
 import org.hid4java.HidDevice;
 import org.hid4java.HidException;
@@ -18,19 +15,14 @@ import org.hid4java.HidManager;
 import org.hid4java.HidServices;
 import org.hid4java.HidServicesListener;
 import org.hid4java.HidServicesSpecification;
+import org.hid4java.ScanMode;
 import org.hid4java.event.HidServicesEvent;
 import org.hid4java.jna.HidApi;
 
-import net.heretical_camelid.fhau.lib.ByteArrayTranslator;
 import net.heretical_camelid.fhau.lib.DefaultLoggingAgent;
 import net.heretical_camelid.fhau.lib.IAmpProvider;
 import net.heretical_camelid.fhau.lib.ILoggingAgent;
 import net.heretical_camelid.fhau.lib.PresetInfo;
-
-
-
-
-
 
 public class DesktopUsbAmpProvider
         implements IAmpProvider, HidServicesListener
@@ -51,12 +43,21 @@ public class DesktopUsbAmpProvider
         hidServicesSpecification.setAutoStart(false);
         // Responses will be read synchronously
         hidServicesSpecification.setAutoDataRead(false);
-        hidServicesSpecification.setDataReadInterval(500);
+
+        // Dump parameters which are default-initialized
+        ScanMode sm = hidServicesSpecification.getScanMode();
+        int si = hidServicesSpecification.getScanInterval();
+        int dri = hidServicesSpecification.getDataReadInterval();
+        int pi = hidServicesSpecification.getPauseInterval();
+        System.out.println(String.format(
+           "sm=%s si=%d dri=%d pi=%d", sm, si, dri, pi
+        ));
 
         // Get HID services using custom specification
         HidServices hidServices = HidManager.getHidServices(hidServicesSpecification);
         // Register for service events
         hidServices.addHidServicesListener(this);
+
 
         // Manually start HID services
         hidServices.start();
@@ -88,11 +89,11 @@ public class DesktopUsbAmpProvider
             } else if (productId==0x0046) {
                 // Original Mustang Micro - with 2024/2025 firmware this does not enumerate as an 
                 // HID Device - including it here in the distant hope that a future firmware might
-                System.out.println("Original Mustang Micro - not tested - may or may not work");                
+                System.out.println("Original Mustang Micro - not expected to be detected via USB HID");                
             } else if (productId==0x003a) {
                 // Mustang Micro Plus - with 2024/2025 firmware this does not enumerate as an 
                 // HID Device - including it here in the distant hope that a future firmware might
-                System.out.println("Mustang Micro Plus - not tested - may or may not work");                
+                System.out.println("Mustang Micro Plus - not expected to be detected via USB HID (but might work with BLE HID over GATT)");                
             } else if(productId>=0x0037 && productId<0x0046) {
                 // See incomplete list of VID/PIDs for Mustang products at 
                 // https://github.com/offa/plug/blob/master/doc/USB.md
@@ -100,14 +101,18 @@ public class DesktopUsbAmpProvider
                 System.out.println("Probably LT series device - not tested - may or may not work");
             } else {
                 System.out.println(
-                    "Outside VID range for LT series - not tested - disabled because not expected to work"
+                    "Outside PID range for LT series - not tested - disabled because not expected to work"
                 );
+                // TODO?: Consider implementing a CLI switch for 'have a go anyway'
                 fmicDevice = null;
             }
 
             // Open the device
+            System.out.println("FMIC device error: " + fmicDevice.getLastErrorMessage());
             if (fmicDevice.isClosed()) {
+                System.out.println("FMIC device error: " + fmicDevice.getLastErrorMessage());
                 if (!fmicDevice.open()) {
+                    System.out.println("FMIC device error: " + fmicDevice.getLastErrorMessage());
                     throw new IllegalStateException("Unable to open device.");
                 }
             } 
@@ -227,10 +232,6 @@ public class DesktopUsbAmpProvider
     @Override
     public void sendCommand(String commandHexString) { 
         System.out.println("sendCommand! (unexpected)");
-    }
-    @Override
-    public void expectReports(Pattern[] reportHexStringPatterns) {
-
     }
 }
 

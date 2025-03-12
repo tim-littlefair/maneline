@@ -10,8 +10,6 @@ import net.heretical_camelid.fhau.lib.ILoggingAgent;
 import net.heretical_camelid.fhau.lib.PresetInfo;
 import net.heretical_camelid.fhau.lib.PresetRecord;
 
-import java.util.regex.Pattern;
-
 public class AndroidUsbAmpProvider implements IAmpProvider {
     final ILoggingAgent m_loggingAgent;
     UsbHidDevice m_device;
@@ -61,11 +59,6 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
         } catch (InterruptedException e) {
             m_loggingAgent.appendToLog(0,"sleep interrupted\n");
         }
-    }
-
-    @Override
-    public void expectReports(Pattern[] reportHexStringPatterns) {
-
     }
 
     @Override

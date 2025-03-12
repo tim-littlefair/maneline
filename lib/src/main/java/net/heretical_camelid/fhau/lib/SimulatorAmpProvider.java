@@ -1,7 +1,5 @@
 package net.heretical_camelid.fhau.lib;
 
-import java.util.regex.Pattern;
-
 public class SimulatorAmpProvider implements IAmpProvider {
     private final ILoggingAgent m_loggingAgent;
     PresetInfo m_presetInfo;
@@ -103,9 +101,6 @@ public class SimulatorAmpProvider implements IAmpProvider {
 
     @Override
     public void sendCommand(String commandHexString) { }
-
-    @Override
-    public void expectReports(Pattern[] reportHexStringPatterns) {  }
 
     @Override
     public PresetInfo getPresetInfo(PresetInfo requestedPresets) {
