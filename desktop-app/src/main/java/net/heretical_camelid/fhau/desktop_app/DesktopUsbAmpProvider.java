@@ -1,8 +1,5 @@
 package net.heretical_camelid.fhau.desktop_app;
 
-import java.util.ArrayList;
-
-import net.heretical_camelid.fhau.lib.*;
 import org.hid4java.HidDevice;
 import org.hid4java.HidManager;
 import org.hid4java.HidServices;
@@ -12,6 +9,7 @@ import org.hid4java.ScanMode;
 import org.hid4java.event.HidServicesEvent;
 import org.hid4java.jna.HidApi;
 
+import net.heretical_camelid.fhau.lib.*;
 import static net.heretical_camelid.fhau.lib.FMICProtocolBase.printAsHex2;
 import static net.heretical_camelid.fhau.lib.FMICProtocolBase.enable_printAsHex2;
 
@@ -22,6 +20,10 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
 
     public DesktopUsbAmpProvider() {
         s_loggingAgent = new DefaultLoggingAgent(2);
+        startProvider();
+    }
+
+    private void startProvider() {
         
         // Demonstrate low level traffic logging
         HidApi.logTraffic = false;
@@ -63,6 +65,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
                 break;
             }
         }
+
         if (fmicDevice == null) {
             // Shut down and rely on auto-shutdown hook to clear HidApi resources
             System.out.println("No relevant devices attached.");
@@ -97,34 +100,41 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
                 fmicDevice = null;
             }
 
-            // Open the device
-            if (fmicDevice.isClosed()) {
-                if (!fmicDevice.open()) {
-                    System.out.println("FMIC device error: " + fmicDevice.getLastErrorMessage());
-                    throw new IllegalStateException("Unable to open device.");
+            if (fmicDevice == null) {
+                // Shut down and rely on auto-shutdown hook to clear HidApi resources
+                System.out.println("No relevant devices attached.");
+            } else {
+                // Open the device
+                System.out.println("FMIC device error: " + fmicDevice.getLastErrorMessage());
+                if (fmicDevice.isClosed()) {
+                  System.out.println("FMIC device error: " + fmicDevice.getLastErrorMessage());
+                  if (!fmicDevice.open()) {
+                      System.out.println("FMIC device error: " + fmicDevice.getLastErrorMessage());
+                      throw new IllegalStateException("Unable to open device.");
+                  }
                 }
-            } 
 
-            // Perform a USB ReportDescriptor operation to determine general device capabilities
-            // Reports can be up to 4096 bytes for complex devices.
-            // Probably won't need this but allocate max capacity anyway.
-            byte[] reportDescriptor = new byte[4096];
-            if (fmicDevice.getReportDescriptor(reportDescriptor) > 0) {
-                // There is an online HTML/JS tool written by Frank Zao which can 
-                // parse USB HID report descriptor.
-                // https://eleccelerator.com/usbdescreqparser/
-                // I'm not yet sure whether there is anything useful to us here.
-                // This Git repo contains a reference copy of the tool in 
-                // the assets directory in case the original URL gets bit-rot.
-                boolean e_pah2_prev_state = enable_printAsHex2;
-                enable_printAsHex2 = true;
-                System.out.println("FMIC device report descriptor: ");
-                printAsHex2(reportDescriptor,"<");
-                enable_printAsHex2 = e_pah2_prev_state;
+                // Perform a USB ReportDescriptor operation to determine general device capabilities
+                // Reports can be up to 4096 bytes for complex devices.
+                // Probably won't need this but allocate max capacity anyway.
+                byte[] reportDescriptor = new byte[4096];
+                if (fmicDevice.getReportDescriptor(reportDescriptor) > 0) {
+                  // There is an online HTML/JS tool written by Frank Zao which can
+                    // parse USB HID report descriptor.
+                    // https://eleccelerator.com/usbdescreqparser/
+                    // I'm not yet sure whether there is anything useful to us here.
+                    // This Git repo contains a reference copy of the tool in
+                    // the assets directory in case the original URL gets bit-rot.
+                    boolean e_pah2_prev_state = enable_printAsHex2;
+                    enable_printAsHex2 = true;
+                    System.out.println("FMIC device report descriptor: ");
+                    printAsHex2(reportDescriptor,"<");
+                    enable_printAsHex2 = e_pah2_prev_state;
+                }
+
+                // Initialise the Fender Mustang/Rumble device
+                handleInitialise(fmicDevice);
             }
-
-            // Initialise the Fender Mustang/Rumble device
-            handleInitialise(fmicDevice);
         }
 
         hidServices.stop();
@@ -148,37 +158,6 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
         return true;
     }
 
-    // hid4java's BaseExample.printAsHex() prints a buffer in full regardless of whether
-    // it is mostly zero-filled.
-    // This variant replaces trailing zero bytes with '...'
-    // (if and only if at least one trailing zero byte is present).
-    // This allows larger buffers to be used without blowing out
-    // log files with empty bytes (e.g. for the report descriptor).
-    // This variant is also suitable for use with both sent
-    // and received data, and is controlled by an enablement variable
-    public static boolean enable_printAsHex2=false;
-    public static void printAsHex2(byte[] dataSentOrReceived, String directionChar) {
-         if(enable_printAsHex2==false) {
-             return;
-         }
-         System.out.printf("%s [%02x]:", directionChar, dataSentOrReceived.length);
-         int trailingZeroByteCount = -1; // -1 signifies 'no non-zero bytes seen yet'
-         for (int i=dataSentOrReceived.length-1; i>0; --i) {
-             if (dataSentOrReceived[i]!=0) {
-                 trailingZeroByteCount = dataSentOrReceived.length - i - 1;
-                 break;
-             }
-         }
-         for (int i=0; i<dataSentOrReceived.length; ++i) {
-             System.out.printf(" %02x", dataSentOrReceived[i]);
-             if (dataSentOrReceived.length-i==trailingZeroByteCount) {
-                System.out.printf(" ...");
-                break;
-             }
-         }
-         System.out.println();
-    }
-
     // Override functions specific to this example beyond this point
     @Override
     public void hidDataReceived(HidServicesEvent event) {
@@ -188,7 +167,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
 
     private int sendCommand(String commandBytesHex, String commandDescription) {
         return 0;
-    }    
+    }
 
     @Override
     public void hidDeviceAttached(HidServicesEvent event) {
@@ -213,12 +192,13 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
     @Override
     public boolean connect() {
         System.out.println("Connect! (unexpected)");
-        return true; 
+        return true;
     }
     @Override
-    public void sendCommand(String commandHexString) { 
+    public void sendCommand(String commandHexString) {
         System.out.println("sendCommand! (unexpected)");
     }
+
 }
 
 
