@@ -1,9 +1,9 @@
 package net.heretical_camelid.fhau.lib;
 
-class PresetRecordBase {
+public class PresetRecordBase {
     String m_name;
 
-    PresetRecordBase(String name) {
+    public PresetRecordBase(String name) {
         m_name = name;
     }
 }

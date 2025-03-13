@@ -1,6 +1,6 @@
 package net.heretical_camelid.fhau.lib;
 
-class PresetNameListGenerator implements PresetRegistryVisitor {
+public class PresetNameListGenerator implements PresetRegistryVisitor {
 
     @Override
     public void visit(PresetRegistryBase registry) {

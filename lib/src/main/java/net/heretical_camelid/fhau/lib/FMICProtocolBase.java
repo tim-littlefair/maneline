@@ -26,7 +26,10 @@ public abstract class FMICProtocolBase {
 
     public final int STATUS_PRESET_WRAP_WARN = 201;
 
-    protected FMICProtocolBase() { }
+    protected ProtocolDeviceInterface m_device;
+    protected FMICProtocolBase(ProtocolDeviceInterface device) {
+        m_device = device;
+    }
 
     public static void printAsHex2(byte[] dataSentOrReceived, String directionChar) {
         if(enable_printAsHex2==false) {
@@ -90,3 +93,4 @@ public abstract class FMICProtocolBase {
         System.out.println(message);
     }
 }
+

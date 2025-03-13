@@ -1,15 +1,11 @@
 package net.heretical_camelid.fhau.desktop_app;
 
-import org.hid4java.HidDevice;
-import org.hid4java.HidManager;
-import org.hid4java.HidServices;
-import org.hid4java.HidServicesListener;
-import org.hid4java.HidServicesSpecification;
-import org.hid4java.ScanMode;
+import org.hid4java.*;
 import org.hid4java.event.HidServicesEvent;
 import org.hid4java.jna.HidApi;
 
 import net.heretical_camelid.fhau.lib.*;
+import org.hid4java.jna.HidDeviceInfoStructure;
 
 import static net.heretical_camelid.fhau.lib.FMICProtocolBase.printAsHex2;
 import static net.heretical_camelid.fhau.lib.FMICProtocolBase.enable_printAsHex2;
@@ -110,9 +106,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
                 System.out.println("No relevant devices attached.");
             } else {
                 // Open the device
-                System.out.println("FMIC device error: " + fmicDevice.getLastErrorMessage());
                 if (fmicDevice.isClosed()) {
-                  System.out.println("FMIC device error: " + fmicDevice.getLastErrorMessage());
                   if (!fmicDevice.open()) {
                       System.out.println("FMIC device error: " + fmicDevice.getLastErrorMessage());
                       throw new IllegalStateException("Unable to open device.");
@@ -152,13 +146,19 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
      * @return True if the device is now initialised for use
      */
     private boolean handleInitialise(HidDevice hidDevice) {
-        FMICProtocolBase protocol = new LTSeriesProtocol(hidDevice);
+        PresetRegistryBase presetRegistry = new PresetRegistryBase();    
+        FMICProtocolBase protocol = new LTSeriesProtocol(new UsbHidDevice(hidDevice), presetRegistry);
         int startupStatus = protocol.doStartup();
-        System.out.println("doStartup returned " + startupStatus);
+        System.out.println("Retrieving presets - should take < 5 seconds");
         int presetNamesStatus = protocol.getPresetNamesList();
-        System.out.println("getPresetNamesList returned " + presetNamesStatus);
-        if(presetNamesStatus!=0) {
-          System.out.println("Last error: " + hidDevice.getLastErrorMessage());
+        if(startupStatus!=0 || presetNamesStatus!=0) {
+            System.out.println("doStartup returned " + startupStatus);
+            System.out.println("getPresetNamesList returned " + presetNamesStatus);
+            System.out.println("Last error: " + hidDevice.getLastErrorMessage());
+            return false;
+        } else {
+            System.out.println("");
+            presetRegistry.acceptVisitor(new PresetNameListGenerator());
         }
         return true;
     }
@@ -206,3 +206,21 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
 
 }
 
+class UsbHidDevice implements ProtocolDeviceInterface {
+    final HidDevice m_hidDevice;
+    UsbHidDevice(HidDevice hidDevice) {
+        m_hidDevice = hidDevice;
+    }
+    @Override
+    public int read(byte[] packetBuffer, int i) { return m_hidDevice.read(packetBuffer,i); }
+
+    @Override
+    public String getLastErrorMessage() {
+        return m_hidDevice.getLastErrorMessage();
+    }
+
+    @Override
+    public int write(byte[] commandBytes, int i, byte b, boolean b1) {
+        return m_hidDevice.write(commandBytes, i, b, b1);
+    }
+}

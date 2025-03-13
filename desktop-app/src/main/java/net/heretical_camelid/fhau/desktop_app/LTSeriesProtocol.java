@@ -1,18 +1,19 @@
 package net.heretical_camelid.fhau.desktop_app;
 
 import net.heretical_camelid.fhau.lib.FMICProtocolBase;
-import org.hid4java.HidDevice;
+import net.heretical_camelid.fhau.lib.PresetRecordBase;
+import net.heretical_camelid.fhau.lib.PresetRegistryBase;
+import net.heretical_camelid.fhau.lib.ProtocolDeviceInterface;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 class LTSeriesProtocol extends FMICProtocolBase {
-    final HidDevice m_device;
-
-    public LTSeriesProtocol(HidDevice device) {
-        m_device = device;
-    }
-
+  PresetRegistryBase m_presetRegistry;
+  public LTSeriesProtocol(ProtocolDeviceInterface device, PresetRegistryBase presetRegistry) {
+    super(device);
+    m_presetRegistry = presetRegistry;
+  }
     public int doStartup() {
         String[][] startupCommands = new String[][]{
             new String[]{"35:09:08:00:8a:07:04:08:00:10", "initialisation request"},
@@ -33,7 +34,8 @@ class LTSeriesProtocol extends FMICProtocolBase {
         int assemblyBufferOffset = 0;
         while (true) {
             byte[] packetBuffer = new byte[64];
-            int packetBytesRead = m_device.read(packetBuffer, 500);
+            int packetBytesRead;
+            packetBytesRead = m_device.read(packetBuffer, 500);
             if (packetBytesRead < 0) {
                 log("read failed, error=" + m_device.getLastErrorMessage());
                 return STATUS_READ_FAIL;
@@ -180,9 +182,7 @@ class LTSeriesProtocol extends FMICProtocolBase {
             int presetIndex = assembledResponseMessage[assembledResponseMessage.length - 1];
             // System.out.println(jsonDefinition);
             String presetExtendedName = FMICProtocolBase.displayName(jsonDefinition);
-            System.out.println(String.format(
-                "Preset %d: %s", presetIndex, presetExtendedName
-            ));
+            m_presetRegistry.register(presetIndex, new PresetRecordBase(presetExtendedName));
         }
 
         return STATUS_OK;

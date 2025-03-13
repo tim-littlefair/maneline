@@ -16,12 +16,12 @@ public class PresetRegistryBase {
         m_records = new HashMap<>();
     }
 
-    void register(int slotIndex, PresetRecordBase presetRecord) {
+    public void register(int slotIndex, PresetRecordBase presetRecord) {
         assert slotIndex > 0;
         m_records.put(slotIndex, presetRecord);
     }
 
-    void acceptVisitor(PresetRegistryVisitor visitor) {
+    public void acceptVisitor(PresetRegistryVisitor visitor) {
         visitor.visit(this);
         for (int i = 1; i < m_records.size(); ++i) {
             PresetRecordBase record = m_records.get(i);
