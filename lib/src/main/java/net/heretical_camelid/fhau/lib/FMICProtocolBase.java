@@ -31,6 +31,22 @@ public abstract class FMICProtocolBase {
         m_device = device;
     }
 
+    public abstract int doStartup();
+
+    public abstract int getPresetNamesList();
+
+    protected static void log(String message) {
+        System.out.println(message);
+    }
+
+    public static void colonSeparatedHexToByteArray(String colonSeparatedHex, byte[] byteArray) {
+        String byteHexArray[] = colonSeparatedHex.split(":");
+        assert byteArray.length >= byteHexArray.length;
+        for (int i = 0; i < byteHexArray.length; ++i) {
+            byteArray[i] = (byte) Integer.parseInt(byteHexArray[i], 16);
+        }
+    }
+
     public static void printAsHex2(byte[] dataSentOrReceived, String directionChar) {
         if(enable_printAsHex2==false) {
             return;
@@ -57,7 +73,7 @@ public abstract class FMICProtocolBase {
         String jsonDefinitionText, String attributeName
     ) {
         Pattern attrDefinitionPattern = Pattern.compile(
-            String.format("\"%s\":\\s*\"([^\"]*)\"", attributeName)
+            String.format("\"%s\":[ ]*\"([^\"]*)\"", attributeName)
         );
         Matcher m = attrDefinitionPattern.matcher(jsonDefinitionText);
 
@@ -77,20 +93,7 @@ public abstract class FMICProtocolBase {
         return name;
     }
 
-    public abstract int doStartup();
 
-    public abstract int getPresetNamesList();
 
-    public static void colonSeparatedHexToByteArray(String colonSeparatedHex, byte[] byteArray) {
-        String byteHexArray[] = colonSeparatedHex.split(":");
-        assert byteArray.length >= byteHexArray.length;
-        for (int i = 0; i < byteHexArray.length; ++i) {
-            byteArray[i] = (byte) Integer.parseInt(byteHexArray[i], 16);
-        }
-    }
-
-    protected static void log(String message) {
-        System.out.println(message);
-    }
 }
 

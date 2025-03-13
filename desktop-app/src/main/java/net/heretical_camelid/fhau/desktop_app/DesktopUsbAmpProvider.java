@@ -5,7 +5,6 @@ import org.hid4java.event.HidServicesEvent;
 import org.hid4java.jna.HidApi;
 
 import net.heretical_camelid.fhau.lib.*;
-import org.hid4java.jna.HidDeviceInfoStructure;
 
 import static net.heretical_camelid.fhau.lib.FMICProtocolBase.printAsHex2;
 import static net.heretical_camelid.fhau.lib.FMICProtocolBase.enable_printAsHex2;
@@ -206,21 +205,3 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
 
 }
 
-class UsbHidDevice implements ProtocolDeviceInterface {
-    final HidDevice m_hidDevice;
-    UsbHidDevice(HidDevice hidDevice) {
-        m_hidDevice = hidDevice;
-    }
-    @Override
-    public int read(byte[] packetBuffer, int i) { return m_hidDevice.read(packetBuffer,i); }
-
-    @Override
-    public String getLastErrorMessage() {
-        return m_hidDevice.getLastErrorMessage();
-    }
-
-    @Override
-    public int write(byte[] commandBytes, int i, byte b, boolean b1) {
-        return m_hidDevice.write(commandBytes, i, b, b1);
-    }
-}
