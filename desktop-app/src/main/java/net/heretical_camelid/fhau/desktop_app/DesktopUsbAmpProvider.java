@@ -10,16 +10,21 @@ import org.hid4java.event.HidServicesEvent;
 import org.hid4java.jna.HidApi;
 
 import net.heretical_camelid.fhau.lib.*;
+
 import static net.heretical_camelid.fhau.lib.FMICProtocolBase.printAsHex2;
 import static net.heretical_camelid.fhau.lib.FMICProtocolBase.enable_printAsHex2;
 
 public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
 {
     final private static int VID_FMIC = 0x1ed8;
+
     static ILoggingAgent s_loggingAgent;
+
+    PresetRegistryBase m_presetRegistry;
 
     public DesktopUsbAmpProvider() {
         s_loggingAgent = new DefaultLoggingAgent(2);
+        m_presetRegistry = new PresetRegistryBase();
         startProvider();
     }
 
@@ -57,7 +62,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
         // Enumerate devices looking for FMIC vendor id and LT series usage page
         HidDevice fmicDevice = null;
         for (HidDevice hidDevice : hidServices.getAttachedHidDevices()) {
-            if (hidDevice.getVendorId() != 0x1ed8) {
+            if (hidDevice.getVendorId() != VID_FMIC) {
                 continue;
             }
             if (hidDevice.getUsage() == 0x01 && hidDevice.getUsagePage() == 0xffffff00) {
@@ -200,6 +205,4 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
     }
 
 }
-
-
 
