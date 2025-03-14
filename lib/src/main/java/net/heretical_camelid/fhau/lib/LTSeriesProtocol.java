@@ -5,11 +5,12 @@ import java.util.Arrays;
 
 public class LTSeriesProtocol extends AbstractMessageProtocolBase {
   PresetRegistryBase m_presetRegistry;
-  public LTSeriesProtocol(DeviceTransportInterface device, PresetRegistryBase presetRegistry) {
-    super(device);
+  public LTSeriesProtocol(PresetRegistryBase presetRegistry) {
     m_presetRegistry = presetRegistry;
   }
     public int doStartup() {
+        assert m_deviceTransport!=null;
+
         String[][] startupCommands = new String[][]{
             new String[]{"35:09:08:00:8a:07:04:08:00:10", "initialisation request"},
             new String[]{"35:07:08:00:b2:06:02:08:01:00:10", "firmware version request"},
@@ -24,64 +25,10 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         return STATUS_OK;
     }
 
-    private int readAndAssembleResponsePackets() {
-        byte[] assemblyBuffer = new byte[4096];
-        int assemblyBufferOffset = 0;
-        while (true) {
-            byte[] packetBuffer = new byte[64];
-            int packetBytesRead;
-            packetBytesRead = m_device.read(packetBuffer, 500);
-            if (packetBytesRead < 0) {
-                log("read failed, error=" + m_device.getLastErrorMessage());
-                return STATUS_READ_FAIL;
-            } else if (packetBytesRead != 64) {
-                log("read incomplete, error=" + m_device.getLastErrorMessage());
-                return STATUS_READ_FAIL;
-            } /* else */
-            {
-                printAsHex2(packetBuffer, ">");
-            }
-            assert packetBuffer[0] == 0x00;
-            int packetContentStart = 3;
-            int contentLength = packetBuffer[2];
-            boolean messageComplete;
-            switch (packetBuffer[1]) {
-                case 0x33: // first packet
-                    assert assemblyBufferOffset == 0;
-                    assert contentLength == 0x3d;
-                    messageComplete = false;
-                    break;
-
-                case 0x34: // middle packet
-                    assert contentLength == 0x3d;
-                    messageComplete = false;
-                    break;
-
-                case 0x35:
-                    assert contentLength <= 0x3d;
-                    messageComplete = true;
-                    break;
-
-                default:
-                    return STATUS_REASSEMBLY_FAIL;
-            }
-            assert assemblyBufferOffset + contentLength < assemblyBuffer.length;
-            System.arraycopy(packetBuffer, packetContentStart, assemblyBuffer, assemblyBufferOffset, contentLength);
-            assemblyBufferOffset += contentLength;
-            if (messageComplete) {
-                break;
-            }
-        }
-
-        // Dump the reassembled message with a distinctive direction character
-        byte[] reassembledMessage = Arrays.copyOfRange(assemblyBuffer, 0, assemblyBufferOffset);
-        printAsHex2(reassembledMessage, "+>");
-        parseResponse(reassembledMessage);
-        return STATUS_OK;
-    }
 
     @Override
     public int getPresetNamesList() {
+        assert m_deviceTransport!=null;
         for (int i = 1; i <= 60; ++i) {
             StringBuilder presetJsonSB = new StringBuilder();
             int psJsonStatus = getPresetJson(i, presetJsonSB);
@@ -97,14 +44,14 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         colonSeparatedHexToByteArray(commandBytesHex, commandBytes);
         // log( "Sending " + commandDescription);
         printAsHex2(commandBytes, "<");
-        int bytesWritten = m_device.write(commandBytes, 64, (byte) 0x00, true);
+        int bytesWritten = m_deviceTransport.write(commandBytes, 64, (byte) 0x00, true);
         if (bytesWritten < 0) {
-            log(m_device.getLastErrorMessage());
+            log(m_deviceTransport.getLastErrorMessage());
             return STATUS_WRITE_FAIL;
         }
         int bytesRead = readAndAssembleResponsePackets();
         if (bytesRead < 0) {
-            log(m_device.getLastErrorMessage());
+            log(m_deviceTransport.getLastErrorMessage());
             return STATUS_REASSEMBLY_FAIL;
         }
         return STATUS_OK;
@@ -180,6 +127,62 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             m_presetRegistry.register(presetIndex, new PresetRecordBase(presetExtendedName));
         }
 
+        return STATUS_OK;
+    }
+
+    private int readAndAssembleResponsePackets() {
+        byte[] assemblyBuffer = new byte[4096];
+        int assemblyBufferOffset = 0;
+        while (true) {
+            byte[] packetBuffer = new byte[64];
+            int packetBytesRead;
+            packetBytesRead = m_deviceTransport.read(packetBuffer, 500);
+            if (packetBytesRead < 0) {
+                log("read failed, error=" + m_deviceTransport.getLastErrorMessage());
+                return STATUS_READ_FAIL;
+            } else if (packetBytesRead != 64) {
+                log("read incomplete, error=" + m_deviceTransport.getLastErrorMessage());
+                return STATUS_READ_FAIL;
+            } /* else */
+            {
+                printAsHex2(packetBuffer, ">");
+            }
+            assert packetBuffer[0] == 0x00;
+            int packetContentStart = 3;
+            int contentLength = packetBuffer[2];
+            boolean messageComplete;
+            switch (packetBuffer[1]) {
+                case 0x33: // first packet
+                    assert assemblyBufferOffset == 0;
+                    assert contentLength == 0x3d;
+                    messageComplete = false;
+                    break;
+
+                case 0x34: // middle packet
+                    assert contentLength == 0x3d;
+                    messageComplete = false;
+                    break;
+
+                case 0x35:
+                    assert contentLength <= 0x3d;
+                    messageComplete = true;
+                    break;
+
+                default:
+                    return STATUS_REASSEMBLY_FAIL;
+            }
+            assert assemblyBufferOffset + contentLength < assemblyBuffer.length;
+            System.arraycopy(packetBuffer, packetContentStart, assemblyBuffer, assemblyBufferOffset, contentLength);
+            assemblyBufferOffset += contentLength;
+            if (messageComplete) {
+                break;
+            }
+        }
+
+        // Dump the reassembled message with a distinctive direction character
+        byte[] reassembledMessage = Arrays.copyOfRange(assemblyBuffer, 0, assemblyBufferOffset);
+        printAsHex2(reassembledMessage, "+>");
+        parseResponse(reassembledMessage);
         return STATUS_OK;
     }
 

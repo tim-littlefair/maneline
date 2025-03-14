@@ -3,38 +3,41 @@ package net.heretical_camelid.fhau.lib;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * This class provides some shared utility functions required
+ * for message protocol implementation classes, and defines
+ * abstract functions for the high-level operations an
+ * implementation is expected to provide.
+ */
 public abstract class AbstractMessageProtocolBase {
 
-    // This function is based on upstream hid4java's BaseExample.printAsHex()
-    // The original prints a buffer in full regardless of whether
-    // it is mostly zero-filled.
-    // This variant replaces trailing zero bytes with '...'
-    // (if and only if at least one trailing zero byte is present).
-    // This allows larger buffers to be used without blowing out
-    // log files with empty bytes (e.g. for the report descriptor).
-    // This variant is also suitable for use with both sent
-    // and received data, and is controlled by an enablement variable
-    public static boolean enable_printAsHex2=false;
-    public final int STATUS_OK = 0;
+    // Abstract interface begins
+    public abstract int doStartup();
+    public abstract int getPresetNamesList();
+    // future
+    // public abstract String getPresetDefinition(int slotIndex);
+    // public abstract int switchToPreset(int slotIndex);
+    // Abstract interface ends
 
+    // Status constants
+    public final int STATUS_OK = 0;
     public final int STATUS_WRITE_FAIL = -101;
     public final int STATUS_READ_FAIL = -102;
     public final int STATUS_REASSEMBLY_FAIL = -103;
     public final int STATUS_PARSE_FAIL = -104;
     public final int STATUS_PRESET_FAIL = -105;
     public final int STATUS_OTHER_FAIL = -109;
-
     public final int STATUS_PRESET_WRAP_WARN = 201;
 
-    protected DeviceTransportInterface m_device;
-    protected AbstractMessageProtocolBase(DeviceTransportInterface device) {
-        m_device = device;
+    protected DeviceTransportInterface m_deviceTransport;
+
+    protected AbstractMessageProtocolBase() {
+        m_deviceTransport = null;
     }
 
-    public abstract int doStartup();
-
-    public abstract int getPresetNamesList();
-
+    public void setDeviceTransport(DeviceTransportInterface deviceTransport) {
+        m_deviceTransport = deviceTransport;
+    }
     protected static void log(String message) {
         System.out.println(message);
     }
@@ -47,6 +50,16 @@ public abstract class AbstractMessageProtocolBase {
         }
     }
 
+    // This function is based on upstream hid4java's BaseExample.printAsHex()
+    // The original prints a buffer in full regardless of whether
+    // it is mostly zero-filled.
+    // This variant replaces trailing zero bytes with '...'
+    // (if and only if at least one trailing zero byte is present).
+    // This allows larger buffers to be used without blowing out
+    // log files with empty bytes (e.g. for the report descriptor).
+    // This variant is also suitable for use with both sent
+    // and received data, and is controlled by an enablement variable
+    public static boolean enable_printAsHex2=false;
     public static void printAsHex2(byte[] dataSentOrReceived, String directionChar) {
         if(enable_printAsHex2==false) {
             return;
@@ -92,8 +105,5 @@ public abstract class AbstractMessageProtocolBase {
         }
         return name;
     }
-
-
-
 }
 
