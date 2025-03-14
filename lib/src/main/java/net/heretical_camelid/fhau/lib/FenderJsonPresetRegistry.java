@@ -53,15 +53,21 @@ class FenderJsonPresetRecord extends PresetRecordBase {
     }
 
     public String getValue(String itemJsonPath) {
-        JsonObject jo = m_definitionJsonObject;
+        JsonElement je = m_definitionJsonObject;
         String[] pathElements = itemJsonPath.split("/");
         for(String pe: pathElements) {
-            jo = jo.getAsJsonObject(pe);
-            if(jo==null) {
+            if("01234".contains(pe)) {
+                JsonArray joAsArray = je.getAsJsonArray();
+                assert joAsArray != null;
+                je = joAsArray.get(Integer.parseInt(pe));
+            } else {
+                je = je.getAsJsonObject().get(pe);
+            }
+            if(je==null) {
                 return null;
             }
         }
-        return jo.getAsString();
+        return je.toString();
     }
 }
 
@@ -73,15 +79,18 @@ class PresetDetailsTableGenerator implements PresetRegistryVisitor {
     @Override
     public void visit(PresetRegistryBase registry) {
         m_printStream.println("Presets");
-        m_printStream.println(String.format("%3s %16s", "---", "----------------"));
-        m_printStream.println(String.format("%3s %16s", " # ", "      Name      "));
-        m_printStream.println(String.format("%3s %16s", "---", "----------------"));
+        m_printStream.println(String.format("%3s %16s %20s", "---", "----------------", "--------------------"));
+        m_printStream.println(String.format("%3s %16s %20s", " # ", "      Name      ", "     Amplifier      "));
+        m_printStream.println(String.format("%3s %16s %20s", "---", "----------------", "--------------------"));
     }
 
     @Override
     public void visit(int slotIndex, Object record) {
         FenderJsonPresetRecord fjpr = (FenderJsonPresetRecord) record;
         assert fjpr != null;
-        m_printStream.println(String.format("%3d %16s", slotIndex, fjpr.m_definitionRawJson));
+        String displayName = fjpr.getValue("info/displayName");
+        String ampName = fjpr.getValue("audioGraph/nodes/2/FenderId").replace("DUBS_","");
+
+        m_printStream.println(String.format("%3d %16s %-20s", slotIndex, displayName, ampName));
     }
 }
