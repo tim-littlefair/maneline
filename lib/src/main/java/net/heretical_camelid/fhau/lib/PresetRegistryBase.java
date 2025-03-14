@@ -44,6 +44,13 @@ public class PresetRegistryBase {
     public void generateNameTable(PrintStream ostream) {
         this.acceptVisitor(new PresetNameTableGenerator(ostream));
     }
+
+    public void dump(String outputPathPrefix) {
+        // The base implementation only ever dumps to standard output
+        assert outputPathPrefix == null;
+
+        generateNameTable(System.out);
+    }
 }
 
 interface PresetRegistryVisitor {

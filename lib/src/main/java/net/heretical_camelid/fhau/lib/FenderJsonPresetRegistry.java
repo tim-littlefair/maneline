@@ -1,7 +1,9 @@
 package net.heretical_camelid.fhau.lib;
 
+import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
+import com.google.gson.*;
+
 
 /**
  * PresetRegistryBase is a minimal registry of presets which maintains
@@ -18,31 +20,68 @@ import java.util.HashMap;
 public class FenderJsonPresetRegistry extends PresetRegistryBase {
     public FenderJsonPresetRegistry() {  }
 
+    @Override
     public void register(int slotIndex, String name, byte[] definition) {
         // Slots are numbered from 1
         assert slotIndex > 0;
-        // This registry can only store slotIndex and name, so definition must be null
-        assert definition == null;
+        // This registry requires a definition
+        assert definition != null;
 
-        m_records.put(slotIndex, new PresetRecordBase(name));
+        m_records.put(slotIndex, new FenderJsonPresetRecord(name, definition));
     }
 
-    public void acceptVisitor(PresetRegistryVisitor visitor) {
-        visitor.visit(this);
-        for (int i = 1; i < m_records.size(); ++i) {
-            Object record = m_records.get(i);
-            if (record != null) {
-                visitor.visit(i, record);
-            }
-        }
+    public void generatePresetDetails(PrintStream printStream) {
+        acceptVisitor(new PresetDetailsTableGenerator(printStream));
+    }
+
+    @Override
+    public void dump(String outputPathPrefix) {
+        generatePresetDetails(System.out);
     }
 }
 
 class FenderJsonPresetRecord extends PresetRecordBase {
     final String m_definitionRawJson;
+    final JsonObject m_definitionJsonObject;
+
     public FenderJsonPresetRecord(String name, byte[] definitionBytes) {
         super(name);
         m_definitionRawJson = new String(definitionBytes, StandardCharsets.UTF_8);
+        m_definitionJsonObject = JsonParser.parseString(
+            m_definitionRawJson
+        ).getAsJsonObject();
+    }
+
+    public String getValue(String itemJsonPath) {
+        JsonObject jo = m_definitionJsonObject;
+        String[] pathElements = itemJsonPath.split("/");
+        for(String pe: pathElements) {
+            jo = jo.getAsJsonObject(pe);
+            if(jo==null) {
+                return null;
+            }
+        }
+        return jo.getAsString();
     }
 }
 
+class PresetDetailsTableGenerator implements PresetRegistryVisitor {
+    PrintStream m_printStream;
+    PresetDetailsTableGenerator(PrintStream printStream) {
+        m_printStream = printStream;
+    }
+    @Override
+    public void visit(PresetRegistryBase registry) {
+        m_printStream.println("Presets");
+        m_printStream.println(String.format("%3s %16s", "---", "----------------"));
+        m_printStream.println(String.format("%3s %16s", " # ", "      Name      "));
+        m_printStream.println(String.format("%3s %16s", "---", "----------------"));
+    }
+
+    @Override
+    public void visit(int slotIndex, Object record) {
+        FenderJsonPresetRecord fjpr = (FenderJsonPresetRecord) record;
+        assert fjpr != null;
+        m_printStream.println(String.format("%3d %16s", slotIndex, fjpr.m_definitionRawJson));
+    }
+}

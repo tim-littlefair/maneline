@@ -19,7 +19,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
 
     public DesktopUsbAmpProvider() {
         s_loggingAgent = new DefaultLoggingAgent(2);
-        m_presetRegistry = new PresetRegistryBase();
+        m_presetRegistry = new FenderJsonPresetRegistry();
         m_protocol = new LTSeriesProtocol(m_presetRegistry);
         startProvider();
     }
@@ -157,7 +157,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
             return false;
         } else {
             System.out.println();
-            m_presetRegistry.generateNameTable(System.out);
+            m_presetRegistry.dump(null);
         }
         return true;
     }
