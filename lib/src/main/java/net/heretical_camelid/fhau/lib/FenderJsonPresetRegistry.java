@@ -95,14 +95,7 @@ class FenderJsonPresetRecord extends PresetRecordBase {
 }
 
 class PresetDetailsTableGenerator implements PresetRegistryVisitor {
-    private final static String _LINE_FORMAT = "%3d %16s %20s %60s";
-    private final static byte[] _UNDERLINE_CHAR = "-".getBytes();
-    private final static String _HEADING_SEPARATOR = (
-        new String(_UNDERLINE_CHAR, 3) + " " +
-        new String(_UNDERLINE_CHAR, 20) + " " +
-        new String(_UNDERLINE_CHAR, 60)
-    );
-
+    private final static String _LINE_FORMAT = "%3d %-16s %-20s %-60s";
     PrintStream m_printStream;
     PresetDetailsTableGenerator(PrintStream printStream) {
         m_printStream = printStream;
@@ -110,13 +103,10 @@ class PresetDetailsTableGenerator implements PresetRegistryVisitor {
     @Override
     public void visit(PresetRegistryBase registry) {
         m_printStream.println("Presets");
-        m_printStream.println(_HEADING_SEPARATOR);
         m_printStream.println(String.format(
-            "%3s %16s %20s",
-            " # ", "      Name      ", "     Amplifier      ",
-            "                    Effects                    "
+            _LINE_FORMAT.replace("%3d", "%3s")
+            "#", "Name", "Amplifier","Effects"
         ));
-        m_printStream.println(_HEADING_SEPARATOR);
     }
 
     @Override
@@ -124,7 +114,7 @@ class PresetDetailsTableGenerator implements PresetRegistryVisitor {
         FenderJsonPresetRecord fjpr = (FenderJsonPresetRecord) record;
         assert fjpr != null;
         m_printStream.println(String.format(
-            "%3d %16s %-20s %-60s",
+            _LINE_FORMAT,
             slotIndex, fjpr.displayName(), fjpr.ampName(), fjpr.effects()
         ));
     }
