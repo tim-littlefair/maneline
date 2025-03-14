@@ -67,11 +67,42 @@ class FenderJsonPresetRecord extends PresetRecordBase {
                 return null;
             }
         }
-        return je.toString();
+        return je.getAsString();
+    }
+
+    public String displayName() {
+        return getValue("info/displayName");
+    }
+
+    public String ampName() {
+        return getValue("audioGraph/nodes/2/FenderId").replace("DUBS_","");
+    }
+
+    public String effects() {
+        return String.format("%s %s %s %s",
+            dspUnitDesc(0), dspUnitDesc(1),
+            // the amp is at nodeIndex=2
+            dspUnitDesc(3), dspUnitDesc(4)
+        );
+    }
+
+    public String dspUnitDesc(int nodeIndex) {
+        String nodePrefix = String.format("audioGraph/nodes/%d/",nodeIndex);
+        String nodeType = getValue(nodePrefix+"nodeId");
+        String nodeName = getValue(nodePrefix+"FenderId").replace("DUBS_","");
+        return nodeType + ":" + nodeName;
     }
 }
 
 class PresetDetailsTableGenerator implements PresetRegistryVisitor {
+    private final static String _LINE_FORMAT = "%3d %16s %20s %60s";
+    private final static byte[] _UNDERLINE_CHAR = "-".getBytes();
+    private final static String _HEADING_SEPARATOR = (
+        new String(_UNDERLINE_CHAR, 3) + " " +
+        new String(_UNDERLINE_CHAR, 20) + " " +
+        new String(_UNDERLINE_CHAR, 60)
+    );
+
     PrintStream m_printStream;
     PresetDetailsTableGenerator(PrintStream printStream) {
         m_printStream = printStream;
@@ -79,18 +110,22 @@ class PresetDetailsTableGenerator implements PresetRegistryVisitor {
     @Override
     public void visit(PresetRegistryBase registry) {
         m_printStream.println("Presets");
-        m_printStream.println(String.format("%3s %16s %20s", "---", "----------------", "--------------------"));
-        m_printStream.println(String.format("%3s %16s %20s", " # ", "      Name      ", "     Amplifier      "));
-        m_printStream.println(String.format("%3s %16s %20s", "---", "----------------", "--------------------"));
+        m_printStream.println(_HEADING_SEPARATOR);
+        m_printStream.println(String.format(
+            "%3s %16s %20s",
+            " # ", "      Name      ", "     Amplifier      ",
+            "                    Effects                    "
+        ));
+        m_printStream.println(_HEADING_SEPARATOR);
     }
 
     @Override
     public void visit(int slotIndex, Object record) {
         FenderJsonPresetRecord fjpr = (FenderJsonPresetRecord) record;
         assert fjpr != null;
-        String displayName = fjpr.getValue("info/displayName");
-        String ampName = fjpr.getValue("audioGraph/nodes/2/FenderId").replace("DUBS_","");
-
-        m_printStream.println(String.format("%3d %16s %-20s", slotIndex, displayName, ampName));
+        m_printStream.println(String.format(
+            "%3d %16s %-20s %-60s",
+            slotIndex, fjpr.displayName(), fjpr.ampName(), fjpr.effects()
+        ));
     }
 }
