@@ -78,19 +78,32 @@ class FenderJsonPresetRecord extends PresetRecordBase {
         return getValue("audioGraph/nodes/2/FenderId").replace("DUBS_","");
     }
 
-    public String effects() {
-        return String.format("%s %s %s %s",
-            dspUnitDesc(0), dspUnitDesc(1),
-            // the amp is at nodeIndex=2
-            dspUnitDesc(3), dspUnitDesc(4)
-        );
-    }
-
     public String dspUnitDesc(int nodeIndex) {
         String nodePrefix = String.format("audioGraph/nodes/%d/",nodeIndex);
         String nodeType = getValue(nodePrefix+"nodeId");
+        if(nodeType.equals("amp")) {
+            return "$AMP$";
+        }
         String nodeName = getValue(nodePrefix+"FenderId").replace("DUBS_","");
+        if(nodeName.equals("Passthru")) {
+            return null;
+        }
         return nodeType + ":" + nodeName;
+    }
+
+    public String effects() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 5; ++i) {
+            String nextUnit = dspUnitDesc(i);
+            if (nextUnit == null) {
+                continue;
+            }
+            sb.append(nextUnit);
+            if (i < 5) {
+                sb.append(" ");
+            }
+        }
+        return sb.toString();
     }
 }
 
@@ -104,8 +117,8 @@ class PresetDetailsTableGenerator implements PresetRegistryVisitor {
     public void visit(PresetRegistryBase registry) {
         m_printStream.println("Presets");
         m_printStream.println(String.format(
-            _LINE_FORMAT.replace("%3d", "%3s")
-            "#", "Name", "Amplifier","Effects"
+            _LINE_FORMAT.replace("%3d", "%3s"),
+            "#", "Name", "Amplifier","Effect Chain"
         ));
     }
 
