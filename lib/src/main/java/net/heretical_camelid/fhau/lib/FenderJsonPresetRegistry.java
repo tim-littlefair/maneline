@@ -1,8 +1,14 @@
 package net.heretical_camelid.fhau.lib;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+
 import com.google.gson.*;
+import com.google.gson.stream.JsonWriter;
 
 
 /**
@@ -37,6 +43,9 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
     @Override
     public void dump(String outputPathPrefix) {
         generatePresetDetails(System.out);
+        AmpBasedPresetSuiteExporter abpse = new AmpBasedPresetSuiteExporter(System.out);
+        acceptVisitor(abpse);
+        abpse.writePresetSuites(".");
     }
 }
 
@@ -132,3 +141,53 @@ class PresetDetailsTableGenerator implements PresetRegistryVisitor {
         ));
     }
 }
+
+class AmpBasedPresetSuiteExporter implements PresetRegistryVisitor {
+    HashMap<String,JsonObject> m_ampPresetSuites;
+    AmpBasedPresetSuiteExporter(PrintStream printStream) {
+        m_ampPresetSuites = new HashMap<>();
+    }
+    @Override
+    public void visit(PresetRegistryBase registry) {
+    }
+
+    @Override
+    public void visit(int slotIndex, Object record) {
+        FenderJsonPresetRecord fjpr = (FenderJsonPresetRecord) record;
+        assert fjpr != null;
+        JsonObject suiteForThisAmp = m_ampPresetSuites.get(fjpr.ampName());
+        if(suiteForThisAmp==null) {
+            suiteForThisAmp = new JsonObject();
+            suiteForThisAmp.addProperty("ampName", fjpr.ampName());
+            suiteForThisAmp.add("presets", new JsonArray());
+            m_ampPresetSuites.put(fjpr.ampName(), suiteForThisAmp);
+        }
+        JsonArray presetArray = suiteForThisAmp.getAsJsonArray("presets");
+        JsonObject newPreset = new JsonObject();
+        newPreset.addProperty("slotIndex", slotIndex);
+        newPreset.addProperty("presetName", fjpr.displayName());
+        presetArray.add(newPreset);
+    }
+
+    public void writePresetSuites(String pathPrefix) {
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        for(String presetName: m_ampPresetSuites.keySet()) {
+            String targetPath = pathPrefix + "/" + presetName+".amp_presets.json";
+            FileOutputStream fos;
+            try {
+                 fos = new FileOutputStream(targetPath);
+            } catch (FileNotFoundException e) {
+                System.err.println("Unable to open " + targetPath + ", continuing...");
+                continue;
+            }
+            String jsonForSuite = gson.toJson(m_ampPresetSuites.get(presetName));
+            try {
+                fos.write(jsonForSuite.getBytes(StandardCharsets.UTF_8));
+            } catch (IOException e) {
+                System.err.println("Unable to write to " + targetPath + ", continuing...");
+                continue;
+            }
+        }
+    }
+}
+
