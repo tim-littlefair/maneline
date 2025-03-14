@@ -1,5 +1,6 @@
 package net.heretical_camelid.fhau.lib;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 
 /**
@@ -14,12 +15,8 @@ import java.util.HashMap;
  * data beyond the slot index and name, so the name, of a more Extended implementations of the registry are expected
  *
  */
-public class PresetRegistryBase {
-    HashMap<Integer, PresetRecordBase> m_records;
-
-    public PresetRegistryBase() {
-        m_records = new HashMap<>();
-    }
+public class FenderJsonPresetRegistry extends PresetRegistryBase {
+    public FenderJsonPresetRegistry() {  }
 
     public void register(int slotIndex, String name, byte[] definition) {
         // Slots are numbered from 1
@@ -41,16 +38,11 @@ public class PresetRegistryBase {
     }
 }
 
-interface PresetRegistryVisitor {
-    void visit(PresetRegistryBase registry);
-    void visit(int slotIndex, Object record);
-}
-
-class PresetRecordBase {
-    String m_name;
-
-    public PresetRecordBase(String name) {
-        m_name = name;
+class FenderJsonPresetRecord extends PresetRecordBase {
+    final String m_definitionRawJson;
+    public FenderJsonPresetRecord(String name, byte[] definitionBytes) {
+        super(name);
+        m_definitionRawJson = new String(definitionBytes, StandardCharsets.UTF_8);
     }
 }
 

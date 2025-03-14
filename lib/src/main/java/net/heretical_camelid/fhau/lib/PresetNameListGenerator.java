@@ -11,7 +11,9 @@ public class PresetNameListGenerator implements PresetRegistryVisitor {
     }
 
     @Override
-    public void visit(int slotIndex, PresetRecordBase record) {
-        System.out.println(String.format("%3d %16s", slotIndex, record.m_name));
+    public void visit(int slotIndex, Object record) {
+        PresetRecordBase prb = (PresetRecordBase) record;
+        assert prb != null;
+        System.out.println(String.format("%3d %16s", slotIndex, prb.m_name));
     }
 }

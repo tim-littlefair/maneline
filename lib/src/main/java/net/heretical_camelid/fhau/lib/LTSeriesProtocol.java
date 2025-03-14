@@ -124,7 +124,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             int presetIndex = assembledResponseMessage[assembledResponseMessage.length - 1];
             // System.out.println(jsonDefinition);
             String presetExtendedName = AbstractMessageProtocolBase.displayName(jsonDefinition);
-            m_presetRegistry.register(presetIndex, new PresetRecordBase(presetExtendedName));
+            m_presetRegistry.register(presetIndex, presetExtendedName, null);
         }
 
         return STATUS_OK;
