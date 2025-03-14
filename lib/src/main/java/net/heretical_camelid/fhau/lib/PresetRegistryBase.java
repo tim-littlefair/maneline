@@ -1,5 +1,6 @@
 package net.heretical_camelid.fhau.lib;
 
+import java.io.PrintStream;
 import java.util.HashMap;
 
 /**
@@ -39,6 +40,10 @@ public class PresetRegistryBase {
             }
         }
     }
+
+    public void generateNameTable(PrintStream ostream) {
+        this.acceptVisitor(new PresetNameTableGenerator(ostream));
+    }
 }
 
 interface PresetRegistryVisitor {
@@ -48,9 +53,28 @@ interface PresetRegistryVisitor {
 
 class PresetRecordBase {
     String m_name;
-
     public PresetRecordBase(String name) {
         m_name = name;
     }
 }
 
+class PresetNameTableGenerator implements PresetRegistryVisitor {
+    PrintStream m_printStream;
+    PresetNameTableGenerator(PrintStream printStream) {
+        m_printStream = printStream;
+    }
+    @Override
+    public void visit(PresetRegistryBase registry) {
+        m_printStream.println("Presets");
+        m_printStream.println(String.format("%3s %16s", "---", "----------------"));
+        m_printStream.println(String.format("%3s %16s", " # ", "      Name      "));
+        m_printStream.println(String.format("%3s %16s", "---", "----------------"));
+    }
+
+    @Override
+    public void visit(int slotIndex, Object record) {
+        PresetRecordBase prb = (PresetRecordBase) record;
+        assert prb != null;
+        m_printStream.println(String.format("%3d %16s", slotIndex, prb.m_name));
+    }
+}

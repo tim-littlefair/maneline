@@ -156,13 +156,14 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
             System.out.println("Last error: " + hidDevice.getLastErrorMessage());
             return false;
         } else {
-            System.out.println("");
-            m_presetRegistry.acceptVisitor(new PresetNameListGenerator());
+            System.out.println();
+            m_presetRegistry.generateNameTable(System.out);
         }
         return true;
     }
 
     // Override functions specific to this example beyond this point
+
     @Override
     public void hidDataReceived(HidServicesEvent event) {
         System.out.println("hidDataReceived: " + event);
