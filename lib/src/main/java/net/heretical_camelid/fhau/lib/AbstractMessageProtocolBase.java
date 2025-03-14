@@ -3,7 +3,7 @@ package net.heretical_camelid.fhau.lib;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public abstract class FMICProtocolBase {
+public abstract class AbstractMessageProtocolBase {
 
     // This function is based on upstream hid4java's BaseExample.printAsHex()
     // The original prints a buffer in full regardless of whether
@@ -26,8 +26,8 @@ public abstract class FMICProtocolBase {
 
     public final int STATUS_PRESET_WRAP_WARN = 201;
 
-    protected ProtocolDeviceInterface m_device;
-    protected FMICProtocolBase(ProtocolDeviceInterface device) {
+    protected DeviceTransportInterface m_device;
+    protected AbstractMessageProtocolBase(DeviceTransportInterface device) {
         m_device = device;
     }
 

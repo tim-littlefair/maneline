@@ -19,7 +19,7 @@ import java.util.regex.Pattern;
  *     </li>
  * </ul>
  */
-abstract public class MessageProtocolBase {
+abstract public class MessageProtocolBase_Old {
     // Both commands and responses can contain placeholders.
     final static public String PLACEHOLDER = ":%%";
 
@@ -34,7 +34,7 @@ abstract public class MessageProtocolBase {
     // when that command is recognized.
     private HashMap<Pattern,String[]> m_programmedResponses;
 
-    protected MessageProtocolBase() {
+    protected MessageProtocolBase_Old() {
         m_programmedResponses = new HashMap<>();
     }
 

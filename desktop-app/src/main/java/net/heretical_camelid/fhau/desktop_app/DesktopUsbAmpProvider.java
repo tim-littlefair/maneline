@@ -6,8 +6,8 @@ import org.hid4java.jna.HidApi;
 
 import net.heretical_camelid.fhau.lib.*;
 
-import static net.heretical_camelid.fhau.lib.FMICProtocolBase.printAsHex2;
-import static net.heretical_camelid.fhau.lib.FMICProtocolBase.enable_printAsHex2;
+import static net.heretical_camelid.fhau.lib.AbstractMessageProtocolBase.printAsHex2;
+import static net.heretical_camelid.fhau.lib.AbstractMessageProtocolBase.enable_printAsHex2;
 
 public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
 {
@@ -146,7 +146,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
      */
     private boolean handleInitialise(HidDevice hidDevice) {
         PresetRegistryBase presetRegistry = new PresetRegistryBase();    
-        FMICProtocolBase protocol = new LTSeriesProtocol(new UsbHidDevice(hidDevice), presetRegistry);
+        AbstractMessageProtocolBase protocol = new LTSeriesProtocol(new DeviceTransportHid4Java(hidDevice), presetRegistry);
         int startupStatus = protocol.doStartup();
         System.out.println("Retrieving presets - should take < 5 seconds");
         int presetNamesStatus = protocol.getPresetNamesList();

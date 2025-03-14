@@ -25,7 +25,7 @@ class SimulatorTransportDelegate extends TransportDelegateBase {
     // and/or files looked up using those values.
     // The rules for this mapping will be provided by a message protocol
     // object.
-    MessageProtocolBase m_messageProtocol;
+    MessageProtocolBase_Old m_messageProtocol;
 
 
     public SimulatorTransportDelegate() {
@@ -33,7 +33,7 @@ class SimulatorTransportDelegate extends TransportDelegateBase {
         m_messageProtocol = null;
     }
 
-    public void setMessageProtocol(MessageProtocolBase mp) {
+    public void setMessageProtocol(MessageProtocolBase_Old mp) {
         m_messageProtocol = mp;
     }
 
@@ -72,7 +72,7 @@ class SimulatorTransportDelegate extends TransportDelegateBase {
     public static void main(String[] args) {
         // train the delegate to respond to a selection of messages
         SimulatorTransportDelegate std = new SimulatorTransportDelegate();
-        std.setMessageProtocol(new STDTest_MessageProtocol());
+        std.setMessageProtocol(new STDTest_MessageProtocolOld());
 
         // Taken from captures of LT40S startup
         String lt40sCmd1 = "08:00:8a:07:04:08:00:10:00:00:00";
@@ -112,7 +112,7 @@ class SimulatorTransportDelegate extends TransportDelegateBase {
     }
 }
 
-class STDTest_MessageProtocol extends MessageProtocolBase {
+class STDTest_MessageProtocolOld extends MessageProtocolBase_Old {
 
     @Override
     String[] generateStartupCommands() {

@@ -1,9 +1,8 @@
 package net.heretical_camelid.fhau.lib;
 
-import java.util.Arrays;
 import java.util.regex.Matcher;
 
-public class MessageProtocol_LT40S extends MessageProtocolBase
+public class MessageProtocol_LT40SOld extends MessageProtocolBase_Old
 {
     public static final String CMD1_OPEN = "08:00:8a:07:04:08:00:10:00:00:00";
     public static final String RSP1_1 = "08:02:8a:07:04:08:00:10:00:00:00";
@@ -12,7 +11,7 @@ public class MessageProtocol_LT40S extends MessageProtocolBase
     public static final String CMDX_GET_PRESET_JSON = "08:00:ca:06:02:08:%%";
     public static final String RSPX_PRESET_JSON = "08:02:fa:01:%%:0a:%%:7b:%%:10";
 
-    public MessageProtocol_LT40S() {
+    public MessageProtocol_LT40SOld() {
         addProgrammedResponse(CMD1_OPEN, new String[] {RSP1_1});
         addProgrammedResponse(CMD2_GET_FW_VER, new String[] {RSP2_1_V1_0_7});
         addProgrammedResponse(CMDX_GET_PRESET_JSON,new String[] {RSPX_PRESET_JSON});

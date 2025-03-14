@@ -1,12 +1,12 @@
 package net.heretical_camelid.fhau.desktop_app;
 
-import net.heretical_camelid.fhau.lib.ProtocolDeviceInterface;
+import net.heretical_camelid.fhau.lib.DeviceTransportInterface;
 import org.hid4java.HidDevice;
 
-class UsbHidDevice implements ProtocolDeviceInterface {
+class DeviceTransportHid4Java implements DeviceTransportInterface {
     final HidDevice m_hidDevice;
 
-    UsbHidDevice(HidDevice hidDevice) {
+    DeviceTransportHid4Java(HidDevice hidDevice) {
         m_hidDevice = hidDevice;
     }
 

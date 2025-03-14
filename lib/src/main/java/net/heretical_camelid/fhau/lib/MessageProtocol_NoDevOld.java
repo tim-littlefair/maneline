@@ -2,7 +2,7 @@ package net.heretical_camelid.fhau.lib;
 
 import java.util.regex.Matcher;
 
-public class MessageProtocol_NoDev extends MessageProtocolBase
+public class MessageProtocol_NoDevOld extends MessageProtocolBase_Old
 {
     public String[] generateStartupCommands() {
         return MessageConstants_LT40S.STARTUP_COMMANDS;

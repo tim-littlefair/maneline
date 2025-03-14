@@ -18,7 +18,7 @@ public class SimulatorAmpProvider implements IAmpProvider {
     public void acceptVisitor(IVisitor visitor) {
         visitor.setAmpState(m_deviceDescription, m_firmwareVersion, m_presetInfo);
     }
-    final private MessageProtocolBase m_protocolDelegate;
+    final private MessageProtocolBase_Old m_protocolDelegate;
     final private TransportDelegateBase m_transportDelegate;
     final private DeviceDelegateBase m_deviceDelegate;
 

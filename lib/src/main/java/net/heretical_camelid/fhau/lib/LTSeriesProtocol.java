@@ -1,16 +1,11 @@
-package net.heretical_camelid.fhau.desktop_app;
-
-import net.heretical_camelid.fhau.lib.FMICProtocolBase;
-import net.heretical_camelid.fhau.lib.PresetRecordBase;
-import net.heretical_camelid.fhau.lib.PresetRegistryBase;
-import net.heretical_camelid.fhau.lib.ProtocolDeviceInterface;
+package net.heretical_camelid.fhau.lib;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
-class LTSeriesProtocol extends FMICProtocolBase {
+public class LTSeriesProtocol extends AbstractMessageProtocolBase {
   PresetRegistryBase m_presetRegistry;
-  public LTSeriesProtocol(ProtocolDeviceInterface device, PresetRegistryBase presetRegistry) {
+  public LTSeriesProtocol(DeviceTransportInterface device, PresetRegistryBase presetRegistry) {
     super(device);
     m_presetRegistry = presetRegistry;
   }
@@ -181,7 +176,7 @@ class LTSeriesProtocol extends FMICProtocolBase {
             );
             int presetIndex = assembledResponseMessage[assembledResponseMessage.length - 1];
             // System.out.println(jsonDefinition);
-            String presetExtendedName = FMICProtocolBase.displayName(jsonDefinition);
+            String presetExtendedName = AbstractMessageProtocolBase.displayName(jsonDefinition);
             m_presetRegistry.register(presetIndex, new PresetRecordBase(presetExtendedName));
         }
 
