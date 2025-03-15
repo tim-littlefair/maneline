@@ -8,12 +8,14 @@ import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
 import java.util.HashMap;
 
-import com.google.gson.*;
-import com.google.gson.stream.JsonWriter;
-
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 /**
  * PresetRegistryBase is a minimal registry of presets which maintains
@@ -48,14 +50,14 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
     }
 
     @Override
-    public void dump(String outputPathPrefix) {
+    public void dump() {
         if(m_outputPath == null) {
             generatePresetDetails(System.out);
         } else {
             generatePresetDetails(System.out);
             AmpBasedPresetSuiteExporter abpse = new AmpBasedPresetSuiteExporter(System.out);
             acceptVisitor(abpse);
-            abpse.writePresetSuites(".");
+            abpse.writePresetSuites(m_outputPath);
         }
     }
 

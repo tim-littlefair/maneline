@@ -45,10 +45,7 @@ public class PresetRegistryBase {
         this.acceptVisitor(new PresetNameTableGenerator(ostream));
     }
 
-    public void dump(String outputPathPrefix) {
-        // The base implementation only ever dumps to standard output
-        assert outputPathPrefix == null;
-
+    public void dump() {
         generateNameTable(System.out);
     }
 }

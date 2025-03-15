@@ -17,5 +17,16 @@ CLASSPATH="desktop-app/build/libs/desktop-app.jar"
 
 export CLASSPATH
 echo $CLASSPATH
-sudo java -cp $CLASSPATH -ea  net.heretical_camelid.fhau.desktop_app.CommandLineInterface $*
+
+if [ ! -z "$*" ]
+then
+  sudo java -cp $CLASSPATH -ea  net.heretical_camelid.fhau.desktop_app.CommandLineInterface $*
+else
+  tsdir=_work/cli-$(date +%s)
+  mkdir $tsdir
+  sudo java -cp $CLASSPATH -ea  net.heretical_camelid.fhau.desktop_app.CommandLineInterface $tsdir
+  sudo chown -R tim $tsdir
+fi
+
+
 
