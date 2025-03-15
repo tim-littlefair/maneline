@@ -1,0 +1,15 @@
+{
+  "ampName": "Twin65",
+  "presets": [
+    {
+      "slotIndex": 5,
+      "presetName": "DREAMY          ",
+      "audioHash": "DREAMY          "
+    },
+    {
+      "slotIndex": 18,
+      "presetName": "PHASER  SWIRL   ",
+      "audioHash": "PHASER  SWIRL   "
+    }
+  ]
+}

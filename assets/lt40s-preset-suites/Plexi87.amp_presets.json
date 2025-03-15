@@ -1,0 +1,20 @@
+{
+  "ampName": "Plexi87",
+  "presets": [
+    {
+      "slotIndex": 4,
+      "presetName": "CLASSIC ROCK    ",
+      "audioHash": "CLASSIC ROCK    "
+    },
+    {
+      "slotIndex": 19,
+      "presetName": "60S     FUZZ    ",
+      "audioHash": "60S     FUZZ    "
+    },
+    {
+      "slotIndex": 20,
+      "presetName": "MYTHIC  CRUNCH  ",
+      "audioHash": "MYTHIC  CRUNCH  "
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "ampName": "Jcm800",
+  "presets": [
+    {
+      "slotIndex": 16,
+      "presetName": "OCTOBOT ONE NOTE",
+      "audioHash": "OCTOBOT ONE NOTE"
+    },
+    {
+      "slotIndex": 22,
+      "presetName": "SUPER   ROCK    ",
+      "audioHash": "SUPER   ROCK    "
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "ampName": "Bassman59",
+  "presets": [
+    {
+      "slotIndex": 3,
+      "presetName": "CHICAGO BLUES   ",
+      "audioHash": "CHICAGO BLUES   "
+    },
+    {
+      "slotIndex": 25,
+      "presetName": "SURF    MUSIC   ",
+      "audioHash": "SURF    MUSIC   "
+    }
+  ]
+}
