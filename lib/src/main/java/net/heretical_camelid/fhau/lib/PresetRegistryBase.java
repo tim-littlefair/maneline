@@ -32,13 +32,14 @@ public class PresetRegistryBase {
     }
 
     public void acceptVisitor(PresetRegistryVisitor visitor) {
-        visitor.visit(this);
-        for (int i = 1; i < m_records.size(); ++i) {
+        visitor.visitBeforeRecords(this);
+        for (int i: m_records.keySet()) {
             Object record = m_records.get(i);
             if (record != null) {
-                visitor.visit(i, record);
+                visitor.visitRecord(i, record);
             }
         }
+        visitor.visitAfterRecords(this);
     }
 
     public void generateNameTable(PrintStream ostream) {
@@ -51,8 +52,9 @@ public class PresetRegistryBase {
 }
 
 interface PresetRegistryVisitor {
-    void visit(PresetRegistryBase registry);
-    void visit(int slotIndex, Object record);
+    void visitBeforeRecords(PresetRegistryBase registry);
+    void visitRecord(int slotIndex, Object record);
+    void visitAfterRecords(PresetRegistryBase registry);
 }
 
 class PresetRecordBase {
@@ -68,7 +70,7 @@ class PresetNameTableGenerator implements PresetRegistryVisitor {
         m_printStream = printStream;
     }
     @Override
-    public void visit(PresetRegistryBase registry) {
+    public void visitBeforeRecords(PresetRegistryBase registry) {
         m_printStream.println("Presets");
         m_printStream.println(String.format("%3s %16s", "---", "----------------"));
         m_printStream.println(String.format("%3s %16s", " # ", "      Name      "));
@@ -76,9 +78,13 @@ class PresetNameTableGenerator implements PresetRegistryVisitor {
     }
 
     @Override
-    public void visit(int slotIndex, Object record) {
+    public void visitRecord(int slotIndex, Object record) {
         PresetRecordBase prb = (PresetRecordBase) record;
         assert prb != null;
         m_printStream.println(String.format("%3d %16s", slotIndex, prb.m_name));
+    }
+
+    @Override
+    public void visitAfterRecords(PresetRegistryBase registry) {
     }
 }

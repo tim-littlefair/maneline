@@ -8,6 +8,7 @@ import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import com.google.gson.Gson;
@@ -31,8 +32,11 @@ import com.google.gson.JsonParser;
  */
 public class FenderJsonPresetRegistry extends PresetRegistryBase {
     final String m_outputPath;
+    HashMap<String, ArrayList<Integer>> m_duplicateSlots;
+
     public FenderJsonPresetRegistry(String outputPath) {
         m_outputPath = outputPath;
+        m_duplicateSlots = new HashMap<>();
     }
 
     @Override
@@ -42,7 +46,20 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
         // This registry requires a definition
         assert definition != null;
 
-        m_records.put(slotIndex, new FenderJsonPresetRecord(name, definition));
+        FenderJsonPresetRecord newRecord = new FenderJsonPresetRecord(name, definition);
+        String duplicateSlotKey = String.format(
+            "name='%s' hash=%s",
+            newRecord.displayName(),newRecord.audioHash()
+        );
+        ArrayList<Integer> existingDuplicateSlotList = m_duplicateSlots.get(duplicateSlotKey);
+        if(existingDuplicateSlotList==null) {
+            ArrayList<Integer> newDuplicateSlotList = new ArrayList<>();
+            newDuplicateSlotList.add(slotIndex);
+            m_duplicateSlots.put(duplicateSlotKey,newDuplicateSlotList);
+            m_records.put(slotIndex, newRecord);
+        } else {
+            existingDuplicateSlotList.add(Integer.valueOf(slotIndex));
+        }
     }
 
     public void generatePresetDetails(PrintStream printStream) {
@@ -191,8 +208,9 @@ class PresetDetailsTableGenerator implements PresetRegistryVisitor {
         m_printStream = printStream;
     }
     @Override
-    public void visit(PresetRegistryBase registry) {
-        m_printStream.println("Presets");
+    public void visitBeforeRecords(PresetRegistryBase registry) {
+        m_printStream.println();
+        m_printStream.println("Unique Presets");
         m_printStream.println(String.format(
             _LINE_FORMAT.replace("%3d", "%3s"),
             "#", "Name", "Amplifier","Hash", "Effect Chain"
@@ -200,13 +218,31 @@ class PresetDetailsTableGenerator implements PresetRegistryVisitor {
     }
 
     @Override
-    public void visit(int slotIndex, Object record) {
+    public void visitRecord(int slotIndex, Object record) {
         FenderJsonPresetRecord fjpr = (FenderJsonPresetRecord) record;
         assert fjpr != null;
         m_printStream.println(String.format(
             _LINE_FORMAT,
             slotIndex, fjpr.displayName(), fjpr.ampName(), fjpr.audioHash(), fjpr.effects()
         ));
+    }
+
+    @Override
+    public void visitAfterRecords(PresetRegistryBase registry) {
+        FenderJsonPresetRegistry fjpRegistry = (FenderJsonPresetRegistry) registry;
+        assert fjpRegistry!=null;
+        m_printStream.println();
+        m_printStream.println("Duplicated Presets");
+        for(String duplicateKey: fjpRegistry.m_duplicateSlots.keySet()) {
+            ArrayList<Integer> duplicateSlotList = fjpRegistry.m_duplicateSlots.get(duplicateKey);
+            if(duplicateSlotList.size()==1) {
+                continue;
+            }
+            m_printStream.println(String.format(
+                "Preset %3d (%s) is duplicated at the following slots: %s",
+                duplicateSlotList.get(0).intValue(), duplicateKey, duplicateSlotList
+            ));
+        }
     }
 }
 
@@ -216,11 +252,11 @@ class AmpBasedPresetSuiteExporter implements PresetRegistryVisitor {
         m_ampPresetSuites = new HashMap<>();
     }
     @Override
-    public void visit(PresetRegistryBase registry) {
+    public void visitBeforeRecords(PresetRegistryBase registry) {
     }
 
     @Override
-    public void visit(int slotIndex, Object record) {
+    public void visitRecord(int slotIndex, Object record) {
         FenderJsonPresetRecord fjpr = (FenderJsonPresetRecord) record;
         assert fjpr != null;
         JsonObject suiteForThisAmp = m_ampPresetSuites.get(fjpr.ampName());
@@ -236,6 +272,11 @@ class AmpBasedPresetSuiteExporter implements PresetRegistryVisitor {
         newPreset.addProperty("presetName", fjpr.displayName());
         newPreset.addProperty("audioHash", fjpr.displayName());
         presetArray.add(newPreset);
+    }
+
+    @Override
+    public void visitAfterRecords(PresetRegistryBase registry) {
+
     }
 
     public void writePresetSuites(String pathPrefix) {
