@@ -8,6 +8,11 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="PresetSuiteDropdownItemStyle"
+           parent="@android:style/Widget.TextView.SpinnerItem">
+        <item name="android:textSize">20sp</item>
+    </style>
+
     <style name="PresetButtonStyle" parent="ThemeOverlay.Material3.Button">
         <item name="android:backgroundTint">@color/fhauGrey</item>
         <item name="android:layout_width">0dp</item>

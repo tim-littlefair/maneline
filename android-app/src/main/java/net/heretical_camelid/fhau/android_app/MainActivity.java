@@ -2,6 +2,7 @@ package net.heretical_camelid.fhau.android_app;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
+import android.text.Layout;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -134,13 +135,19 @@ public class MainActivity
     }
 
     private void populatePresetSuiteDropdown() {
+        int itemLayoutId = R.layout.preset_suite_dropdown_item;
+        //int itemLayoutId = android.R.layout.simple_spinner_dropdown_item;
+
         // Create an ArrayAdapter for the Spinner
-        String[] items = new String[] { "pss1", "pss2" };
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, items);
+        String[] items = new String[] {
+            "No preset suite selected",
+            "Presets using amplifier LinearGain"
+        };
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, itemLayoutId, items);
 
         // Bind the items
         Spinner presetSuiteDropdown = (Spinner) findViewById(R.id.dropdown_preset_suites);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        adapter.setDropDownViewResource(itemLayoutId);
         presetSuiteDropdown.setAdapter(adapter);
     }
 /*
