@@ -6,9 +6,7 @@ import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.*;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -45,6 +43,7 @@ public class MainActivity
 
     LoggingAgent m_loggingAgent = null;
     Button m_btnConnectionStatus;
+
     void appendToLog(String message) {
         if(m_loggingAgent!=null) {
             m_loggingAgent.appendToLog(0,message);
@@ -115,11 +114,11 @@ public class MainActivity
         m_ampManager = null;
 
         TextView tvLog = (TextView) findViewById(R.id.tv_log);
+
         m_loggingAgent = new LoggingAgent(tvLog);
         appendToLog("Starting up");
 
         setSupportActionBar(findViewById(R.id.toolbar_fhau));
-
 
         m_btnConnectionStatus = findViewById(R.id.btn_cxn_status);
         m_btnConnectionStatus.setOnClickListener(new View.OnClickListener() {
@@ -130,6 +129,19 @@ public class MainActivity
                 m_btnConnectionStatus.setText("CONNECTED!");
             }
         });
+
+        populatePresetSuiteDropdown();
+    }
+
+    private void populatePresetSuiteDropdown() {
+        // Create an ArrayAdapter for the Spinner
+        String[] items = new String[] { "pss1", "pss2" };
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, items);
+
+        // Bind the items
+        Spinner presetSuiteDropdown = (Spinner) findViewById(R.id.dropdown_preset_suites);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        presetSuiteDropdown.setAdapter(adapter);
     }
 /*
     @Override

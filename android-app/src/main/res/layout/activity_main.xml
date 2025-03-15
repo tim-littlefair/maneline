@@ -19,12 +19,19 @@
 
         app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
 
+    <Spinner
+            android:id="@+id/dropdown_preset_suites"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/toolbar_fhau"
+            app:layout_constraintBottom_toTopOf="@id/tbl_presets"
+    />
 
     <TableLayout
         android:id="@+id/tbl_presets"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/toolbar_fhau"
+        app:layout_constraintTop_toBottomOf="@id/dropdown_preset_suites"
         app:layout_constraintBottom_toTopOf="@id/tv_log"
         >
 
