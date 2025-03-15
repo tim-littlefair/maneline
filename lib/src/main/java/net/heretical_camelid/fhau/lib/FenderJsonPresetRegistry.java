@@ -73,6 +73,9 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
         } else {
             generatePresetDetails(System.out);
             AmpBasedPresetSuiteExporter abpse = new AmpBasedPresetSuiteExporter(System.out);
+            // For the moment we only want to create suites containing the non-empty
+            // default firmware presets at slots 1 to 30.
+            abpse.setRange(1,30);
             acceptVisitor(abpse);
             abpse.writePresetSuites(m_outputPath);
         }
@@ -248,15 +251,29 @@ class PresetDetailsTableGenerator implements PresetRegistryVisitor {
 
 class AmpBasedPresetSuiteExporter implements PresetRegistryVisitor {
     HashMap<String,JsonObject> m_ampPresetSuites;
+
+    // The user may want to select a range of presets for export
+    // (for example on LT40S to capture only firmware default presets 1-30)
+    int m_minSlotIndex = 1;
+    int m_maxSlotIndex = 999;
     AmpBasedPresetSuiteExporter(PrintStream printStream) {
         m_ampPresetSuites = new HashMap<>();
     }
+
+    void setRange(int minSlotIndex, int maxSlotIndex) {
+        m_minSlotIndex = minSlotIndex;
+        m_maxSlotIndex = maxSlotIndex;
+    }
+
     @Override
     public void visitBeforeRecords(PresetRegistryBase registry) {
     }
 
     @Override
     public void visitRecord(int slotIndex, Object record) {
+        if(slotIndex<=m_minSlotIndex || slotIndex>=m_maxSlotIndex) {
+            return;
+        }
         FenderJsonPresetRecord fjpr = (FenderJsonPresetRecord) record;
         assert fjpr != null;
         JsonObject suiteForThisAmp = m_ampPresetSuites.get(fjpr.ampName());
