@@ -28,7 +28,10 @@ import com.google.gson.stream.JsonWriter;
  *
  */
 public class FenderJsonPresetRegistry extends PresetRegistryBase {
-    public FenderJsonPresetRegistry() {  }
+    final String m_outputPath;
+    public FenderJsonPresetRegistry(String outputPath) {
+        m_outputPath = outputPath;
+    }
 
     @Override
     public void register(int slotIndex, String name, byte[] definition) {
@@ -46,10 +49,14 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
 
     @Override
     public void dump(String outputPathPrefix) {
-        generatePresetDetails(System.out);
-        AmpBasedPresetSuiteExporter abpse = new AmpBasedPresetSuiteExporter(System.out);
-        acceptVisitor(abpse);
-        abpse.writePresetSuites(".");
+        if(m_outputPath == null) {
+            generatePresetDetails(System.out);
+        } else {
+            generatePresetDetails(System.out);
+            AmpBasedPresetSuiteExporter abpse = new AmpBasedPresetSuiteExporter(System.out);
+            acceptVisitor(abpse);
+            abpse.writePresetSuites(".");
+        }
     }
 
     /**
