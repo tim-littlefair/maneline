@@ -4,7 +4,11 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 import java.util.HashMap;
 
 import com.google.gson.*;
@@ -47,6 +51,28 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
         acceptVisitor(abpse);
         abpse.writePresetSuites(".");
     }
+
+    /**
+     * non-public class FenderJsonPresetRecord requires a hash function
+     * in order to enable consumers of the preset details report or
+     * the amp-based preset suite JSON files to determine whether the
+     * audio parameters of a preset have been modified relative to a
+     * report or suite from a different amp or the same amp at an earlier
+     * point in time.
+     * @param prefixLength the length of the hash in characters
+     * @return the last prefixLength characters of the hex encoded
+     * SHA-256 hash of the string.
+     */
+    public static String stringHash(String inputString, int prefixLength) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            md.update(inputString.getBytes(StandardCharsets.UTF_8));
+            String mdHexString = new BigInteger(md.digest()).toString(16);
+            return mdHexString.substring(mdHexString.length()-prefixLength, mdHexString.length());
+        } catch (NoSuchAlgorithmException e) {
+            return Integer.toHexString(inputString.hashCode()).substring(0, prefixLength);
+        }
+    }
 }
 
 class FenderJsonPresetRecord extends PresetRecordBase {
@@ -76,7 +102,12 @@ class FenderJsonPresetRecord extends PresetRecordBase {
                 return null;
             }
         }
-        return je.getAsString();
+        try {
+            return je.getAsString();
+        }
+        catch(IllegalStateException e) {
+            return je.toString();
+        }
     }
 
     public String displayName() {
@@ -84,7 +115,35 @@ class FenderJsonPresetRecord extends PresetRecordBase {
     }
 
     public String ampName() {
-        return getValue("audioGraph/nodes/2/FenderId").replace("DUBS_","");
+        // For the firmware presets 1-30 the amp is always at node #2
+        // This is not always true of presets uploaded from Fender
+        // via FenderTone (amp at node #0 being the most common exception
+        // I've seen).
+        // For efficiency we search node 2 first, then the other
+        // nodes in numeric order.
+        for(int nodeIndex: new int[] { 2, 0, 1, 3, 4 }) {
+            String nodePrefix=String.format("audioGraph/nodes/%d/",nodeIndex);
+            String nodeId=getValue(nodePrefix+"nodeId");
+            if(nodeId.equals("amp")) {
+                String jsonAmpName = getValue(nodePrefix + "FenderId");
+                return jsonAmpName.replace("DUBS_","");
+            }
+        }
+        return null;
+    }
+
+    public String audioHash() {
+        // All audio parameters of the preset are encodded in the audioGraph submap,
+        // which has two subkeys, 'nodes' and 'connections'.
+
+        // We examine the 'connections' item first because we are not sure
+        // whether it is even possible for this to change.
+        String cxnsJson = getValue("audioGraph/connections");
+        String cxnsHash = FenderJsonPresetRegistry.stringHash(cxnsJson,3);
+
+        String nodesJson = getValue("audioGraph/nodes");
+        String nodesHash = FenderJsonPresetRegistry.stringHash(nodesJson,3);
+        return String.format("%s-%s", cxnsHash, nodesHash);
     }
 
     public String dspUnitDesc(int nodeIndex) {
@@ -117,7 +176,7 @@ class FenderJsonPresetRecord extends PresetRecordBase {
 }
 
 class PresetDetailsTableGenerator implements PresetRegistryVisitor {
-    private final static String _LINE_FORMAT = "%3d %-16s %-20s %-60s";
+    private final static String _LINE_FORMAT = "%3d %-16s %-20s %-7s %-60s";
     PrintStream m_printStream;
     PresetDetailsTableGenerator(PrintStream printStream) {
         m_printStream = printStream;
@@ -127,7 +186,7 @@ class PresetDetailsTableGenerator implements PresetRegistryVisitor {
         m_printStream.println("Presets");
         m_printStream.println(String.format(
             _LINE_FORMAT.replace("%3d", "%3s"),
-            "#", "Name", "Amplifier","Effect Chain"
+            "#", "Name", "Amplifier","Hash", "Effect Chain"
         ));
     }
 
@@ -137,7 +196,7 @@ class PresetDetailsTableGenerator implements PresetRegistryVisitor {
         assert fjpr != null;
         m_printStream.println(String.format(
             _LINE_FORMAT,
-            slotIndex, fjpr.displayName(), fjpr.ampName(), fjpr.effects()
+            slotIndex, fjpr.displayName(), fjpr.ampName(), fjpr.audioHash(), fjpr.effects()
         ));
     }
 }
@@ -166,6 +225,7 @@ class AmpBasedPresetSuiteExporter implements PresetRegistryVisitor {
         JsonObject newPreset = new JsonObject();
         newPreset.addProperty("slotIndex", slotIndex);
         newPreset.addProperty("presetName", fjpr.displayName());
+        newPreset.addProperty("audioHash", fjpr.displayName());
         presetArray.add(newPreset);
     }
 
