@@ -72,9 +72,15 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
             generatePresetDetails(System.out);
         } else {
             generatePresetDetails(System.out);
-            AmpBasedPresetSuiteExporter abpse = new AmpBasedPresetSuiteExporter(System.out);
+
+            // Export raw (compact format) and pretty (more readaable)
+            // renderings of the presets as JSON.
+            AmpDefinitionExporter ade = new AmpDefinitionExporter(m_outputPath);
+            acceptVisitor(ade);
+
             // For the moment we only want to create suites containing the non-empty
             // default firmware presets at slots 1 to 30.
+            AmpBasedPresetSuiteExporter abpse = new AmpBasedPresetSuiteExporter(System.out);
             abpse.setRange(1,30);
             acceptVisitor(abpse);
             abpse.writePresetSuites(m_outputPath);
@@ -247,6 +253,60 @@ class PresetDetailsTableGenerator implements PresetRegistryVisitor {
             ));
         }
     }
+}
+
+class AmpDefinitionExporter implements PresetRegistryVisitor {
+    final String m_outputPrefix;
+    final Gson m_gson;
+    AmpDefinitionExporter(String outputPrefix) {
+        m_outputPrefix = outputPrefix;
+        m_gson = new GsonBuilder().setPrettyPrinting().create();
+    }
+
+    @Override
+    public void visitBeforeRecords(PresetRegistryBase registry) {  }
+
+    @Override
+    public void visitRecord(int slotIndex, Object record) {
+        FenderJsonPresetRecord fjpr = (FenderJsonPresetRecord) record;
+        assert fjpr != null;
+        String presetBasename = String.format(
+            "%s-%s",
+            fjpr.displayName().replace(" ","_"),
+            fjpr.audioHash()
+        );
+
+        // The raw export is the JSON exactly as it was retrieved from the protocol,
+        // i.e. compact, with order of dictionary keys preserved.
+        String rawJson = fjpr.m_definitionRawJson;
+        String rawTargetPath = m_outputPrefix + "/" + presetBasename +".raw_preset.json";
+        outputToFile(rawTargetPath, rawJson);
+
+        // The pretty export is the GSON pretty rendering of the parsed JSON object
+        // i.e. indented, with dictionary keys sorted.
+        String prettyJson = m_gson.toJson(fjpr.m_definitionJsonObject);
+        String prettyTargetPath = m_outputPrefix + "/" + presetBasename +".pretty_preset.json";
+        outputToFile(prettyTargetPath, prettyJson);
+    }
+
+    private int outputToFile(String rawTargetPath, String jsonForSuite) {
+        try {
+            FileOutputStream fos;
+            fos = new FileOutputStream(rawTargetPath);
+            fos.write(jsonForSuite.getBytes(StandardCharsets.UTF_8));
+             return 0;
+        } catch (FileNotFoundException e) {
+            System.err.println("Unable to open " + rawTargetPath + ", continuing...");
+            return -1;
+        }
+        catch (IOException e) {
+            System.err.println("Unable to write to " + rawTargetPath + ", continuing...");
+            return -2;
+        }
+    }
+
+    @Override
+    public void visitAfterRecords(PresetRegistryBase registry)  { }
 }
 
 class AmpBasedPresetSuiteExporter implements PresetRegistryVisitor {
