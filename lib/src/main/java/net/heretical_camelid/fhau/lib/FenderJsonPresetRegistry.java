@@ -10,6 +10,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -80,10 +82,9 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
 
             // For the moment we only want to create suites containing the non-empty
             // default firmware presets at slots 1 to 30.
-            AmpBasedPresetSuiteExporter abpse = new AmpBasedPresetSuiteExporter(System.out);
+            AmpBasedPresetSuiteExporter abpse = new AmpBasedPresetSuiteExporter(m_outputPath);
             abpse.setRange(1,30);
             acceptVisitor(abpse);
-            abpse.writePresetSuites(m_outputPath);
         }
     }
 
@@ -108,6 +109,22 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
             return Integer.toHexString(inputString.hashCode()).substring(0, prefixLength);
         }
     }
+
+    public static int outputToFile(String rawTargetPath, String jsonForSuite) {
+        try {
+            FileOutputStream fos;
+            fos = new FileOutputStream(rawTargetPath);
+            fos.write(jsonForSuite.getBytes(StandardCharsets.UTF_8));
+            return 0;
+        } catch (FileNotFoundException e) {
+            System.err.println("Unable to open " + rawTargetPath + ", continuing...");
+            return -1;
+        }
+        catch (IOException e) {
+            System.err.println("Unable to write to " + rawTargetPath + ", continuing...");
+            return -2;
+        }
+    }
 }
 
 class FenderJsonPresetRecord extends PresetRecordBase {
@@ -117,9 +134,7 @@ class FenderJsonPresetRecord extends PresetRecordBase {
     public FenderJsonPresetRecord(String name, byte[] definitionBytes) {
         super(name);
         m_definitionRawJson = new String(definitionBytes, StandardCharsets.UTF_8);
-        m_definitionJsonObject = JsonParser.parseString(
-            m_definitionRawJson
-        ).getAsJsonObject();
+        m_definitionJsonObject = JsonParser.parseString(m_definitionRawJson).getAsJsonObject();
     }
 
     public String getValue(String itemJsonPath) {
@@ -138,9 +153,11 @@ class FenderJsonPresetRecord extends PresetRecordBase {
             }
         }
         try {
+            // primitives are rendered as literal values
             return je.getAsString();
         }
         catch(IllegalStateException e) {
+            // arrays and maps are rendered as quote-surrounded JSON strings
             return je.toString();
         }
     }
@@ -168,15 +185,15 @@ class FenderJsonPresetRecord extends PresetRecordBase {
     }
 
     public String audioHash() {
-        // All audio parameters of the preset are encodded in the audioGraph submap,
-        // which has two subkeys, 'nodes' and 'connections'.
-
-        // We examine the 'connections' item first because we are not sure
-        // whether it is even possible for this to change.
+        // All audio parameters of the preset are encoded in the audioGraph submap,
+        // which has two subkeys, 'nodes' and 'connections'. By composing the hash from
+        // separate hashes over the values for each of these subkeys we can see
+        // that the majority of presets conform to a small number of connection structures.
         String cxnsJson = getValue("audioGraph/connections");
         String cxnsHash = FenderJsonPresetRegistry.stringHash(cxnsJson,3);
 
         String nodesJson = getValue("audioGraph/nodes");
+
         String nodesHash = FenderJsonPresetRegistry.stringHash(nodesJson,3);
         return String.format("%s-%s", cxnsHash, nodesHash);
     }
@@ -280,29 +297,13 @@ class AmpDefinitionExporter implements PresetRegistryVisitor {
         // i.e. compact, with order of dictionary keys preserved.
         String rawJson = fjpr.m_definitionRawJson;
         String rawTargetPath = m_outputPrefix + "/" + presetBasename +".raw_preset.json";
-        outputToFile(rawTargetPath, rawJson);
+        FenderJsonPresetRegistry.outputToFile(rawTargetPath, rawJson);
 
         // The pretty export is the GSON pretty rendering of the parsed JSON object
         // i.e. indented, with dictionary keys sorted.
         String prettyJson = m_gson.toJson(fjpr.m_definitionJsonObject);
         String prettyTargetPath = m_outputPrefix + "/" + presetBasename +".pretty_preset.json";
-        outputToFile(prettyTargetPath, prettyJson);
-    }
-
-    private int outputToFile(String rawTargetPath, String jsonForSuite) {
-        try {
-            FileOutputStream fos;
-            fos = new FileOutputStream(rawTargetPath);
-            fos.write(jsonForSuite.getBytes(StandardCharsets.UTF_8));
-             return 0;
-        } catch (FileNotFoundException e) {
-            System.err.println("Unable to open " + rawTargetPath + ", continuing...");
-            return -1;
-        }
-        catch (IOException e) {
-            System.err.println("Unable to write to " + rawTargetPath + ", continuing...");
-            return -2;
-        }
+        FenderJsonPresetRegistry.outputToFile(prettyTargetPath, prettyJson);
     }
 
     @Override
@@ -311,15 +312,19 @@ class AmpDefinitionExporter implements PresetRegistryVisitor {
 
 class AmpBasedPresetSuiteExporter implements PresetRegistryVisitor {
     HashMap<String,JsonObject> m_ampPresetSuites;
+    final String m_outputPrefix;
+    final Gson m_gson;
+
+    AmpBasedPresetSuiteExporter(String outputPrefix) {
+        m_outputPrefix = outputPrefix;
+        m_gson = new GsonBuilder().setPrettyPrinting().create();
+        m_ampPresetSuites = new HashMap<>();
+    }
 
     // The user may want to select a range of presets for export
     // (for example on LT40S to capture only firmware default presets 1-30)
     int m_minSlotIndex = 1;
     int m_maxSlotIndex = 999;
-    AmpBasedPresetSuiteExporter(PrintStream printStream) {
-        m_ampPresetSuites = new HashMap<>();
-    }
-
     void setRange(int minSlotIndex, int maxSlotIndex) {
         m_minSlotIndex = minSlotIndex;
         m_maxSlotIndex = maxSlotIndex;
@@ -347,33 +352,17 @@ class AmpBasedPresetSuiteExporter implements PresetRegistryVisitor {
         JsonObject newPreset = new JsonObject();
         newPreset.addProperty("slotIndex", slotIndex);
         newPreset.addProperty("presetName", fjpr.displayName());
-        newPreset.addProperty("audioHash", fjpr.displayName());
+        newPreset.addProperty("audioHash", fjpr.audioHash());
+        newPreset.addProperty("effects", fjpr.effects());
         presetArray.add(newPreset);
     }
 
     @Override
     public void visitAfterRecords(PresetRegistryBase registry) {
-
-    }
-
-    public void writePresetSuites(String pathPrefix) {
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
         for(String presetName: m_ampPresetSuites.keySet()) {
-            String targetPath = pathPrefix + "/" + presetName+".amp_presets.json";
-            FileOutputStream fos;
-            try {
-                 fos = new FileOutputStream(targetPath);
-            } catch (FileNotFoundException e) {
-                System.err.println("Unable to open " + targetPath + ", continuing...");
-                continue;
-            }
-            String jsonForSuite = gson.toJson(m_ampPresetSuites.get(presetName));
-            try {
-                fos.write(jsonForSuite.getBytes(StandardCharsets.UTF_8));
-            } catch (IOException e) {
-                System.err.println("Unable to write to " + targetPath + ", continuing...");
-                continue;
-            }
+            String targetPath = m_outputPrefix + "/" + presetName + ".amp_presets.json";
+            String jsonForSuite = m_gson.toJson(m_ampPresetSuites.get(presetName));
+            FenderJsonPresetRegistry.outputToFile(targetPath, jsonForSuite);
         }
     }
 }
