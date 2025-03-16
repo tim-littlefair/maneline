@@ -136,7 +136,6 @@ public class MainActivity
 
     private void populatePresetSuiteDropdown() {
         int itemLayoutId = R.layout.preset_suite_dropdown_item;
-        //int itemLayoutId = android.R.layout.simple_spinner_dropdown_item;
 
         // Create an ArrayAdapter for the Spinner
         String[] items = new String[] {
