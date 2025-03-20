@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <permission android:name="net.heretical_camelid.fhau.android_app.USB_PERMISSION" />
     <uses-feature android:name="android.hardware.usb.host" />
+    <uses-feature android:name="android.hardware.usb.accessory" />
+    <uses-permission android:name="android.permission.USB_PERMISSION" />
+    <uses-permission android:name="net.heretical_camelid.fhau.android_app.USB_PERMISSION"  />
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -17,5 +19,16 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+
+        <receiver
+                android:name=".UsbBroadcastReceiver"
+                android:exported="true" >
+                <intent-filter>
+                    <action android:name="net.heretical_camelid.fhau.android_app.USB_PERMISSION" />
+                    <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
+                    <action android:name="android.hardware.usb.action.USB_DEVICE_DETACHED" />
+                </intent-filter>
+        </receiver>
+
     </application>
 </manifest>

@@ -49,19 +49,19 @@ public class MainActivity
         implements PresetInfo.IVisitor, OnUsbHidDeviceListener
 {
     final static String ACTION_USB_PERMISSION = "net.heretical_camelid.fhau.android_app.USB_PERMISSION";
+    static LoggingAgent s_loggingAgent = null;
 
     BroadcastReceiver m_usbReceiver = null;
     PendingIntent m_permissionIntent;
 
     AmpManager m_ampManager = null;
 
-    LoggingAgent m_loggingAgent = null;
     Button m_btnConnectionStatus;
     private UsbManager m_usbManager;
 
-    void appendToLog(String message) {
-        if(m_loggingAgent!=null) {
-            m_loggingAgent.appendToLog(0,message);
+    static void appendToLog(String message) {
+        if(s_loggingAgent !=null) {
+            s_loggingAgent.appendToLog(0,message);
         }
     }
 
@@ -93,17 +93,17 @@ public class MainActivity
                     ));
                 } else if(itemId == R.id.action_provider_sim_nodev) {
                     m_ampManager = new AmpManager(new SimulatorAmpProvider(
-                        m_loggingAgent,
+                        s_loggingAgent,
                         SimulatorAmpProvider.SimulationMode.NO_DEVICE
                     ));
                 } else if(itemId == R.id.action_provider_sim_lt40s) {
                     m_ampManager = new AmpManager(new SimulatorAmpProvider(
-                        m_loggingAgent,
+                        s_loggingAgent,
                         SimulatorAmpProvider.SimulationMode.LT40S
                     ));
                 } else if(itemId == R.id.action_provider_sim_mmp) {
                     m_ampManager = new AmpManager(new SimulatorAmpProvider(
-                        m_loggingAgent,
+                        s_loggingAgent,
                         SimulatorAmpProvider.SimulationMode.MMP
                     ));
                 } else {
@@ -130,7 +130,7 @@ public class MainActivity
 
         TextView tvLog = (TextView) findViewById(R.id.tv_log);
 
-        m_loggingAgent = new LoggingAgent(tvLog);
+        s_loggingAgent = new LoggingAgent(tvLog);
         appendToLog("Starting up");
 
         setSupportActionBar(findViewById(R.id.toolbar_fhau));
@@ -187,7 +187,7 @@ public class MainActivity
             PermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(
                 ACTION_USB_PERMISSION), 0);
  */
-            IAmpProvider provider = new AndroidUsbAmpProvider(m_loggingAgent, this);
+            IAmpProvider provider = new AndroidUsbAmpProvider(s_loggingAgent, this);
             /*
             IAmpProvider provider = new SimulatorAmpProvider(
                 m_loggingAgent,
@@ -326,24 +326,7 @@ public class MainActivity
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     private void DoIntent () {
-        m_usbReceiver = new BroadcastReceiver() {
-            public void onReceive(Context context, Intent intent) {
-                String action = intent.getAction();
-                if (
-                    UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(action) ||
-                    UsbManager.ACTION_USB_ACCESSORY_ATTACHED.equals(action)
-                ) {
-                    appendToLog("Device attached");
-                } else if (
-                    UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action) ||
-                    UsbManager.ACTION_USB_ACCESSORY_DETACHED.equals(action)
-                ) {
-                    appendToLog("Device detached");
-                } else if (UsbManager.EXTRA_PERMISSION_GRANTED.equals(action)) {
-                    appendToLog("Device permission granted");
-                }
-            }
-        };
+        m_usbReceiver = new UsbBroadcastReceiver();
 
         IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
         m_permissionIntent = PendingIntent.getBroadcast(
@@ -362,17 +345,18 @@ public class MainActivity
         m_usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
         HashMap<String, UsbDevice> usbDeviceMap = m_usbManager.getDeviceList();
         if (usbDeviceMap == null) {
-            m_loggingAgent.appendToLog(0,"device map not received");
+            s_loggingAgent.appendToLog(0,"device map not received");
         } else if (usbDeviceMap.size() == 0) {
-            m_loggingAgent.appendToLog(0, "device map empty");
+            s_loggingAgent.appendToLog(0, "device map empty");
         } else {
             for (String deviceName : usbDeviceMap.keySet()) {
-                m_loggingAgent.appendToLog(0,
+                s_loggingAgent.appendToLog(0,
                     "UD: " + usbDeviceMap.get(deviceName).toString()
                 );
             }
         }
         
     }
+
 }
 
