@@ -24,7 +24,7 @@ then
 else
   tsdir=_work/cli-$(date +%s)
   mkdir $tsdir
-  sudo java -cp $CLASSPATH -ea  net.heretical_camelid.fhau.desktop_app.CommandLineInterface $tsdir
+  java -cp $CLASSPATH -ea  net.heretical_camelid.fhau.desktop_app.CommandLineInterface $tsdir
   sudo chown -R tim $tsdir
 fi
 
