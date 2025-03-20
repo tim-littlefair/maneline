@@ -1,9 +1,15 @@
 package net.heretical_camelid.fhau.android_app;
 
 import android.annotation.SuppressLint;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbManager;
+import android.os.Build;
 import android.os.Bundle;
-import android.text.Layout;
-import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -24,6 +30,8 @@ import net.heretical_camelid.fhau.lib.PresetInfo;
 import net.heretical_camelid.fhau.lib.PresetRecord;
 import net.heretical_camelid.fhau.lib.SimulatorAmpProvider;
 
+import java.util.HashMap;
+
 class MainActivityError extends UnsupportedOperationException {
     public MainActivityError(String message) {
         super(message);
@@ -40,10 +48,16 @@ public class MainActivity
         extends AppCompatActivity
         implements PresetInfo.IVisitor, OnUsbHidDeviceListener
 {
+    final static String ACTION_USB_PERMISSION = "net.heretical_camelid.fhau.android_app.USB_PERMISSION";
+
+    BroadcastReceiver m_usbReceiver = null;
+    PendingIntent m_permissionIntent;
+
     AmpManager m_ampManager = null;
 
     LoggingAgent m_loggingAgent = null;
     Button m_btnConnectionStatus;
+    private UsbManager m_usbManager;
 
     void appendToLog(String message) {
         if(m_loggingAgent!=null) {
@@ -131,7 +145,14 @@ public class MainActivity
             }
         });
 
+        DoIntent();
         populatePresetSuiteDropdown();
+    }
+
+    @Override
+    protected void onNewIntent(Intent theIntent) {
+        super.onNewIntent(theIntent);
+        appendToLog(theIntent.toString());
     }
 
     private void populatePresetSuiteDropdown() {
@@ -148,6 +169,7 @@ public class MainActivity
         Spinner presetSuiteDropdown = (Spinner) findViewById(R.id.dropdown_preset_suites);
         adapter.setDropDownViewResource(itemLayoutId);
         presetSuiteDropdown.setAdapter(adapter);
+
     }
 /*
     @Override
@@ -161,12 +183,19 @@ public class MainActivity
     private void connect() {
         appendToLog("Starting");
         if (m_ampManager == null) {
-            // m_provider = new AndroidUsbAmpProvider(this);
+/*
+            PermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(
+                ACTION_USB_PERMISSION), 0);
+ */
+            IAmpProvider provider = new AndroidUsbAmpProvider(m_loggingAgent, this);
+            /*
             IAmpProvider provider = new SimulatorAmpProvider(
                 m_loggingAgent,
                 SimulatorAmpProvider.SimulationMode.NO_DEVICE
             );
+             */
             m_ampManager = new AmpManager(provider);
+            provider.connect();
         }
         m_ampManager.getPresets().acceptVisitor(this);
 
@@ -294,4 +323,56 @@ public class MainActivity
     public void addMenuProvider(@NonNull MenuProvider provider, @NonNull LifecycleOwner owner, @NonNull Lifecycle.State state) {
 
     }
+
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
+    private void DoIntent () {
+        m_usbReceiver = new BroadcastReceiver() {
+            public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
+                if (
+                    UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(action) ||
+                    UsbManager.ACTION_USB_ACCESSORY_ATTACHED.equals(action)
+                ) {
+                    appendToLog("Device attached");
+                } else if (
+                    UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action) ||
+                    UsbManager.ACTION_USB_ACCESSORY_DETACHED.equals(action)
+                ) {
+                    appendToLog("Device detached");
+                } else if (UsbManager.EXTRA_PERMISSION_GRANTED.equals(action)) {
+                    appendToLog("Device permission granted");
+                }
+            }
+        };
+
+        IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
+        m_permissionIntent = PendingIntent.getBroadcast(
+            this,0,
+            new Intent(ACTION_USB_PERMISSION),PendingIntent.FLAG_IMMUTABLE
+        );
+        filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
+        filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
+        filter.addAction(UsbManager.EXTRA_PERMISSION_GRANTED);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            registerReceiver(m_usbReceiver, filter,RECEIVER_NOT_EXPORTED);
+        } else {
+            registerReceiver(m_usbReceiver, filter);
+        }
+
+        m_usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
+        HashMap<String, UsbDevice> usbDeviceMap = m_usbManager.getDeviceList();
+        if (usbDeviceMap == null) {
+            m_loggingAgent.appendToLog(0,"device map not received");
+        } else if (usbDeviceMap.size() == 0) {
+            m_loggingAgent.appendToLog(0, "device map empty");
+        } else {
+            for (String deviceName : usbDeviceMap.keySet()) {
+                m_loggingAgent.appendToLog(0,
+                    "UD: " + usbDeviceMap.get(deviceName).toString()
+                );
+            }
+        }
+        
+    }
 }
+
