@@ -17,16 +17,11 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 /**
- * PresetRegistryBase is a minimal registry of presets which maintains
- * a collection of simple preset objects which consist of a slot number
- * and name only.
- * Both the registry class and the simple preset objects can be extended
- * to support more complex behaviour.
- * Note that the base registry class is responsible for creating the
- * record objects it stores.  Classes which extend the base registry
- * class to are expected to create record objects which contain additional
- * data beyond the slot index and name, so the name, of a more Extended implementations of the registry are expected
- *
+ * The registry class below is an extension of PresetRegistryBase
+ * which is aware of the relationship between LT-series presets and
+ * their JSON representation, and uses that awareness to export
+ * compact/raw and human-readable JSON statements of the preset
+ * content.
  */
 public class FenderJsonPresetRegistry extends PresetRegistryBase {
     final static Gson s_gsonCompact = new Gson();
