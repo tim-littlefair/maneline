@@ -10,15 +10,11 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
 /**
  * PresetRegistryBase is a minimal registry of presets which maintains
@@ -33,6 +29,9 @@ import com.google.gson.JsonParser;
  *
  */
 public class FenderJsonPresetRegistry extends PresetRegistryBase {
+    final static Gson s_gsonCompact = new Gson();
+    final static Gson s_gsonPretty = new GsonBuilder().setPrettyPrinting().create();
+
     final String m_outputPath;
     HashMap<String, ArrayList<Integer>> m_duplicateSlots;
 
@@ -129,45 +128,24 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
 
 class FenderJsonPresetRecord extends PresetRecordBase {
     final String m_definitionRawJson;
-    final JsonObject m_definitionJsonObject;
+    final PresetCanonicalSerializer m_presetCanonicalSerializer;
 
     public FenderJsonPresetRecord(String name, byte[] definitionBytes) {
         super(name);
         m_definitionRawJson = new String(definitionBytes, StandardCharsets.UTF_8);
-        m_definitionJsonObject = JsonParser.parseString(m_definitionRawJson).getAsJsonObject();
-        PresetJson presetJson = new Gson().fromJson(m_definitionRawJson,PresetJson.class);
-    }
-
-    public String getValue(String itemJsonPath) {
-        JsonElement je = m_definitionJsonObject;
-        String[] pathElements = itemJsonPath.split("/");
-        for(String pe: pathElements) {
-            if("01234".contains(pe)) {
-                JsonArray joAsArray = je.getAsJsonArray();
-                assert joAsArray != null;
-                je = joAsArray.get(Integer.parseInt(pe));
-            } else {
-                je = je.getAsJsonObject().get(pe);
-            }
-            if(je==null) {
-                return null;
-            }
-        }
-        try {
-            // primitives are rendered as literal values
-            return je.getAsString();
-        }
-        catch(IllegalStateException|UnsupportedOperationException e ) {
-            // arrays and maps are rendered as quote-surrounded JSON strings
-            return je.toString();
-        }
+        m_presetCanonicalSerializer = FenderJsonPresetRegistry.s_gsonCompact.fromJson(
+            m_definitionRawJson, PresetCanonicalSerializer.class
+        );
     }
 
     public String displayName() {
-        return getValue("info/displayName");
+        return m_presetCanonicalSerializer.info.displayName;
     }
 
     public String ampName() {
+        PresetCanonicalSerializer.PCS_Node[] nodes =
+            m_presetCanonicalSerializer.audioGraph.nodes
+        ;
         // For the firmware presets 1-30 the amp is always at node #2
         // This is not always true of presets uploaded from Fender
         // via FenderTone (amp at node #0 being the most common exception
@@ -175,49 +153,45 @@ class FenderJsonPresetRecord extends PresetRecordBase {
         // For efficiency we search node 2 first, then the other
         // nodes in numeric order.
         for(int nodeIndex: new int[] { 2, 0, 1, 3, 4 }) {
-            String nodePrefix=String.format("audioGraph/nodes/%d/",nodeIndex);
-            String nodeId=getValue(nodePrefix+"nodeId");
-            if(nodeId.equals("amp")) {
-                String jsonAmpName = getValue(nodePrefix + "FenderId");
-                return jsonAmpName.replace("DUBS_","");
+            PresetCanonicalSerializer.PCS_Node node=nodes[nodeIndex];
+            if(node.nodeId.equals("amp")) {
+                return node.FenderId.replace("DUBS_","");
             }
         }
         return null;
     }
 
     public String audioHash() {
-        String audioGraphRawJson = getValue("audioGraph");
-        Gson gson = new Gson();
-        String audioGraphCanonicalJson = gson.toJson(gson.fromJson(
-            audioGraphRawJson, PresetJson.PJ_AudioGraph.class
-        ));
-        return FenderJsonPresetRegistry.stringHash(audioGraphCanonicalJson,7);
-/*
         // All audio parameters of the preset are encoded in the audioGraph submap,
         // which has two subkeys, 'nodes' and 'connections'. By composing the hash from
         // separate hashes over the values for each of these subkeys we can see
         // that the majority of presets conform to a small number of connection structures.
-        String cxnsJson = getValue("audioGraph/connections");
-        String cxnsHash = FenderJsonPresetRegistry.stringHash(cxnsJson,3);
 
-        String nodesJson = getValue("audioGraph/nodes");
+        String cxnsHash = FenderJsonPresetRegistry.stringHash(
+            FenderJsonPresetRegistry.s_gsonCompact.toJson(
+                m_presetCanonicalSerializer.audioGraph.connections
+            ),2
+        );
 
-        String nodesHash = FenderJsonPresetRegistry.stringHash(nodesJson,3);
+        String nodesHash = FenderJsonPresetRegistry.stringHash(
+            FenderJsonPresetRegistry.s_gsonCompact.toJson(
+                m_presetCanonicalSerializer.audioGraph.nodes
+            ),4
+        );
+
         return String.format("%s-%s", cxnsHash, nodesHash);
- */
     }
 
     public String dspUnitDesc(int nodeIndex) {
-        String nodePrefix = String.format("audioGraph/nodes/%d/",nodeIndex);
-        String nodeType = getValue(nodePrefix+"nodeId");
-        if(nodeType.equals("amp")) {
+        PresetCanonicalSerializer.PCS_Node node = m_presetCanonicalSerializer.audioGraph.nodes[nodeIndex];
+        if(node.nodeId.equals("amp")) {
             return "$AMP$";
         }
-        String nodeName = getValue(nodePrefix+"FenderId").replace("DUBS_","");
+        String nodeName = node.FenderId.replace("DUBS_","");
         if(nodeName.equals("Passthru")) {
             return null;
         }
-        return nodeType + ":" + nodeName;
+        return node.nodeId + ":" + nodeName;
     }
 
     public String effects() {
@@ -274,8 +248,8 @@ class PresetDetailsTableGenerator implements PresetRegistryVisitor {
                 continue;
             }
             m_printStream.println(String.format(
-                "Preset %3d (%s) is duplicated at the following slots: %s",
-                duplicateSlotList.get(0).intValue(), duplicateKey, duplicateSlotList
+                "The preset with %s is duplicated at the following slots: %s",
+                duplicateKey, duplicateSlotList
             ));
         }
     }
@@ -310,7 +284,7 @@ class AmpDefinitionExporter implements PresetRegistryVisitor {
 
         // The pretty export is the GSON pretty rendering of the parsed JSON object
         // i.e. indented, with dictionary keys sorted.
-        String prettyJson = m_gson.toJson(fjpr.m_definitionJsonObject);
+        String prettyJson = m_gson.toJson(fjpr.m_presetCanonicalSerializer);
         String prettyTargetPath = m_outputPrefix + "/" + presetBasename +".pretty_preset.json";
         FenderJsonPresetRegistry.outputToFile(prettyTargetPath, prettyJson);
     }
