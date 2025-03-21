@@ -135,6 +135,7 @@ class FenderJsonPresetRecord extends PresetRecordBase {
         super(name);
         m_definitionRawJson = new String(definitionBytes, StandardCharsets.UTF_8);
         m_definitionJsonObject = JsonParser.parseString(m_definitionRawJson).getAsJsonObject();
+        PresetJson presetJson = new Gson().fromJson(m_definitionRawJson,PresetJson.class);
     }
 
     public String getValue(String itemJsonPath) {
@@ -156,7 +157,7 @@ class FenderJsonPresetRecord extends PresetRecordBase {
             // primitives are rendered as literal values
             return je.getAsString();
         }
-        catch(IllegalStateException e) {
+        catch(IllegalStateException|UnsupportedOperationException e ) {
             // arrays and maps are rendered as quote-surrounded JSON strings
             return je.toString();
         }
@@ -185,6 +186,13 @@ class FenderJsonPresetRecord extends PresetRecordBase {
     }
 
     public String audioHash() {
+        String audioGraphRawJson = getValue("audioGraph");
+        Gson gson = new Gson();
+        String audioGraphCanonicalJson = gson.toJson(gson.fromJson(
+            audioGraphRawJson, PresetJson.PJ_AudioGraph.class
+        ));
+        return FenderJsonPresetRegistry.stringHash(audioGraphCanonicalJson,7);
+/*
         // All audio parameters of the preset are encoded in the audioGraph submap,
         // which has two subkeys, 'nodes' and 'connections'. By composing the hash from
         // separate hashes over the values for each of these subkeys we can see
@@ -196,6 +204,7 @@ class FenderJsonPresetRecord extends PresetRecordBase {
 
         String nodesHash = FenderJsonPresetRegistry.stringHash(nodesJson,3);
         return String.format("%s-%s", cxnsHash, nodesHash);
+ */
     }
 
     public String dspUnitDesc(int nodeIndex) {

@@ -195,11 +195,6 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
     }
 
     @Override
-    public boolean connect() {
-        System.out.println("Connect! (unexpected)");
-        return true;
-    }
-    @Override
     public void sendCommand(String commandHexString) {
         System.out.println("sendCommand! (unexpected)");
     }
