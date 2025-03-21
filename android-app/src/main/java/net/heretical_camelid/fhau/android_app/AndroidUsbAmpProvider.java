@@ -32,10 +32,9 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
         m_loggingAgent = loggingAgent;
         m_mainActivity = mainActivity;
     }
-    @Override
-    public boolean connect() {
+    public boolean connect(int vendorId, int productId) {
         final boolean[] retval = {false};
-        m_device = UsbHidDevice.factory(m_mainActivity, 0x1ed8,0x0046);
+        m_device = UsbHidDevice.factory(m_mainActivity, vendorId, productId);
         if (m_device == null) {
             m_loggingAgent.appendToLog(0,"No device found\n");
             return retval[0];

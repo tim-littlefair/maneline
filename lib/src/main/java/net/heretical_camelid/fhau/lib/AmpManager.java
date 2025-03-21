@@ -1,12 +1,11 @@
 package net.heretical_camelid.fhau.lib;
 
 public class AmpManager {
-    final IAmpProvider m_provider;
+    IAmpProvider m_provider;
 
     PresetInfo m_presetInfo;
-    public AmpManager(IAmpProvider provider) {
-        m_provider = provider;
-        m_provider.connect();
+    public AmpManager() {
+        m_provider = null;
     }
 
     public PresetInfo getPresets() {
@@ -33,5 +32,9 @@ public class AmpManager {
 
     private void refresh() {
         m_presetInfo = m_provider.getPresetInfo(null);
+    }
+
+    public void setProvider(IAmpProvider provider) {
+        m_provider = provider;
     }
 }

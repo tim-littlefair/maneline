@@ -1,7 +1,7 @@
 package net.heretical_camelid.fhau.lib;
 
 public interface IAmpProvider {
-    boolean connect();
+    //boolean connect();
 
     void sendCommand(String commandHexString);
 

@@ -90,7 +90,6 @@ public class SimulatorAmpProvider implements IAmpProvider {
             m_presetInfo = m_deviceDelegate.m_presetInfo;
         }
     }
-    @Override
     public boolean connect() {
         m_loggingAgent.appendToLog(0,String.format(
             "Connected to device '%s', firmware version '%s'",

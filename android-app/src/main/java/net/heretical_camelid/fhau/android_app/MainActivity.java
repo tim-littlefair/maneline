@@ -92,19 +92,22 @@ public class MainActivity
                         item.getTitle()
                     ));
                 } else if(itemId == R.id.action_provider_sim_nodev) {
-                    m_ampManager = new AmpManager(new SimulatorAmpProvider(
+                    m_ampManager = new AmpManager();
+                    m_ampManager.setProvider(new SimulatorAmpProvider(
                         s_loggingAgent,
                         SimulatorAmpProvider.SimulationMode.NO_DEVICE
                     ));
                 } else if(itemId == R.id.action_provider_sim_lt40s) {
-                    m_ampManager = new AmpManager(new SimulatorAmpProvider(
+                    m_ampManager = new AmpManager();
+                    m_ampManager.setProvider(new SimulatorAmpProvider(
                         s_loggingAgent,
-                        SimulatorAmpProvider.SimulationMode.LT40S
+                        SimulatorAmpProvider.SimulationMode.NO_DEVICE
                     ));
                 } else if(itemId == R.id.action_provider_sim_mmp) {
-                    m_ampManager = new AmpManager(new SimulatorAmpProvider(
+                    m_ampManager = new AmpManager();
+                    m_ampManager.setProvider(new SimulatorAmpProvider(
                         s_loggingAgent,
-                        SimulatorAmpProvider.SimulationMode.MMP
+                        SimulatorAmpProvider.SimulationMode.NO_DEVICE
                     ));
                 } else {
                     throw new MainActivityError(String.format(
@@ -126,7 +129,7 @@ public class MainActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        m_ampManager = null;
+        m_ampManager = new AmpManager();
 
         TextView tvLog = (TextView) findViewById(R.id.tv_log);
 
@@ -187,15 +190,16 @@ public class MainActivity
             PermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(
                 ACTION_USB_PERMISSION), 0);
  */
-            IAmpProvider provider = new AndroidUsbAmpProvider(s_loggingAgent, this);
+            AndroidUsbAmpProvider provider = new AndroidUsbAmpProvider(s_loggingAgent, this);
             /*
             IAmpProvider provider = new SimulatorAmpProvider(
                 m_loggingAgent,
                 SimulatorAmpProvider.SimulationMode.NO_DEVICE
             );
              */
-            m_ampManager = new AmpManager(provider);
-            provider.connect();
+            m_ampManager = new AmpManager();
+            provider.connect(0,0);
+            m_ampManager.setProvider(provider);
         }
         m_ampManager.getPresets().acceptVisitor(this);
 
@@ -315,7 +319,7 @@ public class MainActivity
         appendToLog("Failed to connect to physical amp, trying simulator...");
         m_ampManager = null;
         IAmpProvider provider = new SimulatorAmpProvider(null, SimulatorAmpProvider.SimulationMode.NO_DEVICE);
-        m_ampManager = new AmpManager(provider);
+        m_ampManager = new AmpManager();
         appendToLog(null);
     }
 
@@ -350,9 +354,25 @@ public class MainActivity
             s_loggingAgent.appendToLog(0, "device map empty");
         } else {
             for (String deviceName : usbDeviceMap.keySet()) {
-                s_loggingAgent.appendToLog(0,
-                    "UD: " + usbDeviceMap.get(deviceName).toString()
-                );
+                UsbDevice device = usbDeviceMap.get(deviceName);
+                if(device.getVendorId()==0x1ed8) {
+                    s_loggingAgent.appendToLog(0,String.format(
+                        "FMIC device found with vid=%04x pid=%04x name='%s'",
+                        device.getVendorId(),
+                        device.getProductId(),
+                        device.getDeviceName()
+                    ));
+                    AndroidUsbAmpProvider provider = new AndroidUsbAmpProvider(s_loggingAgent, this);
+                    provider.connect(device.getVendorId(), device.getProductId());
+                    m_ampManager.setProvider(provider);
+                } else {
+                    s_loggingAgent.appendToLog(0,String.format(
+                        "non-FMIC device found with vid=%04x pid=%04x name='%s'",
+                        device.getVendorId(),
+                        device.getProductId(),
+                        device.getDeviceName()
+                    ));
+                }
             }
         }
         
