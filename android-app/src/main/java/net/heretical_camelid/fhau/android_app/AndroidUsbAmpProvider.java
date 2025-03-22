@@ -1,8 +1,6 @@
 package net.heretical_camelid.fhau.android_app;
 
-import android.app.PendingIntent;
 import android.content.Context;
-import android.hardware.usb.UsbAccessory;
 import android.hardware.usb.UsbDevice;
 
 import android.hardware.usb.UsbDeviceConnection;
@@ -10,8 +8,6 @@ import android.hardware.usb.UsbManager;
 import com.benlypan.usbhid.UsbHidDevice;
 
 import net.heretical_camelid.fhau.lib.*;
-
-import java.util.HashMap;
 
 import static androidx.core.content.ContextCompat.registerReceiver;
 
@@ -68,14 +64,28 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
 
     @Override
     public PresetInfo getPresetInfo(PresetInfo requestedPresets) {
-        assert requestedPresets == null;
         PresetInfo retval = new PresetInfo();
-        PresetRecord pr1 = new PresetRecord("FENDER CLEAN",1);
-        PresetRecord pr2 = new PresetRecord("SILKY SOLO",2);
-        PresetRecord pr3 = new PresetRecord("CHICAGO BLUES",3);
-        retval.add(pr1);
-        retval.add(pr2);
-        retval.add(pr3);
+        if(m_presetRegistry==null) {
+            m_presetRegistry = new FenderJsonPresetRegistry(null);
+            int presetNamesStatus = m_protocol.getPresetNamesList();
+            if(presetNamesStatus!=0) {
+                System.out.println("getPresetNamesList returned " + presetNamesStatus);
+                return null;
+            } else {
+                m_presetRegistry.acceptVisitor(new PresetRegistryBase.Visitor(){
+                    @Override
+                    public void visitBeforeRecords(PresetRegistryBase registry) { }
+
+                    @Override
+                    public void visitRecord(int slotIndex, Object record) {
+                        retval.add(new PresetRecord(((PresetRecord)record).m_name, slotIndex));
+                    }
+
+                    @Override
+                    public void visitAfterRecords(PresetRegistryBase registry) { }
+                });
+            }
+        }
         return retval;
     }
 }

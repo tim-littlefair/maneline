@@ -10,6 +10,8 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.Settings;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -50,14 +52,12 @@ public class MainActivity
 {
     final static String ACTION_USB_PERMISSION = "net.heretical_camelid.fhau.android_app.USB_PERMISSION";
     static LoggingAgent s_loggingAgent = null;
-
     BroadcastReceiver m_usbReceiver = null;
     PendingIntent m_permissionIntent;
-
     AmpManager m_ampManager = null;
-
     Button m_btnConnectionStatus;
-    private UsbManager m_usbManager;
+    UsbManager m_usbManager;
+    String m_backupDirectoryPath = null;
 
     static void appendToLog(String message) {
         if(s_loggingAgent !=null) {
@@ -148,9 +148,12 @@ public class MainActivity
             }
         });
 
-        DoIntent();
+        requestFileStoragePermission();
+        requestUsbConnectionPermission();
         populatePresetSuiteDropdown();
     }
+
+
 
     @Override
     protected void onNewIntent(Intent theIntent) {
@@ -325,7 +328,7 @@ public class MainActivity
     }
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
-    private void DoIntent () {
+    private void requestUsbConnectionPermission() {
         m_usbReceiver = new UsbBroadcastReceiver();
 
         IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
@@ -343,6 +346,25 @@ public class MainActivity
         }
 
         m_usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
+    }
+
+    void requestFileStoragePermission() {
+        // TODO: Complete this logic to enable logs and preset JSON files
+        // to be exposed when the Android device is connected to a computer
+        // as a USB drive.
+        // The compliant purpose of this permission in is to enable
+        // backup and sharing of presets.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if(Environment.isExternalStorageManager()==false) {
+                m_permissionIntent = PendingIntent.getBroadcast(
+                    this, 0,
+                    new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION),
+                    PendingIntent.FLAG_IMMUTABLE
+                );
+                IntentFilter filter = new IntentFilter(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+                filter.addAction(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+            }
+        }
     }
 }
 

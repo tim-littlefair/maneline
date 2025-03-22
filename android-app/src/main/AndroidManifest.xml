@@ -3,6 +3,7 @@
     <uses-feature android:name="android.hardware.usb.host" />
     <uses-feature android:name="android.hardware.usb.accessory" />
     <uses-permission android:name="android.permission.USB_PERMISSION" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
     <uses-permission android:name="net.heretical_camelid.fhau.android_app.USB_PERMISSION"  />
     <application
         android:allowBackup="true"

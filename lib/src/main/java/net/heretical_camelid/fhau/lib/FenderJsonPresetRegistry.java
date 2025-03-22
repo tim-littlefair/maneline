@@ -205,7 +205,7 @@ class FenderJsonPresetRecord extends PresetRecordBase {
     }
 }
 
-class PresetDetailsTableGenerator implements PresetRegistryVisitor {
+class PresetDetailsTableGenerator implements PresetRegistryBase.Visitor {
     private final static String _LINE_FORMAT = "%3d %-16s %-20s %-7s %-60s";
     PrintStream m_printStream;
     PresetDetailsTableGenerator(PrintStream printStream) {
@@ -250,7 +250,7 @@ class PresetDetailsTableGenerator implements PresetRegistryVisitor {
     }
 }
 
-class AmpDefinitionExporter implements PresetRegistryVisitor {
+class AmpDefinitionExporter implements PresetRegistryBase.Visitor {
     final String m_outputPrefix;
     final Gson m_gson;
     AmpDefinitionExporter(String outputPrefix) {
@@ -288,7 +288,7 @@ class AmpDefinitionExporter implements PresetRegistryVisitor {
     public void visitAfterRecords(PresetRegistryBase registry)  { }
 }
 
-class AmpBasedPresetSuiteExporter implements PresetRegistryVisitor {
+class AmpBasedPresetSuiteExporter implements PresetRegistryBase.Visitor {
     HashMap<String,JsonObject> m_ampPresetSuites;
     final String m_outputPrefix;
     final Gson m_gson;
