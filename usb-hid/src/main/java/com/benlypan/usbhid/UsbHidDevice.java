@@ -151,7 +151,7 @@ public class UsbHidDevice {
 
     // TODO: the call context.registerReceiver is only valid from API 26
     // One of my test devices is a Nexus 7 which is at Android 8.1.2/API 25
-    @SuppressLint("NewApi")
+    @SuppressLint({"NewApi", "UnspecifiedRegisterReceiverFlag"})
     public void open(Context context, OnUsbHidDeviceListener listener) {
         mListener = listener;
         mHandler = new Handler(context.getMainLooper());
@@ -168,7 +168,11 @@ public class UsbHidDevice {
                 PendingIntent.FLAG_IMMUTABLE
             );
             IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
-            context.registerReceiver(mUsbReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+            if (Build.VERSION.SDK_INT >= 26) {
+                context.registerReceiver(mUsbReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+            } else {
+                context.registerReceiver(mUsbReceiver, filter);
+            }
             mUsbManager.requestPermission(mUsbDevice, permissionIntent);
         } else {
             openDevice();

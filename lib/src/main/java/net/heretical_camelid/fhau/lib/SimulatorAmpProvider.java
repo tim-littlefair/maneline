@@ -102,6 +102,11 @@ public class SimulatorAmpProvider implements IAmpProvider {
     public void sendCommand(String commandHexString) { }
 
     @Override
+    public String getFirmwareVersion() {
+        return "";
+    }
+
+    @Override
     public PresetInfo getPresetInfo(PresetInfo requestedPresets) {
         assert requestedPresets == null;
         return m_presetInfo;

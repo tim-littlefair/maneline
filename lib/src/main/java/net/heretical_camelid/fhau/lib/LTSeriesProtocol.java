@@ -4,11 +4,15 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 public class LTSeriesProtocol extends AbstractMessageProtocolBase {
-  PresetRegistryBase m_presetRegistry;
-  public LTSeriesProtocol(PresetRegistryBase presetRegistry) {
-    m_presetRegistry = presetRegistry;
-  }
-    public int doStartup() {
+    String m_firmwareVersion;
+    PresetRegistryBase m_presetRegistry;
+
+    public LTSeriesProtocol(PresetRegistryBase presetRegistry) {
+        m_firmwareVersion = null;
+        m_presetRegistry = presetRegistry;
+    }
+
+    public int doStartup(String[] firmwareVersionEtc) {
         assert m_deviceTransport!=null;
 
         String[][] startupCommands = new String[][]{
@@ -21,7 +25,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
                 return scStatus;
             }
         }
-
+        firmwareVersionEtc[0] = m_firmwareVersion;
         return STATUS_OK;
     }
 
@@ -43,8 +47,24 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         byte[] commandBytes = new byte[64];
         colonSeparatedHexToByteArray(commandBytesHex, commandBytes);
         // log( "Sending " + commandDescription);
+        return sendCommandBytes(commandBytes);
+    }
+
+    private int sendSubstitutedCommand(
+        String commandBytesHex, String commandDescription, int[] substitutionOffsets, byte[] substitutionBytes
+    ) {
+        assert substitutionOffsets.length == substitutionBytes.length;
+        byte[] commandBytes = new byte[64];
+        colonSeparatedHexToByteArray(commandBytesHex, commandBytes);
+        for(int offsetIndex=0; offsetIndex<substitutionOffsets.length; ++offsetIndex) {
+            commandBytes[substitutionOffsets[offsetIndex]]=substitutionBytes[offsetIndex];
+        }
+        return sendCommandBytes(commandBytes);
+    }
+
+    private int sendCommandBytes(byte[] commandBytes) {
         printAsHex2(commandBytes, "<");
-        int bytesWritten = m_deviceTransport.write(commandBytes, 64, (byte) 0x00, true);
+        int bytesWritten = m_deviceTransport.write(commandBytes);
         if (bytesWritten < 0) {
             log(m_deviceTransport.getLastErrorMessage());
             return STATUS_WRITE_FAIL;
@@ -56,6 +76,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         }
         return STATUS_OK;
     }
+
 
 
     private int parseResponse(byte[] assembledResponseMessage) {
@@ -94,8 +115,8 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             int firmwareVersionLength = assembledResponseMessage[6];
             assert payloadLength == firmwareVersionLength + 2;
 
-            String firmwareVersion = new String(assembledResponseMessage, 7, firmwareVersionLength);
-            log("Firmware version: " + firmwareVersion);
+            m_firmwareVersion = new String(assembledResponseMessage, 7, firmwareVersionLength);
+            log("Firmware version: " + m_firmwareVersion);
         } else if (
                    (0xfa == (0xff & assembledResponseMessage[2])) &&
                        (0x01 == (0xff & assembledResponseMessage[3]))
@@ -136,7 +157,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         while (true) {
             byte[] packetBuffer = new byte[64];
             int packetBytesRead;
-            packetBytesRead = m_deviceTransport.read(packetBuffer, 500);
+            packetBytesRead = m_deviceTransport.read(packetBuffer);
             if (packetBytesRead < 0) {
                 log("read failed, error=" + m_deviceTransport.getLastErrorMessage());
                 return STATUS_READ_FAIL;

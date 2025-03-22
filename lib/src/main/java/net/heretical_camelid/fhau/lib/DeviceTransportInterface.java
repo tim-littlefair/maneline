@@ -13,7 +13,7 @@ package net.heretical_camelid.fhau.lib;
  * is not available.
  */
 public interface DeviceTransportInterface {
-    int read(byte[] packetBuffer, int i);
-    int write(byte[] commandBytes, int i, byte b, boolean b1);
+    int read(byte[] packetBuffer);
+    int write(byte[] commandBytes);
     String getLastErrorMessage();
 }

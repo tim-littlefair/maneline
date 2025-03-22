@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 public abstract class AbstractMessageProtocolBase {
 
     // Abstract interface begins
-    public abstract int doStartup();
+    public abstract int doStartup(String[] firmwareVersionEtc);
     public abstract int getPresetNamesList();
     // future
     // public abstract String getPresetDefinition(int slotIndex);
@@ -20,14 +20,14 @@ public abstract class AbstractMessageProtocolBase {
     // Abstract interface ends
 
     // Status constants
-    public final int STATUS_OK = 0;
-    public final int STATUS_WRITE_FAIL = -101;
-    public final int STATUS_READ_FAIL = -102;
-    public final int STATUS_REASSEMBLY_FAIL = -103;
-    public final int STATUS_PARSE_FAIL = -104;
-    public final int STATUS_PRESET_FAIL = -105;
-    public final int STATUS_OTHER_FAIL = -109;
-    public final int STATUS_PRESET_WRAP_WARN = 201;
+    public static final int STATUS_OK = 0;
+    public static final int STATUS_WRITE_FAIL = -101;
+    public static final int STATUS_READ_FAIL = -102;
+    public static final int STATUS_REASSEMBLY_FAIL = -103;
+    public static final int STATUS_PARSE_FAIL = -104;
+    public static final int STATUS_PRESET_FAIL = -105;
+    public static final int STATUS_OTHER_FAIL = -109;
+    public static final int STATUS_PRESET_WRAP_WARN = 201;
 
     protected DeviceTransportInterface m_deviceTransport;
 

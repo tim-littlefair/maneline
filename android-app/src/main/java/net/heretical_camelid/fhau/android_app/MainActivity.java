@@ -174,46 +174,41 @@ public class MainActivity
         presetSuiteDropdown.setAdapter(adapter);
 
     }
-/*
-    @Override
-    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-        //Menu menu = (Menu) findViewById(R.id.menu_providers);
-        menu.setGroupCheckable(R.id.group_providers,false,true);
-        super.onCreateContextMenu(menu, v, menuInfo);
-    }
-*/
 
     private void connect() {
-        appendToLog("Starting");
-        if (m_ampManager == null) {
-/*
-            PermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(
-                ACTION_USB_PERMISSION), 0);
- */
-            AndroidUsbAmpProvider provider = new AndroidUsbAmpProvider(s_loggingAgent, this);
-            /*
-            IAmpProvider provider = new SimulatorAmpProvider(
-                m_loggingAgent,
-                SimulatorAmpProvider.SimulationMode.NO_DEVICE
-            );
-             */
-            m_ampManager = new AmpManager();
-            provider.connect(0,0);
-            m_ampManager.setProvider(provider);
+        HashMap<String, UsbDevice> usbDeviceMap = m_usbManager.getDeviceList();
+        if (usbDeviceMap == null) {
+            s_loggingAgent.appendToLog(0,"device map not received");
+            return;
+        } else if (usbDeviceMap.size() == 0) {
+            s_loggingAgent.appendToLog(0, "device map empty");
+            return;
+        } else {
+            for (String deviceName : usbDeviceMap.keySet()) {
+                UsbDevice device = usbDeviceMap.get(deviceName);
+                if(device.getVendorId()!=0x1ed8) {
+                    s_loggingAgent.appendToLog(0,String.format(
+                        "non-FMIC device found with vid=%04x pid=%04x",
+                        device.getVendorId(), device.getProductId()
+                    ));
+                    continue;
+                } else {
+                    s_loggingAgent.appendToLog(0,String.format(
+                        "FMIC device found with vid=%04x pid=%04x",
+                        device.getVendorId(), device.getProductId()
+                    ));
+                    s_loggingAgent.appendToLog(0,
+                        "FMIC product name: " + device.getProductName()
+                    );
+                    AndroidUsbAmpProvider provider = new AndroidUsbAmpProvider(s_loggingAgent, this);
+                    provider.connect(device.getVendorId(), device.getProductId());
+                    m_ampManager.setProvider(provider);
+                    m_ampManager.getPresets().acceptVisitor(this);
+                    appendToLog("Started");
+                    return;
+                }
+            }
         }
-        m_ampManager.getPresets().acceptVisitor(this);
-
-        /*
-        for(int i=0; i<commandHexStrings.length; ++i)
-        {
-            byte[] requestBytes = ByteArrayTranslator.hexToBytes(commandHexStrings[i]);
-            String requestHexString = ByteArrayTranslator.bytesToHex(requestBytes);
-            sb.append("R1: " + commandHexStrings[i] + "\n");
-            sb.append("R2: " + requestHexString + "\n");
-        }
-        */
-
-        appendToLog("Started");
     }
 
     @Override
@@ -296,6 +291,7 @@ public class MainActivity
                  */
         };
         appendToLog("Device HID connection succeeded");
+        m_ampManager.getPresets();
 /*
         int i=0;
         try {
@@ -311,7 +307,7 @@ public class MainActivity
                     i, e.toString()
             ));
         }
-    */
+ */
     }
 
     @Override
@@ -334,49 +330,19 @@ public class MainActivity
 
         IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
         m_permissionIntent = PendingIntent.getBroadcast(
-            this,0,
-            new Intent(ACTION_USB_PERMISSION),PendingIntent.FLAG_IMMUTABLE
+            this, 0,
+            new Intent(ACTION_USB_PERMISSION), PendingIntent.FLAG_IMMUTABLE
         );
         filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
         filter.addAction(UsbManager.EXTRA_PERMISSION_GRANTED);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            registerReceiver(m_usbReceiver, filter,RECEIVER_NOT_EXPORTED);
+            registerReceiver(m_usbReceiver, filter, RECEIVER_NOT_EXPORTED);
         } else {
             registerReceiver(m_usbReceiver, filter);
         }
 
         m_usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
-        HashMap<String, UsbDevice> usbDeviceMap = m_usbManager.getDeviceList();
-        if (usbDeviceMap == null) {
-            s_loggingAgent.appendToLog(0,"device map not received");
-        } else if (usbDeviceMap.size() == 0) {
-            s_loggingAgent.appendToLog(0, "device map empty");
-        } else {
-            for (String deviceName : usbDeviceMap.keySet()) {
-                UsbDevice device = usbDeviceMap.get(deviceName);
-                if(device.getVendorId()==0x1ed8) {
-                    s_loggingAgent.appendToLog(0,String.format(
-                        "FMIC device found with vid=%04x pid=%04x name='%s'",
-                        device.getVendorId(),
-                        device.getProductId(),
-                        device.getDeviceName()
-                    ));
-                    AndroidUsbAmpProvider provider = new AndroidUsbAmpProvider(s_loggingAgent, this);
-                    provider.connect(device.getVendorId(), device.getProductId());
-                    m_ampManager.setProvider(provider);
-                } else {
-                    s_loggingAgent.appendToLog(0,String.format(
-                        "non-FMIC device found with vid=%04x pid=%04x name='%s'",
-                        device.getVendorId(),
-                        device.getProductId(),
-                        device.getDeviceName()
-                    ));
-                }
-            }
-        }
-        
     }
-
 }
 

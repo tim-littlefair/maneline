@@ -5,14 +5,11 @@ import android.content.Context;
 import android.hardware.usb.UsbAccessory;
 import android.hardware.usb.UsbDevice;
 
+import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
 import com.benlypan.usbhid.UsbHidDevice;
 
-import net.heretical_camelid.fhau.lib.ByteArrayTranslator;
-import net.heretical_camelid.fhau.lib.IAmpProvider;
-import net.heretical_camelid.fhau.lib.ILoggingAgent;
-import net.heretical_camelid.fhau.lib.PresetInfo;
-import net.heretical_camelid.fhau.lib.PresetRecord;
+import net.heretical_camelid.fhau.lib.*;
 
 import java.util.HashMap;
 
@@ -24,6 +21,9 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
     UsbDevice m_usbDevice;
     MainActivity m_mainActivity;
     UsbManager m_usbManager;
+    PresetRegistryBase m_presetRegistry;
+    AbstractMessageProtocolBase m_protocol;
+    String m_firmwareVersion;
 
     AndroidUsbAmpProvider(
         ILoggingAgent loggingAgent,
@@ -31,39 +31,39 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
     ) {
         m_loggingAgent = loggingAgent;
         m_mainActivity = mainActivity;
+        m_presetRegistry = new FenderJsonPresetRegistry(null);
+        m_protocol = new LTSeriesProtocol(m_presetRegistry);
+        m_usbManager = (UsbManager) m_mainActivity.getSystemService(Context.USB_SERVICE);
+
     }
+
     public boolean connect(int vendorId, int productId) {
-        final boolean[] retval = {false};
         m_device = UsbHidDevice.factory(m_mainActivity, vendorId, productId);
         if (m_device == null) {
             m_loggingAgent.appendToLog(0,"No device found\n");
-            return retval[0];
+            return false;
         }
         m_usbDevice = m_device.getUsbDevice();
-        m_loggingAgent.appendToLog(0,String.format(
-                "Device found: id=%d sn=%s vid=%04x pid=%04x pname=%s",
-                m_device.getDeviceId(),
-                m_device.getSerialNumber(),
-                m_usbDevice.getVendorId(),
-                m_usbDevice.getProductId(),
-                m_usbDevice.getProductName()
-        ));
+        assert m_usbDevice != null;
         m_device.open(m_mainActivity, m_mainActivity);
-
-        return retval[0];
+        UsbDeviceConnection deviceConnection = m_usbManager.openDevice(m_usbDevice);
+        assert deviceConnection!=null;
+        m_protocol.setDeviceTransport(new DeviceTransportUsbHid(m_device));
+        String[] firmwareVersionHolder = new String[] { null };
+        int startupStatus = m_protocol.doStartup(firmwareVersionHolder);
+        m_firmwareVersion = firmwareVersionHolder[0];
+        m_loggingAgent.appendToLog(0,"Firmware Version: " + m_firmwareVersion);
+        return startupStatus==AbstractMessageProtocolBase.STATUS_OK;
     }
 
     @Override
     public void sendCommand(String commandHexString) {
-        m_device.write(ByteArrayTranslator.hexToBytes(commandHexString));
-        byte[] responseBytes = m_device.read(64);
-        m_loggingAgent.appendToLog(0,"Sent " + commandHexString + "\n");
-        m_loggingAgent.appendToLog(0,"Received " + ByteArrayTranslator.bytesToHex(responseBytes) + "\n");
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            m_loggingAgent.appendToLog(0,"sleep interrupted\n");
-        }
+
+    }
+
+    @Override
+    public String getFirmwareVersion() {
+        return m_firmwareVersion;
     }
 
     @Override

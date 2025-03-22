@@ -16,6 +16,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
     static ILoggingAgent s_loggingAgent;
     PresetRegistryBase m_presetRegistry;
     private AbstractMessageProtocolBase m_protocol;
+    String m_firmwareVersion;
 
     public DesktopUsbAmpProvider(String outputPath) {
         s_loggingAgent = new DefaultLoggingAgent(2);
@@ -147,7 +148,9 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
      */
     private boolean handleInitialise(HidDevice hidDevice) {
         m_protocol.setDeviceTransport(new DeviceTransportHid4Java(hidDevice));
-        int startupStatus = m_protocol.doStartup();
+        String[] firmwareVersionEtc = new String[] { null };
+        int startupStatus = m_protocol.doStartup(firmwareVersionEtc);
+        m_firmwareVersion = firmwareVersionEtc[0];
         System.out.println("Retrieving presets - should take < 5 seconds");
         int presetNamesStatus = m_protocol.getPresetNamesList();
         if(startupStatus!=0 || presetNamesStatus!=0) {
@@ -199,5 +202,9 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
         System.out.println("sendCommand! (unexpected)");
     }
 
+    @Override
+    public String getFirmwareVersion() {
+        return m_firmwareVersion;
+    }
 }
 
