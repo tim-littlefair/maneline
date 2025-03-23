@@ -42,7 +42,7 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
         // This registry requires a definition
         assert definition != null;
 
-        FenderJsonPresetRecord newRecord = new FenderJsonPresetRecord(name, definition);
+        Record newRecord = new Record(name, definition);
         String duplicateSlotKey = String.format(
             "name='%s' hash=%s",
             newRecord.displayName(),newRecord.audioHash()
@@ -83,7 +83,7 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
     }
 
     /**
-     * non-public class FenderJsonPresetRecord requires a hash function
+     * non-public class Record requires a hash function
      * in order to enable consumers of the preset details report or
      * the amp-based preset suite JSON files to determine whether the
      * audio parameters of a preset have been modified relative to a
@@ -119,89 +119,89 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
             return -2;
         }
     }
-}
 
-class FenderJsonPresetRecord extends PresetRecordBase {
-    final String m_definitionRawJson;
-    final PresetCanonicalSerializer m_presetCanonicalSerializer;
+    public static class Record extends PresetRecordBase {
+        final String m_definitionRawJson;
+        final PresetCanonicalSerializer m_presetCanonicalSerializer;
 
-    public FenderJsonPresetRecord(String name, byte[] definitionBytes) {
-        super(name);
-        m_definitionRawJson = new String(definitionBytes, StandardCharsets.UTF_8);
-        m_presetCanonicalSerializer = FenderJsonPresetRegistry.s_gsonCompact.fromJson(
-            m_definitionRawJson, PresetCanonicalSerializer.class
-        );
-    }
-
-    public String displayName() {
-        return m_presetCanonicalSerializer.info.displayName;
-    }
-
-    public String ampName() {
-        PresetCanonicalSerializer.PCS_Node[] nodes =
-            m_presetCanonicalSerializer.audioGraph.nodes
-        ;
-        // For the firmware presets 1-30 the amp is always at node #2
-        // This is not always true of presets uploaded from Fender
-        // via FenderTone (amp at node #0 being the most common exception
-        // I've seen).
-        // For efficiency we search node 2 first, then the other
-        // nodes in numeric order.
-        for(int nodeIndex: new int[] { 2, 0, 1, 3, 4 }) {
-            PresetCanonicalSerializer.PCS_Node node=nodes[nodeIndex];
-            if(node.nodeId.equals("amp")) {
-                return node.FenderId.replace("DUBS_","");
-            }
+        public Record(String name, byte[] definitionBytes) {
+            super(name);
+            m_definitionRawJson = new String(definitionBytes, StandardCharsets.UTF_8);
+            m_presetCanonicalSerializer = FenderJsonPresetRegistry.s_gsonCompact.fromJson(
+                m_definitionRawJson, PresetCanonicalSerializer.class
+            );
         }
-        return null;
-    }
 
-    public String audioHash() {
-        // All audio parameters of the preset are encoded in the audioGraph submap,
-        // which has two subkeys, 'nodes' and 'connections'. By composing the hash from
-        // separate hashes over the values for each of these subkeys we can see
-        // that the majority of presets conform to a small number of connection structures.
+        public String displayName() {
+            return m_presetCanonicalSerializer.info.displayName;
+        }
 
-        String cxnsHash = FenderJsonPresetRegistry.stringHash(
-            FenderJsonPresetRegistry.s_gsonCompact.toJson(
-                m_presetCanonicalSerializer.audioGraph.connections
-            ),2
-        );
-
-        String nodesHash = FenderJsonPresetRegistry.stringHash(
-            FenderJsonPresetRegistry.s_gsonCompact.toJson(
+        public String ampName() {
+            PresetCanonicalSerializer.PCS_Node[] nodes =
                 m_presetCanonicalSerializer.audioGraph.nodes
-            ),4
-        );
-
-        return String.format("%s-%s", cxnsHash, nodesHash);
-    }
-
-    public String dspUnitDesc(int nodeIndex) {
-        PresetCanonicalSerializer.PCS_Node node = m_presetCanonicalSerializer.audioGraph.nodes[nodeIndex];
-        if(node.nodeId.equals("amp")) {
-            return "$AMP$";
-        }
-        String nodeName = node.FenderId.replace("DUBS_","");
-        if(nodeName.equals("Passthru")) {
+            ;
+            // For the firmware presets 1-30 the amp is always at node #2
+            // This is not always true of presets uploaded from Fender
+            // via FenderTone (amp at node #0 being the most common exception
+            // I've seen).
+            // For efficiency we search node 2 first, then the other
+            // nodes in numeric order.
+            for(int nodeIndex: new int[] { 2, 0, 1, 3, 4 }) {
+                PresetCanonicalSerializer.PCS_Node node=nodes[nodeIndex];
+                if(node.nodeId.equals("amp")) {
+                    return node.FenderId.replace("DUBS_","");
+                }
+            }
             return null;
         }
-        return node.nodeId + ":" + nodeName;
-    }
 
-    public String effects() {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < 5; ++i) {
-            String nextUnit = dspUnitDesc(i);
-            if (nextUnit == null) {
-                continue;
-            }
-            sb.append(nextUnit);
-            if (i < 5) {
-                sb.append(" ");
-            }
+        public String audioHash() {
+            // All audio parameters of the preset are encoded in the audioGraph submap,
+            // which has two subkeys, 'nodes' and 'connections'. By composing the hash from
+            // separate hashes over the values for each of these subkeys we can see
+            // that the majority of presets conform to a small number of connection structures.
+
+            String cxnsHash = FenderJsonPresetRegistry.stringHash(
+                FenderJsonPresetRegistry.s_gsonCompact.toJson(
+                    m_presetCanonicalSerializer.audioGraph.connections
+                ),2
+            );
+
+            String nodesHash = FenderJsonPresetRegistry.stringHash(
+                FenderJsonPresetRegistry.s_gsonCompact.toJson(
+                    m_presetCanonicalSerializer.audioGraph.nodes
+                ),4
+            );
+
+            return String.format("%s-%s", cxnsHash, nodesHash);
         }
-        return sb.toString();
+
+        public String dspUnitDesc(int nodeIndex) {
+            PresetCanonicalSerializer.PCS_Node node = m_presetCanonicalSerializer.audioGraph.nodes[nodeIndex];
+            if(node.nodeId.equals("amp")) {
+                return "$AMP$";
+            }
+            String nodeName = node.FenderId.replace("DUBS_","");
+            if(nodeName.equals("Passthru")) {
+                return null;
+            }
+            return node.nodeId + ":" + nodeName;
+        }
+
+        public String effects() {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < 5; ++i) {
+                String nextUnit = dspUnitDesc(i);
+                if (nextUnit == null) {
+                    continue;
+                }
+                sb.append(nextUnit);
+                if (i < 5) {
+                    sb.append(" ");
+                }
+            }
+            return sb.toString();
+        }
     }
 }
 
@@ -223,7 +223,7 @@ class PresetDetailsTableGenerator implements PresetRegistryBase.Visitor {
 
     @Override
     public void visitRecord(int slotIndex, Object record) {
-        FenderJsonPresetRecord fjpr = (FenderJsonPresetRecord) record;
+        FenderJsonPresetRegistry.Record fjpr = (FenderJsonPresetRegistry.Record) record;
         assert fjpr != null;
         m_printStream.println(String.format(
             _LINE_FORMAT,
@@ -263,7 +263,7 @@ class AmpDefinitionExporter implements PresetRegistryBase.Visitor {
 
     @Override
     public void visitRecord(int slotIndex, Object record) {
-        FenderJsonPresetRecord fjpr = (FenderJsonPresetRecord) record;
+        FenderJsonPresetRegistry.Record fjpr = (FenderJsonPresetRegistry.Record) record;
         assert fjpr != null;
         String presetBasename = String.format(
             "%s-%s",
@@ -317,7 +317,7 @@ class AmpBasedPresetSuiteExporter implements PresetRegistryBase.Visitor {
         if(slotIndex<=m_minSlotIndex || slotIndex>=m_maxSlotIndex) {
             return;
         }
-        FenderJsonPresetRecord fjpr = (FenderJsonPresetRecord) record;
+        FenderJsonPresetRegistry.Record fjpr = (FenderJsonPresetRegistry.Record) record;
         assert fjpr != null;
         JsonObject suiteForThisAmp = m_ampPresetSuites.get(fjpr.ampName());
         if(suiteForThisAmp==null) {

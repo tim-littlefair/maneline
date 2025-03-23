@@ -134,7 +134,6 @@ public class MainActivity
         TextView tvLog = (TextView) findViewById(R.id.tv_log);
 
         s_loggingAgent = new LoggingAgent(tvLog);
-        appendToLog("Starting up");
 
         setSupportActionBar(findViewById(R.id.toolbar_fhau));
 
@@ -207,7 +206,6 @@ public class MainActivity
                     provider.connect(device.getVendorId(), device.getProductId());
                     m_ampManager.setProvider(provider);
                     m_ampManager.getPresets().acceptVisitor(this);
-                    appendToLog("Started");
                     return;
                 }
             }
@@ -293,7 +291,6 @@ public class MainActivity
                 "35:07:08:00:8a:02:02:08:02",
                  */
         };
-        appendToLog("Device HID connection succeeded");
         m_ampManager.getPresets();
 /*
         int i=0;

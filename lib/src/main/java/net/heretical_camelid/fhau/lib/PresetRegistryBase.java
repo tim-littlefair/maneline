@@ -50,6 +50,10 @@ public class PresetRegistryBase {
         generateNameTable(System.out);
     }
 
+    public Object uniquePresetCount() {
+        return m_records.size();
+    }
+
     public static interface Visitor {
         void visitBeforeRecords(PresetRegistryBase registry);
         void visitRecord(int slotIndex, Object record);

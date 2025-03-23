@@ -27,9 +27,9 @@ public class PresetInfo {
         visitor.setActivePresetIndex(m_activePresetIndex);
     }
 
-    Map<Integer, PresetRecord> m_presetRecords;
-    private Map<String,Integer> m_nameIndex;
-    private int m_activePresetIndex;
+    public Map<Integer, PresetRecord> m_presetRecords;
+    Map<String,Integer> m_nameIndex;
+    int m_activePresetIndex;
     public PresetInfo() {
         m_presetRecords = new TreeMap<>(); // TreeMap.keySet() is sorted
         m_nameIndex = new HashMap<>();

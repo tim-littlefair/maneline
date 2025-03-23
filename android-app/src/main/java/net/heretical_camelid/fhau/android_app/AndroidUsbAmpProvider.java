@@ -9,8 +9,6 @@ import com.benlypan.usbhid.UsbHidDevice;
 
 import net.heretical_camelid.fhau.lib.*;
 
-import static androidx.core.content.ContextCompat.registerReceiver;
-
 public class AndroidUsbAmpProvider implements IAmpProvider {
     final ILoggingAgent m_loggingAgent;
     UsbHidDevice m_device;
@@ -20,6 +18,7 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
     PresetRegistryBase m_presetRegistry;
     AbstractMessageProtocolBase m_protocol;
     String m_firmwareVersion;
+    PresetInfo m_presetInfo;
 
     AndroidUsbAmpProvider(
         ILoggingAgent loggingAgent,
@@ -49,7 +48,11 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
         int startupStatus = m_protocol.doStartup(firmwareVersionHolder);
         m_firmwareVersion = firmwareVersionHolder[0];
         m_loggingAgent.appendToLog(0,"Firmware Version: " + m_firmwareVersion);
-        return startupStatus==AbstractMessageProtocolBase.STATUS_OK;
+        int presetNamesStatus = m_protocol.getPresetNamesList();
+        m_loggingAgent.appendToLog(0,String.format(
+            "Amp contains %d unique presets", m_presetRegistry.uniquePresetCount()
+        ));
+        return startupStatus== AbstractMessageProtocolBase.STATUS_OK;
     }
 
     @Override
@@ -67,24 +70,26 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
         PresetInfo retval = new PresetInfo();
         if(m_presetRegistry==null) {
             m_presetRegistry = new FenderJsonPresetRegistry(null);
-            int presetNamesStatus = m_protocol.getPresetNamesList();
-            if(presetNamesStatus!=0) {
-                System.out.println("getPresetNamesList returned " + presetNamesStatus);
-                return null;
-            } else {
-                m_presetRegistry.acceptVisitor(new PresetRegistryBase.Visitor(){
-                    @Override
-                    public void visitBeforeRecords(PresetRegistryBase registry) { }
 
-                    @Override
-                    public void visitRecord(int slotIndex, Object record) {
-                        retval.add(new PresetRecord(((PresetRecord)record).m_name, slotIndex));
-                    }
+            m_presetRegistry.acceptVisitor(new PresetRegistryBase.Visitor(){
+                @Override
+                public void visitBeforeRecords(PresetRegistryBase registry) { }
 
-                    @Override
-                    public void visitAfterRecords(PresetRegistryBase registry) { }
-                });
-            }
+                @Override
+                public void visitRecord(int slotIndex, Object record) {
+                    FenderJsonPresetRegistry.Record fjpr = (FenderJsonPresetRegistry.Record) record;
+                    PresetRecord pr = new PresetRecord(fjpr.displayName(), slotIndex);
+                    pr.m_state = PresetRecord.PresetState.ACCEPTED;
+                    retval.add(pr);
+                }
+
+                @Override
+                public void visitAfterRecords(PresetRegistryBase registry) {
+                    m_loggingAgent.appendToLog(0,
+                        "Preset count: " + retval.m_presetRecords.size()
+                    );
+                }
+            });
         }
         return retval;
     }
