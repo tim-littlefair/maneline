@@ -163,7 +163,7 @@ public class MainActivity
         assert registry!=null;
         PresetSuiteManager psm = new PresetSuiteManager(registry);
         ArrayList<PresetSuiteManager.PresetSuiteEntry> presetSuites =
-            psm.buildPresetSuites(9,5,3)
+            psm.buildPresetSuites(9,3,5)
         ;
         int itemLayoutId = R.layout.preset_suite_dropdown_item;
 

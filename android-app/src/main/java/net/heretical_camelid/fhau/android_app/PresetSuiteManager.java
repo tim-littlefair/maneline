@@ -6,6 +6,7 @@ import net.heretical_camelid.fhau.lib.PresetRegistryBase;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.SortedSet;
 
 public class PresetSuiteManager implements PresetRegistryBase.Visitor {
@@ -56,14 +57,67 @@ public class PresetSuiteManager implements PresetRegistryBase.Visitor {
         ArrayList<PresetSuiteEntry> retval = new ArrayList<>();
         ArrayList<String> ampNames = new ArrayList<>(m_ampPresets.keySet());
         // First pass - amps which are used often enough for their own suite
-        for(String ampName: ampNames) {
+        Iterator<String> ampNameIter = ampNames.iterator();
+        while(ampNameIter.hasNext()) {
+            String ampName = ampNameIter.next();
             ArrayList<FenderJsonPresetRegistry.Record> presetsForThisAmp = m_ampPresets.get(ampName);
             if(presetsForThisAmp.size()>=targetPresetsPerSuite) {
                 retval.add(new PresetSuiteEntry("Amplifier " + ampName, presetsForThisAmp));
             }
+            ampNameIter.remove();
         }
         // Second pass - group amps by name (up to maxAmpsPerSuite)
+        boolean anotherGroupFound;
+        do {
+            ArrayList<String> theseAmpNames = new ArrayList<>();
+            ArrayList<FenderJsonPresetRegistry.Record> presetsForTheseAmps = new ArrayList<>();
+            anotherGroupFound = false;
+            Iterator<String> groupFirstAmpNameIter = ampNames.iterator();
+            Iterator<String> groupLastAmpNameIter = ampNames.iterator();
+            while(groupLastAmpNameIter.hasNext()) {
+                System.out.println(theseAmpNames);
+                System.out.println(presetsForTheseAmps);
+                String nextAmpName = groupLastAmpNameIter.next();
+                System.out.println("Examining " + nextAmpName);
+                ArrayList<FenderJsonPresetRegistry.Record> presetsForNextAmp = m_ampPresets.get(nextAmpName);
+                int newGroupedPresetCount = presetsForTheseAmps.size() + presetsForNextAmp.size();
+                if (newGroupedPresetCount >= targetPresetsPerSuite) {
+                    theseAmpNames.add(nextAmpName);
+                    presetsForTheseAmps.addAll(presetsForNextAmp);
+                    retval.add(new PresetSuiteEntry(
+                        "Amplifiers " + String.join(",",theseAmpNames),
+                        presetsForTheseAmps
+                    ));
+                    while(groupFirstAmpNameIter.hasNext()) {
+                        groupFirstAmpNameIter.remove();
+                        if(groupFirstAmpNameIter==groupLastAmpNameIter) {
+                            // Last item in group, remove and start a new group
+                            groupFirstAmpNameIter.remove();
+                            String suiteName = "Amplifiers " + String.join(",", theseAmpNames);
+                            retval.add(new PresetSuiteEntry(suiteName, presetsForTheseAmps));
+                            theseAmpNames = new ArrayList<>();
+                            presetsForTheseAmps = new ArrayList<>();
+                            anotherGroupFound=true;
+                            groupFirstAmpNameIter = ampNames.iterator();
+                            groupLastAmpNameIter = ampNames.iterator();
+                            break;
+                        }
+                    }
+                } else if(theseAmpNames.size()==maxAmpsPerSuite) {
+                    // Didn't make it to the target size
+                    // Keep only the last amp checked
+                    groupFirstAmpNameIter = groupLastAmpNameIter;
+                    theseAmpNames = new ArrayList<>();
+                    theseAmpNames.add(nextAmpName);
+                    presetsForTheseAmps = new ArrayList<>();
+                    presetsForTheseAmps.addAll(presetsForNextAmp);
+                }
+            }
+        } while(anotherGroupFound==true);
+
         // Third pass - group other amps A-Z
+        // TBD
+
         return retval;
     }
 
