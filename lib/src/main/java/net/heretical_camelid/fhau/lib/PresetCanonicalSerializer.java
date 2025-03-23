@@ -1,5 +1,9 @@
 package net.heretical_camelid.fhau.lib;
 
+import com.google.gson.Gson;
+
+import java.util.SortedSet;
+
 /**
  * This class and its static inner classes are constructed to satisfy
  * the recommendations described in
@@ -14,6 +18,7 @@ package net.heretical_camelid.fhau.lib;
  * preset #1 "FENDER  CLEAN   ".
  */
 public class PresetCanonicalSerializer {
+    static Gson s_gson = new Gson();
     String nodeType;
     String NodeId;
     String version;
@@ -23,9 +28,26 @@ public class PresetCanonicalSerializer {
     PCS_AudioGraph audioGraph;
     PresetCanonicalSerializer() {}
 
+    static class PCS_Comparable implements Comparable<PCS_Comparable> {
+        // Static inner classes PCS_Node and PCS_Connection are contained
+        // within the JSON format in JSON array objects in which the order
+        // of records is neither significant nor consistent between presets
+        // which have been created via different pathways.
+        // In order to be able to create consistent hashes over these
+        // collections we choose to peer them into instances of SortedSet,
+        // so the collected items need to implement the Comparable<> interface.
+        @Override
+        public int compareTo(PCS_Comparable o) {
+            String compactJsonThis = s_gson.toJson(this);
+            String compactJsonOther = s_gson.toJson(o);
+            return compactJsonThis.compareTo(compactJsonOther);
+        }
+    }
+
     static class PCS_AudioGraph {
-        PCS_Node[] nodes;
-        PCS_Connection[] connections;
+        SortedSet<PCS_Node> nodes;
+        SortedSet<PCS_Connection> connections;
+        PCS_AudioGraph() {}
     }
 
     static class PCS_Info {
@@ -41,7 +63,7 @@ public class PresetCanonicalSerializer {
         PCS_Info() { }
     }
 
-    static class PCS_Node {
+    static class PCS_Node extends PCS_Comparable {
         String nodeId;
         String dspUnit;
         String FenderId;
@@ -58,7 +80,7 @@ public class PresetCanonicalSerializer {
         PCS_DspUnitParameters() { }
     }
 
-    static class PCS_Connection {
+    static class PCS_Connection extends PCS_Comparable {
         PCS_Connection_IO input;
         PCS_Connection_IO output;
         PCS_Connection() { }
