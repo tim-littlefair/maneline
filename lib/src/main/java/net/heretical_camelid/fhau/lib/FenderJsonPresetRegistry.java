@@ -150,13 +150,23 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
         public String audioHash() {
             // All audio parameters of the preset are encoded in the audioGraph submap,
             // which has two subkeys, 'nodes' and 'connections'. By composing the hash from
-            // separate hashes over the values for each of these subkeys we can see
-            // that the majority of presets conform to a small number of connection structures.
+            // separate hashes over the values for each of these subkeys we make the hash
+            // depend separately on the connection structure and the identity and parameters
+            // of the amp and DSP unit effects selected.
 
-            // Both nodes and connections are arrays in which the order of items is
-            // neither significant nor consistent.  We sort each of these arrays
-            // before calculating a hash to ensure that equivalent arrays with
-            // different orders generate the same hash.
+            // Both nodes and connections collections are arrays in which the order of items is
+            // neither significant nor consistent.  By having PCS use SortedSet<> instead of
+            // an []-array for each of these collections we ensure that equivalent arrays with
+            // an identical set of records in a different order within the compact JSON
+            // supplied by the amp generate the same hash value from the consistently ordered
+            // object parsed from the JSON.
+
+            // In the presets retrieved from firmware after a factory preset, and in all
+            // other presets seen to date the connection structure conforms to
+            // stomp-mod-amp-delay-reverb, and the two-hex-digit hash of the connection
+            // collection is '12'.  If any other two digit pattern is seen in the
+            // connection position it will signify an exotic connection structure.
+
             String cxnsHash = FenderJsonPresetRegistry.stringHash(
                 FenderJsonPresetRegistry.s_gsonCompact.toJson(
                     m_presetCanonicalSerializer.audioGraph.connections

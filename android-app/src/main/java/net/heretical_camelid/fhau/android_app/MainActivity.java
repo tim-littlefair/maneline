@@ -26,12 +26,9 @@ import androidx.lifecycle.LifecycleOwner;
 import com.benlypan.usbhid.OnUsbHidDeviceListener;
 import com.benlypan.usbhid.UsbHidDevice;
 
-import net.heretical_camelid.fhau.lib.AmpManager;
-import net.heretical_camelid.fhau.lib.IAmpProvider;
-import net.heretical_camelid.fhau.lib.PresetInfo;
-import net.heretical_camelid.fhau.lib.PresetRecord;
-import net.heretical_camelid.fhau.lib.SimulatorAmpProvider;
+import net.heretical_camelid.fhau.lib.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 class MainActivityError extends UnsupportedOperationException {
@@ -149,7 +146,6 @@ public class MainActivity
 
         requestFileStoragePermission();
         requestUsbConnectionPermission();
-        populatePresetSuiteDropdown();
     }
 
 
@@ -161,14 +157,23 @@ public class MainActivity
     }
 
     private void populatePresetSuiteDropdown() {
+        AndroidUsbAmpProvider provider = (AndroidUsbAmpProvider)(m_ampManager.m_provider);
+        assert provider!=null;
+        FenderJsonPresetRegistry registry = (FenderJsonPresetRegistry)(provider.m_presetRegistry);
+        assert registry!=null;
+        PresetSuiteManager psm = new PresetSuiteManager(registry);
+        ArrayList<PresetSuiteManager.PresetSuiteEntry> presetSuites =
+            psm.buildPresetSuites(9,5,3)
+        ;
         int itemLayoutId = R.layout.preset_suite_dropdown_item;
 
-        // Create an ArrayAdapter for the Spinner
-        String[] items = new String[] {
-            "No preset suite selected",
-            "Presets using amplifier LinearGain"
-        };
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, itemLayoutId, items);
+        ArrayList<String> suiteNames = new ArrayList<>();
+        for(PresetSuiteManager.PresetSuiteEntry pse: presetSuites) {
+            suiteNames.add(pse.first);
+        }
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+            this, itemLayoutId, suiteNames.toArray(new String[]{ }
+        ));
 
         // Bind the items
         Spinner presetSuiteDropdown = (Spinner) findViewById(R.id.dropdown_preset_suites);
@@ -206,6 +211,7 @@ public class MainActivity
                     provider.connect(device.getVendorId(), device.getProductId());
                     m_ampManager.setProvider(provider);
                     m_ampManager.getPresets().acceptVisitor(this);
+                    populatePresetSuiteDropdown();
                     return;
                 }
             }

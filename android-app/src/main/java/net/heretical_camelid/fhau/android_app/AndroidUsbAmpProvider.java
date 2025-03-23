@@ -93,4 +93,8 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
         }
         return retval;
     }
+
+    public PresetRegistryBase getPresetRegistry() {
+        return m_presetRegistry;
+    }
 }
