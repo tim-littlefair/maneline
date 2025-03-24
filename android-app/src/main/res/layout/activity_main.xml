@@ -134,6 +134,8 @@
         android:gravity="top"
         android:scrollbarSize="10dp"
         android:scrollbars="vertical"
+        android:scrollbarAlwaysDrawVerticalTrack="true"
+        android:nestedScrollingEnabled="true"
         android:textSize="20sp"
         android:background="@color/fhauCream"
 

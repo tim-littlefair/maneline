@@ -5,7 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.hardware.usb.UsbManager;
 
-class UsbBroadcastReceiver extends BroadcastReceiver {
+public class UsbBroadcastReceiver extends BroadcastReceiver {
     public UsbBroadcastReceiver() { }
 
     public void onReceive(Context context, Intent intent) {

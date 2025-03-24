@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.ActivityInfo;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.os.Build;
@@ -30,6 +31,8 @@ import net.heretical_camelid.fhau.lib.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import static net.heretical_camelid.fhau.android_app.R.*;
 
 class MainActivityError extends UnsupportedOperationException {
     public MainActivityError(String message) {
@@ -124,6 +127,7 @@ public class MainActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
         setContentView(R.layout.activity_main);
 
         m_ampManager = new AmpManager();
@@ -161,7 +165,7 @@ public class MainActivity
         assert provider!=null;
         FenderJsonPresetRegistry registry = (FenderJsonPresetRegistry)(provider.m_presetRegistry);
         assert registry!=null;
-        PresetSuiteManager psm = new PresetSuiteManager(registry);
+        PresetSuiteManager psm = new PresetSuiteManager(this, registry);
         ArrayList<PresetSuiteManager.PresetSuiteEntry> presetSuites =
             psm.buildPresetSuites(9,3,5)
         ;
@@ -177,9 +181,9 @@ public class MainActivity
 
         // Bind the items
         Spinner presetSuiteDropdown = (Spinner) findViewById(R.id.dropdown_preset_suites);
+        presetSuiteDropdown.setOnItemSelectedListener(psm);
         adapter.setDropDownViewResource(itemLayoutId);
         presetSuiteDropdown.setAdapter(adapter);
-
     }
 
     private void connect() {
@@ -215,6 +219,52 @@ public class MainActivity
                     return;
                 }
             }
+        }
+    }
+
+    void setPresetButton(int buttonIndex, int slotId, String presetName) {
+        String presetButtonName = String.format("button%d", buttonIndex);
+        int buttonId = getResources().getIdentifier(
+            presetButtonName, "id", getPackageName()
+        );
+        int buttonColor;
+        String buttonText;
+        float buttonAlpha;
+        Button presetButton = findViewById(buttonId);
+        if(presetButton==null) {
+            appendToLog("Failed to find button " + presetButtonName);
+            return;
+        }
+        if(slotId==0) {
+            assert presetName==null;
+            presetButton.setClickable(false);
+            presetButton.setOnClickListener(null);
+            presetButton.setEnabled(false);
+            buttonColor = R.color.fhauGrey;
+            buttonAlpha = 0.5F;
+        } else {
+            assert presetName!=null;
+            presetButton.setClickable(true);
+            presetButton.setOnClickListener((new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    m_ampManager.switchPreset(slotId);
+                }
+            }));
+            presetButton.setEnabled(true);
+            buttonColor = R.color.fhauGreen;
+            buttonAlpha = 1.0F;
+        }
+        presetButton.setText(presetName);
+        presetButton.setBackgroundColor(
+            getResources().getColor(buttonColor,null)
+        );
+        presetButton.setAlpha(buttonAlpha);
+    }
+
+    void clearPresetButtons() {
+        for(int i=1; i<=9; ++i) {
+            setPresetButton(i,0,null);
         }
     }
 
