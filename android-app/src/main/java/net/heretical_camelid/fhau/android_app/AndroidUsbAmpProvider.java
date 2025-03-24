@@ -32,17 +32,7 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
 
     }
 
-    public boolean connect(int vendorId, int productId) {
-        m_device = UsbHidDevice.factory(m_mainActivity, vendorId, productId);
-        if (m_device == null) {
-            m_loggingAgent.appendToLog(0,"No device found\n");
-            return false;
-        }
-        m_usbDevice = m_device.getUsbDevice();
-        assert m_usbDevice != null;
-        m_device.open(m_mainActivity, m_mainActivity);
-        UsbDeviceConnection deviceConnection = m_usbManager.openDevice(m_usbDevice);
-        assert deviceConnection!=null;
+    public boolean getFirmwareVersionAndPresets() {
         m_protocol.setDeviceTransport(new DeviceTransportUsbHid(m_device));
         String[] firmwareVersionHolder = new String[] { null };
         int startupStatus = m_protocol.doStartup(firmwareVersionHolder);
@@ -96,5 +86,34 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
 
     public PresetRegistryBase getPresetRegistry() {
         return m_presetRegistry;
+    }
+
+    public boolean attemptConnection(UsbDevice device) {
+        m_device = UsbHidDevice.factory(
+            m_mainActivity, device.getVendorId(), device.getProductId()
+        );
+        if (m_device == null) {
+            m_loggingAgent.appendToLog(0,
+                "No USB HID device found"
+            );
+            return false;
+        }
+        m_usbDevice = m_device.getUsbDevice();
+        if (m_usbDevice == null) {
+            m_loggingAgent.appendToLog(0,
+                "m_device.getUsbDevice() returned null"
+            );
+            return false;
+        }
+        m_device.open(m_mainActivity, m_mainActivity);
+        UsbDeviceConnection deviceConnection = m_usbManager.openDevice(m_usbDevice);
+        if(deviceConnection==null) {
+            m_loggingAgent.appendToLog(0,
+                "m_usbManager.openDevice(m_usbDevice) returned null"
+            );
+            return false;
+        }
+        getFirmwareVersionAndPresets();
+        return true;
     }
 }

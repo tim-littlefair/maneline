@@ -58,6 +58,7 @@ public class MainActivity
     Button m_btnConnectionStatus;
     UsbManager m_usbManager;
     String m_backupDirectoryPath = null;
+    private boolean m_connectionSucceeded=false;
 
     static void appendToLog(String message) {
         if(s_loggingAgent !=null) {
@@ -187,6 +188,10 @@ public class MainActivity
     }
 
     private void connect() {
+        if(m_connectionSucceeded==true) {
+            appendToLog("Already connected!");
+            return;
+        }
         HashMap<String, UsbDevice> usbDeviceMap = m_usbManager.getDeviceList();
         if (usbDeviceMap == null) {
             s_loggingAgent.appendToLog(0,"device map not received");
@@ -212,10 +217,14 @@ public class MainActivity
                         "FMIC product name: " + device.getProductName()
                     );
                     AndroidUsbAmpProvider provider = new AndroidUsbAmpProvider(s_loggingAgent, this);
-                    provider.connect(device.getVendorId(), device.getProductId());
-                    m_ampManager.setProvider(provider);
-                    m_ampManager.getPresets().acceptVisitor(this);
-                    populatePresetSuiteDropdown();
+                    m_connectionSucceeded = provider.attemptConnection(device);
+                    if(m_connectionSucceeded) {
+                        m_ampManager.setProvider(provider);
+                        populatePresetSuiteDropdown();
+                    }
+                    // For the moment we don't attempt to handle multiple FMIC devices
+                    // being connected and attempting to connect to second or later after
+                    // first fails.
                     return;
                 }
             }
@@ -418,6 +427,10 @@ public class MainActivity
                 filter.addAction(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
             }
         }
+    }
+
+    public void usbAccessPermissionGranted() {
+        connect();
     }
 }
 
