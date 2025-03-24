@@ -32,8 +32,6 @@ import net.heretical_camelid.fhau.lib.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import static net.heretical_camelid.fhau.android_app.R.*;
-
 class MainActivityError extends UnsupportedOperationException {
     public MainActivityError(String message) {
         super(message);
@@ -48,7 +46,7 @@ class MainActivityError extends UnsupportedOperationException {
 
 public class MainActivity
         extends AppCompatActivity
-        implements PresetInfo.IVisitor, OnUsbHidDeviceListener
+        implements PresetInfo.IVisitor
 {
     final static String ACTION_USB_PERMISSION = "net.heretical_camelid.fhau.android_app.USB_PERMISSION";
     static LoggingAgent s_loggingAgent = null;
@@ -130,8 +128,8 @@ public class MainActivity
         super.onCreate(savedInstanceState);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
         setContentView(R.layout.activity_main);
-
         m_ampManager = new AmpManager();
+        m_usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
 
         TextView tvLog = (TextView) findViewById(R.id.tv_log);
 
@@ -143,17 +141,19 @@ public class MainActivity
         m_btnConnectionStatus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                m_btnConnectionStatus.setOnClickListener(null);
                 connect();
-                m_btnConnectionStatus.setText("CONNECTED!");
+                m_btnConnectionStatus.setText("Click to reconnect");
             }
         });
 
         requestFileStoragePermission();
-        requestUsbConnectionPermission();
     }
 
-
+    @Override
+    public void onResume() {
+        super.onResume();
+        connect();
+    }
 
     @Override
     protected void onNewIntent(Intent theIntent) {
@@ -221,6 +221,8 @@ public class MainActivity
                     if(m_connectionSucceeded) {
                         m_ampManager.setProvider(provider);
                         populatePresetSuiteDropdown();
+                    } else {
+                        requestUsbConnectionPermission();
                     }
                     // For the moment we don't attempt to handle multiple FMIC devices
                     // being connected and attempting to connect to second or later after
@@ -246,6 +248,7 @@ public class MainActivity
         }
         if(slotId==0) {
             assert presetName==null;
+            presetName = "NOT\nIN\nUSE";
             presetButton.setClickable(false);
             presetButton.setOnClickListener(null);
             presetButton.setEnabled(false);
@@ -329,61 +332,6 @@ public class MainActivity
 
     }
 
-    @SuppressLint("DefaultLocale")
-    @Override
-    public void onUsbHidDeviceConnected(UsbHidDevice device) {
-        String[] commandHexStrings = new String[]{
-                "35:09:08:00:8a:07:04:08:00:10:00",
-                "35:07:08:00:b2:06:02:08:01",
-                // Next 60 + 1 commands get
-                // the JSON descriptions of the 60 stored
-                // and 1 active presets
-                // We can't handle these until we have support
-                // for multi-frame responses
-                //"35:07:08:00:ca:06:02:08:01",
-                //"35:07:08:00:ca:06:02:08:02",
-                //..
-                "35:07:08:00:f2:03:02:08:01",
-                "35:07:08:00:d2:06:02:08:01",
-                "35:07:08:00:e2:06:02:08:01",
-                "35:07:08:00:d2:0c:02:08:01",
-                "35:09:08:00:8a:07:04:08:01:10:00",
-                /*
-                "35:07:08:00:8a:02:02:08:02",
-                "35:07:08:00:8a:02:02:08:03",
-                "35:07:08:00:8a:02:02:08:04",
-                "35:07:08:00:8a:02:02:08:01",
-                "35:07:08:00:8a:02:02:08:02",
-                 */
-        };
-        m_ampManager.getPresets();
-/*
-        int i=0;
-        try {
-            for (i = 0; i < commandHexStrings.length; ++i) {
-                m_ampManager.sendCommand(commandHexStrings[i], m_sbLog);
-            }
-            PresetInfo pi = m_ampManager.getPresetInfo(null);
-            pi.acceptVisitor(this);
-        }
-        catch(Exception e) {
-            appendToLog(String.format(
-                    "Exception caught processing command %d: %s",
-                    i, e.toString()
-            ));
-        }
- */
-    }
-
-    @Override
-    public void onUsbHidDeviceConnectFailed(UsbHidDevice device) {
-        appendToLog("Failed to connect to physical amp, trying simulator...");
-        m_ampManager = null;
-        IAmpProvider provider = new SimulatorAmpProvider(null, SimulatorAmpProvider.SimulationMode.NO_DEVICE);
-        m_ampManager = new AmpManager();
-        appendToLog(null);
-    }
-
     @Override
     public void addMenuProvider(@NonNull MenuProvider provider, @NonNull LifecycleOwner owner, @NonNull Lifecycle.State state) {
 
@@ -407,7 +355,6 @@ public class MainActivity
             registerReceiver(m_usbReceiver, filter);
         }
 
-        m_usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
     }
 
     void requestFileStoragePermission() {

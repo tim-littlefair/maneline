@@ -105,7 +105,7 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
             );
             return false;
         }
-        m_device.open(m_mainActivity, m_mainActivity);
+        m_device.open(m_mainActivity, null);
         UsbDeviceConnection deviceConnection = m_usbManager.openDevice(m_usbDevice);
         if(deviceConnection==null) {
             m_loggingAgent.appendToLog(0,

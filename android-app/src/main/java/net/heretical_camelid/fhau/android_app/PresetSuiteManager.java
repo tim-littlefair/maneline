@@ -1,5 +1,6 @@
 package net.heretical_camelid.fhau.android_app;
 
+import android.text.TextUtils;
 import android.util.Pair;
 import android.view.View;
 import android.widget.AdapterView;
@@ -9,6 +10,7 @@ import net.heretical_camelid.fhau.lib.PresetRegistryBase;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.regex.Pattern;
 
 public class PresetSuiteManager implements PresetRegistryBase.Visitor, AdapterView.OnItemSelectedListener {
     final MainActivity m_mainActivity;
@@ -137,14 +139,13 @@ public class PresetSuiteManager implements PresetRegistryBase.Visitor, AdapterVi
         for(int i=0; i<suitePresetRecords.size(); ++i) {
             FenderJsonPresetRegistry.Record presetRecord = suitePresetRecords.get(i);
             m_mainActivity.setPresetButton(
-                i+1, i+1, presetRecord.displayName()
+                i+1, i+1, buttonLabel(i+1, presetRecord.displayName())
             );
             m_mainActivity.appendToLog(
                 presetRecord.displayName().replace("( )+"," ") +
                 ": " +  presetRecord.effects()
             );
         }
-
     }
 
     @Override
@@ -159,5 +160,55 @@ public class PresetSuiteManager implements PresetRegistryBase.Visitor, AdapterVi
         ) {
             super(suiteName, records);
         }
+    }
+
+    static String buttonLabel(int slotIndex, String displayName) {
+        final String retval;
+        // We want the button label to be a three-line string
+        // The first line will be slotIndex
+        // The second and third lines will be taken from displayName
+        String[] displayNameWords = TextUtils.split(displayName,Pattern.compile("( )+"));
+        switch (displayNameWords.length) {
+            case 2:
+                retval = String.format(
+                    "%03d\n%s\n%s",
+                    slotIndex,
+                    displayNameWords[0],
+                    displayNameWords[1]
+                );
+                break;
+            case 1:
+                if (displayNameWords[0].length() > 8) {
+                    // This case required to handle "ACOUSTICSIM"
+                    retval = String.format(
+                        "%03d\n%s\n%s",
+                        slotIndex,
+                        displayNameWords[0].substring(0, 8),
+                        displayNameWords[0].substring(8)
+                    );
+                } else {
+                    // This case required to handle "EMPTY"
+                    retval = String.format(
+                        "%03d\n%s\n%s",
+                        slotIndex,
+                        displayNameWords[0],
+                        "        "
+                    );
+                }
+                break;
+            case 0:
+                retval = String.format("%03d\n        \n        ", slotIndex);
+                break;
+            default:
+                assert displayName.length() > 8;
+                retval = String.format(
+                    "%03d\n%s\n%s",
+                    slotIndex,
+                    displayName.substring(0, 8),
+                    displayName.substring(8)
+                );
+        }
+        System.out.println("X:" + displayNameWords + retval);
+        return retval;
     }
 }
