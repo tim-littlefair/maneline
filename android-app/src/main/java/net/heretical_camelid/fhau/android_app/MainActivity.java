@@ -58,7 +58,7 @@ public class MainActivity
     AmpManager m_ampManager = null;
 
     Button m_btnConnectionStatus;
-    private UsbManager m_usbManager;
+    UsbManager m_usbManager;
 
     static void appendToLog(String message) {
         if(s_loggingAgent !=null) {
@@ -214,7 +214,7 @@ public class MainActivity
                     );
                     AndroidUsbAmpProvider provider = new AndroidUsbAmpProvider(s_loggingAgent, this);
                     if(m_usbManager.hasPermission(device)) {
-                        provider.connect(device.getVendorId(), device.getProductId());
+                        provider.attemptConnection(device);
                         m_ampManager.setProvider(provider);
                         populatePresetSuiteDropdown();
                         // m_ampManager.getPresets().acceptVisitor(this);

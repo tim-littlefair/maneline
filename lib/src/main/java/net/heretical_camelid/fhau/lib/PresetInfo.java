@@ -27,7 +27,7 @@ public class PresetInfo {
         visitor.setActivePresetIndex(m_activePresetIndex);
     }
 
-    Map<Integer, PresetRecord> m_presetRecords;
+    public Map<Integer, PresetRecord> m_presetRecords;
     private Map<String,Integer> m_nameIndex;
     private int m_activePresetIndex;
     public PresetInfo() {

@@ -244,10 +244,25 @@ public class UsbHidDevice {
 
     public byte[] read(int size, int timeout) {
         byte[] buffer = new byte[size];
-        int bytesRead = mConnection.bulkTransfer(mInUsbEndpoint, buffer, size, timeout);
-        if (bytesRead < size) {
-            buffer = Arrays.copyOfRange(buffer, 0, bytesRead);
+        int bytesRead=0;
+        for(int i=0; i<3; ++i) {
+            bytesRead = mConnection.bulkTransfer(mInUsbEndpoint, buffer, size, timeout);
+            if (bytesRead > 0) {
+                break;
+            }
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                bytesRead=0;
+            }
         }
-        return buffer;
+        if(bytesRead<0) {
+            return null;
+        } else {
+            if (bytesRead < size) {
+                buffer = Arrays.copyOfRange(buffer, 0, bytesRead);
+            }
+            return buffer;
+        }
     }
 }

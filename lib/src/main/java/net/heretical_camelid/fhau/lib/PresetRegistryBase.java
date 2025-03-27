@@ -31,7 +31,7 @@ public class PresetRegistryBase {
         m_records.put(slotIndex, new PresetRecordBase(name));
     }
 
-    public void acceptVisitor(PresetRegistryVisitor visitor) {
+    public void acceptVisitor(Visitor visitor) {
         visitor.visitBeforeRecords(this);
         for (int i: m_records.keySet()) {
             Object record = m_records.get(i);
@@ -49,13 +49,18 @@ public class PresetRegistryBase {
     public void dump() {
         generateNameTable(System.out);
     }
+
+    public Object uniquePresetCount() {
+        return m_records.size();
+    }
+
+    public static interface Visitor {
+        void visitBeforeRecords(PresetRegistryBase registry);
+        void visitRecord(int slotIndex, Object record);
+        void visitAfterRecords(PresetRegistryBase registry);
+    }
 }
 
-interface PresetRegistryVisitor {
-    void visitBeforeRecords(PresetRegistryBase registry);
-    void visitRecord(int slotIndex, Object record);
-    void visitAfterRecords(PresetRegistryBase registry);
-}
 
 class PresetRecordBase {
     String m_name;
@@ -64,7 +69,7 @@ class PresetRecordBase {
     }
 }
 
-class PresetNameTableGenerator implements PresetRegistryVisitor {
+class PresetNameTableGenerator implements PresetRegistryBase.Visitor {
     PrintStream m_printStream;
     PresetNameTableGenerator(PrintStream printStream) {
         m_printStream = printStream;

@@ -15,8 +15,12 @@ class DeviceTransportUsbHid implements DeviceTransportInterface {
     @Override
     public int read(byte[] packetBuffer) {
         byte[] bytesRead = m_usbHidDevice.read(packetBuffer.length,TIMEOUT_MS);
-        System.arraycopy(bytesRead,0, packetBuffer,0, bytesRead.length);
-        return bytesRead.length;
+        if(bytesRead==null) {
+            return 0;
+        } else {
+            System.arraycopy(bytesRead, 0, packetBuffer, 0, bytesRead.length);
+            return bytesRead.length;
+        }
     }
 
     @Override

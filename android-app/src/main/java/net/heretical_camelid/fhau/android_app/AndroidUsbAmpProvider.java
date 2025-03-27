@@ -1,8 +1,6 @@
 package net.heretical_camelid.fhau.android_app;
 
-import android.app.PendingIntent;
 import android.content.Context;
-import android.hardware.usb.UsbAccessory;
 import android.hardware.usb.UsbDevice;
 
 import android.hardware.usb.UsbDeviceConnection;
@@ -10,10 +8,6 @@ import android.hardware.usb.UsbManager;
 import com.benlypan.usbhid.UsbHidDevice;
 
 import net.heretical_camelid.fhau.lib.*;
-
-import java.util.HashMap;
-
-import static androidx.core.content.ContextCompat.registerReceiver;
 
 public class AndroidUsbAmpProvider implements IAmpProvider {
     final ILoggingAgent m_loggingAgent;
@@ -24,6 +18,8 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
     PresetRegistryBase m_presetRegistry;
     AbstractMessageProtocolBase m_protocol;
     String m_firmwareVersion;
+    PresetInfo m_presetInfo;
+    boolean m_permissionRequested = false;
 
     AndroidUsbAmpProvider(
         ILoggingAgent loggingAgent,
@@ -37,23 +33,17 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
 
     }
 
-    public boolean connect(int vendorId, int productId) {
-        m_device = UsbHidDevice.factory(m_mainActivity, vendorId, productId);
-        if (m_device == null) {
-            m_loggingAgent.appendToLog(0,"No device found\n");
-            return false;
-        }
-        m_usbDevice = m_device.getUsbDevice();
-        assert m_usbDevice != null;
-        m_device.open(m_mainActivity, m_mainActivity);
-        UsbDeviceConnection deviceConnection = m_usbManager.openDevice(m_usbDevice);
-        assert deviceConnection!=null;
+    public boolean getFirmwareVersionAndPresets() {
         m_protocol.setDeviceTransport(new DeviceTransportUsbHid(m_device));
         String[] firmwareVersionHolder = new String[] { null };
         int startupStatus = m_protocol.doStartup(firmwareVersionHolder);
         m_firmwareVersion = firmwareVersionHolder[0];
         m_loggingAgent.appendToLog(0,"Firmware Version: " + m_firmwareVersion);
-        return startupStatus==AbstractMessageProtocolBase.STATUS_OK;
+        int presetNamesStatus = m_protocol.getPresetNamesList();
+        m_loggingAgent.appendToLog(0,String.format(
+            "Amp contains %d unique presets", m_presetRegistry.uniquePresetCount()
+        ));
+        return startupStatus== AbstractMessageProtocolBase.STATUS_OK;
     }
 
     @Override
@@ -68,14 +58,74 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
 
     @Override
     public PresetInfo getPresetInfo(PresetInfo requestedPresets) {
-        assert requestedPresets == null;
         PresetInfo retval = new PresetInfo();
-        PresetRecord pr1 = new PresetRecord("FENDER CLEAN",1);
-        PresetRecord pr2 = new PresetRecord("SILKY SOLO",2);
-        PresetRecord pr3 = new PresetRecord("CHICAGO BLUES",3);
-        retval.add(pr1);
-        retval.add(pr2);
-        retval.add(pr3);
+        if(m_presetRegistry==null) {
+            m_presetRegistry = new FenderJsonPresetRegistry(null);
+
+            m_presetRegistry.acceptVisitor(new PresetRegistryBase.Visitor(){
+                @Override
+                public void visitBeforeRecords(PresetRegistryBase registry) { }
+
+                @Override
+                public void visitRecord(int slotIndex, Object record) {
+                    FenderJsonPresetRegistry.Record fjpr = (FenderJsonPresetRegistry.Record) record;
+                    PresetRecord pr = new PresetRecord(fjpr.displayName(), slotIndex);
+                    pr.m_state = PresetRecord.PresetState.ACCEPTED;
+                    retval.add(pr);
+                }
+
+                @Override
+                public void visitAfterRecords(PresetRegistryBase registry) {
+                    m_loggingAgent.appendToLog(0,
+                        "Preset count: " + retval.m_presetRecords.size()
+                    );
+                }
+            });
+        }
         return retval;
+    }
+
+    public PresetRegistryBase getPresetRegistry() {
+        return m_presetRegistry;
+    }
+
+    public boolean attemptConnection(UsbDevice device) {
+        m_device = UsbHidDevice.factory(
+            m_mainActivity, device.getVendorId(), device.getProductId()
+        );
+        if (m_device == null) {
+            m_loggingAgent.appendToLog(0,
+                "No USB HID device found"
+            );
+            return false;
+        }
+        m_usbDevice = m_device.getUsbDevice();
+        if (m_usbDevice == null) {
+            m_loggingAgent.appendToLog(0,
+                "m_device.getUsbDevice() returned null"
+            );
+            return false;
+        }
+        if(m_mainActivity.m_usbManager.hasPermission(m_usbDevice)) {
+            m_mainActivity.appendToLog("USB permission already held");
+        } else if(m_permissionRequested==false) {
+            m_mainActivity.appendToLog("Requesting USB permissionX");
+            //m_mainActivity.requestUsbConnectionPermission();
+            m_permissionRequested = true;
+            return false;
+        } else {
+            m_mainActivity.appendToLog("Waiting for USB permission");
+            return false;
+        }
+        m_device.open(m_mainActivity, null);
+        UsbDeviceConnection deviceConnection = m_usbManager.openDevice(m_usbDevice);
+        if(deviceConnection==null) {
+            m_loggingAgent.appendToLog(0,
+                "m_usbManager.openDevice(m_usbDevice) returned null"
+            );
+            return false;
+        }
+        getFirmwareVersionAndPresets();
+        return true;
     }
 }
