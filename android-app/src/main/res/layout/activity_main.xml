@@ -142,8 +142,8 @@
         <TextView
                 android:id="@+id/tv_log"
                 android:layout_width="match_parent"
-                android:layout_height="800dp"
-                android:minHeight="200dp"
+                android:layout_height="0dp"
+                android:minHeight="800dp"
                 android:gravity="fill"
                 android:textSize="20sp"
                 android:background="@color/fhauCream"

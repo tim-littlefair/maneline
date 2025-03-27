@@ -19,6 +19,7 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
     AbstractMessageProtocolBase m_protocol;
     String m_firmwareVersion;
     PresetInfo m_presetInfo;
+    boolean m_permissionRequested = false;
 
     AndroidUsbAmpProvider(
         ILoggingAgent loggingAgent,
@@ -103,6 +104,17 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
             m_loggingAgent.appendToLog(0,
                 "m_device.getUsbDevice() returned null"
             );
+            return false;
+        }
+        if(m_mainActivity.m_usbManager.hasPermission(m_usbDevice)) {
+            m_mainActivity.appendToLog("USB permission already held");
+        } else if(m_permissionRequested==false) {
+            m_mainActivity.appendToLog("Requesting USB permission");
+            m_mainActivity.requestUsbConnectionPermission();
+            m_permissionRequested = true;
+            return false;
+        } else {
+            m_mainActivity.appendToLog("Waiting for USB permission");
             return false;
         }
         m_device.open(m_mainActivity, null);

@@ -54,7 +54,7 @@ public class MainActivity
     PendingIntent m_permissionIntent;
     AmpManager m_ampManager = null;
     Button m_btnConnectionStatus;
-    UsbManager m_usbManager;
+    UsbManager m_usbManager = null;
     String m_backupDirectoryPath = null;
     private boolean m_connectionSucceeded=false;
 
@@ -62,6 +62,7 @@ public class MainActivity
         if(s_loggingAgent !=null) {
             s_loggingAgent.appendToLog(0,message);
         }
+        System.out.println(message);
     }
 
     int m_lastPresetInUse = 0;
@@ -152,6 +153,11 @@ public class MainActivity
     @Override
     public void onResume() {
         super.onResume();
+        if(BuildConfig.DEBUG == true) {
+            appendToLog("FHAU debug variant built at " + BuildConfig.BUILD_TIME);
+        } else {
+            appendToLog("FHAU version " + BuildConfig.VERSION_NAME);
+        }
         connect();
     }
 
@@ -190,7 +196,7 @@ public class MainActivity
     private void connect() {
         if(m_connectionSucceeded==true) {
             appendToLog("Already connected!");
-            return;
+            // return;
         }
         HashMap<String, UsbDevice> usbDeviceMap = m_usbManager.getDeviceList();
         if (usbDeviceMap == null) {
@@ -198,7 +204,9 @@ public class MainActivity
             return;
         } else if (usbDeviceMap.size() == 0) {
             s_loggingAgent.appendToLog(0, "device map empty");
-            return;
+            AndroidUsbAmpProvider provider = new AndroidUsbAmpProvider(s_loggingAgent, this);
+            m_connectionSucceeded = provider.attemptConnection(device);
+            // return;
         } else {
             for (String deviceName : usbDeviceMap.keySet()) {
                 UsbDevice device = usbDeviceMap.get(deviceName);
@@ -222,7 +230,9 @@ public class MainActivity
                         m_ampManager.setProvider(provider);
                         populatePresetSuiteDropdown();
                     } else {
-                        requestUsbConnectionPermission();
+                        if(m_usbManager!=null) {
+                            requestUsbConnectionPermission();
+                        }
                     }
                     // For the moment we don't attempt to handle multiple FMIC devices
                     // being connected and attempting to connect to second or later after
@@ -338,9 +348,15 @@ public class MainActivity
     }
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
-    private void requestUsbConnectionPermission() {
-        m_usbReceiver = new UsbBroadcastReceiver();
-
+    void requestUsbConnectionPermission() {
+        if(m_usbReceiver==null) {
+            m_usbReceiver = new UsbBroadcastReceiver();
+            appendToLog("New UBR, USB request will be done");
+        } else {
+            appendToLog("Existing UBR, USB request will not be done");
+            return;
+        }
+// /*
         IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
         m_permissionIntent = PendingIntent.getBroadcast(
             this, 0,
@@ -354,7 +370,7 @@ public class MainActivity
         } else {
             registerReceiver(m_usbReceiver, filter);
         }
-
+// */
     }
 
     void requestFileStoragePermission() {
