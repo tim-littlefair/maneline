@@ -10,6 +10,8 @@ android {
     }
     defaultConfig {
         targetSdkVersion 35
+        def buildTime = new Date()
+        buildConfigField "String", "BUILD_TIME", "\"${buildTime.format('yyyy-MM-dd HH:mm:ss')}\""
     }
     buildTypes {
         release {
@@ -23,6 +25,7 @@ android {
         targetCompatibility JavaVersion.VERSION_11
     }
     buildFeatures {
+        android.buildFeatures.buildConfig true
         viewBinding true
     }
 }
