@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.ActivityInfo;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.os.Build;
@@ -127,6 +128,7 @@ public class MainActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
         setContentView(R.layout.activity_main);
 
         m_ampManager = new AmpManager();
@@ -148,9 +150,19 @@ public class MainActivity
             }
         });
 
-        DoIntent();
-        populatePresetSuiteDropdown();
     }
+
+    @Override
+    public void onResume() {
+         super.onResume();
+         if(BuildConfig.DEBUG == true) {
+               appendToLog("FHAU debug variant built at " + BuildConfig.BUILD_TIME);
+         } else {
+             appendToLog("FHAU version " + BuildConfig.VERSION_NAME);
+         }
+         DoIntent();
+         connect();
+}
 
     @Override
     protected void onNewIntent(Intent theIntent) {
@@ -201,10 +213,16 @@ public class MainActivity
                         "FMIC product name: " + device.getProductName()
                     );
                     AndroidUsbAmpProvider provider = new AndroidUsbAmpProvider(s_loggingAgent, this);
-                    provider.connect(device.getVendorId(), device.getProductId());
-                    m_ampManager.setProvider(provider);
-                    m_ampManager.getPresets().acceptVisitor(this);
-                    appendToLog("Started");
+                    if(m_usbManager.hasPermission(device)) {
+                        provider.connect(device.getVendorId(), device.getProductId());
+                        m_ampManager.setProvider(provider);
+                        populatePresetSuiteDropdown();
+                        // m_ampManager.getPresets().acceptVisitor(this);
+                        appendToLog("Started");
+                    } else {
+                        m_usbManager.requestPermission(device, m_permissionIntent);
+                        appendToLog("Start deferred pending USB permission");
+                    }
                     return;
                 }
             }
