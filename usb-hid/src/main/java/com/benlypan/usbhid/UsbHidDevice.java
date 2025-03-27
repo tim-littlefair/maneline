@@ -1,6 +1,5 @@
 package com.benlypan.usbhid;
 
-import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -149,30 +148,13 @@ public class UsbHidDevice {
         return mUsbDevice.getDeviceId();
     }
 
-    // TODO: the call context.registerReceiver is only valid from API 26
-    // One of my test devices is a Nexus 7 which is at Android 8.1.2/API 25
-    @SuppressLint({"NewApi", "UnspecifiedRegisterReceiverFlag"})
     public void open(Context context, OnUsbHidDeviceListener listener) {
         mListener = listener;
         mHandler = new Handler(context.getMainLooper());
         if (!mUsbManager.hasPermission(mUsbDevice)) {
-            // TODO:
-            // As a courtesy, I should raise a Pull Request
-            // on the repository owned by GitHub user @benlypan
-            // which this library is copied from, to update the parameters
-            // here as required by modern Android SDKs targets
-            PendingIntent permissionIntent = PendingIntent.getBroadcast(
-                context,
-                0,
-                new Intent(ACTION_USB_PERMISSION),
-                PendingIntent.FLAG_IMMUTABLE
-            );
+            PendingIntent permissionIntent = PendingIntent.getBroadcast(context, 0, new Intent(ACTION_USB_PERMISSION), 0);
             IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
-            if (Build.VERSION.SDK_INT >= 26) {
-                context.registerReceiver(mUsbReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
-            } else {
-                context.registerReceiver(mUsbReceiver, filter);
-            }
+            context.registerReceiver(mUsbReceiver, filter);
             mUsbManager.requestPermission(mUsbDevice, permissionIntent);
         } else {
             openDevice();
@@ -244,25 +226,10 @@ public class UsbHidDevice {
 
     public byte[] read(int size, int timeout) {
         byte[] buffer = new byte[size];
-        int bytesRead=0;
-        for(int i=0; i<3; ++i) {
-            bytesRead = mConnection.bulkTransfer(mInUsbEndpoint, buffer, size, timeout);
-            if (bytesRead > 0) {
-                break;
-            }
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                bytesRead=0;
-            }
+        int bytesRead = mConnection.bulkTransfer(mInUsbEndpoint, buffer, size, timeout);
+        if (bytesRead < size) {
+            buffer = Arrays.copyOfRange(buffer, 0, bytesRead);
         }
-        if(bytesRead<0) {
-            return null;
-        } else {
-            if (bytesRead < size) {
-                buffer = Arrays.copyOfRange(buffer, 0, bytesRead);
-            }
-            return buffer;
-        }
+        return buffer;
     }
 }

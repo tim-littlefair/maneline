@@ -11,6 +11,8 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.Settings;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -25,12 +27,9 @@ import androidx.lifecycle.LifecycleOwner;
 import com.benlypan.usbhid.OnUsbHidDeviceListener;
 import com.benlypan.usbhid.UsbHidDevice;
 
-import net.heretical_camelid.fhau.lib.AmpManager;
-import net.heretical_camelid.fhau.lib.IAmpProvider;
-import net.heretical_camelid.fhau.lib.PresetInfo;
-import net.heretical_camelid.fhau.lib.PresetRecord;
-import net.heretical_camelid.fhau.lib.SimulatorAmpProvider;
+import net.heretical_camelid.fhau.lib.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 class MainActivityError extends UnsupportedOperationException {
@@ -47,23 +46,23 @@ class MainActivityError extends UnsupportedOperationException {
 
 public class MainActivity
         extends AppCompatActivity
-        implements PresetInfo.IVisitor, OnUsbHidDeviceListener
+        implements PresetInfo.IVisitor
 {
     final static String ACTION_USB_PERMISSION = "net.heretical_camelid.fhau.android_app.USB_PERMISSION";
     static LoggingAgent s_loggingAgent = null;
-
     BroadcastReceiver m_usbReceiver = null;
     PendingIntent m_permissionIntent;
-
     AmpManager m_ampManager = null;
-
     Button m_btnConnectionStatus;
-    UsbManager m_usbManager;
+    UsbManager m_usbManager = null;
+    String m_backupDirectoryPath = null;
+    private boolean m_connectionSucceeded=false;
 
     static void appendToLog(String message) {
         if(s_loggingAgent !=null) {
             s_loggingAgent.appendToLog(0,message);
         }
+        System.out.println(message);
     }
 
     int m_lastPresetInUse = 0;
@@ -130,13 +129,12 @@ public class MainActivity
         super.onCreate(savedInstanceState);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
         setContentView(R.layout.activity_main);
-
         m_ampManager = new AmpManager();
+        m_usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
 
         TextView tvLog = (TextView) findViewById(R.id.tv_log);
 
         s_loggingAgent = new LoggingAgent(tvLog);
-        appendToLog("Starting up");
 
         setSupportActionBar(findViewById(R.id.toolbar_fhau));
 
@@ -144,25 +142,24 @@ public class MainActivity
         m_btnConnectionStatus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                m_btnConnectionStatus.setOnClickListener(null);
                 connect();
-                m_btnConnectionStatus.setText("CONNECTED!");
+                m_btnConnectionStatus.setText("Click to reconnect");
             }
         });
 
+        requestFileStoragePermission();
     }
 
     @Override
     public void onResume() {
-         super.onResume();
-         if(BuildConfig.DEBUG == true) {
-               appendToLog("FHAU debug variant built at " + BuildConfig.BUILD_TIME);
-         } else {
-             appendToLog("FHAU version " + BuildConfig.VERSION_NAME);
-         }
-         DoIntent();
-         connect();
-}
+        super.onResume();
+        if(BuildConfig.DEBUG == true) {
+            appendToLog("FHAU debug variant built at " + BuildConfig.BUILD_TIME);
+        } else {
+            appendToLog("FHAU version " + BuildConfig.VERSION_NAME);
+        }
+        connect();
+    }
 
     @Override
     protected void onNewIntent(Intent theIntent) {
@@ -171,29 +168,43 @@ public class MainActivity
     }
 
     private void populatePresetSuiteDropdown() {
+        AndroidUsbAmpProvider provider = (AndroidUsbAmpProvider)(m_ampManager.m_provider);
+        assert provider!=null;
+        FenderJsonPresetRegistry registry = (FenderJsonPresetRegistry)(provider.m_presetRegistry);
+        assert registry!=null;
+        PresetSuiteManager psm = new PresetSuiteManager(this, registry);
+        ArrayList<PresetSuiteManager.PresetSuiteEntry> presetSuites =
+            psm.buildPresetSuites(9,3,5)
+        ;
         int itemLayoutId = R.layout.preset_suite_dropdown_item;
 
-        // Create an ArrayAdapter for the Spinner
-        String[] items = new String[] {
-            "No preset suite selected",
-            "Presets using amplifier LinearGain"
-        };
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, itemLayoutId, items);
+        ArrayList<String> suiteNames = new ArrayList<>();
+        for(PresetSuiteManager.PresetSuiteEntry pse: presetSuites) {
+            suiteNames.add(pse.first);
+        }
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+            this, itemLayoutId, suiteNames.toArray(new String[]{ }
+        ));
 
         // Bind the items
         Spinner presetSuiteDropdown = (Spinner) findViewById(R.id.dropdown_preset_suites);
+        presetSuiteDropdown.setOnItemSelectedListener(psm);
         adapter.setDropDownViewResource(itemLayoutId);
         presetSuiteDropdown.setAdapter(adapter);
-
     }
 
     private void connect() {
+        if(m_connectionSucceeded==true) {
+            appendToLog("Already connected!");
+            // return;
+        }
         HashMap<String, UsbDevice> usbDeviceMap = m_usbManager.getDeviceList();
         if (usbDeviceMap == null) {
             s_loggingAgent.appendToLog(0,"device map not received");
             return;
         } else if (usbDeviceMap.size() == 0) {
             s_loggingAgent.appendToLog(0, "device map empty");
+            AndroidUsbAmpProvider provider = new AndroidUsbAmpProvider(s_loggingAgent, this);
             return;
         } else {
             for (String deviceName : usbDeviceMap.keySet()) {
@@ -213,19 +224,68 @@ public class MainActivity
                         "FMIC product name: " + device.getProductName()
                     );
                     AndroidUsbAmpProvider provider = new AndroidUsbAmpProvider(s_loggingAgent, this);
-                    if(m_usbManager.hasPermission(device)) {
-                        provider.attemptConnection(device);
+                    m_connectionSucceeded = provider.attemptConnection(device);
+                    if(m_connectionSucceeded) {
                         m_ampManager.setProvider(provider);
                         populatePresetSuiteDropdown();
-                        // m_ampManager.getPresets().acceptVisitor(this);
-                        appendToLog("Started");
                     } else {
-                        m_usbManager.requestPermission(device, m_permissionIntent);
-                        appendToLog("Start deferred pending USB permission");
+                        if(m_usbManager!=null) {
+                            registerForPermissionIntent();
+                        }
                     }
+                    // For the moment we don't attempt to handle multiple FMIC devices
+                    // being connected and attempting to connect to second or later after
+                    // first fails.
                     return;
                 }
             }
+        }
+    }
+
+    void setPresetButton(int buttonIndex, int slotId, String presetName) {
+        String presetButtonName = String.format("button%d", buttonIndex);
+        int buttonId = getResources().getIdentifier(
+            presetButtonName, "id", getPackageName()
+        );
+        int buttonColor;
+        String buttonText;
+        float buttonAlpha;
+        Button presetButton = findViewById(buttonId);
+        if(presetButton==null) {
+            appendToLog("Failed to find button " + presetButtonName);
+            return;
+        }
+        if(slotId==0) {
+            assert presetName==null;
+            presetName = "NOT\nIN\nUSE";
+            presetButton.setClickable(false);
+            presetButton.setOnClickListener(null);
+            presetButton.setEnabled(false);
+            buttonColor = R.color.fhauGrey;
+            buttonAlpha = 0.5F;
+        } else {
+            assert presetName!=null;
+            presetButton.setClickable(true);
+            presetButton.setOnClickListener((new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    m_ampManager.switchPreset(slotId);
+                }
+            }));
+            presetButton.setEnabled(true);
+            buttonColor = R.color.fhauGreen;
+            buttonAlpha = 1.0F;
+        }
+        presetButton.setText(presetName);
+        presetButton.setBackgroundColor(
+            getResources().getColor(buttonColor,null)
+        );
+        presetButton.setAlpha(buttonAlpha);
+    }
+
+    void clearPresetButtons() {
+        for(int i=1; i<=9; ++i) {
+            setPresetButton(i,0,null);
         }
     }
 
@@ -281,86 +341,57 @@ public class MainActivity
 
     }
 
-    @SuppressLint("DefaultLocale")
-    @Override
-    public void onUsbHidDeviceConnected(UsbHidDevice device) {
-        String[] commandHexStrings = new String[]{
-                "35:09:08:00:8a:07:04:08:00:10:00",
-                "35:07:08:00:b2:06:02:08:01",
-                // Next 60 + 1 commands get
-                // the JSON descriptions of the 60 stored
-                // and 1 active presets
-                // We can't handle these until we have support
-                // for multi-frame responses
-                //"35:07:08:00:ca:06:02:08:01",
-                //"35:07:08:00:ca:06:02:08:02",
-                //..
-                "35:07:08:00:f2:03:02:08:01",
-                "35:07:08:00:d2:06:02:08:01",
-                "35:07:08:00:e2:06:02:08:01",
-                "35:07:08:00:d2:0c:02:08:01",
-                "35:09:08:00:8a:07:04:08:01:10:00",
-                /*
-                "35:07:08:00:8a:02:02:08:02",
-                "35:07:08:00:8a:02:02:08:03",
-                "35:07:08:00:8a:02:02:08:04",
-                "35:07:08:00:8a:02:02:08:01",
-                "35:07:08:00:8a:02:02:08:02",
-                 */
-        };
-        appendToLog("Device HID connection succeeded");
-        m_ampManager.getPresets();
-/*
-        int i=0;
-        try {
-            for (i = 0; i < commandHexStrings.length; ++i) {
-                m_ampManager.sendCommand(commandHexStrings[i], m_sbLog);
-            }
-            PresetInfo pi = m_ampManager.getPresetInfo(null);
-            pi.acceptVisitor(this);
-        }
-        catch(Exception e) {
-            appendToLog(String.format(
-                    "Exception caught processing command %d: %s",
-                    i, e.toString()
-            ));
-        }
- */
-    }
-
-    @Override
-    public void onUsbHidDeviceConnectFailed(UsbHidDevice device) {
-        appendToLog("Failed to connect to physical amp, trying simulator...");
-        m_ampManager = null;
-        IAmpProvider provider = new SimulatorAmpProvider(null, SimulatorAmpProvider.SimulationMode.NO_DEVICE);
-        m_ampManager = new AmpManager();
-        appendToLog(null);
-    }
-
     @Override
     public void addMenuProvider(@NonNull MenuProvider provider, @NonNull LifecycleOwner owner, @NonNull Lifecycle.State state) {
 
     }
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
-    private void DoIntent () {
-        m_usbReceiver = new UsbBroadcastReceiver();
-
-        IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
-        m_permissionIntent = PendingIntent.getBroadcast(
-            this, 0,
-            new Intent(ACTION_USB_PERMISSION), PendingIntent.FLAG_IMMUTABLE
-        );
-        filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
-        filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
-        filter.addAction(UsbManager.EXTRA_PERMISSION_GRANTED);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            registerReceiver(m_usbReceiver, filter, RECEIVER_NOT_EXPORTED);
+    void registerForPermissionIntent() {
+        if(m_usbReceiver==null) {
+            m_usbReceiver = new UsbBroadcastReceiver();
+            m_permissionIntent = PendingIntent.getBroadcast(
+                this, 0,
+                new Intent(ACTION_USB_PERMISSION), PendingIntent.FLAG_IMMUTABLE
+            );
+            IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
+            filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
+            filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
+            filter.addAction(UsbManager.EXTRA_PERMISSION_GRANTED);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                registerReceiver(m_usbReceiver, filter, RECEIVER_NOT_EXPORTED);
+            } else {
+                registerReceiver(m_usbReceiver, filter);
+            }
+            appendToLog("Registered for permission intent");
         } else {
-            registerReceiver(m_usbReceiver, filter);
+            appendToLog("Already registered for permission intent");
         }
+// /*
+// */
+    }
 
-        m_usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
+    void requestFileStoragePermission() {
+        // TODO: Complete this logic to enable logs and preset JSON files
+        // to be exposed when the Android device is connected to a computer
+        // as a USB drive.
+        // The compliant purpose of this permission in is to enable
+        // backup and sharing of presets.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if(Environment.isExternalStorageManager()==false) {
+                m_permissionIntent = PendingIntent.getBroadcast(
+                    this, 0,
+                    new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION),
+                    PendingIntent.FLAG_IMMUTABLE
+                );
+                IntentFilter filter = new IntentFilter(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+                filter.addAction(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+            }
+        }
+    }
+
+    public void usbAccessPermissionGranted() {
+        connect();
     }
 }
 

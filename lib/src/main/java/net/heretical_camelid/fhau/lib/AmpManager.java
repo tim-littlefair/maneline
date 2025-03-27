@@ -1,7 +1,7 @@
 package net.heretical_camelid.fhau.lib;
 
 public class AmpManager {
-    IAmpProvider m_provider;
+    public IAmpProvider m_provider;
 
     PresetInfo m_presetInfo;
     public AmpManager() {

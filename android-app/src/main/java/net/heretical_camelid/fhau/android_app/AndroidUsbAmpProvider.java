@@ -106,11 +106,11 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
             );
             return false;
         }
-        if(m_mainActivity.m_usbManager.hasPermission(m_usbDevice)) {
+        if(m_usbManager.hasPermission(m_usbDevice)) {
             m_mainActivity.appendToLog("USB permission already held");
         } else if(m_permissionRequested==false) {
-            m_mainActivity.appendToLog("Requesting USB permissionX");
-            //m_mainActivity.requestUsbConnectionPermission();
+            m_mainActivity.appendToLog("Requesting USB permission");
+            m_usbManager.requestPermission(m_usbDevice, m_mainActivity.m_permissionIntent);
             m_permissionRequested = true;
             return false;
         } else {
