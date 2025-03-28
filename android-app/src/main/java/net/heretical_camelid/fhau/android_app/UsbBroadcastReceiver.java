@@ -6,9 +6,17 @@ import android.content.Intent;
 import android.hardware.usb.UsbManager;
 
 public class UsbBroadcastReceiver extends BroadcastReceiver {
-    public UsbBroadcastReceiver() { }
+    AndroidUsbAmpProvider m_provider;
+    public UsbBroadcastReceiver() {
+        m_provider = null;
+    }
+
+    void setProvider(AndroidUsbAmpProvider provider) {
+        m_provider = provider;
+    }
 
     public void onReceive(Context context, Intent intent) {
+        assert m_provider!=null;
         String action = intent.getAction();
         if (
             UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(action) ||
@@ -21,7 +29,14 @@ public class UsbBroadcastReceiver extends BroadcastReceiver {
         ) {
             MainActivity.appendToLog("Device detached");
         } else if (UsbManager.EXTRA_PERMISSION_GRANTED.equals(action)) {
-            MainActivity.appendToLog("Device permission granted or denied");
+            if(intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED,false)) {
+                MainActivity.appendToLog("USB access permission granted");
+                MainActivity mainActivity = (MainActivity) context;
+                assert (mainActivity) != null;
+                m_provider.usbAccessPermissionGranted();
+            } else {
+                m_provider.usbAccessPermissionDenied();
+            }
         }
     }
 }

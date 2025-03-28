@@ -1,5 +1,6 @@
 package com.benlypan.usbhid;
 
+import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -148,11 +149,16 @@ public class UsbHidDevice {
         return mUsbDevice.getDeviceId();
     }
 
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
     public void open(Context context, OnUsbHidDeviceListener listener) {
         mListener = listener;
         mHandler = new Handler(context.getMainLooper());
         if (!mUsbManager.hasPermission(mUsbDevice)) {
-            PendingIntent permissionIntent = PendingIntent.getBroadcast(context, 0, new Intent(ACTION_USB_PERMISSION), 0);
+            PendingIntent permissionIntent = PendingIntent.getBroadcast(
+                context, 0,
+                new Intent(ACTION_USB_PERMISSION),
+                PendingIntent.FLAG_IMMUTABLE
+            );
             IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
             context.registerReceiver(mUsbReceiver, filter);
             mUsbManager.requestPermission(mUsbDevice, permissionIntent);

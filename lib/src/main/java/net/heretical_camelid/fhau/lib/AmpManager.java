@@ -1,10 +1,11 @@
 package net.heretical_camelid.fhau.lib;
 
 public class AmpManager {
+    static ILoggingAgent s_loggingAgent;
     public IAmpProvider m_provider;
-
     PresetInfo m_presetInfo;
-    public AmpManager() {
+    public AmpManager(ILoggingAgent loggingAgent) {
+        s_loggingAgent = loggingAgent;
         m_provider = null;
     }
 
@@ -35,6 +36,23 @@ public class AmpManager {
     }
 
     public void setProvider(IAmpProvider provider) {
+        s_loggingAgent.appendToLog(5, String.format(
+           "AmpManager.setProvider() called old_was_null:%s, new_is_null:%s",
+           m_provider==null,provider==null
+        ));
         m_provider = provider;
+    }
+
+    public void attemptConnection() {
+        if(m_provider!=null) {
+            IAmpProvider.ProviderState_e connectionOutcomeState = m_provider.attemptConnection();
+            s_loggingAgent.appendToLog(5, String.format(
+                "AmpManager.attemptConnection() returned %s", connectionOutcomeState
+            ));
+        } else {
+            s_loggingAgent.appendToLog(5,
+                "AmpManager.attemptConnection() called while provider was null"
+            );
+        }
     }
 }

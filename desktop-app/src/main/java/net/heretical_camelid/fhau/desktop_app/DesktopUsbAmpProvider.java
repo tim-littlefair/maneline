@@ -198,6 +198,22 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
     }
 
     @Override
+    public ProviderState_e attemptConnection() {
+        // The interface requires this as the Android/USB
+        // provider needs to do the connection in stages
+        // so that the UI can prompt to ask the user
+        // for permission.
+        // Desktop/USB doesn't need to do this so we
+        // don't expect it to be called.
+        return null;
+    }
+
+    @Override
+    public ProviderState_e getState() {
+        return null;
+    }
+
+    @Override
     public void sendCommand(String commandHexString) {
         System.out.println("sendCommand! (unexpected)");
     }

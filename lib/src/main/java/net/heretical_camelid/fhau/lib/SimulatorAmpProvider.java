@@ -99,6 +99,16 @@ public class SimulatorAmpProvider implements IAmpProvider {
     }
 
     @Override
+    public ProviderState_e attemptConnection() {
+        return ProviderState_e.PROVIDER_DEVICE_CONNECTION_SUCCEEDED;
+    }
+
+    @Override
+    public ProviderState_e getState() {
+        return null;
+    }
+
+    @Override
     public void sendCommand(String commandHexString) { }
 
     @Override
