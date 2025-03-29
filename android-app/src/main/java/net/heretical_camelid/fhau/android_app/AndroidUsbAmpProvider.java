@@ -53,7 +53,6 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
     }
 
     public boolean getFirmwareVersionAndPresets() {
-        m_protocol.setDeviceTransport(new DeviceTransportUsbHid(m_device));
         String[] firmwareVersionHolder = new String[] { null };
         int startupStatus = m_protocol.doStartup(firmwareVersionHolder);
         m_firmwareVersion = firmwareVersionHolder[0];
@@ -143,18 +142,32 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
                     );
                     if (!m_usbManager.hasPermission(usbDevice)) {
                         registerForPermissionIntent();
+                        m_usbManager.requestPermission(usbDevice,m_permissionIntent);
                         m_state = ProviderState_e.PROVIDER_CONNECTING_TO_DEVICE;
                         return m_state;
                     }
 
                     try {
                         // If we are still in the function at this point,
-                        // the connection must have succeeded
-                        getFirmwareVersionAndPresets();
-                        m_mainActivity.populatePresetSuiteDropdown();
-                        m_connectionSucceeded = true;
-                        m_state = ProviderState_e.PROVIDER_DEVICE_CONNECTION_SUCCEEDED;
-                        break;
+                        // we must have permission, so we try to connect
+                        UsbDeviceConnection cxn = m_usbManager.openDevice(usbDevice);
+                        if(cxn!=null) {
+                            UsbHidDevice usbHidDevice = UsbHidDevice.factory(
+                                m_mainActivity,
+                                usbDevice.getVendorId(), usbDevice.getProductId()
+                            );
+                            assert usbHidDevice!=null;
+                            usbHidDevice.open(m_mainActivity,null);
+                            m_protocol.setDeviceTransport(new DeviceTransportUsbHid(usbHidDevice));
+                            getFirmwareVersionAndPresets();
+                            m_mainActivity.populatePresetSuiteDropdown();
+                            m_connectionSucceeded = true;
+                            m_state = ProviderState_e.PROVIDER_DEVICE_CONNECTION_SUCCEEDED;
+                            break;
+                        } else {
+                            m_state = ProviderState_e.PROVIDER_DEVICE_CONNECTION_FAILED;
+                            return m_state;
+                        }
                     }
                     catch(Exception e) {
                         appendToLog("Exception caught - see logcat for details");
