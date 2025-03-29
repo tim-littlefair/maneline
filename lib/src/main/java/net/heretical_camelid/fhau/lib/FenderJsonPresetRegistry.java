@@ -129,6 +129,13 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
             m_presetCanonicalSerializer = FenderJsonPresetRegistry.s_gsonCompact.fromJson(
                 m_definitionRawJson, PresetCanonicalSerializer.class
             );
+            // Presets with different histories (i.e. unmodified firmware presets
+            // vs presets imported or modified by Fender Tone) can have JSON
+            // structures which are identical in meaning but different in
+            // element ordering.  We run the makeCanonical function to standardize
+            // the sort order of elements in order to ensure that presets which are
+            // exact equivalants from an audio PoV generate the same hash code.
+            m_presetCanonicalSerializer.makeCanonical();
         }
 
         public String displayName() {

@@ -1,5 +1,9 @@
 package net.heretical_camelid.fhau.lib;
 
+import com.google.gson.Gson;
+
+import java.util.Arrays;
+
 /**
  * This class and its static inner classes are constructed to satisfy
  * the recommendations described in
@@ -14,6 +18,8 @@ package net.heretical_camelid.fhau.lib;
  * preset #1 "FENDER  CLEAN   ".
  */
 public class PresetCanonicalSerializer {
+    static Gson s_gsonCompact = new Gson();
+
     String nodeType;
     String NodeId;
     String version;
@@ -21,7 +27,11 @@ public class PresetCanonicalSerializer {
     int numOutputs;
     PCS_Info info;
     PCS_AudioGraph audioGraph;
-    PresetCanonicalSerializer() {}
+    public PresetCanonicalSerializer() {}
+    public void makeCanonical() {
+        Arrays.sort(audioGraph.connections);
+        Arrays.sort(audioGraph.nodes);
+    }
 
     static class PCS_AudioGraph {
         PCS_Node[] nodes;
@@ -41,12 +51,15 @@ public class PresetCanonicalSerializer {
         PCS_Info() { }
     }
 
-    static class PCS_Node {
+    static class PCS_Node implements Comparable<PCS_Node> {
         String nodeId;
         String dspUnit;
         String FenderId;
         PCS_DspUnitParameters dspUnitParameters;
         PCS_Node() {}
+        public int compareTo(PCS_Node other) {
+            return s_gsonCompact.toJson(this).compareTo(s_gsonCompact.toJson(other));
+        }
     }
 
     static class PCS_DspUnitParameters {
@@ -58,15 +71,18 @@ public class PresetCanonicalSerializer {
         PCS_DspUnitParameters() { }
     }
 
-    static class PCS_Connection {
+    static class PCS_Connection implements Comparable<PCS_Connection> {
         PCS_Connection_IO input;
         PCS_Connection_IO output;
         PCS_Connection() { }
+        public int compareTo(PCS_Connection other) {
+            return s_gsonCompact.toJson(this).compareTo(s_gsonCompact.toJson(other));
+        }
     }
 
     static class PCS_Connection_IO {
-        int index;
         String nodeId;
+        int index;
         PCS_Connection_IO() {}
     }
 }
