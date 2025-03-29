@@ -126,8 +126,19 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
         public Record(String name, byte[] definitionBytes) {
             super(name);
             m_definitionRawJson = new String(definitionBytes, StandardCharsets.UTF_8);
+            // Many DSPUnitParameter JSON substructures contain an attribute named 'tone'
+            // with a fixed point decimal value.
+            // A small number have an attribute of the same name with the string value
+            // "normal" instead of a numeric value.
+            // Allowing the same substructure attribute with different datatypes
+            // would break Gson serialization and deserialisation, so before parsing
+            // we convert "normal" to a numeric value
+            // TODO:
+            // When we start pushing JSON back to the LT40S we'll need to think
+            // about whether this is OK.
             m_presetCanonicalSerializer = FenderJsonPresetRegistry.s_gsonCompact.fromJson(
-                m_definitionRawJson, PresetCanonicalSerializer.class
+                m_definitionRawJson.replace("\"normal\"", "0.5"),
+                PresetCanonicalSerializer.class
             );
             // Presets with different histories (i.e. unmodified firmware presets
             // vs presets imported or modified by Fender Tone) can have JSON
@@ -300,10 +311,12 @@ class PresetDetailsTableGenerator implements PresetRegistryBase.Visitor {
 
 class AmpDefinitionExporter implements PresetRegistryBase.Visitor {
     final String m_outputPrefix;
-    final Gson m_gson;
+    final Gson m_compactGson;
+    final Gson m_prettyGson;
     AmpDefinitionExporter(String outputPrefix) {
         m_outputPrefix = outputPrefix;
-        m_gson = new GsonBuilder().setPrettyPrinting().create();
+        m_compactGson = new Gson();
+        m_prettyGson = new GsonBuilder().setPrettyPrinting().create();
     }
 
     @Override
@@ -325,11 +338,18 @@ class AmpDefinitionExporter implements PresetRegistryBase.Visitor {
         String rawTargetPath = m_outputPrefix + "/" + presetBasename +".raw_preset.json";
         FenderJsonPresetRegistry.outputToFile(rawTargetPath, rawJson);
 
+        // We also export the GSON compact rendering so that we can compare
+        // it to the raw JSON received from the amp.
+        String compactJson = m_compactGson.toJson(fjpr.m_presetCanonicalSerializer);
+        String compactTargetPath = m_outputPrefix + "/" + presetBasename +".compact.json";
+        FenderJsonPresetRegistry.outputToFile(compactTargetPath, compactJson);
+
         // The pretty export is the GSON pretty rendering of the parsed JSON object
         // i.e. indented, with dictionary keys sorted.
-        String prettyJson = m_gson.toJson(fjpr.m_presetCanonicalSerializer);
+        String prettyJson = m_prettyGson.toJson(fjpr.m_presetCanonicalSerializer);
         String prettyTargetPath = m_outputPrefix + "/" + presetBasename +".pretty_preset.json";
         FenderJsonPresetRegistry.outputToFile(prettyTargetPath, prettyJson);
+
     }
 
     @Override

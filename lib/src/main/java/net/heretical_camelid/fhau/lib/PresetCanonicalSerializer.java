@@ -29,6 +29,14 @@ public class PresetCanonicalSerializer {
     PCS_AudioGraph audioGraph;
     public PresetCanonicalSerializer() {}
     public void makeCanonical() {
+        // The two arrays have inconsistent order when the same preset
+        // is copied to a different slot (or maybe when it is edited
+        // in Fender Tone, even if the final state is equal to the
+        // original state).
+        // Sorting the arrays resolves the inconsistency and helps to
+        // reduce the number of presets with the same name and
+        // identical parameters but different hashes due to JSON
+        // element ordering
         Arrays.sort(audioGraph.connections);
         Arrays.sort(audioGraph.nodes);
     }
@@ -64,10 +72,16 @@ public class PresetCanonicalSerializer {
 
     static class PCS_DspUnitParameters {
         boolean bypass;
-        String bypassType;
+        // TODO:
+        // bypassType appears to be optional and finishes up with inconsistent
+        // values when a preset is copied or imported via FenderTone as
+        // opposed to the original firmware presets.
+        // Investigate if the inconsistent values actually affect preset sound.
+        // If not maybe skip serializing this?
+        // String bypassType;
         float level;
         float gain;
-        String tone;
+        float tone;
         PCS_DspUnitParameters() { }
     }
 
