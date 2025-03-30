@@ -42,19 +42,36 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
         assert definition != null;
 
         Record newRecord = new Record(name, definition);
-        String duplicateSlotKey = String.format(
-            "name='%s' hash=%s",
-            newRecord.displayName(),newRecord.audioHash()
-        );
-        ArrayList<Integer> existingDuplicateSlotList = m_duplicateSlots.get(duplicateSlotKey);
+        String dsk = duplicateSlotKey(newRecord);
+        ArrayList<Integer> existingDuplicateSlotList = m_duplicateSlots.get(dsk);
         if(existingDuplicateSlotList==null) {
             ArrayList<Integer> newDuplicateSlotList = new ArrayList<>();
             newDuplicateSlotList.add(slotIndex);
-            m_duplicateSlots.put(duplicateSlotKey,newDuplicateSlotList);
+            m_duplicateSlots.put(dsk,newDuplicateSlotList);
             m_records.put(slotIndex, newRecord);
         } else {
             existingDuplicateSlotList.add(Integer.valueOf(slotIndex));
         }
+    }
+
+    public boolean isDuplicate(int slotIndex, Record record) {
+        String dsk = duplicateSlotKey(record);
+        ArrayList<Integer> duplicateSlotIndexes = m_duplicateSlots.get(dsk);
+        int positionInDupList = duplicateSlotIndexes.indexOf(slotIndex);
+        assert positionInDupList>=0;
+        if(positionInDupList==0) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    private static String duplicateSlotKey(Record newRecord) {
+        String retval = String.format(
+            "name='%s' hash=%s",
+            newRecord.displayName(), newRecord.audioHash()
+        );
+        return retval;
     }
 
     public void generatePresetDetails(PrintStream printStream) {

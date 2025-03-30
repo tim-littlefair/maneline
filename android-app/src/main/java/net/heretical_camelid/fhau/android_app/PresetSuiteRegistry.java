@@ -1,24 +1,18 @@
 package net.heretical_camelid.fhau.android_app;
 
-import android.text.TextUtils;
 import android.util.Pair;
-import android.view.View;
-import android.widget.AdapterView;
 import net.heretical_camelid.fhau.lib.FenderJsonPresetRegistry;
 import net.heretical_camelid.fhau.lib.PresetRegistryBase;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.regex.Pattern;
 
-public class PresetSuiteManager implements PresetRegistryBase.Visitor, AdapterView.OnItemSelectedListener {
-    final MainActivity m_mainActivity;
+public class PresetSuiteRegistry implements PresetRegistryBase.Visitor {
     final HashMap<String, ArrayList<FenderJsonPresetRegistry.Record>> m_ampPresets;
     ArrayList<PresetSuiteEntry> m_presetSuites;
 
-    PresetSuiteManager(MainActivity mainActivity, FenderJsonPresetRegistry registry) {
-        m_mainActivity = mainActivity;
+    PresetSuiteRegistry(MainActivity mainActivity, FenderJsonPresetRegistry registry) {
         m_ampPresets = new HashMap<>();
         registry.acceptVisitor(this);
     }
@@ -129,30 +123,6 @@ public class PresetSuiteManager implements PresetRegistryBase.Visitor, AdapterVi
         return retval;
     }
 
-    @Override
-    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        assert m_presetSuites!=null;
-        PresetSuiteEntry selectedSuite = m_presetSuites.get(position);
-        m_mainActivity.clearPresetButtons();
-        ArrayList<FenderJsonPresetRegistry.Record> suitePresetRecords = selectedSuite.second;
-        m_mainActivity.appendToLog("Preset suite '" + selectedSuite.first + "' selected");
-        for(int i=0; i<suitePresetRecords.size(); ++i) {
-            FenderJsonPresetRegistry.Record presetRecord = suitePresetRecords.get(i);
-            m_mainActivity.setPresetButton(
-                i+1, i+1, buttonLabel(i+1, presetRecord.displayName())
-            );
-            m_mainActivity.appendToLog(
-                presetRecord.displayName().replace("( )+"," ") +
-                ": " +  presetRecord.effects()
-            );
-        }
-    }
-
-    @Override
-    public void onNothingSelected(AdapterView<?> parent) {
-        m_mainActivity.clearPresetButtons();
-    }
-
     static class PresetSuiteEntry
         extends Pair<String, ArrayList<FenderJsonPresetRegistry.Record>> {
         PresetSuiteEntry(
@@ -174,5 +144,9 @@ public class PresetSuiteManager implements PresetRegistryBase.Visitor, AdapterVi
             line2 = ZWNBS;
         }
         return String.format("%03d\n%s\n%s",slotIndex,line1,line2);
+    }
+
+    static interface Visitor {
+
     }
 }

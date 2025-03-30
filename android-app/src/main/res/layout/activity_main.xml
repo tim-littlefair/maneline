@@ -130,7 +130,7 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:gravity="fill"
+            android:gravity="top"
             android:scrollbarSize="30dp"
             android:scrollbars="vertical"
             android:scrollbarAlwaysDrawVerticalTrack="true"
@@ -144,7 +144,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:minHeight="800dp"
-                android:gravity="fill"
+                android:gravity="top"
                 android:textSize="20sp"
                 android:background="@color/fhauCream"
         />

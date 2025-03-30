@@ -1,18 +1,9 @@
 package net.heretical_camelid.fhau.android_app;
 
 import android.annotation.SuppressLint;
-import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
-import android.hardware.usb.UsbDevice;
-import android.hardware.usb.UsbManager;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
-import android.provider.Settings;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -24,13 +15,9 @@ import androidx.core.view.MenuProvider;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 
-import com.benlypan.usbhid.OnUsbHidDeviceListener;
-import com.benlypan.usbhid.UsbHidDevice;
-
 import net.heretical_camelid.fhau.lib.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 class MainActivityError extends UnsupportedOperationException {
     public MainActivityError(String message) {
@@ -46,11 +33,11 @@ class MainActivityError extends UnsupportedOperationException {
 
 public class MainActivity
         extends AppCompatActivity
-        implements PresetInfo.IVisitor
-{
+    implements PresetInfo.IVisitor, AdapterView.OnItemSelectedListener {
     static LoggingAgent s_loggingAgent;
     private AndroidUsbAmpProvider m_provider;
     AmpManager m_ampManager = null;
+    PresetSuiteRegistry m_presetSuiteRegistry = null;
     Button m_btnConnectionStatus;
 
     public MainActivity() {
@@ -160,14 +147,14 @@ public class MainActivity
         assert provider!=null;
         FenderJsonPresetRegistry registry = (FenderJsonPresetRegistry)(provider.m_presetRegistry);
         assert registry!=null;
-        PresetSuiteManager psm = new PresetSuiteManager(this, registry);
-        ArrayList<PresetSuiteManager.PresetSuiteEntry> presetSuites =
-            psm.buildPresetSuites(9,3,5)
+        m_presetSuiteRegistry = new PresetSuiteRegistry(this, registry);
+        ArrayList<PresetSuiteRegistry.PresetSuiteEntry> presetSuites =
+            m_presetSuiteRegistry.buildPresetSuites(9,3,5)
         ;
         int itemLayoutId = R.layout.preset_suite_dropdown_item;
 
         ArrayList<String> suiteNames = new ArrayList<>();
-        for(PresetSuiteManager.PresetSuiteEntry pse: presetSuites) {
+        for(PresetSuiteRegistry.PresetSuiteEntry pse: presetSuites) {
             suiteNames.add(pse.first);
         }
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
@@ -176,7 +163,7 @@ public class MainActivity
 
         // Bind the items
         Spinner presetSuiteDropdown = (Spinner) findViewById(R.id.dropdown_preset_suites);
-        presetSuiteDropdown.setOnItemSelectedListener(psm);
+        presetSuiteDropdown.setOnItemSelectedListener(this);
         adapter.setDropDownViewResource(itemLayoutId);
         presetSuiteDropdown.setAdapter(adapter);
     }
@@ -311,6 +298,35 @@ public class MainActivity
             }
         }
          */
+    }
+
+    void setupPresetButtonsForSuite(PresetSuiteRegistry.PresetSuiteEntry selectedSuite, ArrayList<FenderJsonPresetRegistry.Record> suitePresetRecords, PresetSuiteRegistry presetSuiteRegistry) {
+        clearPresetButtons();
+        appendToLog("Preset suite '" + selectedSuite.first + "' selected");
+        for(int i = 0; i< suitePresetRecords.size(); ++i) {
+            FenderJsonPresetRegistry.Record presetRecord = suitePresetRecords.get(i);
+            setPresetButton(
+                i+1, i+1, PresetSuiteRegistry.buttonLabel(i+1, presetRecord.displayName())
+            );
+            appendToLog(
+                presetRecord.displayName().replace("( )+"," ") +
+                ": " +  presetRecord.effects()
+            );
+        }
+    }
+
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+        clearPresetButtons();
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        assert m_presetSuiteRegistry.m_presetSuites!=null;
+        PresetSuiteRegistry.PresetSuiteEntry selectedSuite = m_presetSuiteRegistry.m_presetSuites.get(position);
+        ArrayList<FenderJsonPresetRegistry.Record> suitePresetRecords = selectedSuite.second;
+        setupPresetButtonsForSuite(selectedSuite, suitePresetRecords, m_presetSuiteRegistry);
     }
 }
 
