@@ -232,16 +232,23 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
             StringBuilder sb = new StringBuilder();
             String nextNodeType = cxnMap.get("preset").get(0);
             for(int i=0;i<5;++i) {
+                boolean insertSeparator=false;
                 String nodeName = nodeMap.get(nextNodeType);
                 if(!nodeName.equals("Passthru")) {
-                    sb.append(nextNodeType + ":" + nodeName + " ");
+                    sb.append(
+                        nextNodeType.substring(0,1) + ":" + nodeName
+                    );
+                    insertSeparator = true;
                 }
                 nextNodeType = cxnMap.get(nextNodeType).get(0);
                 if(nextNodeType.equals("preset")) {
                     break;
+                } else if(insertSeparator) {
+                    final String UNICODE_NON_BREAKING_SPACE = "\u00A0";
+                    sb.append(UNICODE_NON_BREAKING_SPACE);
                 }
             }
-            return sb.toString().strip();
+            return sb.toString();
         }
     }
 }
