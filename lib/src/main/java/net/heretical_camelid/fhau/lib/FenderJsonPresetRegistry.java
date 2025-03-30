@@ -126,18 +126,8 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
         public Record(String name, byte[] definitionBytes) {
             super(name);
             m_definitionRawJson = new String(definitionBytes, StandardCharsets.UTF_8);
-            // Many DSPUnitParameter JSON substructures contain an attribute named 'tone'
-            // with a fixed point decimal value.
-            // A small number have an attribute of the same name with the string value
-            // "normal" instead of a numeric value.
-            // Allowing the same substructure attribute with different datatypes
-            // would break Gson serialization and deserialisation, so before parsing
-            // we convert "normal" to a numeric value
-            // TODO:
-            // When we start pushing JSON back to the LT40S we'll need to think
-            // about whether this is OK.
             m_presetCanonicalSerializer = FenderJsonPresetRegistry.s_gsonCompact.fromJson(
-                m_definitionRawJson.replace("\"normal\"", "0.5"),
+                m_definitionRawJson,
                 PresetCanonicalSerializer.class
             );
             // Presets with different histories (i.e. unmodified firmware presets
@@ -166,33 +156,25 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
         }
 
         public String audioHash() {
-            // All audio parameters of the preset are encoded in the audioGraph submap,
-            // which has two subkeys, 'nodes' and 'connections'. By composing the hash from
-            // separate hashes over the values for each of these subkeys we make the hash
-            // depend separately on the connection structure and the identity and parameters
-            // of the amp and DSP unit effects selected.
-
-            // Both nodes and connections collections are arrays in which the order of items is
-            // neither significant nor consistent.  By having PCS use SortedSet<> instead of
-            // an []-array for each of these collections we ensure that equivalent arrays with
-            // an identical set of records in a different order within the compact JSON
-            // supplied by the amp generate the same hash value from the consistently ordered
-            // object parsed from the JSON.
-
-            // In the presets retrieved from firmware after a factory preset, and in all
-            // other presets seen to date the connection structure conforms to
-            // stomp-mod-amp-delay-reverb, and the two-hex-digit hash of the connection
-            // collection is '12'.  If any other two digit pattern is seen in the
-            // connection position it will signify an exotic connection structure.
+            // We use the GSON @Since annotation to exclude a small number
+            // of fields in the DspUnitParameters JSON substructure which
+            // have inconsistent serialization according to whether they
+            // are original firmware presets, presets edited or imported
+            // by FenderTone or via the amp's own controls.
+            // Excluding these fields enables us to get the same hash
+            // values for presets which are functionally identical but
+            // have specific attributes represented differently at the
+            // DspUnitParameter level.
+            Gson hashingGson = new GsonBuilder().setVersion(0.0).create();
 
             String cxnsHash = FenderJsonPresetRegistry.stringHash(
-                FenderJsonPresetRegistry.s_gsonCompact.toJson(
+                hashingGson.toJson(
                     m_presetCanonicalSerializer.audioGraph.connections
                 ),2
             );
 
             String nodesHash = FenderJsonPresetRegistry.stringHash(
-                FenderJsonPresetRegistry.s_gsonCompact.toJson(
+                hashingGson.toJson(
                     m_presetCanonicalSerializer.audioGraph.nodes
                 ),4
             );

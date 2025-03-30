@@ -1,6 +1,8 @@
 package net.heretical_camelid.fhau.lib;
 
 import com.google.gson.Gson;
+import com.google.gson.annotations.SerializedName;
+import com.google.gson.annotations.Since;
 
 import java.util.Arrays;
 
@@ -71,17 +73,100 @@ public class PresetCanonicalSerializer {
     }
 
     static class PCS_DspUnitParameters {
+        // scripts/extract_dsp_param_domains.py
+        // was used to scan all of the compact
+        // JSON retrieved from the LT40S and
+        // generate an alphabetic list of the
+        // attributes which appear in this item
+        // with their domains.
+
+        // This list is in alphabetical order with
+        // a small number of exceptions which require
+        // comments and/or annotations, these appear
+        // at the end
+        float attenuate;
+        int attenuation;
+        float avgDelay;
+        float bass;
+        float bias;
+        float blend;
+        boolean bright;
+        float brite;
         boolean bypass;
-        // TODO:
-        // bypassType appears to be optional and finishes up with inconsistent
-        // values when a preset is copied or imported via FenderTone as
-        // opposed to the original firmware presets.
-        // Investigate if the inconsistent values actually affect preset sound.
-        // If not maybe skip serializing this?
-        // String bypassType;
-        float level;
+        // bypassType: at end of list
+        String cabsimType;
+        float chase;
+        float cut;
+        float decay;
+        float depth;
+        float diffuse;
+        float dist;
+        float dlyTime;
+        float duty;
+        float dwell;
+        float feedback;
         float gain;
-        float tone;
+        float gain2;
+        String gateDetectorPosition;
+        String gatePreset;
+        float hiFrq;
+        float high;
+        float highmid;
+        float hysteresis;
+        float level;
+        float loFrq;
+        float low;
+        float lowmid;
+        float lrPhase;
+        float master;
+        float mid;
+        String mode;
+        String noteDivision;
+        int octdown;
+        int octup;
+        float outputLevel;
+        float phase;
+        float presence;
+        float q;
+        float rate;
+        float rateHz;
+        float reson;
+        float rotor;
+        String sag;
+        float sensitivity;
+        // shape: at end of list
+        float stereoSpread;
+        float tapTimeBPM;
+        float thresh;
+        float threshold;
+        float time;
+        // tone: at end of list
+        float treb;
+        float treble;
+        String type;
+        float volume;
+        float wetLvl;
+        float wowLevel;
+
+        // The remaining attributes have been identified
+        // as taking on inconsistent values and/or types when a preset
+        // is copied, or edited or imported using Fender Tone
+        // The @Since annotation is used on these so that
+        // they can be excluded from the JSON used to calculate
+        // a hash.
+
+        // bypassType switches between 'Post', 'Pre' and absent
+        @Since(99.99)
+        String bypassType;
+
+        // tone switches between 'normal' and (numeric) 0.5
+        @Since(99.99)
+        String tone;
+
+        // shape switches between 'sine' and (numeric) 0
+        @Since(99.99)
+        String shape;
+
         PCS_DspUnitParameters() { }
     }
 
