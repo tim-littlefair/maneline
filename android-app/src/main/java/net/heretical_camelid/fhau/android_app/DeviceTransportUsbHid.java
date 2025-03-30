@@ -14,13 +14,27 @@ class DeviceTransportUsbHid implements DeviceTransportInterface {
 
     @Override
     public int read(byte[] packetBuffer) {
-        byte[] bytesRead = m_usbHidDevice.read(packetBuffer.length,TIMEOUT_MS);
-        if(bytesRead==null) {
-            return 0;
-        } else {
-            System.arraycopy(bytesRead, 0, packetBuffer, 0, bytesRead.length);
-            return bytesRead.length;
+        final int NUM_ATTEMPTS=3;
+        final int MSEC_BETWEEN_ATTEMPTS=100;
+        for(int i=0; i<NUM_ATTEMPTS; ++i) {
+            try {
+                byte[] bytesRead = m_usbHidDevice.read(packetBuffer.length,TIMEOUT_MS);
+                if(bytesRead==null) {
+                    return 0;
+                } else {
+                    System.arraycopy(bytesRead, 0, packetBuffer, 0, bytesRead.length);
+                    return bytesRead.length;
+                }
+            }
+            catch(IllegalArgumentException e) {
+                try {
+                    Thread.sleep(MSEC_BETWEEN_ATTEMPTS);
+                } catch (InterruptedException ex) {
+                    // Do nothing
+                }
+            }
         }
+        return 0;
     }
 
     @Override

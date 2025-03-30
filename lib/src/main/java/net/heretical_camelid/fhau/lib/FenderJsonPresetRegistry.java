@@ -54,19 +54,15 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
         }
     }
 
-    public boolean isDuplicate(int slotIndex, Record record) {
+    public int firstSlotIndex(Record record) {
         String dsk = duplicateSlotKey(record);
         ArrayList<Integer> duplicateSlotIndexes = m_duplicateSlots.get(dsk);
-        int positionInDupList = duplicateSlotIndexes.indexOf(slotIndex);
-        assert positionInDupList>=0;
-        if(positionInDupList==0) {
-            return false;
-        } else {
-            return true;
-        }
+        assert duplicateSlotIndexes != null;
+        assert duplicateSlotIndexes.size() > 0;
+        return duplicateSlotIndexes.get(0);
     }
 
-    private static String duplicateSlotKey(Record newRecord) {
+    static String duplicateSlotKey(Record newRecord) {
         String retval = String.format(
             "name='%s' hash=%s",
             newRecord.displayName(), newRecord.audioHash()

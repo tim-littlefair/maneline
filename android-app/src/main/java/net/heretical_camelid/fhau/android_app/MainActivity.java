@@ -17,7 +17,7 @@ import androidx.lifecycle.LifecycleOwner;
 
 import net.heretical_camelid.fhau.lib.*;
 
-import java.util.ArrayList;
+import java.util.*;
 
 class MainActivityError extends UnsupportedOperationException {
     public MainActivityError(String message) {
@@ -147,7 +147,7 @@ public class MainActivity
         assert provider!=null;
         FenderJsonPresetRegistry registry = (FenderJsonPresetRegistry)(provider.m_presetRegistry);
         assert registry!=null;
-        m_presetSuiteRegistry = new PresetSuiteRegistry(this, registry);
+        m_presetSuiteRegistry = new PresetSuiteRegistry(registry);
         ArrayList<PresetSuiteRegistry.PresetSuiteEntry> presetSuites =
             m_presetSuiteRegistry.buildPresetSuites(9,3,5)
         ;
@@ -155,7 +155,7 @@ public class MainActivity
 
         ArrayList<String> suiteNames = new ArrayList<>();
         for(PresetSuiteRegistry.PresetSuiteEntry pse: presetSuites) {
-            suiteNames.add(pse.first);
+            suiteNames.add(pse.name());
         }
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
             this, itemLayoutId, suiteNames.toArray(new String[]{ }
@@ -300,9 +300,28 @@ public class MainActivity
          */
     }
 
+    private void setupPresetButtonsForSuite(String suiteName, HashMap<Integer, FenderJsonPresetRegistry.Record> suitePresetRecords) {
+        clearPresetButtons();
+        appendToLog("Preset suite '" + suiteName + "' selected");
+        ArrayList<Integer> slotIndices = new ArrayList<>(suitePresetRecords.keySet());
+        slotIndices.sort(null);
+        for(int i=0; i<slotIndices.size(); ++i) {
+            int slotIndex = slotIndices.get(i);
+            FenderJsonPresetRegistry.Record presetRecord = suitePresetRecords.get(slotIndex);
+            setPresetButton(
+                i+1, slotIndex,
+                PresetSuiteRegistry.buttonLabel(slotIndex, presetRecord.displayName())
+            );
+            appendToLog(
+                presetRecord.displayName().replace("( )+"," ") +
+                    ": " +  presetRecord.effects()
+            );
+        }
+    }
+/*
     void setupPresetButtonsForSuite(PresetSuiteRegistry.PresetSuiteEntry selectedSuite, ArrayList<FenderJsonPresetRegistry.Record> suitePresetRecords, PresetSuiteRegistry presetSuiteRegistry) {
         clearPresetButtons();
-        appendToLog("Preset suite '" + selectedSuite.first + "' selected");
+        appendToLog("Preset suite '" + selectedSuite.name() + "' selected");
         for(int i = 0; i< suitePresetRecords.size(); ++i) {
             FenderJsonPresetRegistry.Record presetRecord = suitePresetRecords.get(i);
             setPresetButton(
@@ -314,6 +333,7 @@ public class MainActivity
             );
         }
     }
+ */
 
 
     @Override
@@ -323,10 +343,15 @@ public class MainActivity
 
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        /*
         assert m_presetSuiteRegistry.m_presetSuites!=null;
         PresetSuiteRegistry.PresetSuiteEntry selectedSuite = m_presetSuiteRegistry.m_presetSuites.get(position);
         ArrayList<FenderJsonPresetRegistry.Record> suitePresetRecords = selectedSuite.second;
-        setupPresetButtonsForSuite(selectedSuite, suitePresetRecords, m_presetSuiteRegistry);
+         */
+        String suiteName = m_presetSuiteRegistry.nameAt(position);
+        HashMap<Integer,FenderJsonPresetRegistry.Record> suitePresetRecords = m_presetSuiteRegistry.recordsAt(position);
+        setupPresetButtonsForSuite(suiteName, suitePresetRecords);
     }
+
 }
 
