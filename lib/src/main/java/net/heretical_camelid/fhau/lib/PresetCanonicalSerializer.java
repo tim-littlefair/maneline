@@ -84,69 +84,69 @@ public class PresetCanonicalSerializer {
         // a small number of exceptions which require
         // comments and/or annotations, these appear
         // at the end
-        float attenuate;
-        int attenuation;
-        float avgDelay;
-        float bass;
-        float bias;
-        float blend;
-        boolean bright;
-        float brite;
-        boolean bypass;
+        Float attenuate;
+        Float attenuation;
+        Float avgDelay;
+        Float bass;
+        Float bias;
+        Float blend;
+        Boolean bright;
+        Float brite;
+        // bypass: at end of list
         // bypassType: at end of list
         String cabsimType;
-        float chase;
-        float cut;
-        float decay;
-        float depth;
-        float diffuse;
-        float dist;
-        float dlyTime;
-        float duty;
-        float dwell;
-        float feedback;
-        float gain;
-        float gain2;
+        Float chase;
+        Float cut;
+        Float decay;
+        Float depth;
+        Float diffuse;
+        Float dist;
+        Float dlyTime;
+        Float duty;
+        Float dwell;
+        Float feedback;
+        Float gain;
+        Float gain2;
         String gateDetectorPosition;
         String gatePreset;
-        float hiFrq;
-        float high;
-        float highmid;
-        float hysteresis;
-        float level;
-        float loFrq;
-        float low;
-        float lowmid;
-        float lrPhase;
-        float master;
-        float mid;
+        Float hiFrq;
+        Float high;
+        Float highmid;
+        Float hysteresis;
+        Float level;
+        Float loFrq;
+        Float low;
+        Float lowmid;
+        Float lrPhase;
+        Float master;
+        Float mid;
         String mode;
         String noteDivision;
-        int octdown;
-        int octup;
-        float outputLevel;
-        float phase;
-        float presence;
-        float q;
-        float rate;
-        float rateHz;
-        float reson;
-        float rotor;
+        Integer octdown;
+        Integer octup;
+        Float outputLevel;
+        Float phase;
+        Float presence;
+        Float q;
+        Float rate;
+        Float rateHz;
+        Float reson;
+        Float rotor;
         String sag;
-        float sensitivity;
+        Float sensitivity;
         // shape: at end of list
-        float stereoSpread;
-        float tapTimeBPM;
-        float thresh;
-        float threshold;
-        float time;
+        Float stereoSpread;
+        Float tapTimeBPM;
+        Float thresh;
+        Float threshold;
+        Float time;
         // tone: at end of list
-        float treb;
-        float treble;
+        Float treb;
+        Float treble;
         String type;
-        float volume;
-        float wetLvl;
-        float wowLevel;
+        Float volume;
+        Float wetLvl;
+        Float wowLevel;
 
         // The remaining attributes have been identified
         // as taking on inconsistent values and/or types when a preset
@@ -154,6 +154,10 @@ public class PresetCanonicalSerializer {
         // The @Since annotation is used on these so that
         // they can be excluded from the JSON used to calculate
         // a hash.
+
+        // bypass switches between False and absent
+        @Since(99.99)
+        Boolean bypass;
 
         // bypassType switches between 'Post', 'Pre' and absent
         @Since(99.99)
