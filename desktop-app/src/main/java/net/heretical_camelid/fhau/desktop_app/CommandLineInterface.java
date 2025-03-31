@@ -9,14 +9,18 @@ import java.io.InputStreamReader;
 public class CommandLineInterface implements ILoggingAgent {
     static void doInteractive(DesktopUsbAmpProvider provider) {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        while(true) {
+        boolean continueAcceptingCommands=true;
+        while(continueAcceptingCommands) {
             try {
                 System.out.println("Command? ");
                 String line=br.readLine();
                 String[] lineWords = line.split(" ");
-                if(lineWords[0]=="preset") {
-                    int slotIndex = Integer.parseInt(lineWords[2]);
-                    provider.switchPreset(slotIndex);
+                if(lineWords[0].equals("exit")) {
+                    System.out.println("Exit requested");
+                    continueAcceptingCommands=false;
+                } else if(lineWords[0]=="preset") {
+                        int slotIndex = Integer.parseInt(lineWords[2]);
+                        provider.switchPreset(slotIndex);
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -48,9 +52,11 @@ public class CommandLineInterface implements ILoggingAgent {
             System.out.println("Output will be generated to " + outputPath);
         }
         DesktopUsbAmpProvider provider = new DesktopUsbAmpProvider(outputPath);
+        provider.startProvider();
         if(args.length>1 && args[1].equals("--interactive")) {
             CommandLineInterface cli = new CommandLineInterface();
             cli.doInteractive(provider);
         }
+        provider.stopProvider();
     }
 }

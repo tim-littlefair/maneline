@@ -2,6 +2,7 @@ package net.heretical_camelid.fhau.lib;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 // Useful reference:
 // https://github.com/brentmaxwell/LtAmp/blob/main/Schema/protobuf/FenderMessageLT.proto
@@ -9,27 +10,44 @@ import java.util.Arrays;
 public class LTSeriesProtocol extends AbstractMessageProtocolBase {
     String m_firmwareVersion;
     PresetRegistryBase m_presetRegistry;
+    // DeviceTransportInterface m_deviceTransport;
+    final Thread m_heartbeatThread;
+    Boolean m_heartbeatStopped = false;
 
     public LTSeriesProtocol(PresetRegistryBase presetRegistry) {
         m_firmwareVersion = null;
         m_presetRegistry = presetRegistry;
+        Boolean m_heartbeatStopped = false;
+        m_heartbeatThread = new HeartbeatThread();
     }
 
     public int doStartup(String[] firmwareVersionEtc) {
         assert m_deviceTransport!=null;
 
         String[][] startupCommands = new String[][]{
-            new String[]{"35:09:08:00:8a:07:04:08:00:10", "initialisation request"},
+            new String[]{"35:09:08:00:8a:07:04:08:00:10:00", "initialisation request"},
             new String[]{"35:07:08:00:b2:06:02:08:01:00:10", "firmware version request"},
         };
         for (String[] sc : startupCommands) {
-            int scStatus = sendCommand(sc[0], sc[1]);
+            int scStatus = sendCommand(sc[0], sc[1],true);
             if (scStatus != STATUS_OK) {
                 return scStatus;
             }
         }
         firmwareVersionEtc[0] = m_firmwareVersion;
+        m_heartbeatThread.start();
         return STATUS_OK;
+    }
+
+    @Override
+    public void doShutdown() {
+        log("Shutting down");
+        synchronized(m_heartbeatThread) {
+            m_heartbeatStopped = true;
+            log("Heartbeat stop flag set");
+        }
+        m_heartbeatThread.interrupt();
+        log("Heartbeat thread interrupted");
     }
 
 
@@ -58,15 +76,15 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             "request to activate preset at slot " + slotIndex
         };
 
-        int scStatus = sendCommand(switchPresetCommand[0],switchPresetCommand[1]);
+        int scStatus = sendCommand(switchPresetCommand[0],switchPresetCommand[1],true);
         return scStatus;
     }
 
-    private int sendCommand(String commandBytesHex, String commandDescription) {
+    private int sendCommand(String commandBytesHex, String commandDescription, boolean responseExpected) {
         byte[] commandBytes = new byte[64];
         colonSeparatedHexToByteArray(commandBytesHex, commandBytes);
-        // log( "Sending " + commandDescription);
-        return sendCommandBytes(commandBytes);
+        log( "Sending " + commandDescription);
+        return sendCommandBytes(commandBytes,responseExpected);
     }
 
     private int sendSubstitutedCommand(
@@ -78,15 +96,18 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         for(int offsetIndex=0; offsetIndex<substitutionOffsets.length; ++offsetIndex) {
             commandBytes[substitutionOffsets[offsetIndex]]=substitutionBytes[offsetIndex];
         }
-        return sendCommandBytes(commandBytes);
+        return sendCommandBytes(commandBytes,true);
     }
 
-    private int sendCommandBytes(byte[] commandBytes) {
+    synchronized private int sendCommandBytes(byte[] commandBytes, boolean responseExpected) {
         printAsHex2(commandBytes, "<");
         int bytesWritten = m_deviceTransport.write(commandBytes);
         if (bytesWritten < 0) {
             log(m_deviceTransport.getLastErrorMessage());
             return STATUS_WRITE_FAIL;
+        }
+        if(responseExpected==false) {
+            return STATUS_OK;
         }
         int bytesRead = readAndAssembleResponsePackets();
         if (bytesRead < 0) {
@@ -231,6 +252,30 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         String commandHexBytes = "35:07:08:00:ca:06:02:08:%1".replace("%1", presetIndexHex);
         String commandDescription = "request for JSON for preset " + i;
 
-        return sendCommand(commandHexBytes, commandDescription);
+        return sendCommand(commandHexBytes, commandDescription,true);
+    }
+
+    class HeartbeatThread extends Thread {
+        @Override
+        public void run() {
+            while (true) {
+                synchronized (m_heartbeatThread) {
+                    if (m_heartbeatStopped) {
+                        break;
+                    }
+                }
+                String[] heartbeatCommand = new String[] {
+                    "35:07:08:00:c9:01:02:08:01",
+                    "heartbeat"
+                };
+                sendCommand(heartbeatCommand[0],heartbeatCommand[1],false);
+                try {
+                    Thread.sleep(1000);
+                }
+                catch (InterruptedException e) {
+                    // expect to exit
+                }
+            }
+        }
     }
 }

@@ -18,16 +18,16 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
     String m_firmwareVersion;
     PresetRegistryBase m_presetRegistry;
     PresetSuiteRegistry m_presetSuiteRegistry;
+    HidServices m_hidServices;
 
     public DesktopUsbAmpProvider(String outputPath) {
         s_loggingAgent = new DefaultLoggingAgent(2);
         m_presetRegistry = new FenderJsonPresetRegistry(outputPath);
         m_presetSuiteRegistry = new PresetSuiteRegistry((FenderJsonPresetRegistry) m_presetRegistry);
         m_protocol = new LTSeriesProtocol(m_presetRegistry);
-        startProvider();
     }
 
-    private void startProvider() {
+    void startProvider() {
         
         // Demonstrate low level traffic logging
         HidApi.logTraffic = false;
@@ -50,17 +50,17 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
         ));
 
         // Get HID services using custom specification
-        HidServices hidServices = HidManager.getHidServices(hidServicesSpecification);
+        m_hidServices = HidManager.getHidServices(hidServicesSpecification);
         // Register for service events
-        hidServices.addHidServicesListener(this);
+        m_hidServices.addHidServicesListener(this);
 
 
         // Manually start HID services
-        hidServices.start();
+        m_hidServices.start();
 
         // Enumerate devices looking for FMIC vendor id and LT series usage page
         HidDevice fmicDevice = null;
-        for (HidDevice hidDevice : hidServices.getAttachedHidDevices()) {
+        for (HidDevice hidDevice : m_hidServices.getAttachedHidDevices()) {
             if (hidDevice.getVendorId() != VID_FMIC) {
                 continue;
             }
@@ -139,10 +139,13 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
             }
         }
 
-        hidServices.stop();
-        hidServices.shutdown();
     }
 
+    public void stopProvider() {
+        m_protocol.doShutdown();
+        m_hidServices.stop();
+        m_hidServices.shutdown();
+    }
 
     /**
      * @param hidDevice The device to use
@@ -161,6 +164,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
             System.out.println("Last error: " + hidDevice.getLastErrorMessage());
             return false;
         } else {
+            m_protocol.switchPreset(12);
             System.out.println();
             m_presetRegistry.dump();
             m_presetSuiteRegistry.buildPresetSuites(9, 7, 3);
