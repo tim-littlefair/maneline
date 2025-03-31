@@ -110,6 +110,11 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
         return m_presetRegistry;
     }
 
+    @Override
+    public void switchPreset(int slotIndex) {
+        m_protocol.switchPreset(slotIndex);
+    }
+
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     public ProviderState_e attemptConnection() {
         UsbDevice usbDevice = null;

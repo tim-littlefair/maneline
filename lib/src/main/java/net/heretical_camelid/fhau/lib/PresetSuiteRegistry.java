@@ -198,6 +198,17 @@ public class PresetSuiteRegistry implements PresetRegistryBase.Visitor {
         return String.format("%03d\n%s\n%s",slotIndex,line1,line2);
     }
 
+    public int firstSuiteForSlotIndex(int slotIndex) {
+        for(int i=0; i<m_presetSuites.size(); ++i) {
+            for(int j: m_presetSuites.get(i).m_presetRecords.keySet()) {
+                if(j==slotIndex) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+
     public void dump() {
         System.out.println("Preset Suites");
         for(PresetSuiteEntry pse: m_presetSuites) {

@@ -105,5 +105,7 @@ public abstract class AbstractMessageProtocolBase {
         }
         return name;
     }
+
+    public abstract int switchPreset(int slotIndex);
 }
 

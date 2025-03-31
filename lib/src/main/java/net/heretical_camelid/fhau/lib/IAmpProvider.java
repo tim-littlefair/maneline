@@ -1,6 +1,8 @@
 package net.heretical_camelid.fhau.lib;
 
 public interface IAmpProvider {
+    void switchPreset(int slotIndex);
+
     public static enum ProviderState_e {
         PROVIDER_INITIAL,
         PROVIDER_NO_APPLICABLE_DEVICE,

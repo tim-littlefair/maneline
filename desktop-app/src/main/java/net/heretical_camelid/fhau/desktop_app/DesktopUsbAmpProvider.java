@@ -203,6 +203,11 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
     }
 
     @Override
+    public void switchPreset(int slotIndex) {
+        m_protocol.switchPreset(slotIndex);
+    }
+
+    @Override
     public ProviderState_e attemptConnection() {
         // The interface requires this as the Android/USB
         // provider needs to do the connection in stages
@@ -227,5 +232,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
     public String getFirmwareVersion() {
         return m_firmwareVersion;
     }
+
+
 }
 

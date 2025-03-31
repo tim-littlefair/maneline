@@ -99,6 +99,11 @@ public class SimulatorAmpProvider implements IAmpProvider {
     }
 
     @Override
+    public void switchPreset(int slotIndex) {
+
+    }
+
+    @Override
     public ProviderState_e attemptConnection() {
         return ProviderState_e.PROVIDER_DEVICE_CONNECTION_SUCCEEDED;
     }

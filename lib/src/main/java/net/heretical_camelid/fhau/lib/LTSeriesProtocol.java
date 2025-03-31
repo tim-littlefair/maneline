@@ -3,6 +3,9 @@ package net.heretical_camelid.fhau.lib;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
+// Useful reference:
+// https://github.com/brentmaxwell/LtAmp/blob/main/Schema/protobuf/FenderMessageLT.proto
+
 public class LTSeriesProtocol extends AbstractMessageProtocolBase {
     String m_firmwareVersion;
     PresetRegistryBase m_presetRegistry;
@@ -41,6 +44,22 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             }
         }
         return STATUS_OK;
+    }
+
+    @Override
+    public int switchPreset(int slotIndex) {
+        assert m_deviceTransport!=null;
+        assert slotIndex>=1;
+        assert slotIndex<=60;
+
+        String slotIndexHex = String.format("%02x",slotIndex);
+        String[] switchPresetCommand = new String[]{
+            "35:07:08:00:8a:02:02:08:" + slotIndexHex,
+            "request to activate preset at slot " + slotIndex
+        };
+
+        int scStatus = sendCommand(switchPresetCommand[0],switchPresetCommand[1]);
+        return scStatus;
     }
 
     private int sendCommand(String commandBytesHex, String commandDescription) {
