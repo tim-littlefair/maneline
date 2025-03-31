@@ -56,15 +56,62 @@ public class PresetSuiteRegistry implements PresetRegistryBase.Visitor {
         m_registry.acceptVisitor(this);
         ArrayList<PresetSuiteEntry> retval = new ArrayList<>();
         ArrayList<String> ampNames = new ArrayList<>(m_ampPresets.keySet());
-        ampNames.sort(null);
-        // First pass - amps which are used often enough for their own suite
-        Iterator<String> ampNameIter = ampNames.iterator();
-        while(ampNameIter.hasNext()) {
-            String ampName = ampNameIter.next();
-            HashMap<Integer, FenderJsonPresetRegistry.Record> presetsForThisAmp = m_ampPresets.get(ampName);
-            if(presetsForThisAmp.size()>=targetPresetsPerSuite) {
-                HashMap<Integer,FenderJsonPresetRegistry.Record> suitePresetMap = new HashMap<>();
-                retval.add(new PresetSuiteEntry("Amplifier " + ampName, presetsForThisAmp));
+        while(!ampNames.isEmpty()) {
+            ampNames.sort(null);
+            ArrayList<String> processedAmpNames = new ArrayList<>();
+
+            Iterator<String> ampNameIter = ampNames.iterator();
+            while (ampNameIter.hasNext()) {
+                String firstAmpName = ampNameIter.next();
+                HashMap<Integer, FenderJsonPresetRegistry.Record> presetsForThisSuite = m_ampPresets.get(firstAmpName);
+                if (presetsForThisSuite.size() >= targetPresetsPerSuite) {
+                    retval.add(new PresetSuiteEntry("Amplifier " + firstAmpName, presetsForThisSuite));
+                    processedAmpNames.add(firstAmpName);
+                } else {
+                    ArrayList<String> suiteAmpNames = new ArrayList<>();
+                    suiteAmpNames.add(firstAmpName);
+                    while(ampNameIter.hasNext()) {
+                        int maxAdditionalPresets = maxPresetsPerSuite - presetsForThisSuite.size();
+                        String nextAmpName = ampNameIter.next();
+                        HashMap<Integer, FenderJsonPresetRegistry.Record> presetsForNextAmp = m_ampPresets.get(nextAmpName);
+                        if(presetsForNextAmp.size()>maxAdditionalPresets) {
+                            System.out.println("Overflow: " + nextAmpName);
+                            continue;
+                        } else {
+                            for(int slotIndex: presetsForNextAmp.keySet()) {
+                                presetsForThisSuite.put(
+                                    slotIndex, presetsForNextAmp.get(slotIndex)
+                                );
+                            }
+                            suiteAmpNames.add(nextAmpName);
+                            System.out.println("Building: " + String.join(",",suiteAmpNames));
+                            if (presetsForThisSuite.size()>=targetPresetsPerSuite) {
+                                retval.add(new PresetSuiteEntry(
+                                    "Amplifiers " + String.join(",",suiteAmpNames),
+                                    presetsForThisSuite
+                                ));
+                                processedAmpNames.addAll(suiteAmpNames);
+                                break;
+                            } else if(suiteAmpNames.size()==maxAmpsPerSuite) {
+                                suiteAmpNames.clear();
+                                presetsForThisSuite.clear();
+                                break;
+                            }
+                        }
+                    }
+                    if(processedAmpNames.isEmpty()) {
+                        m_presetSuites = retval;
+                        return retval;
+                    } else {
+                        System.out.println(
+                            "Processed " + String.join(",",processedAmpNames)
+                        );
+                        ampNames.removeAll(processedAmpNames);
+                        processedAmpNames.clear();
+                        // Iterator invalidated - start at top again
+                        ampNameIter = ampNames.iterator();
+                    }
+                }
             }
         }
 /*
