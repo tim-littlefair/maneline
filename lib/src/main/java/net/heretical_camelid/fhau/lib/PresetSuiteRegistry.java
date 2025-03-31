@@ -12,7 +12,6 @@ public class PresetSuiteRegistry implements PresetRegistryBase.Visitor {
     public PresetSuiteRegistry(FenderJsonPresetRegistry registry) {
         m_registry = registry;
         m_ampPresets = new HashMap<>();
-        m_registry.acceptVisitor(this);
     }
 
     // The user may want to select a range of presets for export
@@ -25,7 +24,9 @@ public class PresetSuiteRegistry implements PresetRegistryBase.Visitor {
     }
 
     @Override
-    public void visitBeforeRecords(PresetRegistryBase registry) { }
+    public void visitBeforeRecords(PresetRegistryBase registry) {
+        m_ampPresets.clear();
+    }
 
     @Override
     public void visitRecord(int slotIndex, Object record) {
@@ -34,13 +35,13 @@ public class PresetSuiteRegistry implements PresetRegistryBase.Visitor {
         }
         FenderJsonPresetRegistry.Record fjpr = (FenderJsonPresetRegistry.Record) record;
         assert fjpr != null;
-        int firstSlotIndex = m_registry.firstSlotIndex(fjpr);
         HashMap<Integer,FenderJsonPresetRegistry.Record> presetsForThisAmp = m_ampPresets.get(fjpr.ampName());
         if(presetsForThisAmp==null) {
             presetsForThisAmp = new HashMap<>();
+            presetsForThisAmp.put(slotIndex,fjpr);
             m_ampPresets.put(fjpr.ampName(), presetsForThisAmp);
         } else {
-            presetsForThisAmp.put(firstSlotIndex,fjpr);
+            presetsForThisAmp.put(slotIndex,fjpr);
         }
     }
 
@@ -52,8 +53,10 @@ public class PresetSuiteRegistry implements PresetRegistryBase.Visitor {
         int targetPresetsPerSuite,
         int maxAmpsPerSuite
     ) {
+        m_registry.acceptVisitor(this);
         ArrayList<PresetSuiteEntry> retval = new ArrayList<>();
         ArrayList<String> ampNames = new ArrayList<>(m_ampPresets.keySet());
+        ampNames.sort(null);
         // First pass - amps which are used often enough for their own suite
         Iterator<String> ampNameIter = ampNames.iterator();
         while(ampNameIter.hasNext()) {
@@ -63,7 +66,6 @@ public class PresetSuiteRegistry implements PresetRegistryBase.Visitor {
                 HashMap<Integer,FenderJsonPresetRegistry.Record> suitePresetMap = new HashMap<>();
                 retval.add(new PresetSuiteEntry("Amplifier " + ampName, presetsForThisAmp));
             }
-            ampNameIter.remove();
         }
 /*
         // Second pass - group amps by name (up to maxAmpsPerSuite)
@@ -119,7 +121,6 @@ public class PresetSuiteRegistry implements PresetRegistryBase.Visitor {
         // TBD
 */
         m_presetSuites = retval;
-
         return retval;
     }
 
@@ -161,7 +162,17 @@ public class PresetSuiteRegistry implements PresetRegistryBase.Visitor {
         return String.format("%03d\n%s\n%s",slotIndex,line1,line2);
     }
 
-    static interface Visitor {
-
+    public void dump() {
+        System.out.println("Preset Suites");
+        for(PresetSuiteEntry pse: m_presetSuites) {
+            System.out.println(pse.m_suiteName);
+            ArrayList<Integer> presetSlots = new ArrayList<>(pse.m_presetRecords.keySet());
+            presetSlots.sort(null);
+            for(int i: presetSlots) {
+                System.out.println(String.format(
+                    "    %03d %s", i, pse.m_presetRecords.get(i).displayName()
+                ));
+            }
+        }
     }
 }

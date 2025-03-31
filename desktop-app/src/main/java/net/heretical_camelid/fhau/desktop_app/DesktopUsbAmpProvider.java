@@ -14,13 +14,15 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
     final private static int VID_FMIC = 0x1ed8;
 
     static ILoggingAgent s_loggingAgent;
-    PresetRegistryBase m_presetRegistry;
-    private AbstractMessageProtocolBase m_protocol;
+    AbstractMessageProtocolBase m_protocol;
     String m_firmwareVersion;
+    PresetRegistryBase m_presetRegistry;
+    PresetSuiteRegistry m_presetSuiteRegistry;
 
     public DesktopUsbAmpProvider(String outputPath) {
         s_loggingAgent = new DefaultLoggingAgent(2);
         m_presetRegistry = new FenderJsonPresetRegistry(outputPath);
+        m_presetSuiteRegistry = new PresetSuiteRegistry((FenderJsonPresetRegistry) m_presetRegistry);
         m_protocol = new LTSeriesProtocol(m_presetRegistry);
         startProvider();
     }
@@ -161,6 +163,9 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
         } else {
             System.out.println();
             m_presetRegistry.dump();
+            m_presetSuiteRegistry.buildPresetSuites(9, 3, 3);
+            System.out.println();
+            m_presetSuiteRegistry.dump();
         }
         return true;
     }
