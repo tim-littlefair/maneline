@@ -163,7 +163,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
         } else {
             System.out.println();
             m_presetRegistry.dump();
-            m_presetSuiteRegistry.buildPresetSuites(9, 5, 3);
+            m_presetSuiteRegistry.buildPresetSuites(9, 7, 3);
             System.out.println();
             m_presetSuiteRegistry.dump();
         }

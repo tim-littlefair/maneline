@@ -100,8 +100,9 @@ public class PresetSuiteRegistry implements PresetRegistryBase.Visitor {
                         }
                     }
                     if(processedAmpNames.isEmpty()) {
-                        m_presetSuites = retval;
-                        return retval;
+                        // Maybe we can squeeze out a few more suites
+                        // if we accept smaller suites
+                        --targetPresetsPerSuite;
                     } else {
                         System.out.println(
                             "Processed " + String.join(",",processedAmpNames)
