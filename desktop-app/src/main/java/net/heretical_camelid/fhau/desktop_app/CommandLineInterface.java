@@ -18,9 +18,11 @@ public class CommandLineInterface implements ILoggingAgent {
                 if(lineWords[0].equals("exit")) {
                     System.out.println("Exit requested");
                     continueAcceptingCommands=false;
-                } else if(lineWords[0]=="preset") {
-                        int slotIndex = Integer.parseInt(lineWords[2]);
+                } else if(lineWords[0].equals("preset")) {
+                        int slotIndex = Integer.parseInt(lineWords[1]);
                         provider.switchPreset(slotIndex);
+                } else {
+                    System.out.println("Failed to parse line: "+line);
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);

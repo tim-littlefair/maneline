@@ -83,7 +83,9 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
     private int sendCommand(String commandBytesHex, String commandDescription, boolean responseExpected) {
         byte[] commandBytes = new byte[64];
         colonSeparatedHexToByteArray(commandBytesHex, commandBytes);
-        log( "Sending " + commandDescription);
+        if(commandDescription!=null) {
+            log("Sending " + commandDescription);
+        }
         return sendCommandBytes(commandBytes,responseExpected);
     }
 
@@ -266,7 +268,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
                 }
                 String[] heartbeatCommand = new String[] {
                     "35:07:08:00:c9:01:02:08:01",
-                    "heartbeat"
+                    null
                 };
                 sendCommand(heartbeatCommand[0],heartbeatCommand[1],false);
                 try {
