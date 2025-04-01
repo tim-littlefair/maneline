@@ -199,6 +199,7 @@ public class MainActivity
             presetButton.setOnClickListener((new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    appendToLog("click for preset " + slotId);
                     m_ampManager.switchPreset(slotId);
                 }
             }));

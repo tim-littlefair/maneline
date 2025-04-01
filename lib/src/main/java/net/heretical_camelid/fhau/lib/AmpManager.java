@@ -20,15 +20,10 @@ public class AmpManager {
     }
 
     public void switchPreset(int whichSlot) {
-        /*
-        String commandHexString = String.format(
-            "35:07:08:00:8a:02:02:08:%02x",
-            whichSlot
+        s_loggingAgent.appendToLog(0,
+            String.format("Preset %d requested",whichSlot)
         );
-        appendToLog(String.format("Requesting switch to preset %02d",whichSlot));
-        m_ampManager.sendCommand(commandHexString, m_sbLog);
-        appendToLog("Preset switch command sent");
-         */
+        m_provider.switchPreset(whichSlot);
     }
 
     private void refresh() {
