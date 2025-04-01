@@ -5,6 +5,8 @@ import net.heretical_camelid.fhau.lib.ILoggingAgent;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CommandLineInterface implements ILoggingAgent {
     static void doInteractive(DesktopUsbAmpProvider provider) {
@@ -49,14 +51,20 @@ public class CommandLineInterface implements ILoggingAgent {
 
     static public void main(String[] args)  {
         String outputPath = null;
-        if(args.length>0) {
-            outputPath = args[0];
+        ArrayList<String> argsAL = new ArrayList<String>(List.of(args));
+        boolean doInteractive = false;
+        if(argsAL.contains("--interactive")) {
+            doInteractive = true;
+            argsAL.remove("--interactive");
+        }
+        if(argsAL.size()>0) {
+            outputPath = argsAL.get(0);
             System.out.println("Output will be generated to " + outputPath);
         }
         DesktopUsbAmpProvider provider = new DesktopUsbAmpProvider(outputPath);
         provider.startProvider();
-        if(args.length>1 && args[1].equals("--interactive")) {
-            CommandLineInterface cli = new CommandLineInterface();
+        CommandLineInterface cli = new CommandLineInterface();
+        if(doInteractive) {
             cli.doInteractive(provider);
         }
         provider.stopProvider();

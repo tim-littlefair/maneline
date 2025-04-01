@@ -20,7 +20,7 @@ echo $CLASSPATH
 
 if [ ! -z "$*" ]
 then
-  sudo java -cp $CLASSPATH -ea  net.heretical_camelid.fhau.desktop_app.CommandLineInterface $*
+  java -cp $CLASSPATH -ea  net.heretical_camelid.fhau.desktop_app.CommandLineInterface $*
 else
   tsdir=_work/cli-$(date +%s)
   mkdir $tsdir
