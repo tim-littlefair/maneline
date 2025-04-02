@@ -222,7 +222,11 @@ public class UsbHidDevice {
             // use the control endpoint
 
         } else {
-            mConnection.bulkTransfer(mOutUsbEndpoint, data, size, 1000);
+            int bytesTransferred = mConnection.bulkTransfer(mOutUsbEndpoint, data, size, 1000);
+            System.out.println(String.format(
+                "UsbHidDevice.write data.length=%d offset=%d size=%d retval=%d",
+                data.length, offset, size, bytesTransferred
+            ));
         }
     }
 
