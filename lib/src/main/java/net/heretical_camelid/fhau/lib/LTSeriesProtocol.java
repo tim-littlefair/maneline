@@ -61,22 +61,12 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             }
         }
         try {
-            switchPreset(12);
-            Thread.sleep(500);
-            switchPreset(13);
             Thread.sleep(500);
             if(!m_heartbeatStopped) {
                 log("Starting heartbeat thread");
                 m_heartbeatThread.start();
             } else {
                 log("Heartbeat thread will not be started");
-            }
-            int sleepLength = 500;
-            for(int i=0; i<10; ++i) {
-                switchPreset(10+i);
-                log("Sleeping for " + sleepLength);
-                Thread.sleep(sleepLength);
-                sleepLength = (sleepLength * 12)/10;
             }
         }
         catch (InterruptedException e) {
