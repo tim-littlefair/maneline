@@ -68,6 +68,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             } else {
                 log("Heartbeat thread will not be started");
             }
+            int sleepLength = 500;
         }
         catch (InterruptedException e) {
             log(e.toString());

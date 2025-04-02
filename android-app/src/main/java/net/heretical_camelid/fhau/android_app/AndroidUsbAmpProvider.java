@@ -248,3 +248,4 @@ public class AndroidUsbAmpProvider implements OnUsbHidDeviceListener, IAmpProvid
         m_state = ProviderState_e.PROVIDER_INITIAL;
     }
 }
+
