@@ -19,6 +19,8 @@ import net.heretical_camelid.fhau.lib.*;
 
 import java.util.*;
 
+import static net.heretical_camelid.fhau.lib.IAmpProvider.ProviderState_e.PROVIDER_DEVICE_CONNECTION_SUCCEEDED;
+
 class MainActivityError extends UnsupportedOperationException {
     public MainActivityError(String message) {
         super(message);
@@ -169,7 +171,11 @@ public class MainActivity
     }
 
     void connect() {
-        m_ampManager.attemptConnection();
+        IAmpProvider.ProviderState_e cxnStatus = m_provider.attemptConnection();
+        if(cxnStatus == PROVIDER_DEVICE_CONNECTION_SUCCEEDED) {
+            m_provider.getFirmwareVersionAndPresets();
+            populatePresetSuiteDropdown();
+        }
     }
 
     void setPresetButton(int buttonIndex, int slotId, String presetName) {

@@ -21,10 +21,12 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
     HidServices m_hidServices;
 
     public DesktopUsbAmpProvider(String outputPath) {
-        s_loggingAgent = new DefaultLoggingAgent(2);
+        if(s_loggingAgent==null) {
+            s_loggingAgent = new DefaultLoggingAgent(2);
+        }
         m_presetRegistry = new FenderJsonPresetRegistry(outputPath);
         m_presetSuiteRegistry = new PresetSuiteRegistry((FenderJsonPresetRegistry) m_presetRegistry);
-        m_protocol = new LTSeriesProtocol(m_presetRegistry);
+        m_protocol = new LTSeriesProtocol(m_presetRegistry,true);
     }
 
     void startProvider() {

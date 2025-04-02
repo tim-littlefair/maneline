@@ -10,6 +10,7 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
 import android.os.Build;
+import com.benlypan.usbhid.OnUsbHidDeviceListener;
 import com.benlypan.usbhid.UsbHidDevice;
 
 import net.heretical_camelid.fhau.lib.*;
@@ -19,7 +20,7 @@ import java.util.HashMap;
 import static android.content.Context.RECEIVER_NOT_EXPORTED;
 import static net.heretical_camelid.fhau.android_app.MainActivity.appendToLog;
 
-public class AndroidUsbAmpProvider implements IAmpProvider {
+public class AndroidUsbAmpProvider implements OnUsbHidDeviceListener, IAmpProvider {
     final static String ACTION_USB_PERMISSION = "net.heretical_camelid.fhau.android_app.USB_PERMISSION";
 
     ProviderState_e m_state;
@@ -34,7 +35,7 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
     boolean m_connectionSucceeded=false;
 
 
-    UsbHidDevice m_device;
+    UsbHidDevice m_usbHidDevice;
     UsbDevice m_usbDevice;
 
     AndroidUsbAmpProvider(
@@ -44,12 +45,14 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
         m_mainActivity = mainActivity;
         m_usbManager = (UsbManager) m_mainActivity.getSystemService(Context.USB_SERVICE);
         m_presetRegistry = new FenderJsonPresetRegistry(null);
-        m_protocol = new LTSeriesProtocol(m_presetRegistry);
+        m_protocol = new LTSeriesProtocol(m_presetRegistry,true);
 
         // m_usbReceiver is used as an indicator for whether the permission request
         // has been done, so we do not instantiate it until we have a device on
         // which permission can be requested
         m_usbReceiver = null;
+        m_usbDevice = null;
+        m_usbHidDevice = null;
     }
 
     public boolean getFirmwareVersionAndPresets() {
@@ -61,7 +64,8 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
         appendToLog(String.format(
             "Amp contains %d unique presets", m_presetRegistry.uniquePresetCount()
         ));
-        return startupStatus== AbstractMessageProtocolBase.STATUS_OK;
+
+        return startupStatus==AbstractMessageProtocolBase.STATUS_OK;
     }
 
     @Override
@@ -117,116 +121,83 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     public ProviderState_e attemptConnection() {
-        UsbDevice usbDevice = null;
-        HashMap<String, UsbDevice> usbDeviceMap = m_usbManager.getDeviceList();
-        if (usbDeviceMap == null) {
-            appendToLog("device map not received");
-            m_state = ProviderState_e.PROVIDER_NO_APPLICABLE_DEVICE;
-            return m_state;
-        } else if (usbDeviceMap.size() == 0) {
-            appendToLog("device map empty");
-            m_state = ProviderState_e.PROVIDER_NO_APPLICABLE_DEVICE;
-            return m_state;
-        } else {
-            for (String deviceName : usbDeviceMap.keySet()) {
-                usbDevice = usbDeviceMap.get(deviceName);
-                if (usbDevice.getVendorId() != 0x1ed8) {
-                    appendToLog(String.format(
-                        "non-FMIC device found with vid=%04x pid=%04x",
-                        usbDevice.getVendorId(), usbDevice.getProductId()
-                    ));
-                    usbDevice = null;
-                    continue;
-                } else {
-                    appendToLog(String.format(
-                        "FMIC device found with vid=%04x pid=%04x",
-                        usbDevice.getVendorId(), usbDevice.getProductId()
-                    ));
-                    appendToLog(
-                        "FMIC product name: " + usbDevice.getProductName()
-                    );
-                    if (!m_usbManager.hasPermission(usbDevice)) {
-                        registerForPermissionIntent();
-                        m_usbManager.requestPermission(usbDevice,m_permissionIntent);
-                        m_state = ProviderState_e.PROVIDER_CONNECTING_TO_DEVICE;
-                        return m_state;
-                    }
-
-                    try {
-                        // If we are still in the function at this point,
-                        // we must have permission, so we try to connect
-                        UsbDeviceConnection cxn = m_usbManager.openDevice(usbDevice);
-                        if(cxn!=null) {
-                            UsbHidDevice usbHidDevice = UsbHidDevice.factory(
-                                m_mainActivity,
-                                usbDevice.getVendorId(), usbDevice.getProductId()
-                            );
-                            assert usbHidDevice!=null;
-                            usbHidDevice.open(m_mainActivity,null);
-                            m_protocol.setDeviceTransport(new DeviceTransportUsbHid(usbHidDevice));
-                            getFirmwareVersionAndPresets();
-                            m_mainActivity.populatePresetSuiteDropdown();
-                            m_connectionSucceeded = true;
-                            m_state = ProviderState_e.PROVIDER_DEVICE_CONNECTION_SUCCEEDED;
-                            break;
-                        } else {
-                            m_state = ProviderState_e.PROVIDER_DEVICE_CONNECTION_FAILED;
-                            return m_state;
-                        }
-                    }
-                    catch(Exception e) {
-                        appendToLog("Exception caught - see logcat for details");
-                        System.err.println(e.toString());
-                        e.printStackTrace(System.err);
-                        m_state = ProviderState_e.PROVIDER_DEVICE_CONNECTION_FAILED;
-                        // For the moment we don't attempt to handle multiple FMIC devices
-                        // being connected and attempting to connect to second or later after
-                        // first fails.
-                        return m_state;
+        if(m_usbDevice==null)
+        {
+            UsbDevice usbDevice = null;
+            HashMap<String, UsbDevice> usbDeviceMap = m_usbManager.getDeviceList();
+            if (usbDeviceMap == null) {
+                appendToLog("device map not received");
+                m_state = ProviderState_e.PROVIDER_NO_APPLICABLE_DEVICE;
+                return m_state;
+            } else if (usbDeviceMap.size() == 0) {
+                appendToLog("device map empty");
+                m_state = ProviderState_e.PROVIDER_NO_APPLICABLE_DEVICE;
+                return m_state;
+            } else {
+                for (String deviceName : usbDeviceMap.keySet()) {
+                    usbDevice = usbDeviceMap.get(deviceName);
+                    if (usbDevice.getVendorId() != 0x1ed8) {
+                        appendToLog(String.format(
+                            "non-FMIC device found with vid=%04x pid=%04x",
+                            usbDevice.getVendorId(), usbDevice.getProductId()
+                        ));
+                        usbDevice = null;
+                        continue;
+                    } else {
+                        appendToLog(String.format(
+                            "FMIC device found with vid=%04x pid=%04x",
+                            usbDevice.getVendorId(), usbDevice.getProductId()
+                        ));
+                        appendToLog(
+                            "FMIC product name: " + usbDevice.getProductName()
+                        );
+                        m_usbDevice = usbDevice;
+                        break;
                     }
                 }
             }
+            assert m_usbDevice!=null;
+            if(m_usbHidDevice==null) {
+                if (!m_usbManager.hasPermission(m_usbDevice)) {
+                    registerForPermissionIntent();
+                    m_usbManager.requestPermission(m_usbDevice, m_permissionIntent);
+                    m_state = ProviderState_e.PROVIDER_CONNECTING_TO_DEVICE;
+                    return m_state;
+                }
 
-            assert usbDevice!=null;
-            m_device = UsbHidDevice.factory(
-                m_mainActivity, usbDevice.getVendorId(), usbDevice.getProductId()
-            );
-            if (m_device == null) {
-                appendToLog("No USB HID device found");
-                m_state = ProviderState_e.PROVIDER_DEVICE_CONNECTION_FAILED;
-                return m_state;
+                try {
+                    m_state = ProviderState_e.PROVIDER_CONNECTING_TO_DEVICE;
+
+                    // If we are still in the function at this point,
+                    // we must have permission, so we try to connect
+                    UsbDeviceConnection cxn = m_usbManager.openDevice(m_usbDevice);
+                    if (cxn != null) {
+                        UsbHidDevice m_usbHidDevice = UsbHidDevice.factory(
+                            m_mainActivity,
+                            m_usbDevice.getVendorId(), m_usbDevice.getProductId()
+                        );
+                        if (m_usbHidDevice == null) {
+                            m_usbHidDevice.open(m_mainActivity,this);
+                            appendToLog("No USB HID device found");
+                            m_state = ProviderState_e.PROVIDER_DEVICE_CONNECTION_FAILED;
+                            return m_state;
+                        }
+                        m_usbHidDevice.open(m_mainActivity, null);
+                        m_protocol.setDeviceTransport(new DeviceTransportUsbHid(m_usbHidDevice));
+                        m_connectionSucceeded = true;
+                        m_state = ProviderState_e.PROVIDER_DEVICE_CONNECTION_SUCCEEDED;
+                    } else {
+                        m_state = ProviderState_e.PROVIDER_DEVICE_CONNECTION_FAILED;
+                    }
+                } catch (Exception e) {
+                    appendToLog("Exception caught - see logcat for details");
+                    System.err.println(e.toString());
+                    e.printStackTrace(System.err);
+                    m_state = ProviderState_e.PROVIDER_DEVICE_CONNECTION_FAILED;
+                }
             }
-            m_usbDevice = m_device.getUsbDevice();
-            if (m_usbDevice == null) {
-                appendToLog("m_device.getUsbDevice() returned null");
-                m_state = ProviderState_e.PROVIDER_DEVICE_CONNECTION_FAILED;
-                return m_state;
-            }
-            if (m_usbManager.hasPermission(m_usbDevice)) {
-                appendToLog("USB permission already held");
-            } else if (m_permissionRequested == false) {
-                appendToLog("Requesting USB permission");
-                m_usbManager.requestPermission(m_usbDevice, m_permissionIntent);
-                m_permissionRequested = true;
-                m_state = ProviderState_e.PROVIDER_CONNECTING_TO_DEVICE;
-                return m_state;
-            } else {
-                appendToLog("Waiting for USB permission");
-                m_state = ProviderState_e.PROVIDER_CONNECTING_TO_DEVICE;
-                return m_state;
-            }
-            m_device.open(m_mainActivity, null);
-            UsbDeviceConnection deviceConnection = m_usbManager.openDevice(m_usbDevice);
-            if (deviceConnection == null) {
-                appendToLog(
-                    "m_usbManager.openDevice(m_usbDevice) returned null"
-                );
-                m_state = ProviderState_e.PROVIDER_DEVICE_CONNECTION_FAILED;
-                return m_state;
-            }
-            appendToLog("Got to end of attemptConnection in state " + m_state);
-            return m_state;
         }
+        return m_state;
     }
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
@@ -260,5 +231,20 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
 
     public void usbAccessPermissionDenied() {
         m_state = ProviderState_e.PROVIDER_DEVICE_CONNECTION_FAILED;
+    }
+
+    @Override
+    public void onUsbHidDeviceConnected(UsbHidDevice device) {
+        appendToLog("Device connected");
+    }
+
+    @Override
+    public void onUsbHidDeviceConnectFailed(UsbHidDevice device) {
+        appendToLog("Device connect failed");
+        m_usbHidDevice.close();
+        m_usbHidDevice = null;
+        m_usbDevice = null;
+        m_connectionSucceeded = false;
+        m_state = ProviderState_e.PROVIDER_INITIAL;
     }
 }

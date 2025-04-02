@@ -10,14 +10,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class LTSeriesProtocol extends AbstractMessageProtocolBase {
     String m_firmwareVersion;
     PresetRegistryBase m_presetRegistry;
-    // DeviceTransportInterface m_deviceTransport;
     final Thread m_heartbeatThread;
-    Boolean m_heartbeatStopped = false;
+    boolean m_heartbeatStopped = false;
 
-    public LTSeriesProtocol(PresetRegistryBase presetRegistry) {
+    public LTSeriesProtocol(PresetRegistryBase presetRegistry, boolean startHeartbeat) {
         m_firmwareVersion = null;
         m_presetRegistry = presetRegistry;
-        Boolean m_heartbeatStopped = false;
+        m_heartbeatStopped = !startHeartbeat;
         m_heartbeatThread = new HeartbeatThread();
     }
 
@@ -35,7 +34,6 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             }
         }
         firmwareVersionEtc[0] = m_firmwareVersion;
-        m_heartbeatThread.start();
         return STATUS_OK;
     }
 
@@ -43,6 +41,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
     public void doShutdown() {
         log("Shutting down");
         synchronized(m_heartbeatThread) {
+            log("Setting heartbeat stop flag");
             m_heartbeatStopped = true;
             log("Heartbeat stop flag set");
         }
@@ -60,6 +59,28 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             if (psJsonStatus != STATUS_OK) {
                 return psJsonStatus;
             }
+        }
+        try {
+            switchPreset(12);
+            Thread.sleep(500);
+            switchPreset(13);
+            Thread.sleep(500);
+            if(!m_heartbeatStopped) {
+                log("Starting heartbeat thread");
+                m_heartbeatThread.start();
+            } else {
+                log("Heartbeat thread will not be started");
+            }
+            int sleepLength = 500;
+            for(int i=0; i<10; ++i) {
+                switchPreset(10+i);
+                log("Sleeping for " + sleepLength);
+                Thread.sleep(sleepLength);
+                sleepLength = (sleepLength * 12)/10;
+            }
+        }
+        catch (InterruptedException e) {
+            log(e.toString());
         }
         return STATUS_OK;
     }
@@ -137,7 +158,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         // bytes.
         // This is a generic protobuf header.
         assert 0x08 == assembledResponseMessage[0];
-        assert 0x02 == assembledResponseMessage[1];
+        // assert 0x02 == assembledResponseMessage[1];
 
         // The next 1 or 2 bytes contain a varint
         // indicating the message tag and its protobuf
@@ -188,6 +209,11 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             // System.out.println(jsonDefinition);
             String presetExtendedName = AbstractMessageProtocolBase.displayName(jsonDefinition);
             m_presetRegistry.register(presetIndex, presetExtendedName, jsonDefinition.getBytes(StandardCharsets.UTF_8));
+        } else {
+            log(String.format(
+                "Response payload starts %02x:%02x:%02x",
+                assembledResponseMessage[2],assembledResponseMessage[3],assembledResponseMessage[4]
+            ));
         }
 
         return STATUS_OK;
@@ -204,7 +230,10 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
                 log("read failed, error=" + m_deviceTransport.getLastErrorMessage());
                 return STATUS_READ_FAIL;
             } else if (packetBytesRead != 64) {
-                log("read incomplete, error=" + m_deviceTransport.getLastErrorMessage());
+                log(String.format(
+                    "read incomplete, bytes=%d error=%s",
+                    packetBytesRead, m_deviceTransport.getLastErrorMessage()
+                ));
                 return STATUS_READ_FAIL;
             } /* else */
             {
@@ -272,7 +301,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
                 };
                 sendCommand(heartbeatCommand[0],heartbeatCommand[1],false);
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(700);
                 }
                 catch (InterruptedException e) {
                     // expect to exit
