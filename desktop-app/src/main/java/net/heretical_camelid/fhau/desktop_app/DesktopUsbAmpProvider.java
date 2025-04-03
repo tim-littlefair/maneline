@@ -11,6 +11,8 @@ import org.hid4java.jna.HidApi;
 
 import net.heretical_camelid.fhau.lib.*;
 
+import java.util.ArrayList;
+
 import static net.heretical_camelid.fhau.lib.AbstractMessageProtocolBase.printAsHex2;
 import static net.heretical_camelid.fhau.lib.AbstractMessageProtocolBase.enable_printAsHex2;
 
@@ -21,7 +23,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
     static ILoggingAgent s_loggingAgent;
     AbstractMessageProtocolBase m_protocol;
     String m_firmwareVersion;
-    PresetRegistryBase m_presetRegistry;
+    FenderJsonPresetRegistry m_presetRegistry;
     PresetSuiteRegistry m_presetSuiteRegistry;
     HidServices m_hidServices;
 
@@ -215,6 +217,14 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
     @Override
     public void switchPreset(int slotIndex) {
         m_protocol.switchPreset(slotIndex);
+    }
+
+    @Override
+    public ArrayList<PresetSuiteRegistry.PresetSuiteEntry> buildAmpBasedPresetSuites(int maxPresetsPerSuite, int targetPresetsPerSuite, int maxAmpsPerSuite) {
+        m_presetSuiteRegistry = new PresetSuiteRegistry(m_presetRegistry);
+        return m_presetSuiteRegistry.buildPresetSuites(
+            maxPresetsPerSuite, targetPresetsPerSuite, maxAmpsPerSuite
+        );
     }
 
     @Override

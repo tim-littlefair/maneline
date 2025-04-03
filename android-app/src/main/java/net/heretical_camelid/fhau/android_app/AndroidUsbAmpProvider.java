@@ -17,7 +17,9 @@ import net.heretical_camelid.fhau.lib.*;
 import net.heretical_camelid.fhau.lib.interfaces.IAmpProvider;
 import net.heretical_camelid.fhau.lib.registries.FenderJsonPresetRegistry;
 import net.heretical_camelid.fhau.lib.registries.PresetRegistryBase;
+import net.heretical_camelid.fhau.lib.registries.PresetSuiteRegistry;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import static android.content.Context.RECEIVER_NOT_EXPORTED;
@@ -26,20 +28,25 @@ import static net.heretical_camelid.fhau.android_app.MainActivity.appendToLog;
 public class AndroidUsbAmpProvider implements OnUsbHidDeviceListener, IAmpProvider {
     final static String ACTION_USB_PERMISSION = "net.heretical_camelid.fhau.android_app.USB_PERMISSION";
 
-    ProviderState_e m_state;
     MainActivity m_mainActivity;
-    UsbManager m_usbManager;
-    UsbBroadcastReceiver m_usbReceiver;
-    PendingIntent m_permissionIntent;
-    PresetRegistryBase m_presetRegistry;
-    AbstractMessageProtocolBase m_protocol;
+
     String m_firmwareVersion;
     boolean m_permissionRequested = false;
     boolean m_connectionSucceeded=false;
 
 
+    UsbManager m_usbManager;
+    UsbBroadcastReceiver m_usbReceiver;
+    PendingIntent m_permissionIntent;
     UsbHidDevice m_usbHidDevice;
     UsbDevice m_usbDevice;
+
+    AbstractMessageProtocolBase m_protocol;
+
+    FenderJsonPresetRegistry m_presetRegistry;
+    PresetSuiteRegistry m_presetSuiteRegistry;
+
+    ProviderState_e m_state;
 
     AndroidUsbAmpProvider(
         MainActivity mainActivity
@@ -120,6 +127,14 @@ public class AndroidUsbAmpProvider implements OnUsbHidDeviceListener, IAmpProvid
     @Override
     public void switchPreset(int slotIndex) {
         m_protocol.switchPreset(slotIndex);
+    }
+
+    @Override
+    public ArrayList<PresetSuiteRegistry.PresetSuiteEntry> buildAmpBasedPresetSuites(int maxPresetsPerSuite, int targetPresetsPerSuite, int maxAmpsPerSuite) {
+        m_presetSuiteRegistry = new PresetSuiteRegistry(m_presetRegistry);
+        return m_presetSuiteRegistry.buildPresetSuites(
+            maxPresetsPerSuite, targetPresetsPerSuite, maxAmpsPerSuite
+        );
     }
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
@@ -249,6 +264,12 @@ public class AndroidUsbAmpProvider implements OnUsbHidDeviceListener, IAmpProvid
         m_usbDevice = null;
         m_connectionSucceeded = false;
         m_state = ProviderState_e.PROVIDER_INITIAL;
+    }
+
+    public void switchSuite(int position) {
+        String suiteName = m_presetSuiteRegistry.nameAt(position);
+        HashMap<Integer,FenderJsonPresetRegistry.Record> suitePresetRecords = m_presetSuiteRegistry.recordsAt(position);
+        m_mainActivity.suiteSelected(suiteName, suitePresetRecords);
     }
 }
 

@@ -1,6 +1,5 @@
 package net.heretical_camelid.fhau.android_app;
 
-import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
@@ -15,8 +14,6 @@ import androidx.core.view.MenuProvider;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 
-import net.heretical_camelid.fhau.lib.*;
-import net.heretical_camelid.fhau.lib.delegates.SimulatorAmpProvider;
 import net.heretical_camelid.fhau.lib.interfaces.IAmpProvider;
 import net.heretical_camelid.fhau.lib.registries.FenderJsonPresetRegistry;
 import net.heretical_camelid.fhau.lib.registries.PresetSuiteRegistry;
@@ -39,11 +36,9 @@ class MainActivityError extends UnsupportedOperationException {
 
 public class MainActivity
         extends AppCompatActivity
-    implements PresetInfo.IVisitor, AdapterView.OnItemSelectedListener {
+        implements AdapterView.OnItemSelectedListener {
     static LoggingAgent s_loggingAgent;
-    private AndroidUsbAmpProvider m_provider;
-    AmpManager m_ampManager = null;
-    PresetSuiteRegistry m_presetSuiteRegistry = null;
+    AndroidUsbAmpProvider m_provider;
     Button m_btnConnectionStatus;
 
     public MainActivity() {
@@ -74,6 +69,7 @@ public class MainActivity
             if (itemId == R.id.action_disconnect) {
                 throw new MainActivityError("TODO: Implement disconnect");
             } else {
+                /*
                 if(itemId == R.id.action_provider_sim_nodev) {
                     m_ampManager.setProvider(new SimulatorAmpProvider(
                         s_loggingAgent,
@@ -95,6 +91,7 @@ public class MainActivity
                         item.getTitle()
                     ));
                 }
+                 */
                 item.setChecked(true);
             }
         }
@@ -120,9 +117,7 @@ public class MainActivity
             appendToLog("FHAU version " + BuildConfig.VERSION_NAME);
         }
 
-        m_ampManager = new AmpManager(s_loggingAgent);
         m_provider = new AndroidUsbAmpProvider(this);
-        m_ampManager.setProvider(m_provider);
 
         m_btnConnectionStatus = findViewById(R.id.btn_cxn_status);
         m_btnConnectionStatus.setOnClickListener(new View.OnClickListener() {
@@ -149,14 +144,18 @@ public class MainActivity
     }
 
     void populatePresetSuiteDropdown() {
-        AndroidUsbAmpProvider provider = (AndroidUsbAmpProvider)(m_ampManager.m_provider);
-        assert provider!=null;
-        FenderJsonPresetRegistry registry = (FenderJsonPresetRegistry)(provider.m_presetRegistry);
+        assert m_provider!=null;
+        /*
+        FenderJsonPresetRegistry registry = (FenderJsonPresetRegistry)(m_provider.m_presetRegistry);
         assert registry!=null;
-        m_presetSuiteRegistry = new PresetSuiteRegistry(registry);
+        PresetSuiteRegistry m_presetSuiteRegistry = new PresetSuiteRegistry(registry);
         ArrayList<PresetSuiteRegistry.PresetSuiteEntry> presetSuites =
             m_presetSuiteRegistry.buildPresetSuites(9,3,5)
         ;
+         */
+        ArrayList<PresetSuiteRegistry.PresetSuiteEntry> presetSuites = m_provider.buildAmpBasedPresetSuites(
+            9,5,3
+        );
         int itemLayoutId = R.layout.preset_suite_dropdown_item;
 
         ArrayList<String> suiteNames = new ArrayList<>();
@@ -210,7 +209,7 @@ public class MainActivity
                 @Override
                 public void onClick(View v) {
                     appendToLog("click for preset " + slotId);
-                    m_ampManager.switchPreset(slotId);
+                    m_provider.switchPreset(slotId);
                 }
             }));
             presetButton.setEnabled(true);
@@ -228,58 +227,6 @@ public class MainActivity
         for(int i=1; i<=9; ++i) {
             setPresetButton(i,0,null);
         }
-    }
-
-    @Override
-    public void visit(PresetRecord pr) {
-        if (m_lastPresetInUse == MAX_PRESET) {
-            return;
-        }
-        int buttonColour = R.color.fhauGrey;
-        switch(pr.m_state) {
-            case ACCEPTED:
-                buttonColour = R.color.fhauGreen;
-                break;
-            case TENTATIVE:
-                buttonColour = R.color.fhauAmber;
-                break;
-            default:
-                appendToLog(String.format(
-                    "Preset with slot=%d, name='%s' not offered because it is in state %s",
-                    pr.m_slotNumber, pr.m_name, pr.m_state
-                ));
-                return;
-        }
-        m_lastPresetInUse++;
-        String presetButtonName = String.format("button%d", m_lastPresetInUse);
-        @SuppressLint("DiscouragedApi")
-        int buttonId = getResources().getIdentifier(
-                presetButtonName, "id", getPackageName()
-        );
-        Button presetButton = findViewById(buttonId);
-        presetButton.setText(pr.m_name);
-        presetButton.setEnabled(true);
-        presetButton.setClickable(true);
-        presetButton.setBackgroundColor(
-            getResources().getColor(buttonColour,null)
-        );
-        if(m_piSlotIndex==pr.m_slotNumber) {
-            presetButton.setAlpha(0.5F);
-            presetButton.setOnClickListener(null);
-        } else {
-            presetButton.setAlpha(1.0F);
-            presetButton.setOnClickListener((new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    m_ampManager.switchPreset(pr.m_slotNumber);
-                }
-            }));
-        }
-    }
-
-    @Override
-    public void setActivePresetIndex(int activePresetIndex) {
-
     }
 
     @Override
@@ -329,23 +276,6 @@ public class MainActivity
             );
         }
     }
-/*
-    void setupPresetButtonsForSuite(PresetSuiteRegistry.PresetSuiteEntry selectedSuite, ArrayList<FenderJsonPresetRegistry.Record> suitePresetRecords, PresetSuiteRegistry presetSuiteRegistry) {
-        clearPresetButtons();
-        appendToLog("Preset suite '" + selectedSuite.name() + "' selected");
-        for(int i = 0; i< suitePresetRecords.size(); ++i) {
-            FenderJsonPresetRegistry.Record presetRecord = suitePresetRecords.get(i);
-            setPresetButton(
-                i+1, i+1, PresetSuiteRegistry.buttonLabel(i+1, presetRecord.displayName())
-            );
-            appendToLog(
-                presetRecord.displayName().replace("( )+"," ") +
-                ": " +  presetRecord.effects()
-            );
-        }
-    }
- */
-
 
     @Override
     public void onNothingSelected(AdapterView<?> parent) {
@@ -354,13 +284,17 @@ public class MainActivity
 
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        m_provider.switchSuite(position);
+    }
+
+    void suiteSelected(
+        String suiteName,
+        HashMap<Integer,FenderJsonPresetRegistry.Record> suitePresetRecords
+    ) {
         /*
-        assert m_presetSuiteRegistry.m_presetSuites!=null;
-        PresetSuiteRegistry.PresetSuiteEntry selectedSuite = m_presetSuiteRegistry.m_presetSuites.get(position);
-        ArrayList<FenderJsonPresetRegistry.Record> suitePresetRecords = selectedSuite.second;
-         */
         String suiteName = m_presetSuiteRegistry.nameAt(position);
         HashMap<Integer,FenderJsonPresetRegistry.Record> suitePresetRecords = m_presetSuiteRegistry.recordsAt(position);
+         */
         setupPresetButtonsForSuite(suiteName, suitePresetRecords);
     }
 

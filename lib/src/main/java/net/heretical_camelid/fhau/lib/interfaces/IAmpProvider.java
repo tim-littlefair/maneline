@@ -1,9 +1,28 @@
 package net.heretical_camelid.fhau.lib.interfaces;
 
 import net.heretical_camelid.fhau.lib.PresetInfo;
+import net.heretical_camelid.fhau.lib.registries.FenderJsonPresetRegistry;
+import net.heretical_camelid.fhau.lib.registries.PresetSuiteRegistry;
+
+import java.util.ArrayList;
 
 public interface IAmpProvider {
     void switchPreset(int slotIndex);
+    ArrayList<PresetSuiteRegistry.PresetSuiteEntry> buildAmpBasedPresetSuites(
+        int maxPresetsPerSuite, int targetPresetsPerSuite, int maxAmpsPerSuite
+    );
+
+    default ArrayList<PresetSuiteRegistry.PresetSuiteEntry> buildAmpBasedPresetSuites(
+        FenderJsonPresetRegistry registry,
+        int maxPresetsPerSuite, int targetPresetsPerSuite, int maxAmpsPerSuite
+    ) {
+        assert registry!=null;
+        PresetSuiteRegistry m_presetSuiteRegistry = new PresetSuiteRegistry(registry);
+        return m_presetSuiteRegistry.buildPresetSuites(
+            maxPresetsPerSuite, targetPresetsPerSuite,maxAmpsPerSuite
+        );
+    }
+
 
     public static enum ProviderState_e {
         PROVIDER_INITIAL,
