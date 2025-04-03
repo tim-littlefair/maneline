@@ -1,5 +1,10 @@
 package net.heretical_camelid.fhau.desktop_app;
 
+import net.heretical_camelid.fhau.lib.interfaces.IAmpProvider;
+import net.heretical_camelid.fhau.lib.interfaces.ILoggingAgent;
+import net.heretical_camelid.fhau.lib.registries.FenderJsonPresetRegistry;
+import net.heretical_camelid.fhau.lib.registries.PresetRegistryBase;
+import net.heretical_camelid.fhau.lib.registries.PresetSuiteRegistry;
 import org.hid4java.*;
 import org.hid4java.event.HidServicesEvent;
 import org.hid4java.jna.HidApi;

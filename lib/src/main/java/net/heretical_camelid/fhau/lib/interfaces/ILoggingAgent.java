@@ -1,4 +1,4 @@
-package net.heretical_camelid.fhau.lib;
+package net.heretical_camelid.fhau.lib.interfaces;
 
 /**
  * The interface below is intended to define an interface for

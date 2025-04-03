@@ -1,5 +1,7 @@
 package net.heretical_camelid.fhau.lib;
 
+import net.heretical_camelid.fhau.lib.interfaces.ILoggingAgent;
+
 /**
  * The class below is available as a default implementation
  * of ILoggingAgent for clients.

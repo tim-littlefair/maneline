@@ -1,4 +1,4 @@
-package net.heretical_camelid.fhau.lib;
+package net.heretical_camelid.fhau.lib.delegates;
 
 import java.util.regex.Matcher;
 

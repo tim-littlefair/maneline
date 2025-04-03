@@ -1,4 +1,4 @@
-package net.heretical_camelid.fhau.lib;
+package net.heretical_camelid.fhau.lib.utilities;
 
 //enum MustangProtobufDialect { MPD_GUESS,  MPD_LT40S,  MPD_MMP };
 public class RawProtobufUtilities {

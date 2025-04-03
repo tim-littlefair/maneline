@@ -1,6 +1,6 @@
 package net.heretical_camelid.fhau.desktop_app;
 
-import net.heretical_camelid.fhau.lib.ILoggingAgent;
+import net.heretical_camelid.fhau.lib.interfaces.ILoggingAgent;
 
 import java.io.BufferedReader;
 import java.io.IOException;

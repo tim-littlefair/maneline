@@ -1,6 +1,5 @@
 package net.heretical_camelid.fhau.lib;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -54,37 +53,5 @@ public class PresetInfo {
 
     public static void main(String[] args) {
         System.out.println("TODO: tests for PresetInfo");
-    }
-
-    // All functions beyond this point are package-private and
-    // exist to provide convenient test/simulation data for other classes
-    // in this package.
-
-    static PresetInfo piMixedBag() {
-        PresetInfo piMixedBag = new PresetInfo();
-
-        PresetRecord pr1 = new PresetRecord("COOL SOUND",1);
-        pr1.m_state = PresetRecord.PresetState.ACCEPTED;
-        piMixedBag.add(pr1);
-
-        PresetRecord pr2 = new PresetRecord("WARM SOUND",2);
-        pr2.m_state = PresetRecord.PresetState.ACCEPTED;
-        piMixedBag.add(pr2);
-
-        // We want to support sparse instances of PresetInfo, so
-        // this one is an example
-        PresetRecord pr5 = new PresetRecord("SPARSE SOUND",5);
-        pr5.m_state = PresetRecord.PresetState.ACCEPTED;
-        piMixedBag.add(pr5);
-
-        PresetRecord pr10 = new PresetRecord("NEW SOUND",10);
-        pr10.m_state = PresetRecord.PresetState.TENTATIVE;
-        piMixedBag.add(pr10);
-
-        PresetRecord pr11 = new PresetRecord("NASTY SOUND",11);
-        pr11.m_state = PresetRecord.PresetState.REJECTED;
-        piMixedBag.add(pr11);
-
-        return piMixedBag;
     }
 }

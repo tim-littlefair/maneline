@@ -1,4 +1,4 @@
-package net.heretical_camelid.fhau.lib;
+package net.heretical_camelid.fhau.lib.delegates;
 
 public class MessageConstants_LT40S {
     final static public String[] STARTUP_COMMANDS = new java.lang.String[] {

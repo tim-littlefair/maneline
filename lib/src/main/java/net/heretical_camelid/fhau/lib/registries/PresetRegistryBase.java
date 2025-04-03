@@ -1,4 +1,4 @@
-package net.heretical_camelid.fhau.lib;
+package net.heretical_camelid.fhau.lib.registries;
 
 import java.io.PrintStream;
 import java.util.HashMap;

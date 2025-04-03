@@ -1,10 +1,10 @@
 package net.heretical_camelid.fhau.desktop_app;
 
-import net.heretical_camelid.fhau.lib.DeviceTransportInterface;
+import net.heretical_camelid.fhau.lib.interfaces.IDeviceTransport;
 import org.hid4java.HidDevice;
 
 
-class DeviceTransportHid4Java implements DeviceTransportInterface {
+class DeviceTransportHid4Java implements IDeviceTransport {
     final HidDevice m_hidDevice;
 
     DeviceTransportHid4Java(HidDevice hidDevice) {

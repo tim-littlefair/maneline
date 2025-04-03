@@ -1,7 +1,6 @@
-package net.heretical_camelid.fhau.lib;
+package net.heretical_camelid.fhau.lib.registries;
 
 import com.google.gson.Gson;
-import com.google.gson.annotations.SerializedName;
 import com.google.gson.annotations.Since;
 
 import java.util.Arrays;

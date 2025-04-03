@@ -1,4 +1,6 @@
-package net.heretical_camelid.fhau.lib;
+package net.heretical_camelid.fhau.lib.interfaces;
+
+import net.heretical_camelid.fhau.lib.PresetInfo;
 
 public interface IAmpProvider {
     void switchPreset(int slotIndex);

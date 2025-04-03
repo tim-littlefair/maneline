@@ -1,4 +1,10 @@
-package net.heretical_camelid.fhau.lib;
+package net.heretical_camelid.fhau.lib.delegates;
+
+import net.heretical_camelid.fhau.lib.DefaultLoggingAgent;
+import net.heretical_camelid.fhau.lib.PresetInfo;
+import net.heretical_camelid.fhau.lib.PresetRecord;
+import net.heretical_camelid.fhau.lib.interfaces.IAmpProvider;
+import net.heretical_camelid.fhau.lib.interfaces.ILoggingAgent;
 
 public class SimulatorAmpProvider implements IAmpProvider {
     private final ILoggingAgent m_loggingAgent;
@@ -9,6 +15,34 @@ public class SimulatorAmpProvider implements IAmpProvider {
     String m_firmwareVersion = null;
 
     interface IVisitor {
+        static PresetInfo piMixedBag() {
+            PresetInfo piMixedBag = new PresetInfo();
+
+            PresetRecord pr1 = new PresetRecord("COOL SOUND",1);
+            pr1.m_state = PresetRecord.PresetState.ACCEPTED;
+            piMixedBag.add(pr1);
+
+            PresetRecord pr2 = new PresetRecord("WARM SOUND",2);
+            pr2.m_state = PresetRecord.PresetState.ACCEPTED;
+            piMixedBag.add(pr2);
+
+            // We want to support sparse instances of PresetInfo, so
+            // this one is an example
+            PresetRecord pr5 = new PresetRecord("SPARSE SOUND",5);
+            pr5.m_state = PresetRecord.PresetState.ACCEPTED;
+            piMixedBag.add(pr5);
+
+            PresetRecord pr10 = new PresetRecord("NEW SOUND",10);
+            pr10.m_state = PresetRecord.PresetState.TENTATIVE;
+            piMixedBag.add(pr10);
+
+            PresetRecord pr11 = new PresetRecord("NASTY SOUND",11);
+            pr11.m_state = PresetRecord.PresetState.REJECTED;
+            piMixedBag.add(pr11);
+
+            return piMixedBag;
+        }
+
         void setAmpState(
             String deviceDescription,
             String firmwareVersion,
@@ -66,7 +100,7 @@ public class SimulatorAmpProvider implements IAmpProvider {
                 m_presetInfo = new PresetInfo();
                 m_deviceDescription = "SimulatedAmplifier SN 123456";
                 m_firmwareVersion = "99.00.13";
-                m_presetInfo = PresetInfo.piMixedBag();
+                m_presetInfo = IVisitor.piMixedBag();
                 break;
 
             case LT40S:

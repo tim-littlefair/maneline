@@ -1,5 +1,7 @@
 package net.heretical_camelid.fhau.lib;
 
+import net.heretical_camelid.fhau.lib.interfaces.IDeviceTransport;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,13 +31,13 @@ public abstract class AbstractMessageProtocolBase {
     public static final int STATUS_OTHER_FAIL = -109;
     public static final int STATUS_PRESET_WRAP_WARN = 201;
 
-    protected DeviceTransportInterface m_deviceTransport;
+    protected IDeviceTransport m_deviceTransport;
 
     protected AbstractMessageProtocolBase() {
         m_deviceTransport = null;
     }
 
-    public void setDeviceTransport(DeviceTransportInterface deviceTransport) {
+    public void setDeviceTransport(IDeviceTransport deviceTransport) {
         m_deviceTransport = deviceTransport;
     }
     protected static void log(String message) {

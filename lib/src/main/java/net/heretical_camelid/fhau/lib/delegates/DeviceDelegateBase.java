@@ -1,4 +1,6 @@
-package net.heretical_camelid.fhau.lib;
+package net.heretical_camelid.fhau.lib.delegates;
+
+import net.heretical_camelid.fhau.lib.PresetInfo;
 
 /**
  * TODO:

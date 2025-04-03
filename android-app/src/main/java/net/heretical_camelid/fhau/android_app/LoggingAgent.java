@@ -2,7 +2,7 @@ package net.heretical_camelid.fhau.android_app;
 
 import android.widget.TextView;
 
-import net.heretical_camelid.fhau.lib.ILoggingAgent;
+import net.heretical_camelid.fhau.lib.interfaces.ILoggingAgent;
 
 public class LoggingAgent implements ILoggingAgent {
 

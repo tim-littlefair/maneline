@@ -1,8 +1,9 @@
 package net.heretical_camelid.fhau.lib;
 
+import net.heretical_camelid.fhau.lib.registries.PresetRegistryBase;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 // Useful reference:
 // https://github.com/brentmaxwell/LtAmp/blob/main/Schema/protobuf/FenderMessageLT.proto

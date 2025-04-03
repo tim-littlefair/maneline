@@ -1,4 +1,4 @@
-package net.heretical_camelid.fhau.lib;
+package net.heretical_camelid.fhau.lib.utilities;
 
 /**
  * This application chooses to use a colon-separated format

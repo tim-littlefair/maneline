@@ -1,5 +1,8 @@
 package net.heretical_camelid.fhau.lib;
 
+import net.heretical_camelid.fhau.lib.interfaces.IAmpProvider;
+import net.heretical_camelid.fhau.lib.interfaces.ILoggingAgent;
+
 public class AmpManager {
     static ILoggingAgent s_loggingAgent;
     public IAmpProvider m_provider;

@@ -16,10 +16,14 @@ import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 
 import net.heretical_camelid.fhau.lib.*;
+import net.heretical_camelid.fhau.lib.delegates.SimulatorAmpProvider;
+import net.heretical_camelid.fhau.lib.interfaces.IAmpProvider;
+import net.heretical_camelid.fhau.lib.registries.FenderJsonPresetRegistry;
+import net.heretical_camelid.fhau.lib.registries.PresetSuiteRegistry;
 
 import java.util.*;
 
-import static net.heretical_camelid.fhau.lib.IAmpProvider.ProviderState_e.PROVIDER_DEVICE_CONNECTION_SUCCEEDED;
+import static net.heretical_camelid.fhau.lib.interfaces.IAmpProvider.ProviderState_e.PROVIDER_DEVICE_CONNECTION_SUCCEEDED;
 
 class MainActivityError extends UnsupportedOperationException {
     public MainActivityError(String message) {

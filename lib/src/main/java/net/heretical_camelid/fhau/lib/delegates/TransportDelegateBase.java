@@ -1,4 +1,4 @@
-package net.heretical_camelid.fhau.lib;
+package net.heretical_camelid.fhau.lib.delegates;
 
 abstract class TransportDelegateBase {
     abstract public String[] processCommand(String commandHexString, DeviceDelegateBase deviceDelegate);

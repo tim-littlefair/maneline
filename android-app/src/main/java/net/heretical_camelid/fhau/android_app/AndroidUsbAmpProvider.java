@@ -14,6 +14,9 @@ import com.benlypan.usbhid.OnUsbHidDeviceListener;
 import com.benlypan.usbhid.UsbHidDevice;
 
 import net.heretical_camelid.fhau.lib.*;
+import net.heretical_camelid.fhau.lib.interfaces.IAmpProvider;
+import net.heretical_camelid.fhau.lib.registries.FenderJsonPresetRegistry;
+import net.heretical_camelid.fhau.lib.registries.PresetRegistryBase;
 
 import java.util.HashMap;
 

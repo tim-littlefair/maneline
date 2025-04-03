@@ -2,9 +2,9 @@ package net.heretical_camelid.fhau.android_app;
 
 import com.benlypan.usbhid.UsbHidDevice;
 
-import net.heretical_camelid.fhau.lib.DeviceTransportInterface;
+import net.heretical_camelid.fhau.lib.interfaces.IDeviceTransport;
 
-class DeviceTransportUsbHid implements DeviceTransportInterface {
+class DeviceTransportUsbHid implements IDeviceTransport {
     final UsbHidDevice m_usbHidDevice;
     final static int TIMEOUT_MS = 500;
 

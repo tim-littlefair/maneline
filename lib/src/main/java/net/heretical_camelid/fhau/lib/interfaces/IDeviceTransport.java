@@ -1,4 +1,4 @@
-package net.heretical_camelid.fhau.lib;
+package net.heretical_camelid.fhau.lib.interfaces;
 
 /**
  * This interface defines the behaviour an implemention of
@@ -12,7 +12,7 @@ package net.heretical_camelid.fhau.lib;
  * can be used in n.h_c.f.android_app where hid4java
  * is not available.
  */
-public interface DeviceTransportInterface {
+public interface IDeviceTransport {
     int read(byte[] packetBuffer);
     int write(byte[] commandBytes);
     String getLastErrorMessage();
