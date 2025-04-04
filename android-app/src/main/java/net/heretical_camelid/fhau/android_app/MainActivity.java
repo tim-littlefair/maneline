@@ -57,6 +57,7 @@ public class MainActivity
     Thread m_providerThread;
     Handler m_providerHandler;
 
+    TextView m_tvLog;
     Button m_btnConnectionStatus;
 
     void appendToLog(String message) {
@@ -116,9 +117,10 @@ public class MainActivity
         setContentView(R.layout.activity_main);
         setSupportActionBar(findViewById(R.id.toolbar_fhau));
 
-        TextView tvLog = (TextView) findViewById(R.id.tv_log);
-        m_loggingAgent = new LoggingAgent(tvLog);
-        tvLog.setText("");
+        m_tvLog = (TextView) findViewById(R.id.tv_log);
+        m_loggingAgent = new LoggingAgent(m_tvLog);
+        m_tvLog.setText("");
+
         if(BuildConfig.DEBUG == true) {
             appendToLog("FHAU debug variant built at " + BuildConfig.BUILD_TIME);
         } else {
@@ -133,6 +135,7 @@ public class MainActivity
                 switch (MessageType_e.values()[m.what]) {
                     case MESSAGE_PROVIDER_CONNECTED:
                         assert m_providerThread.isAlive()==false;
+                        m_btnConnectionStatus.setText("Click to reconnect");
                         m_providerThread = new Thread() {
                             @Override
                             public void run() {
@@ -164,8 +167,9 @@ public class MainActivity
         m_btnConnectionStatus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                m_loggingAgent.clearLog();
+                m_btnConnectionStatus.setText("Connecting");
                 connect();
-                m_btnConnectionStatus.setText("Click to reconnect");
             }
         });
 
@@ -188,14 +192,6 @@ public class MainActivity
 
     void populatePresetSuiteDropdown() {
         assert m_provider!=null;
-        /*
-        FenderJsonPresetRegistry registry = (FenderJsonPresetRegistry)(m_provider.m_presetRegistry);
-        assert registry!=null;
-        PresetSuiteRegistry m_presetSuiteRegistry = new PresetSuiteRegistry(registry);
-        ArrayList<PresetSuiteRegistry.PresetSuiteEntry> presetSuites =
-            m_presetSuiteRegistry.buildPresetSuites(9,3,5)
-        ;
-         */
         ArrayList<PresetSuiteRegistry.PresetSuiteEntry> presetSuites = m_provider.buildAmpBasedPresetSuites(
             9,5,3
         );
@@ -265,7 +261,8 @@ public class MainActivity
             presetButton.setOnClickListener((new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    appendToLog("click for preset " + slotId);
+                    m_loggingAgent.clearLog();
+                    appendToLog("preset " + slotId + " requested");
                     m_provider.switchPreset(slotId);
                 }
             }));
@@ -326,10 +323,6 @@ public class MainActivity
             setPresetButton(
                 i+1, slotIndex,
                 PresetSuiteRegistry.buttonLabel(slotIndex, presetRecord.displayName())
-            );
-            appendToLog(
-                presetRecord.displayName().replace("( )+"," ") +
-                    ": " +  presetRecord.effects()
             );
         }
     }

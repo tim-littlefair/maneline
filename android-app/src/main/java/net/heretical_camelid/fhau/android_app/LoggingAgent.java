@@ -12,7 +12,10 @@ public class LoggingAgent implements ILoggingAgent {
         m_tvLog = tvLog;
         m_sbLog = new StringBuilder();
     }
-    public void clearLog() { }
+    public void clearLog() {
+        m_tvLog.setText("");
+    }
+
     public void setLevel(int loggingLevel) { }
     public void appendToLog(int loggingLevel, String messageToAppend) {
         if(messageToAppend!=null) {
