@@ -14,28 +14,19 @@ import java.util.HashMap;
 import static net.heretical_camelid.fhau.android_app.MainActivity.appendToLog;
 
 public class AndroidUsbAmpProvider implements IAmpProvider {
-    final static String ACTION_USB_PERMISSION = "net.heretical_camelid.fhau.android_app.USB_PERMISSION";
 
     MainActivity m_mainActivity;
-
-    String m_firmwareVersion;
-    boolean m_permissionRequested = false;
-    boolean m_connectionSucceeded=false;
-
     DeviceTransportUsbHid m_deviceTransportUsbHid;
-
-
-    AbstractMessageProtocolBase m_protocol;
+    LTSeriesProtocol m_protocol;
 
     FenderJsonPresetRegistry m_presetRegistry;
     PresetSuiteRegistry m_presetSuiteRegistry;
-
-    ProviderState_e m_state;
+    String m_ampModel;
+    String m_firmwareVersion;
 
     AndroidUsbAmpProvider(
         MainActivity mainActivity
     ) {
-        m_state = ProviderState_e.PROVIDER_INITIAL;
         m_mainActivity = mainActivity;
         m_presetRegistry = new FenderJsonPresetRegistry(null);
         m_protocol = new LTSeriesProtocol(m_presetRegistry,true);
@@ -74,15 +65,16 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     public ProviderState_e attemptConnection() {
-        return m_deviceTransportUsbHid.attemptUsbHidConnection();
-    }
-
-    public void usbAccessPermissionGranted() {
-        attemptConnection();
-    }
-
-    public void usbAccessPermissionDenied() {
-        m_state = ProviderState_e.PROVIDER_DEVICE_CONNECTION_FAILED;
+        ProviderState_e state = m_deviceTransportUsbHid.attemptUsbHidConnection();
+        if(state==ProviderState_e.PROVIDER_DEVICE_CONNECTION_SUCCEEDED) {
+            String[] startupItemWrapper = new String[2];
+            m_protocol.setDeviceTransport(m_deviceTransportUsbHid);
+            m_protocol.doStartup(startupItemWrapper);
+            m_protocol.getPresetNamesList();
+            m_protocol.startHeartbeatThread();
+            buildAmpBasedPresetSuites(9, 7, 3);
+        }
+        return state;
     }
 
     public void switchSuite(int position) {

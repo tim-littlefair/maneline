@@ -61,6 +61,12 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
                 return psJsonStatus;
             }
         }
+        //startHeartbeatThread();
+        return STATUS_OK;
+    }
+
+    @Override
+    public void startHeartbeatThread() {
         try {
             Thread.sleep(500);
             if(!m_heartbeatStopped) {
@@ -74,7 +80,6 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         catch (InterruptedException e) {
             log(e.toString());
         }
-        return STATUS_OK;
     }
 
     @Override

@@ -111,5 +111,7 @@ public abstract class AbstractMessageProtocolBase {
     public abstract int switchPreset(int slotIndex);
 
     public abstract void doShutdown();
+
+    public abstract void startHeartbeatThread();
 }
 
