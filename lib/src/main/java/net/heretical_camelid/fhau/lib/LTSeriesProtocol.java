@@ -67,18 +67,13 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
 
     @Override
     public void startHeartbeatThread() {
-        try {
-            Thread.sleep(500);
-            if(!m_heartbeatStopped) {
-                log("Starting heartbeat thread");
-                m_heartbeatThread.start();
-            } else {
-                log("Heartbeat thread will not be started");
-            }
-            int sleepLength = 500;
-        }
-        catch (InterruptedException e) {
-            log(e.toString());
+        if(m_heartbeatStopped) {
+            log("Heartbeat thread will not be started");
+        } else if(m_heartbeatThread.isAlive()) {
+            log("Heartbeat thread is already started");
+        } else {
+            log("Starting heartbeat thread");
+            m_heartbeatThread.start();
         }
     }
 

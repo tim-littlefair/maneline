@@ -3,6 +3,9 @@ package net.heretical_camelid.fhau.android_app;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -20,6 +23,7 @@ import net.heretical_camelid.fhau.lib.registries.PresetSuiteRegistry;
 
 import java.util.*;
 
+import static net.heretical_camelid.fhau.android_app.MessageType_e.MESSAGE_PROVIDER_CONNECTED;
 import static net.heretical_camelid.fhau.lib.interfaces.IAmpProvider.ProviderState_e.PROVIDER_DEVICE_CONNECTION_SUCCEEDED;
 
 class MainActivityError extends UnsupportedOperationException {
@@ -34,15 +38,22 @@ class MainActivityError extends UnsupportedOperationException {
     }
 };
 
+enum MessageType_e {
+    MESSAGE_PROVIDER_CONNECTED,
+    MESSAGE_PROVIDER_CONNECTION_FAILED,
+    MESSAGE_PROVIDER_CONNECTION_BROKEN,
+    MESSAGE_PRESET_SELECTED
+}
+
 public class MainActivity
         extends AppCompatActivity
         implements AdapterView.OnItemSelectedListener {
     static LoggingAgent s_loggingAgent;
     AndroidUsbAmpProvider m_provider;
-    Button m_btnConnectionStatus;
+    Thread m_providerThread;
+    Handler m_providerHandler;
 
-    public MainActivity() {
-    }
+    Button m_btnConnectionStatus;
 
     static void appendToLog(String message) {
         if(s_loggingAgent !=null) {
@@ -96,6 +107,21 @@ public class MainActivity
         }
 
         m_provider = new AndroidUsbAmpProvider(this);
+        m_providerThread = null;
+        m_providerHandler = new Handler(Looper.getMainLooper()) {
+            public void handleMessage(Message m) {
+                assert m_providerThread!=null;
+                switch (MessageType_e.values()[m.what]) {
+                    case MESSAGE_PROVIDER_CONNECTED:
+                        m_providerThread = null;
+                        populatePresetSuiteDropdown();
+                        break;
+
+                    default:
+                        appendToLog("Unexpected message received by providerHandler: " + m.what);
+                }
+            }
+        };
 
         m_btnConnectionStatus = findViewById(R.id.btn_cxn_status);
         m_btnConnectionStatus.setOnClickListener(new View.OnClickListener() {
@@ -112,7 +138,9 @@ public class MainActivity
     @Override
     public void onResume() {
         super.onResume();
-        connect();
+        if(m_providerThread==null) {
+            connect();
+        }
     }
 
     @Override
@@ -152,12 +180,23 @@ public class MainActivity
     }
 
     void connect() {
-        IAmpProvider.ProviderState_e cxnStatus = m_provider.attemptConnection();
+        assert m_providerThread==null;
+        m_providerThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                IAmpProvider.ProviderState_e cxnStatus = m_provider.attemptConnection();
+                onConnectAttemptOutcome(cxnStatus);
+            }
+        });
+        m_providerThread.start();
+    }
+
+    private void onConnectAttemptOutcome(IAmpProvider.ProviderState_e cxnStatus) {
         if(cxnStatus == PROVIDER_DEVICE_CONNECTION_SUCCEEDED) {
             appendToLog("Connection succeeded");
             m_provider.getFirmwareVersionAndPresets();
-            populatePresetSuiteDropdown();
             appendToLog("Presets populated");
+            m_providerHandler.sendEmptyMessage(MESSAGE_PROVIDER_CONNECTED.ordinal());
         } else {
             appendToLog("cxnStatus=" + cxnStatus);
         }

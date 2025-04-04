@@ -28,9 +28,11 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
         MainActivity mainActivity
     ) {
         m_mainActivity = mainActivity;
+        m_deviceTransportUsbHid = new DeviceTransportUsbHid(m_mainActivity, this);
         m_presetRegistry = new FenderJsonPresetRegistry(null);
         m_protocol = new LTSeriesProtocol(m_presetRegistry,true);
-        m_deviceTransportUsbHid = new DeviceTransportUsbHid(m_mainActivity, this);
+
+        m_presetSuiteRegistry = null;
     }
 
     public boolean getFirmwareVersionAndPresets() {
