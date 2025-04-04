@@ -3,7 +3,6 @@ package net.heretical_camelid.fhau.desktop_app;
 import net.heretical_camelid.fhau.lib.interfaces.IAmpProvider;
 import net.heretical_camelid.fhau.lib.interfaces.ILoggingAgent;
 import net.heretical_camelid.fhau.lib.registries.FenderJsonPresetRegistry;
-import net.heretical_camelid.fhau.lib.registries.PresetRegistryBase;
 import net.heretical_camelid.fhau.lib.registries.PresetSuiteRegistry;
 import org.hid4java.*;
 import org.hid4java.event.HidServicesEvent;
@@ -210,11 +209,6 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
     }
 
     @Override
-    public PresetInfo getPresetInfo(PresetInfo requestedPresets) {
-        return null;
-    }
-
-    @Override
     public void switchPreset(int slotIndex) {
         m_protocol.switchPreset(slotIndex);
     }
@@ -236,21 +230,6 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
         // Desktop/USB doesn't need to do this so we
         // don't expect it to be called.
         return null;
-    }
-
-    @Override
-    public ProviderState_e getState() {
-        return null;
-    }
-
-    @Override
-    public void sendCommand(String commandHexString) {
-        System.out.println("sendCommand! (unexpected)");
-    }
-
-    @Override
-    public String getFirmwareVersion() {
-        return m_firmwareVersion;
     }
 
 

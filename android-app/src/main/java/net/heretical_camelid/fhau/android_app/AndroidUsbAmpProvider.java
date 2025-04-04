@@ -1,13 +1,6 @@
 package net.heretical_camelid.fhau.android_app;
 
 import android.annotation.SuppressLint;
-import android.app.PendingIntent;
-import android.content.Context;
-import android.hardware.usb.UsbDevice;
-
-import android.hardware.usb.UsbManager;
-import com.benlypan.usbhid.OnUsbHidDeviceListener;
-import com.benlypan.usbhid.UsbHidDevice;
 
 import net.heretical_camelid.fhau.lib.*;
 import net.heretical_camelid.fhau.lib.interfaces.IAmpProvider;
@@ -20,7 +13,7 @@ import java.util.HashMap;
 
 import static net.heretical_camelid.fhau.android_app.MainActivity.appendToLog;
 
-public class AndroidUsbAmpProvider implements OnUsbHidDeviceListener, IAmpProvider {
+public class AndroidUsbAmpProvider implements IAmpProvider {
     final static String ACTION_USB_PERMISSION = "net.heretical_camelid.fhau.android_app.USB_PERMISSION";
 
     MainActivity m_mainActivity;
@@ -31,11 +24,6 @@ public class AndroidUsbAmpProvider implements OnUsbHidDeviceListener, IAmpProvid
 
     DeviceTransportUsbHid m_deviceTransportUsbHid;
 
-    UsbManager m_usbManager;
-    UsbBroadcastReceiver m_usbReceiver;
-    PendingIntent m_permissionIntent;
-    UsbHidDevice m_usbHidDevice;
-    UsbDevice m_usbDevice;
 
     AbstractMessageProtocolBase m_protocol;
 
@@ -49,18 +37,9 @@ public class AndroidUsbAmpProvider implements OnUsbHidDeviceListener, IAmpProvid
     ) {
         m_state = ProviderState_e.PROVIDER_INITIAL;
         m_mainActivity = mainActivity;
-        m_usbManager = (UsbManager) m_mainActivity.getSystemService(Context.USB_SERVICE);
         m_presetRegistry = new FenderJsonPresetRegistry(null);
         m_protocol = new LTSeriesProtocol(m_presetRegistry,true);
-
-        // m_usbReceiver is used as an indicator for whether the permission request
-        // has been done, so we do not instantiate it until we have a device on
-        // which permission can be requested
-        m_usbReceiver = null;
-        m_usbDevice = null;
-        m_usbHidDevice = null;
-
-        m_deviceTransportUsbHid = new DeviceTransportUsbHid(null);
+        m_deviceTransportUsbHid = new DeviceTransportUsbHid(m_mainActivity, this);
     }
 
     public boolean getFirmwareVersionAndPresets() {
@@ -95,7 +74,7 @@ public class AndroidUsbAmpProvider implements OnUsbHidDeviceListener, IAmpProvid
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     public ProviderState_e attemptConnection() {
-        return m_deviceTransportUsbHid.attemptUsbHidConnection(this);
+        return m_deviceTransportUsbHid.attemptUsbHidConnection();
     }
 
     public void usbAccessPermissionGranted() {
@@ -104,21 +83,6 @@ public class AndroidUsbAmpProvider implements OnUsbHidDeviceListener, IAmpProvid
 
     public void usbAccessPermissionDenied() {
         m_state = ProviderState_e.PROVIDER_DEVICE_CONNECTION_FAILED;
-    }
-
-    @Override
-    public void onUsbHidDeviceConnected(UsbHidDevice device) {
-        appendToLog("Device connected");
-    }
-
-    @Override
-    public void onUsbHidDeviceConnectFailed(UsbHidDevice device) {
-        appendToLog("Device connect failed");
-        m_usbHidDevice.close();
-        m_usbHidDevice = null;
-        m_usbDevice = null;
-        m_connectionSucceeded = false;
-        m_state = ProviderState_e.PROVIDER_INITIAL;
     }
 
     public void switchSuite(int position) {
