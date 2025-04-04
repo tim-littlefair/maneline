@@ -23,7 +23,7 @@ import net.heretical_camelid.fhau.lib.registries.PresetSuiteRegistry;
 
 import java.util.*;
 
-import static net.heretical_camelid.fhau.android_app.MessageType_e.MESSAGE_PROVIDER_CONNECTED;
+import static net.heretical_camelid.fhau.android_app.MessageType_e.*;
 import static net.heretical_camelid.fhau.lib.interfaces.IAmpProvider.ProviderState_e.PROVIDER_DEVICE_CONNECTION_SUCCEEDED;
 
 class MainActivityError extends UnsupportedOperationException {
@@ -39,27 +39,46 @@ class MainActivityError extends UnsupportedOperationException {
 };
 
 enum MessageType_e {
-    MESSAGE_PROVIDER_CONNECTED,
     MESSAGE_PROVIDER_CONNECTION_FAILED,
+    MESSAGE_PROVIDER_CONNECTED,
+    MESSAGE_PROVIDER_STARTUP_COMPLETED,
+    MESSAGE_PRESETS_DOWNLOADED,
+    MESSAGE_PRESET_SELECTED,
     MESSAGE_PROVIDER_CONNECTION_BROKEN,
-    MESSAGE_PRESET_SELECTED
+    MESSAGE_APPEND_TO_LOG,
 }
 
 public class MainActivity
         extends AppCompatActivity
         implements AdapterView.OnItemSelectedListener {
-    static LoggingAgent s_loggingAgent;
+    public static final String LOG_MESSAGE = "LOG_MESSAGE";
+    LoggingAgent m_loggingAgent;
     AndroidUsbAmpProvider m_provider;
     Thread m_providerThread;
     Handler m_providerHandler;
 
     Button m_btnConnectionStatus;
 
-    static void appendToLog(String message) {
-        if(s_loggingAgent !=null) {
-            s_loggingAgent.appendToLog(0,message);
-        }
+    void appendToLog(String message) {
         System.out.println(message);
+        long currentThreadId = Thread.currentThread().getId(); 
+        if( m_providerThread!=null &&
+            currentThreadId==m_providerThread.getId()
+        ) {
+            Message logMessage = new Message();
+            logMessage.what = MESSAGE_APPEND_TO_LOG.ordinal();
+            Bundle messageBundle = new Bundle();
+            messageBundle.putString(LOG_MESSAGE, message);
+            logMessage.setData(messageBundle);
+            m_providerHandler.sendMessage(logMessage);
+        } else if (
+            m_loggingAgent!=null &&
+            currentThreadId==this.getMainLooper().getThread().getId()    
+        ) {
+            m_loggingAgent.appendToLog(0,message);
+        } else {
+            System.out.println("Message will not be displayed: " + message);
+        }
     }
 
     int m_lastPresetInUse = 0;
@@ -98,7 +117,7 @@ public class MainActivity
         setSupportActionBar(findViewById(R.id.toolbar_fhau));
 
         TextView tvLog = (TextView) findViewById(R.id.tv_log);
-        s_loggingAgent = new LoggingAgent(tvLog);
+        m_loggingAgent = new LoggingAgent(tvLog);
         tvLog.setText("");
         if(BuildConfig.DEBUG == true) {
             appendToLog("FHAU debug variant built at " + BuildConfig.BUILD_TIME);
@@ -113,8 +132,26 @@ public class MainActivity
                 assert m_providerThread!=null;
                 switch (MessageType_e.values()[m.what]) {
                     case MESSAGE_PROVIDER_CONNECTED:
+                        assert m_providerThread.isAlive()==false;
+                        m_providerThread = new Thread() {
+                            @Override
+                            public void run() {
+                                m_provider.getFirmwareVersionAndPresets();
+                                m_providerHandler.sendEmptyMessage(MESSAGE_PRESETS_DOWNLOADED.ordinal());
+                            }
+                        };
+                        m_providerThread.start();
+                        break;
+
+                    case MESSAGE_PRESETS_DOWNLOADED:
+                        assert m_providerThread.isAlive()==false;
                         m_providerThread = null;
+                        appendToLog("Presets retrieved - grouping into suites");
                         populatePresetSuiteDropdown();
+                        break;
+
+                    case MESSAGE_APPEND_TO_LOG:
+                        appendToLog(m.getData().getString(LOG_MESSAGE));
                         break;
 
                     default:
@@ -138,7 +175,7 @@ public class MainActivity
     @Override
     public void onResume() {
         super.onResume();
-        if(m_providerThread==null) {
+        if(m_providerThread ==null) {
             connect();
         }
     }
@@ -180,22 +217,21 @@ public class MainActivity
     }
 
     void connect() {
-        assert m_providerThread==null;
-        m_providerThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                IAmpProvider.ProviderState_e cxnStatus = m_provider.attemptConnection();
-                onConnectAttemptOutcome(cxnStatus);
-            }
-        });
-        m_providerThread.start();
+        if(m_providerThread ==null) {
+            m_providerThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    IAmpProvider.ProviderState_e cxnStatus = m_provider.attemptConnection();
+                    onConnectAttemptOutcome(cxnStatus);
+                }
+            });
+            m_providerThread.start();
+        }
     }
 
     private void onConnectAttemptOutcome(IAmpProvider.ProviderState_e cxnStatus) {
         if(cxnStatus == PROVIDER_DEVICE_CONNECTION_SUCCEEDED) {
-            appendToLog("Connection succeeded");
-            m_provider.getFirmwareVersionAndPresets();
-            appendToLog("Presets populated");
+            appendToLog("Connected to amplifier - retrieving presets");
             m_providerHandler.sendEmptyMessage(MESSAGE_PROVIDER_CONNECTED.ordinal());
         } else {
             appendToLog("cxnStatus=" + cxnStatus);

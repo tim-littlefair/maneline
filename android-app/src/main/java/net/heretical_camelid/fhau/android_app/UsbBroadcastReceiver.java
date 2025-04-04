@@ -21,15 +21,15 @@ public class UsbBroadcastReceiver extends BroadcastReceiver {
             UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(action) ||
                 UsbManager.ACTION_USB_ACCESSORY_ATTACHED.equals(action)
         ) {
-            MainActivity.appendToLog("Device attached");
+            //  MainActivity.appendToLog("Device attached");
         } else if (
                    UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action) ||
                        UsbManager.ACTION_USB_ACCESSORY_DETACHED.equals(action)
         ) {
-            MainActivity.appendToLog("Device detached");
+            // MainActivity.appendToLog("Device detached");
         } else if (UsbManager.EXTRA_PERMISSION_GRANTED.equals(action)) {
             if(intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED,false)) {
-                MainActivity.appendToLog("USB access permission granted");
+                // MainActivity.appendToLog("USB access permission granted");
                 MainActivity mainActivity = (MainActivity) context;
                 assert (mainActivity) != null;
                 m_transport.usbAccessPermissionGranted();

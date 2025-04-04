@@ -11,8 +11,6 @@ import net.heretical_camelid.fhau.lib.registries.PresetSuiteRegistry;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import static net.heretical_camelid.fhau.android_app.MainActivity.appendToLog;
-
 public class AndroidUsbAmpProvider implements IAmpProvider {
 
     MainActivity m_mainActivity;
@@ -39,9 +37,9 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
         String[] firmwareVersionHolder = new String[] { null };
         int startupStatus = m_protocol.doStartup(firmwareVersionHolder);
         m_firmwareVersion = firmwareVersionHolder[0];
-        appendToLog("Firmware Version: " + m_firmwareVersion);
+        m_mainActivity.appendToLog("Firmware Version: " + m_firmwareVersion);
         int presetNamesStatus = m_protocol.getPresetNamesList();
-        appendToLog(String.format(
+        m_mainActivity.appendToLog(String.format(
             "Amp contains %d unique presets", m_presetRegistry.uniquePresetCount()
         ));
 

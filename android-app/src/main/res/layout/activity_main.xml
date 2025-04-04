@@ -128,9 +128,9 @@
     <ScrollView
             android:id="@+id/tv_log_scroll"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:gravity="top"
+            android:gravity="fill"
             android:scrollbarSize="30dp"
             android:scrollbars="vertical"
             android:scrollbarAlwaysDrawVerticalTrack="true"
@@ -142,9 +142,8 @@
         <TextView
                 android:id="@+id/tv_log"
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:minHeight="800dp"
-                android:gravity="top"
+                android:layout_height="wrap_content"
+                android:gravity="bottom"
                 android:textSize="20sp"
                 android:background="@color/fhauCream"
         />
