@@ -150,25 +150,6 @@ public class SimulatorAmpProvider implements IAmpProvider {
         return ProviderState_e.PROVIDER_DEVICE_CONNECTION_SUCCEEDED;
     }
 
-    @Override
-    public ProviderState_e getState() {
-        return null;
-    }
-
-    @Override
-    public void sendCommand(String commandHexString) { }
-
-    @Override
-    public String getFirmwareVersion() {
-        return "";
-    }
-
-    @Override
-    public PresetInfo getPresetInfo(PresetInfo requestedPresets) {
-        assert requestedPresets == null;
-        return m_presetInfo;
-    }
-
     public static void main(String[] args) {
         SimulatorAmpProvider sap = new SimulatorAmpProvider(null, SimulationMode.NO_DEVICE);
         SimulatorAmpProvider.IVisitor testVisitor = new IVisitor() {

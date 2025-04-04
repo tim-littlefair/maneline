@@ -69,29 +69,7 @@ public class MainActivity
             if (itemId == R.id.action_disconnect) {
                 throw new MainActivityError("TODO: Implement disconnect");
             } else {
-                /*
-                if(itemId == R.id.action_provider_sim_nodev) {
-                    m_ampManager.setProvider(new SimulatorAmpProvider(
-                        s_loggingAgent,
-                        SimulatorAmpProvider.SimulationMode.NO_DEVICE
-                    ));
-                } else if(itemId == R.id.action_provider_sim_lt40s) {
-                    m_ampManager.setProvider(new SimulatorAmpProvider(
-                        s_loggingAgent,
-                        SimulatorAmpProvider.SimulationMode.NO_DEVICE
-                    ));
-                } else if(itemId == R.id.action_provider_sim_mmp) {
-                    m_ampManager.setProvider(new SimulatorAmpProvider(
-                        s_loggingAgent,
-                        SimulatorAmpProvider.SimulationMode.NO_DEVICE
-                    ));
-                } else {
-                    throw new MainActivityError(String.format(
-                        "Provider %s not implemented yet",
-                        item.getTitle()
-                    ));
-                }
-                 */
+                // TODO: Do something here
                 item.setChecked(true);
             }
         }
@@ -176,8 +154,12 @@ public class MainActivity
     void connect() {
         IAmpProvider.ProviderState_e cxnStatus = m_provider.attemptConnection();
         if(cxnStatus == PROVIDER_DEVICE_CONNECTION_SUCCEEDED) {
+            appendToLog("Connection succeeded");
             m_provider.getFirmwareVersionAndPresets();
             populatePresetSuiteDropdown();
+            appendToLog("Presets populated");
+        } else {
+            appendToLog("cxnStatus=" + cxnStatus);
         }
     }
 

@@ -5,8 +5,6 @@ import net.heretical_camelid.fhau.lib.interfaces.ILoggingAgent;
 /**
  * The class below is available as a default implementation
  * of ILoggingAgent for clients.
- * Within the current package, it is used for clients which pass a null
- * as the loggingAgent parameter to the AmpManager constructor.
  */
 public class DefaultLoggingAgent implements ILoggingAgent {
     int m_maxVisibleLoggingLevel;
