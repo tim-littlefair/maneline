@@ -200,7 +200,7 @@ public class MainActivity
 
     private void onConnectAttemptOutcome(IAmpProvider.ProviderState_e cxnStatus) {
         if(cxnStatus == PROVIDER_DEVICE_CONNECTION_SUCCEEDED) {
-            appendToLog("Connected to amplifier - retrieving presets");
+            appendToLog("Connected to amplifier - retrieving firmware version and presets");
             m_providerHandler.sendEmptyMessage(MESSAGE_PROVIDER_CONNECTED.ordinal());
         } else {
             appendToLog("cxnStatus=" + cxnStatus);
