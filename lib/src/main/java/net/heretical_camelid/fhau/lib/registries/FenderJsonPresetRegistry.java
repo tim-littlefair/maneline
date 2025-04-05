@@ -14,6 +14,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import net.heretical_camelid.fhau.lib.PresetRecord;
 
 /**
  * The registry class below is an extension of PresetRegistryBase
@@ -27,10 +28,13 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
     final static Gson s_gsonPretty = new GsonBuilder().setPrettyPrinting().create();
 
     final String m_outputPath;
+    HashMap<Integer,Record> m_slotsToRecords;
     HashMap<String, ArrayList<Integer>> m_duplicateSlots;
+
 
     public FenderJsonPresetRegistry(String outputPath) {
         m_outputPath = outputPath;
+        m_slotsToRecords = new HashMap<>();
         m_duplicateSlots = new HashMap<>();
     }
 
@@ -47,6 +51,7 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
         if(existingDuplicateSlotList==null) {
             ArrayList<Integer> newDuplicateSlotList = new ArrayList<>();
             newDuplicateSlotList.add(slotIndex);
+            m_slotsToRecords.put(slotIndex,newRecord);
             m_duplicateSlots.put(dsk,newDuplicateSlotList);
             m_records.put(slotIndex, newRecord);
         } else {
@@ -130,6 +135,10 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
             System.err.println("Unable to write to " + rawTargetPath + ", continuing...");
             return -2;
         }
+    }
+
+    public Record get(int slotIndex) {
+        return m_slotsToRecords.get(slotIndex);
     }
 
     public static class Record extends PresetRecordBase {

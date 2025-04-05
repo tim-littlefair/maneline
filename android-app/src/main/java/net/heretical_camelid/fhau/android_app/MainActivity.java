@@ -3,7 +3,6 @@ package net.heretical_camelid.fhau.android_app;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.view.Menu;
@@ -51,7 +50,13 @@ enum MessageType_e {
 public class MainActivity
         extends AppCompatActivity
         implements AdapterView.OnItemSelectedListener {
-    public static final String LOG_MESSAGE = "LOG_MESSAGE";
+
+    // The following constants are used as keys when messages are sent to m_providerHandler
+    public static final String MESSAGE_LOG_APPEND_STRING = "MESSAGE_LOG_APPEND_STRING";
+    public static final String MESSAGE_SLOT_INDEX = "MESSAGE_SLOT_INDEX";
+    public static final String MESSAGE_PRESET_NAME = "MESSAGE_PRESET_NAME";
+    public static final String MESSAGE_PRESET_EFFECTS = "MESSAGE_PRESET_EFFECTS";
+
     LoggingAgent m_loggingAgent;
     AndroidUsbAmpProvider m_provider;
     Thread m_providerThread;
@@ -69,7 +74,7 @@ public class MainActivity
             Message logMessage = new Message();
             logMessage.what = MESSAGE_APPEND_TO_LOG.ordinal();
             Bundle messageBundle = new Bundle();
-            messageBundle.putString(LOG_MESSAGE, message);
+            messageBundle.putString(MESSAGE_LOG_APPEND_STRING, message);
             logMessage.setData(messageBundle);
             m_providerHandler.sendMessage(logMessage);
         } else if (
@@ -129,39 +134,7 @@ public class MainActivity
 
         m_provider = new AndroidUsbAmpProvider(this);
         m_providerThread = null;
-        m_providerHandler = new Handler(Looper.getMainLooper()) {
-            public void handleMessage(Message m) {
-                assert m_providerThread!=null;
-                switch (MessageType_e.values()[m.what]) {
-                    case MESSAGE_PROVIDER_CONNECTED:
-                        assert m_providerThread.isAlive()==false;
-                        m_btnConnectionStatus.setText("Click to reconnect");
-                        m_providerThread = new Thread() {
-                            @Override
-                            public void run() {
-                                m_provider.getFirmwareVersionAndPresets();
-                                m_providerHandler.sendEmptyMessage(MESSAGE_PRESETS_DOWNLOADED.ordinal());
-                            }
-                        };
-                        m_providerThread.start();
-                        break;
-
-                    case MESSAGE_PRESETS_DOWNLOADED:
-                        assert m_providerThread.isAlive()==false;
-                        m_providerThread = null;
-                        appendToLog("Presets retrieved - grouping into suites");
-                        populatePresetSuiteDropdown();
-                        break;
-
-                    case MESSAGE_APPEND_TO_LOG:
-                        appendToLog(m.getData().getString(LOG_MESSAGE));
-                        break;
-
-                    default:
-                        appendToLog("Unexpected message received by providerHandler: " + m.what);
-                }
-            }
-        };
+        m_providerHandler = new Handler();
 
         m_btnConnectionStatus = findViewById(R.id.btn_cxn_status);
         m_btnConnectionStatus.setOnClickListener(new View.OnClickListener() {
@@ -348,5 +321,65 @@ public class MainActivity
         setupPresetButtonsForSuite(suiteName, suitePresetRecords);
     }
 
+    class Handler extends android.os.Handler {
+        public Handler() {
+            super(Looper.getMainLooper());
+        }
+
+        public void handleMessage(Message m) {
+            //assert m_providerThread!=null;
+            switch (MessageType_e.values()[m.what]) {
+                case MESSAGE_PROVIDER_CONNECTED:
+                    assert m_providerThread.isAlive()==false;
+                    m_btnConnectionStatus.setText("Click to reconnect");
+                    m_providerThread = new Thread() {
+                        @Override
+                        public void run() {
+                            m_provider.getFirmwareVersionAndPresets();
+                            m_providerHandler.sendEmptyMessage(MESSAGE_PRESETS_DOWNLOADED.ordinal());
+                        }
+                    };
+                    m_providerThread.start();
+                    break;
+
+                case MESSAGE_PRESETS_DOWNLOADED:
+                    assert m_providerThread.isAlive()==false;
+                    m_providerThread = null;
+                    appendToLog("Presets retrieved - grouping into suites");
+                    populatePresetSuiteDropdown();
+                    break;
+
+                case MESSAGE_PRESET_SELECTED:
+                    Bundle messageData = m.getData();
+                    int slotIndex = messageData.getInt(MESSAGE_SLOT_INDEX);
+                    String presetName = messageData.getString(MESSAGE_PRESET_NAME);
+                    String effects = messageData.getString(MESSAGE_PRESET_EFFECTS);
+                    // expand abbreviations in effects for readability
+                    effects = effects
+                                  // Note that changing ':' to '=' is required
+                                  // to prevent every mod: being changed to mo\ndelay:
+                                  // Alternatively we could have reordered substitutions
+                                  // so delay is done before mod, but changing the
+                                  // separator allows us to process the effects in their
+                                  // typical order, and feels OK for readability
+                                  .replace("s:","\nstomp=")
+                                  .replace("m:", "\nmod=")
+                                  .replace( "a:", "\namp=")
+                                  .replace("d:","\ndelay=")
+                                  .replace("r:","\nreverb=")
+                                  .strip();
+                    appendToLog("Preset loaded: " + presetName);
+                    appendToLog("Effects:\n"+effects+"\n");
+                    break;
+
+                case MESSAGE_APPEND_TO_LOG:
+                    appendToLog(m.getData().getString(MESSAGE_LOG_APPEND_STRING));
+                    break;
+
+                default:
+                    appendToLog("Unexpected message received by providerHandler: " + m.what);
+            }
+        }
+    }
 }
 

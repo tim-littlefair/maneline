@@ -2,6 +2,8 @@ package net.heretical_camelid.fhau.android_app;
 
 import android.annotation.SuppressLint;
 
+import android.os.Bundle;
+import android.os.Message;
 import net.heretical_camelid.fhau.lib.*;
 import net.heretical_camelid.fhau.lib.interfaces.IAmpProvider;
 import net.heretical_camelid.fhau.lib.registries.FenderJsonPresetRegistry;
@@ -52,7 +54,23 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
 
     @Override
     public void switchPreset(int slotIndex) {
-        m_protocol.switchPreset(slotIndex);
+        FenderJsonPresetRegistry.Record presetRecord = m_presetRegistry.get(slotIndex);
+        if(presetRecord == null) {
+            m_mainActivity.appendToLog("No preset found for slot id " + slotIndex);
+        } else {
+            m_protocol.switchPreset(slotIndex);
+            Bundle msgData = new Bundle();
+            msgData.putInt(MainActivity.MESSAGE_SLOT_INDEX, slotIndex);
+            msgData.putString(
+                MainActivity.MESSAGE_PRESET_NAME,
+                presetRecord.displayName().replaceAll("( )+", " ").strip()
+            );
+            msgData.putString(MainActivity.MESSAGE_PRESET_EFFECTS, presetRecord.effects());
+            Message presetChangeMsg = new Message();
+            presetChangeMsg.what = MessageType_e.MESSAGE_PRESET_SELECTED.ordinal();
+            presetChangeMsg.setData(msgData);
+            m_mainActivity.m_providerHandler.sendMessage(presetChangeMsg);
+        }
     }
 
     @Override
