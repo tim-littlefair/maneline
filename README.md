@@ -19,9 +19,11 @@ A collection of code and data related to the protocols used to control Fender Mu
 
 # Credits
 
-The usb-hid library for Android and the structure of the FHAU Android app are based on the 
+The usb-hid library for Android and the initial structure of the FHAU Android app are based on the 
 following upstream GitHub repository:
 https://github.com/benlypan/UsbHid
+The Android app has since been modified extensively and I now regard it as original work in this
+repository, but the usb-hid directory has very few changes relative to @benlypan's original work.
 
 README-usbhid.md in this repository contains the original README of the upstream repository.
 
@@ -46,4 +48,7 @@ on 4 December 2024, zip file stored in the /assets directory.
 TBD
 
 # License
-MIT
+Code in the usb-hid subdirectory is written by @benlypan and remains under the MIT license under which it was originally
+published.
+
+Code in all other directories is original work in the current repository and is licensed under GPL version 3.
