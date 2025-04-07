@@ -11,11 +11,11 @@ then
   exit 1
 fi
 
-required_apt_packages="openjdk-17-jdk openjdk-17-doc openjdk-17-dbg openjdk-17-source"
+required_apt_packages='openjdk-17-jdk openjdk-17-doc openjdk-17-dbg openjdk-17-source'
+
 . /etc/os-release
 if [ "$ID" = "debian" ]
 then
-  # Debian 12 contains a package called sdkmanager which
   required_apt_packages="$required_apt_packages sdkmanager"
 elif [ "$ID" = "ubuntu" ]
 then
@@ -43,7 +43,12 @@ mkdir $devenv_path
 mkdir $ANDROID_SDK
 mkdir $GRADLE_USER_HOME
 
-sdkmanager --sdk_root=$ANDROID_SDK --install "platforms;android-34.ext12"
+if [ "$ID" = "debian" ]
+then
+  sdkmanager --sdk_root=$ANDROID_SDK --install "platforms-tools;android-34.0.5"
+fi
+
+sdkmanager --sdk_root=$ANDROID_SDK --install "platforms;android-34"
 sdkmanager --sdk_root=$ANDROID_SDK --install "sources;android-34"
 sdkmanager --sdk_root=$ANDROID_SDK --install "build-tools;34.0.0"
 sdkmanager --sdk_root=$ANDROID_SDK --install "system-images;android-34;aosp_atd;x86_64"
