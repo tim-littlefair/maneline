@@ -111,6 +111,7 @@ y
 y
 y" | cmdline-tools/latest/bin/sdkmanager --licenses
 cmdline-tools/latest/bin/sdkmanager --licenses
+cmdline-tools/latest/bin/sdkmanager --list_installed
 
 
 exit 0
