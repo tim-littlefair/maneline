@@ -1,8 +1,19 @@
 #!/bin/sh
 
-# The development
+
+# The development environment can be anywhere but it 
+# is recommended it should sit as a sibling directory 
+# alongside the root of the Git repository so that
+# a) there is no danger of accidentally checking the 
+# development environment in; and
+# b) development environment tools can be run manually
+# from a shell in the root of the repository with 
+# simple consistent command lines.
+
 devenv_path=$1
 
+# The script expects that when it runs, the 
+# development environment directory will not exist...
 if [ -e $devenv_path ]
 then
   echo There is either a file or a directory at $devenv_path.
@@ -11,48 +22,94 @@ then
   exit 1
 fi
 
-required_apt_packages='openjdk-17-jdk openjdk-17-doc openjdk-17-dbg openjdk-17-source'
-
-. /etc/os-release
-if [ "$ID" = "debian" ]
-then
-  required_apt_packages="$required_apt_packages sdkmanager"
-elif [ "$ID" = "ubuntu" ]
-then
-  required_apt_packages="$required_apt_packages google-android-cmdline-tools-13.0-installer"
-else
-  echo Operating system ID "$ID" not recognized
-  echo Please ensure Google\'s 'sdkmanager' utility is installed
-fi
-
-sudo apt -y update
-if [ "$?" != "0" ]
-then
-  echo sudo not available to user running this script -
-  echo ask adminstrator to ensure that the OS is up to date
-  echo and that the following packages are installed:
-  echo $required_apt_packages
-else
-  sudo apt -y upgrade
-  sudo apt install -y $required_apt_packages
-fi
-
-export ANDROID_SDK=$devenv_path/AndroidSdk
-export GRADLE_USER_HOME=$devenv_path/GradleUserHome
+# ... but its parent will
 mkdir $devenv_path
-mkdir $ANDROID_SDK
-mkdir $GRADLE_USER_HOME
-
-if [ "$ID" = "debian" ]
+if [ ! "$?" = "0" ]
 then
-  sdkmanager --sdk_root=$ANDROID_SDK --install "platforms-tools;android-34.0.5"
+  echo Unable to create devenv at $devenv_path
+  exit 1
 fi
 
-sdkmanager --sdk_root=$ANDROID_SDK --install "platforms;android-34"
-sdkmanager --sdk_root=$ANDROID_SDK --install "sources;android-34"
-sdkmanager --sdk_root=$ANDROID_SDK --install "build-tools;34.0.0"
-sdkmanager --sdk_root=$ANDROID_SDK --install "system-images;android-34;aosp_atd;x86_64"
-sdkmanager --sdk_root=$ANDROID_SDK --update
+# ... and a download cache might or might not
+cd $devenv_path
+devenv_path=$(pwd)
+cache_dir=../cache
+if [ ! -d $cache_dir ]
+then
+  mkdir $cache_dir
+  if [ ! "$?" = "0" ]
+  then
+    echo Unable to create cache
+    exit 2
+  fi
+fi
+
+# For the moment we only support Linux/x64
+# but we use variables which could be varied
+# at some time in the future for macOS, Windows
+# Linux/ARM etc
+
+# Development presently standardises on JDK 21, using 
+# Oracle's openjdk archive at
+# https://jdk.java.net/archive/
+jdk_url=https://download.java.net/java/GA/jdk21.0.2/f2283984656d49d69e91c558476027ac/13/GPL/openjdk-21.0.2_linux-x64_bin.tar.gz
+jdk_file=$(basename $(echo $jdk_url | sed -e s^https:/^^))
+
+# It also uses Android command line tools, 
+# URLs for these are available at 
+# https://developer.android.com/studio#command-line-tools-only
+android_cltools_url=https://dl.google.com/android/repository/commandlinetools-linux-13114758_latest.zip
+android_cltools_file=$(basename $(echo $android_cltools_url | sed -e s^https:/^^))
+
+cd $cache_dir
+set $cache_dir=$(pwd)
+
+if [ ! -e $jdk_file ]
+then
+  echo Downloading $jdk_url
+  wget $jdk_url
+fi
+
+if [ ! -e $android_cltools_file ]
+then
+  echo Downloading $android_cltools_url
+  wget $android_cltools_url
+fi
+
+cd $devenv_path
+
+echo Unpacking $jdk_file
+tar xzvf $cache_dir/$jdk_file
+
+echo Unpacking $android_cltools_file
+mkdir android_sdk
+cd android_sdk
+unzip ../$cache_dir/$android_cltools_file
+mv cmdline-tools latest
+mkdir cmdline-tools
+mv latest cmdline-tools/latest
+
+#ANDROID_SDK=$(pwd)
+#export ANDROID_SDK 
+echo "y
+y
+y
+y
+y
+y
+y
+y
+y
+y
+y" | cmdline-tools/latest/bin/sdkmanager --install \
+  "sources;android-35" \
+  "build-tools;35.0.0" \
+  "platforms;android-35" \
+  "system-images;android-35;aosp_atd;x86_64"
+
+cmdline-tools/latest/bin/sdkmanager --update
+cmdline-tools/latest/bin/sdkmanager --licenses
 
 
+exit 0
 
