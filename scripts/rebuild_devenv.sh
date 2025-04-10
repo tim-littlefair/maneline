@@ -67,13 +67,13 @@ set $cache_dir=$(pwd)
 if [ ! -e $jdk_file ]
 then
   echo Downloading $jdk_url
-  wget --style=dot:giga $jdk_url
+  wget --progress=dot:giga $jdk_url
 fi
 
 if [ ! -e $android_cltools_file ]
 then
   echo Downloading $android_cltools_url
-  wget --style=dot:giga $android_cltools_url
+  wget --progress=dot:giga $android_cltools_url
 fi
 
 cd $devenv_path
