@@ -90,8 +90,10 @@ mkdir cmdline-tools
 mv latest cmdline-tools/latest
 
 cmdline-tools/latest/bin/sdkmanager --install \
+  "build-tools;35.0.1" \
+  "platform-tools" \
+  "emulator" \
   "sources;android-35" \
-  "build-tools;35.0.0" \
   "platforms;android-35" \
   "system-images;android-35;aosp_atd;x86_64"
 
@@ -109,6 +111,7 @@ y
 y
 y" | cmdline-tools/latest/bin/sdkmanager --licenses
 cmdline-tools/latest/bin/sdkmanager --licenses
+
 
 exit 0
 
