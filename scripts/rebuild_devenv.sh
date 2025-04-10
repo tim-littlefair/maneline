@@ -67,13 +67,13 @@ set $cache_dir=$(pwd)
 if [ ! -e $jdk_file ]
 then
   echo Downloading $jdk_url
-  wget $jdk_url
+  wget --style=dot:giga $jdk_url
 fi
 
 if [ ! -e $android_cltools_file ]
 then
   echo Downloading $android_cltools_url
-  wget $android_cltools_url
+  wget --style=dot:giga $android_cltools_url
 fi
 
 cd $devenv_path
@@ -89,8 +89,14 @@ mv cmdline-tools latest
 mkdir cmdline-tools
 mv latest cmdline-tools/latest
 
-#ANDROID_SDK=$(pwd)
-#export ANDROID_SDK 
+cmdline-tools/latest/bin/sdkmanager --install \
+  "sources;android-35" \
+  "build-tools;35.0.0" \
+  "platforms;android-35" \
+  "system-images;android-35;aosp_atd;x86_64"
+
+cmdline-tools/latest/bin/sdkmanager --update
+
 echo "y
 y
 y
@@ -101,15 +107,8 @@ y
 y
 y
 y
-y" | cmdline-tools/latest/bin/sdkmanager --install \
-  "sources;android-35" \
-  "build-tools;35.0.0" \
-  "platforms;android-35" \
-  "system-images;android-35;aosp_atd;x86_64"
-
-cmdline-tools/latest/bin/sdkmanager --update
+y" | cmdline-tools/latest/bin/sdkmanager --licenses
 cmdline-tools/latest/bin/sdkmanager --licenses
-
 
 exit 0
 
