@@ -2,12 +2,12 @@ pipeline {
     agent any
     options {
         // Timeout counter starts AFTER agent is allocated
-        timeout(time: 1, unit: 'SECONDS')
+        timeout(time: 600, unit: 'SECONDS')
     }
     stages {
-        stage('Example') {
+        stage('SDK check/rebuild/build') {
             steps {
-                echo 'Hello World'
+                sh './scripts/rebuild_sdk.sh'
             }
         }
     }

@@ -1,6 +1,5 @@
 #!/bin/sh
 
-
 # The development environment can be anywhere but it 
 # is recommended it should sit as a sibling directory 
 # alongside the root of the Git repository so that
@@ -10,7 +9,7 @@
 # from a shell in the root of the repository with 
 # simple consistent command lines.
 
-devenv_reldir=$1
+devenv_reldir=../$SDK_NAME
 
 # The script expects that when it runs, the 
 # development environment directory will not exist...
