@@ -7,7 +7,7 @@ pipeline {
     stages {
         stage('SDK check/rebuild/build') {
             steps {
-                sh './scripts/rebuild_sdk.sh'
+                sh 'sh ./scripts/rebuild_sdk.sh'
             }
         }
     }
