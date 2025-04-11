@@ -92,6 +92,7 @@ mv latest cmdline-tools/latest
 export JAVA_HOME=$devenv_absdir/jdk-21.0.2
 yes | cmdline-tools/latest/bin/sdkmanager --install \
   "build-tools;35.0.1" \
+  "build-tools;34.0.0" \
   "platform-tools" \
   "emulator" \
   "sources;android-35" \
