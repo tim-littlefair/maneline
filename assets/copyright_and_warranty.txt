@@ -1,0 +1,6 @@
+Feral Horse Amp Utils (FHAU) version %VERSION%
+Copyright (C) 2025 Tim Littlefair
+
+FHAU comes with ABSOLUTELY NO WARRANTY; %NO_WARRANTY_DETAILS%.
+
+FHAU is free software, and you are welcome to redistribute it under certain conditions; %COPYING_DETAILS%.
