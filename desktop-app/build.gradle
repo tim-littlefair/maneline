@@ -9,13 +9,17 @@ java {
 
 jar {
     manifest {
-        attributes "MainClass" : 'net.heretical_camelid.fhau.desktop_app.CommandLineInterface'
+        attributes "Main-Class" : 'net.heretical_camelid.fhau.desktop_app.CommandLineInterface'
     }
     from {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }    
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     dependsOn(':lib:jar')
+}
+
+base {
+    archivesName = "desktopFHAUcli-$rootProject.ext.versionName"
 }
 
 dependencies {

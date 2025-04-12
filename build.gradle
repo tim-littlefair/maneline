@@ -20,3 +20,14 @@ allprojects {
         mavenCentral()
     }
 }
+
+// For Android apps relased via PlayStore, versionCode must
+// be a monotonically increasing integer.
+// This will be substituted during release candidate builds
+// by a script in a release build following the format
+// sprintf("%d%02d%02d0%04d",major,minor,patch,build)
+// NB Major must have format %d not %02d to avoid interpretation
+// as octal.
+ext.versionCode=9999
+ext.versionName="0.0.0"
+

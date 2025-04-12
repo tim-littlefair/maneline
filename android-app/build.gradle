@@ -5,8 +5,8 @@ android {
     defaultConfig {
         applicationId "net.heretical_camelid.fhau.android_app"
         minSdkVersion 25
-        versionCode 1
-        versionName "1.0"
+        versionCode rootProject.ext.versionCode
+        versionName rootProject.ext.versionName
     }
     defaultConfig {
         targetSdkVersion 35
@@ -28,6 +28,10 @@ android {
         android.buildFeatures.buildConfig true
         viewBinding true
     }
+}
+
+base {
+    archivesName = "androidFHAU-$android.defaultConfig.versionName"
 }
 
 dependencies {
