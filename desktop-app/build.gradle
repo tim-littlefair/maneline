@@ -10,10 +10,17 @@ java {
 jar {
     manifest {
         attributes "Main-Class" : 'net.heretical_camelid.fhau.desktop_app.CommandLineInterface'
+        attributes "Implementation-Version" : "$rootProject.ext.versionName"
     }
     from {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
-    }    
+    }
+    from('..') {
+        include "LICENSE"
+        include "assets/copyright_and_warranty.txt"
+        include "assets/warranty_disclaimer.txt"
+    }
+
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     dependsOn(':lib:jar')
 }
@@ -26,4 +33,5 @@ dependencies {
     implementation project(':lib')
     implementation 'net.java.dev.jna:jna:5.8.0'
     implementation 'org.hid4java:hid4java:0.8.0'
+    implementation 'org.jcommander:jcommander:2.0'
 }

@@ -31,3 +31,8 @@ allprojects {
 ext.versionCode=9999
 ext.versionName="0.0.0"
 
+tasks.register('warrantyAndCopyrightFiles',Copy) {
+    from 'assets'
+    include 'copyright_and_warrranty.txt'
+}
+
