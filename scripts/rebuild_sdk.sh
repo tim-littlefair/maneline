@@ -53,25 +53,34 @@ cache_absdir=$(pwd)
 # Development presently standardises on JDK 21, using 
 # Oracle's openjdk archive at
 # https://jdk.java.net/archive/
-jdk_url=https://download.java.net/java/GA/jdk21.0.2/f2283984656d49d69e91c558476027ac/13/GPL/openjdk-21.0.2_linux-x64_bin.tar.gz
-jdk_file=$(basename $(echo $jdk_url | sed -e s^https:/^^))
-
-# It also uses Android command line tools, 
-# URLs for these are available at 
+# It also uses Android command line tools,
+# URLs for these are available at
 # https://developer.android.com/studio#command-line-tools-only
-android_cltools_url=https://dl.google.com/android/repository/commandlinetools-linux-13114758_latest.zip
+
+osname=$(uname -s)
+if [ "$osname" = "Linux" ]
+then
+  jdk_url=https://download.java.net/java/GA/jdk21.0.2/f2283984656d49d69e91c558476027ac/13/GPL/openjdk-21.0.2_linux-x64_bin.tar.gz
+  android_cltools_url=https://dl.google.com/android/repository/commandlinetools-linux-13114758_latest.zip
+elif [ "$osname" = "Darwin" ]
+then
+  jdk_url=https://download.java.net/java/GA/jdk21.0.2/f2283984656d49d69e91c558476027ac/13/GPL/openjdk-21.0.2_macos-x64_bin.tar.gz
+  android_cltools_url=https://dl.google.com/android/repository/commandlinetools-mac-13114758_latest.zip
+fi
+
 android_cltools_file=$(basename $(echo $android_cltools_url | sed -e s^https:/^^))
+jdk_file=$(basename $(echo $jdk_url | sed -e s^https:/^^))
 
 if [ ! -e $jdk_file ]
 then
   echo Downloading $jdk_url
-  wget --progress=dot:giga $jdk_url
+  curl $jdk_url -o $jdk_file
 fi
 
 if [ ! -e $android_cltools_file ]
 then
   echo Downloading $android_cltools_url
-  wget --progress=dot:giga $android_cltools_url
+  curl $android_cltools_url -o $android_cltools_file
 fi
 
 cd $devenv_absdir
@@ -88,7 +97,17 @@ mv cmdline-tools latest
 mkdir cmdline-tools
 mv latest cmdline-tools/latest
 
-export JAVA_HOME=$devenv_absdir/jdk-21.0.2
+if [ -d $devenv_absdir/jdk-21.0.2 ]
+then
+  export JAVA_HOME=$devenv_absdir/jdk-21.0.2
+elif [ -d $devenv_absdir/jdk-21.0.2.jdk/Contents/Home ]
+then
+  export JAVA_HOME=$devenv_absdir/jdk-21.0.2.jdk/Contents/Home
+else
+  echo Could not find appropriate JAVA_HOME
+  exit 2
+fi
+
 yes | cmdline-tools/latest/bin/sdkmanager --install \
   "build-tools;35.0.1" \
   "build-tools;34.0.0" \
