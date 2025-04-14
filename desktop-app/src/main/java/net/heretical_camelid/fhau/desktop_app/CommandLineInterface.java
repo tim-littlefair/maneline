@@ -67,7 +67,7 @@ public class CommandLineInterface implements ILoggingAgent {
         doDisclaimerAcceptedCheck();
         if(s_argParamShowDisclaimer==true) {
             showDisclaimerAndPromptForAcceptance();
-            System.exit(0);
+            // System.exit(0);
         }
 
         String outputPath = null;
