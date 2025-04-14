@@ -67,7 +67,7 @@ public class CommandLineInterface implements ILoggingAgent {
         doDisclaimerAcceptedCheck();
         if(s_argParamShowDisclaimer==true) {
             showDisclaimerAndPromptForAcceptance();
-            // System.exit(0);
+            System.exit(0);
         }
 
         String outputPath = null;
@@ -134,6 +134,7 @@ public class CommandLineInterface implements ILoggingAgent {
                 ),
                 DateTimeFormatter.BASIC_ISO_DATE
             );
+            disclaimerAcceptedUntilFIS.close();
             if(LocalDate.now().compareTo(disclaimerAcceptedUntilDate)>0) {
                 // The disclaimer has not been displayed and accepted
                 // recently, so show it again
@@ -188,10 +189,53 @@ public class CommandLineInterface implements ILoggingAgent {
 
     private static void showDisclaimerAndPromptForAcceptance() {
         HashMap<String,String> substitutions = new HashMap<>();
+        substitutions.put(
+                "%HOW_TO_DISABLE_DISCLAIMER%",
+                String.join(
+                    "\n",
+                    "Having read the disclaimer above, do you accept the risks ",
+                    "of running this software?",
+                    "Type 'yes' to accept, anything else to decline."
+                )
+        );
         showMessageWithSubstitutions(
             "/assets/warranty_disclaimer.txt",
             substitutions
         );
+        try {
+            String inputLine = null;
+            inputLine = new BufferedReader(
+                new InputStreamReader(System.in)
+            ).readLine();
+            if(inputLine.contains("yes")) {
+                String nextDisclaimerDisplayDate = LocalDate.now().plusDays(
+                    DISCLAIMER_ACCEPTANCE_DURATION_DAYS
+                ).format(DateTimeFormatter.BASIC_ISO_DATE);
+                FileOutputStream disclaimerAcceptedUntilFOS = new FileOutputStream(
+                    DISCLAIMER_ACCEPTANCE_RECORD_FILENAME
+                );
+                disclaimerAcceptedUntilFOS.write(nextDisclaimerDisplayDate.getBytes());
+                disclaimerAcceptedUntilFOS.close();
+                System.out.println(
+                    String.join("\n",
+                        "You have accepted the disclaimer, please run this program ",
+                        "again to connect to your FMIC device.",
+                        "The disclaimer will need to be accepted again after " + nextDisclaimerDisplayDate,
+                        ""
+                    )
+                );
+            } else {
+                System.out.println(
+                    String.join("\n",
+                        "You have not accepted the disclaimer.  This program will ",
+                        "not attempt to connect to your FMIC device until you do.",
+                        ""
+                    )
+                );
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     static void showMessageWithSubstitutions(

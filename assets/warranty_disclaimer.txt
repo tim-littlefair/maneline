@@ -29,5 +29,4 @@ software, and that they agree that the developer
 of FHAU accepts no liability for adverse consequences
 caused by running the software.
 
-%HOW_TO_DISABLE_DISCLAIMER%.
-
+%HOW_TO_DISABLE_DISCLAIMER%
