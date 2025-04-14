@@ -88,7 +88,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
             if (productId==0x0046) {
                 // Mustang LT40S - tested with firmware 1.0.7
                 System.out.println("Mustang LT40S - tested with firmware 1.0.7 - expected to work");
-            } else if (productId==0x0037) {
+            } else if (productId==0x0043) {
                 // Original Mustang Micro - with 2024/2025 firmware this does not enumerate as an 
                 // HID Device - including it here in the distant hope that a future firmware might
                 System.out.println("Original Mustang Micro - not expected to be detected via USB HID");                
@@ -96,7 +96,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
                 // Mustang Micro Plus - with 2024/2025 firmware this does not enumerate as an 
                 // HID Device - including it here in the distant hope that a future firmware might
                 System.out.println("Mustang Micro Plus - not expected to be detected via USB HID (but might work with BLE HID over GATT)");                
-            } else if(productId>=0x0040 && productId<0x0046) {
+            } else if(productId>=0x0030 && productId<0x004F) {
                 // See incomplete list of VID/PIDs for Mustang products at 
                 // https://github.com/offa/plug/blob/master/doc/USB.md
                 // This range appears to be where the LT-series devices lie historically.    
