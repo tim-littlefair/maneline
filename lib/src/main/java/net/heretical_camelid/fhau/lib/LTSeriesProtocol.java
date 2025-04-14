@@ -40,14 +40,14 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
 
     @Override
     public void doShutdown() {
-        log("Shutting down");
+        //log("Shutting down");
         synchronized(m_heartbeatThread) {
-            log("Setting heartbeat stop flag");
+            //log("Setting heartbeat stop flag");
             m_heartbeatStopped = true;
-            log("Heartbeat stop flag set");
+            //log("Heartbeat stop flag set");
         }
         m_heartbeatThread.interrupt();
-        log("Heartbeat thread interrupted");
+        //log("Heartbeat thread interrupted");
     }
 
 
@@ -72,7 +72,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         } else if(m_heartbeatThread.isAlive()) {
             log("Heartbeat thread is already started");
         } else {
-            log("Starting heartbeat thread");
+            //log("Starting heartbeat thread");
             m_heartbeatThread.start();
         }
     }
@@ -202,10 +202,12 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             String presetExtendedName = AbstractMessageProtocolBase.displayName(jsonDefinition);
             m_presetRegistry.register(presetIndex, presetExtendedName, jsonDefinition.getBytes(StandardCharsets.UTF_8));
         } else {
+            /*
             log(String.format(
                 "Response payload starts %02x:%02x:%02x",
                 assembledResponseMessage[2],assembledResponseMessage[3],assembledResponseMessage[4]
             ));
+             */
         }
 
         return STATUS_OK;
@@ -272,10 +274,15 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
 
     private int getPresetJson(int i, StringBuilder presetJsonSB) {
         String presetIndexHex = String.format("%02x", i);
-        String commandHexBytes = "35:07:08:00:ca:06:02:08:%1".replace("%1", presetIndexHex);
-        String commandDescription = "request for JSON for preset " + i;
-
-        return sendCommand(commandHexBytes, commandDescription,true);
+        String commandHexBytes = "35:07:08:00:ca:06:02:08:%1".replace(
+                "%1",
+                presetIndexHex
+        );
+        // Sending null instead of a command description suppresses
+        // 60 lines of logging for the 60 preset requests sent out
+        // during startup.
+        // String commandDescription = "request for JSON for preset " + i;
+        return sendCommand(commandHexBytes, null,true);
     }
 
     class HeartbeatThread extends Thread {

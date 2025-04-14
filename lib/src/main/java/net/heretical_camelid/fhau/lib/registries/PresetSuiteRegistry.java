@@ -101,7 +101,6 @@ public class PresetSuiteRegistry implements PresetRegistryBase.Visitor {
                                 );
                             }
                             suiteAmpNames.add(nextAmpName);
-                            System.out.println("Building: " + String.join(",",suiteAmpNames));
                             if (presetsForThisSuite.size()>=targetPresetsPerSuite) {
                                 retval.add(new PresetSuiteEntry(
                                     "Amplifiers " + String.join(",",suiteAmpNames),
@@ -132,9 +131,6 @@ public class PresetSuiteRegistry implements PresetRegistryBase.Visitor {
                         m_presetSuites = retval;
                         return retval;
                     } else {
-                        System.out.println(
-                            "Processed " + String.join(",",processedAmpNames)
-                        );
                         ampNames.removeAll(processedAmpNames);
                         if(remainingPresetCount<=maxPresetsPerSuite) {
                             HashMap<Integer, FenderJsonPresetRegistry.Record> presetsForOtherAmpSuite = new HashMap<>();

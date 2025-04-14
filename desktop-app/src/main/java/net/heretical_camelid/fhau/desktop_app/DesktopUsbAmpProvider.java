@@ -53,9 +53,6 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
         int si = hidServicesSpecification.getScanInterval();
         int dri = hidServicesSpecification.getDataReadInterval();
         int pi = hidServicesSpecification.getPauseInterval();
-        System.out.println(String.format(
-           "sm=%s si=%d dri=%d pi=%d", sm, si, dri, pi
-        ));
 
         // Get HID services using custom specification
         m_hidServices = HidManager.getHidServices(hidServicesSpecification);
@@ -137,8 +134,8 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
                     // the assets directory in case the original URL gets bit-rot.
                     boolean e_pah2_prev_state = enable_printAsHex2;
                     enable_printAsHex2 = true;
-                    System.out.println("FMIC device report descriptor: ");
-                    printAsHex2(reportDescriptor,"<");
+                    //System.out.println("FMIC device report descriptor: ");
+                    //printAsHex2(reportDescriptor,"<");
                     enable_printAsHex2 = e_pah2_prev_state;
                 }
 
@@ -164,7 +161,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
         String[] firmwareVersionEtc = new String[] { null };
         int startupStatus = m_protocol.doStartup(firmwareVersionEtc);
         m_firmwareVersion = firmwareVersionEtc[0];
-        System.out.println("Retrieving presets - should take < 5 seconds");
+        System.out.println("Retrieving presets 1-60 - should take < 5 seconds");
         int presetNamesStatus = m_protocol.getPresetNamesList();
         if(startupStatus!=0 || presetNamesStatus!=0) {
             System.out.println("doStartup returned " + startupStatus);
@@ -186,7 +183,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
 
     @Override
     public void hidDataReceived(HidServicesEvent event) {
-        System.out.println("hidDataReceived: " + event);
+        // System.out.println("hidDataReceived: " + event);
         byte[] responseBytes = event.getDataReceived();
     }
 
