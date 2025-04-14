@@ -97,6 +97,8 @@ mv cmdline-tools latest
 mkdir cmdline-tools
 mv latest cmdline-tools/latest
 
+cd $devenv_absdir
+
 if [ -d $devenv_absdir/jdk-21.0.2 ]
 then
   export JAVA_HOME=$devenv_absdir/jdk-21.0.2
@@ -107,8 +109,19 @@ else
   echo Could not find appropriate JAVA_HOME
   exit 2
 fi
+ANDROID_HOME=$devenv_absdir/android-sdk
 
-yes | cmdline-tools/latest/bin/sdkmanager --install \
+cat > sdk_vars.sh <<+
+JAVA_HOME=$JAVA_HOME
+ANDROID_HOME=$ANDROID_HOME
+ANDROID_USER_HOME=$ANDROID_HOME
+GRADLE_USER_HOME=$devenv_absdir/gradle-user-home
+PATH=$JAVA_HOME/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
++
+
+. sdk_vars.sh
+
+yes | sdkmanager --install \
   "build-tools;35.0.1" \
   "build-tools;34.0.0" \
   "platform-tools" \
@@ -117,9 +130,11 @@ yes | cmdline-tools/latest/bin/sdkmanager --install \
   "platforms;android-35" \
   "system-images;android-35;aosp_atd;x86_64"
 
-yes | cmdline-tools/latest/bin/sdkmanager --update
+yes | sdkmanager --update
 
-cmdline-tools/latest/bin/sdkmanager --list_installed
+yes | sdkmanager --licenses
+
+sdkmanager --list_installed
 
 exit 0
 
