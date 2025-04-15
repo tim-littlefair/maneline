@@ -39,18 +39,21 @@ public class UsbHidDevice {
 
     private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if (ACTION_USB_PERMISSION.equals(action)) {
-                context.unregisterReceiver(this);
-                synchronized (this) {
-                    UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
-                    if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false) && device != null) {
-                        openDevice();
-                    } else {
-                        onConnectFailed();
-                    }
+        String action = intent.getAction();
+        if (ACTION_USB_PERMISSION.equals(action)) {
+            context.unregisterReceiver(this);
+            synchronized (this) {
+                @SuppressWarnings("deprecation")
+                // TODO:
+                // Work out how to address deprecation of this line
+                UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
+                if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false) && device != null) {
+                    openDevice();
+                } else {
+                    onConnectFailed();
                 }
             }
+        }
         }
     };
 
@@ -160,6 +163,9 @@ public class UsbHidDevice {
                 PendingIntent.FLAG_IMMUTABLE
             );
             IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
+            // TODO:
+            // Work out the optimal way to update this to address the
+            // lint check unspecified register receiver
             context.registerReceiver(mUsbReceiver, filter);
             mUsbManager.requestPermission(mUsbDevice, permissionIntent);
         } else {
@@ -177,9 +183,9 @@ public class UsbHidDevice {
             onConnectFailed();
             return;
         }
-        if (Build.VERSION.SDK_INT >= 21) {
+        //if (Build.VERSION.SDK_INT >= 21) {
             mConnection.setInterface(mUsbInterface);
-        }
+        //}
 
         mHandler.post(new Runnable() {
             @Override
