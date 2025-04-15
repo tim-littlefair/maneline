@@ -22,10 +22,10 @@
 # which can be accessed are explicitly listed by USB vendor id
 # and product id in this file.
 
-# The file is intended to fulfill the same function for the
-# newer devices supported by FHAU.  FHAU is presently in an
-# experimental state, and for the time being the rules are
-# very permissive, allowing access to any device associated
+# The current file is intended to fulfill the same function
+# for the newer devices supported by FHAU.  FHAU is presently
+# in an experimental state, and for the time being the rules
+# are very permissive, allowing access to any device associated
 # with either FMIC's USB vendor id 1ed8 or their Bluetooth
 # Low Energy vendor id 09d8 (as it is on the FHAU roadmap to
 # add support for the Mustang Micro Plus device which uses
@@ -34,6 +34,13 @@
 # At some time in the future this file will be tightened up
 # to limit access to devices which are known to be interoperable
 # with a future stable version of FHAU.
+
+# For this file to be effective in allowing non-root users to
+# run the FHAU command line program on Linux, it must be
+# installed into the directory /usr/lib/udev/rules.d using
+# a command line like:
+# sudo cp 50-fhau.rules /usr/lib/udev/rules.d
+# A reboot may be required to ensure this rule becomes active
 
 SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1ed8", MODE="0660", GROUP="plugdev", TAG+="uaccess"
 SUBSYSTEM=="hidraw", ATTRS{idVendor}=="09d8", MODE="0660", GROUP="plugdev", TAG+="uaccess"
