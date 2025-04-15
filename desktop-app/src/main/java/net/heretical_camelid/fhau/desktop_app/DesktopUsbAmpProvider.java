@@ -170,11 +170,10 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
             return false;
         } else {
             m_protocol.startHeartbeatThread();
-            System.out.println();
-            m_presetRegistry.dump();
             m_presetSuiteRegistry.buildPresetSuites(9, 7, 3);
             System.out.println();
-            m_presetSuiteRegistry.dump();
+            m_presetRegistry.dump(m_presetSuiteRegistry);
+            System.out.println();
         }
         return true;
     }
