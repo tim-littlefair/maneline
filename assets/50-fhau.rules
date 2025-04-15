@@ -1,0 +1,39 @@
+# udev rules for the feral-horse-amp-utils (FHAU) program on Linux
+# ref:
+# https://github.com/tim-littlefair/feral-horse-amp-utils
+
+# The FHAU project consists of various pieces of software
+# which are intended to access modelling amplifiers
+# manufactured by Fender Musical Instruments Corporation (FMIC)
+# under the 'Mustang' and 'Rumble' brand name, and within that
+# range model numbers with the LT- prefix only.
+
+# FHAU is related in function, but not directly derived from
+# a program called mustang-plug which has been packaged as
+# part of various Linux distributions including Debian and Ubuntu
+# for a number of years, and which interoperates with a range
+# of older Mustang-branded amplifiers.
+
+# When the mustang-plug Debian package is installed a post-install
+# script creates a file at /usr/lib/udev/rules.d/50-mustang.rules
+# which has the effect of allowing a non-root user who is logged
+# in on the desktop to interact directly with the older Mustang
+# models which are supported by mustang-plug.  The devices
+# which can be accessed are explicitly listed by USB vendor id
+# and product id in this file.
+
+# The file is intended to fulfill the same function for the
+# newer devices supported by FHAU.  FHAU is presently in an
+# experimental state, and for the time being the rules are
+# very permissive, allowing access to any device associated
+# with either FMIC's USB vendor id 1ed8 or their Bluetooth
+# Low Energy vendor id 09d8 (as it is on the FHAU roadmap to
+# add support for the Mustang Micro Plus device which uses
+# this vendor id in its BLE communications).
+
+# At some time in the future this file will be tightened up
+# to limit access to devices which are known to be interoperable
+# with a future stable version of FHAU.
+
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1ed8", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="09d8", MODE="0660", GROUP="plugdev", TAG+="uaccess"
