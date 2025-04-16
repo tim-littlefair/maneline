@@ -15,7 +15,7 @@ public abstract class AbstractMessageProtocolBase {
 
     // Abstract interface begins
     public abstract int doStartup(String[] firmwareVersionEtc);
-    public abstract int getPresetNamesList();
+    public abstract int getPresetNamesList(int firstPreset, int lastPreset);
     // future
     // public abstract String getPresetDefinition(int slotIndex);
     // public abstract int switchToPreset(int slotIndex);

@@ -52,9 +52,9 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
 
 
     @Override
-    public int getPresetNamesList() {
+    public int getPresetNamesList(int firstPreset, int lastPreset) {
         assert m_deviceTransport!=null;
-        for (int i = 1; i <= 60; ++i) {
+        for (int i = firstPreset; i <= lastPreset; ++i) {
             StringBuilder presetJsonSB = new StringBuilder();
             int psJsonStatus = getPresetJson(i, presetJsonSB);
             if (psJsonStatus != STATUS_OK) {

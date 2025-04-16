@@ -40,7 +40,21 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
         int startupStatus = m_protocol.doStartup(firmwareVersionHolder);
         m_firmwareVersion = firmwareVersionHolder[0];
         m_mainActivity.appendToLog("Firmware Version: " + m_firmwareVersion);
-        int presetNamesStatus = m_protocol.getPresetNamesList();
+
+        // The Mustang LT40S with firmware 1.0.7 has 60 presets
+        // According to the internet, Mustang LT50, Mustang/Rumble LT25
+        // had 30 presets on early firmware, but have since had updated
+        // firmware released which supports 60 presets.
+        // If/when we get success reports from devices other than the
+        // LT40S we should update the values below.
+        // Experiments with LT40S/firmware 1.0.7 show that
+        // _on_that_device_firmware_combination_ there are no adverse
+        // consequences of requesting a preset out of the storage range
+        // of the amp.
+        int firstPreset = 1;
+        int lastPreset = 60;
+        int presetNamesStatus = m_protocol.getPresetNamesList(firstPreset, lastPreset);
+
         m_mainActivity.appendToLog(String.format(
             "Amp contains %d unique presets", m_presetRegistry.uniquePresetCount()
         ));
@@ -88,7 +102,21 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
             String[] startupItemWrapper = new String[2];
             m_protocol.setDeviceTransport(m_deviceTransportUsbHid);
             m_protocol.doStartup(startupItemWrapper);
-            m_protocol.getPresetNamesList();
+
+            // The Mustang LT40S with firmware 1.0.7 has 60 presets
+            // According to the internet, Mustang LT50, Mustang/Rumble LT25
+            // had 30 presets on early firmware, but have since had updated
+            // firmware released which supports 60 presets.
+            // If/when we get success reports from devices other than the
+            // LT40S we should update the values below.
+            // Experiments with LT40S/firmware 1.0.7 show that
+            // _on_that_device_firmware_combination_ there are no adverse
+            // consequences of requesting a preset out of the storage range
+            // of the amp.
+            int firstPreset = 1;
+            int lastPreset = 60;
+            m_protocol.getPresetNamesList(firstPreset, lastPreset);
+
             m_protocol.startHeartbeatThread();
             buildAmpBasedPresetSuites(9, 7, 3);
         }

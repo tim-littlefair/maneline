@@ -19,6 +19,7 @@ jar {
         include "LICENSE"
         include "assets/copyright_and_warranty.txt"
         include "assets/warranty_disclaimer.txt"
+        include "assets/50-fhau.rules"
     }
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
