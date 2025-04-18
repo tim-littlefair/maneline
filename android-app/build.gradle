@@ -28,6 +28,14 @@ android {
         android.buildFeatures.buildConfig true
         viewBinding true
     }
+    // Occasional lint false positives with message
+    // 'MainActivity must extend android.app.Activity (Instantiable)'
+    // Need to be disabled
+    // Ref:
+    // https://stackoverflow.com/a/78556959
+    lintOptions {
+        disable.add("Instantiatable")
+    }
 }
 
 base {
