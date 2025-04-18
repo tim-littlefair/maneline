@@ -26,10 +26,17 @@ pipeline {
                     }
                     sh """
                         . ../$SDK_NAME/fhau_sdk_vars.sh
-                        ./gradlew build
+                        ./gradlew clean build
                     """
                 }
             }
         }
+    }
+    post {
+        success {
+            archiveArtifacts
+                artifacts: 'android-app/build/outputs/**/*.apk,desktop-app/**/*.jar'
+                fingerprint: true
+            }
     }
 }
