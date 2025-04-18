@@ -6,15 +6,14 @@ pipeline {
     }
     stages {
         stage('SDK check/rebuild/build') {
-            steps {
-                script {
-                    if(params.REBUILD_SDK == true) {
-                        echo Rebuilding FHAU SDK
-                        sh 'sh ./scripts/rebuild_sdk.sh'
-                    } else {
-                        echo Using existing FHAU SDK
-                    }
+            when {
+                expression {
+                    return params.REBUILD_SDK == true
                 }
+            }
+            steps {
+                echo "Rebuilding FHAU SDK"
+                sh 'sh ./scripts/rebuild_sdk.sh'
             }
         }
         stage('FHAU Release Patch') {
