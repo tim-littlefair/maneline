@@ -24,17 +24,11 @@ pipeline {
                     } else {
                         echo 'Not a release'
                     }
-                    sh 'exit 1'
+                    sh """
+                        . ../$SDK_NAME/fhau_sdk_vars.sh
+                        ./gradlew build
+                    """
                 }
-            }
-        }
-
-        stage('FHAU CI build') {
-            steps {
-                sh """
-                    . ../$SDK_NAME/fhau_sdk_vars.sh
-                    ./gradlew build
-                """
             }
         }
     }
