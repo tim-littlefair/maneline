@@ -19,15 +19,12 @@ export versionCode=$(echo "
   0
   $RELEASE_VERSION_MAJOR +
   100 * $RELEASE_VERSION_MINOR +
-  100 * $RELEASE_VERSION_MINOR +
   100 * $RELEASE_VERSION_PATCH +
   10000 * $BUILD_ID + p
   " | dc )
 
 env | grep version
 
+sed -i build.gradle "s/0.0.0/$versionReleaseString/"
+sed -i build.gradle "s/9999/$versionCode/"
 
-
-echo Build not implemented yet
-
-exit 1
