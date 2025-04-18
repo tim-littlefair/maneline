@@ -12,8 +12,8 @@ pipeline {
                 }
             }
             steps {
-                echo "Rebuilding FHAU SDK"
-                sh 'sh ./scripts/rebuild_sdk.sh'
+                echo "Rebuilding FHAU SDK in ../$SDK_NAME"
+                sh "sh ./scripts/rebuild_sdk.sh $SDK_NAME"
             }
         }
         stage('FHAU CI Build') {

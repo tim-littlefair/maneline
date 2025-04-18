@@ -27,7 +27,7 @@ then
     echo SDK name from command line argument: $SDK_NAME
 elif [ ! -z "$SDK_NAME" ]
 then
-    SDK_NAME=$1
+    SDK_NAME=$1/var/lib/jenkins/workspace/fhau
     echo SDK name from environment: $SDK_NAME
     # Environment variable is intended for use in a CI
     # job where a new SDK is built from scratch
