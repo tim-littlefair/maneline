@@ -13,7 +13,9 @@ versionReleaseString=$RELEASE_VERSION_MAJOR.$RELEASE_VERSION_MINOR.$RELEASE_VERS
 versionJenkinsBuildId=$BUILD_ID
 versionGitHash=$(git rev-parse HEAD | cut -c 1-7)
 
+echo X
 env | grep version
+echo Y
 
 echo Build not implemented yet
 
