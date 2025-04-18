@@ -7,22 +7,27 @@ pipeline {
     stages {
         stage('SDK check/rebuild/build') {
             steps {
-                if ( params.rebuild_sdk  ) {
+                when {
+                    expression { params.REBUILD_SDK == true  }
+                }
+                steps {
                     sh 'echo Rebuilding FHAU SDK'
                     sh 'sh ./scripts/rebuild_sdk.sh'
-                } else {
-                    sh 'echo Using existing FHAU SDK'
                 }
             }
         }
+        stage('FHAU Release Patch') {
+            when {
+                expression { params.RELEASE_VERSION_MAJOR != "" }
+            }
+            steps {
+                sh './scripts/build_fhau_release.sh'
+            }
+        }
+
         stage('FHAU CI build') {
             steps {
                 sh './gradlew build'
-            }
-        }
-        stage('FHAU Release build') {
-            steps {
-                sh './scripts/build_fhau_release.sh'
             }
         }
     }
