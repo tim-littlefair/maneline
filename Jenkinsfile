@@ -19,7 +19,7 @@ pipeline {
         stage('FHAU CI Build') {
             steps {
                 script {
-                    if(not params.RELEASE_VERSION_MAJOR == "") {
+                    if( params.RELEASE_VERSION_MAJOR != "" ) {
                         sh './scripts/build_fhau_release.sh'
                     } else {
                         echo 'Not a release'
