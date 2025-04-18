@@ -12,10 +12,21 @@ set -e
 export versionReleaseString=$RELEASE_VERSION_MAJOR.$RELEASE_VERSION_MINOR.$RELEASE_VERSION_PATCH
 export versionJenkinsBuildId=$BUILD_ID
 export versionGitHash=$(git rev-parse HEAD | cut -c 1-7)
+export versionBuildString=$versionReleaseString-$versionGitHash-$versionJenkinsBuildId
+# Version code is a decimal integer consisting of 2 digits each of major, minor and patch
+# version numbers followed by 4 digits of build number
+export versionCode=$(echo "
+  0
+  $RELEASE_VERSION_MAJOR +
+  100 * $RELEASE_VERSION_MINOR +
+  100 * $RELEASE_VERSION_MINOR +
+  100 * $RELEASE_VERSION_PATCH +
+  10000 * $BUILD_ID + p
+  " | dc )
 
-echo X
 env | grep version
-echo Y
+
+
 
 echo Build not implemented yet
 
