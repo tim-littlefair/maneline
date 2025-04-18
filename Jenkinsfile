@@ -7,21 +7,21 @@ pipeline {
     stages {
         stage('SDK check/rebuild/build') {
             steps {
-                when {
-                    expression { params.REBUILD_SDK == true  }
-                }
                 steps {
-                    sh 'echo Rebuilding FHAU SDK'
-                    sh 'sh ./scripts/rebuild_sdk.sh'
+                    if(params.REBUILD_SDK == true) {
+                        echo Rebuilding FHAU SDK
+                        sh 'sh ./scripts/rebuild_sdk.sh'
+                    } else {
+                        echo Using existing FHAU SDK
+                    }
                 }
             }
         }
         stage('FHAU Release Patch') {
-            when {
-                expression { return params.RELEASE_VERSION_MAJOR != "" }
-            }
             steps {
-                sh './scripts/build_fhau_release.sh'
+                if(params.RELEASE_VERSION_MAJOR == "") {
+                    sh './scripts/build_fhau_release.sh'
+                }
             }
         }
 
