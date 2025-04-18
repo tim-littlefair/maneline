@@ -8,19 +8,25 @@ pipeline {
         stage('SDK check/rebuild/build') {
             steps {
                 steps {
-                    if(params.REBUILD_SDK == true) {
-                        echo Rebuilding FHAU SDK
-                        sh 'sh ./scripts/rebuild_sdk.sh'
-                    } else {
-                        echo Using existing FHAU SDK
+                    script {
+                        if(params.REBUILD_SDK == true) {
+                            echo Rebuilding FHAU SDK
+                            sh 'sh ./scripts/rebuild_sdk.sh'
+                        } else {
+                            echo Using existing FHAU SDK
+                        }
                     }
                 }
             }
         }
         stage('FHAU Release Patch') {
             steps {
-                if(params.RELEASE_VERSION_MAJOR == "") {
-                    sh './scripts/build_fhau_release.sh'
+                script {
+                    if(params.RELEASE_VERSION_MAJOR == "") {
+                        sh './scripts/build_fhau_release.sh'
+                    } else {
+                        echo 'Not a release'
+                    }
                 }
             }
         }
