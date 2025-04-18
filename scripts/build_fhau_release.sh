@@ -9,9 +9,9 @@ set -e
 # to have defined an environment variable BUILD_ID containing
 # Jenkins' own run number for this build.
 
-versionReleaseString=$RELEASE_VERSION_MAJOR.$RELEASE_VERSION_MINOR.$RELEASE_VERSION_PATCH
-versionJenkinsBuildId=$BUILD_ID
-versionGitHash=$(git rev-parse HEAD | cut -c 1-7)
+export versionReleaseString=$RELEASE_VERSION_MAJOR.$RELEASE_VERSION_MINOR.$RELEASE_VERSION_PATCH
+export versionJenkinsBuildId=$BUILD_ID
+export versionGitHash=$(git rev-parse HEAD | cut -c 1-7)
 
 echo X
 env | grep version
