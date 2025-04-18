@@ -18,7 +18,7 @@ pipeline {
         }
         stage('FHAU Release Patch') {
             when {
-                expression { params.RELEASE_VERSION_MAJOR != "" }
+                expression { return params.RELEASE_VERSION_MAJOR != "" }
             }
             steps {
                 sh './scripts/build_fhau_release.sh'
