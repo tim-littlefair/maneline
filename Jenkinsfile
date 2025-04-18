@@ -16,21 +16,25 @@ pipeline {
                 sh 'sh ./scripts/rebuild_sdk.sh'
             }
         }
-        stage('FHAU Release Patch') {
+        stage('FHAU CI Build') {
             steps {
                 script {
-                    if(params.RELEASE_VERSION_MAJOR == "") {
+                    if(not params.RELEASE_VERSION_MAJOR == "") {
                         sh './scripts/build_fhau_release.sh'
                     } else {
                         echo 'Not a release'
                     }
+                    sh 'exit 1'
                 }
             }
         }
 
         stage('FHAU CI build') {
             steps {
-                sh './gradlew build'
+                sh """
+                    . ../$SDK_NAME/fhau_sdk_vars.sh
+                    ./gradlew build
+                """
             }
         }
     }
