@@ -7,14 +7,12 @@ pipeline {
     stages {
         stage('SDK check/rebuild/build') {
             steps {
-                steps {
-                    script {
-                        if(params.REBUILD_SDK == true) {
-                            echo Rebuilding FHAU SDK
-                            sh 'sh ./scripts/rebuild_sdk.sh'
-                        } else {
-                            echo Using existing FHAU SDK
-                        }
+                script {
+                    if(params.REBUILD_SDK == true) {
+                        echo Rebuilding FHAU SDK
+                        sh 'sh ./scripts/rebuild_sdk.sh'
+                    } else {
+                        echo Using existing FHAU SDK
                     }
                 }
             }
