@@ -33,10 +33,10 @@ pipeline {
         }
     }
     post {
-        success {
+        always {
             archiveArtifacts
                 artifacts: 'android-app/build/outputs/**/*.apk,desktop-app/**/*.jar'
                 fingerprint: true
-            }
+        }
     }
 }
