@@ -30,7 +30,7 @@ android {
     }
     // Occasional lint false positives with message
     // 'MainActivity must extend android.app.Activity (Instantiable)'
-    // Need to be disabled
+    // need to be disabled
     // Ref:
     // https://stackoverflow.com/a/78556959
     lintOptions {
