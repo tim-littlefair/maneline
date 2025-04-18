@@ -25,6 +25,6 @@ export versionCode=$(echo "
 
 env | grep version
 
-sed -i build.gradle "s/0.0.0/$versionReleaseString/"
-sed -i build.gradle "s/9999/$versionCode/"
+sed -e "s/0.0.0/$versionReleaseString/" -i build.gradle
+sed -e "s/9999/$versionCode/" -i build.gradle
 
