@@ -14,6 +14,8 @@ import java.util.List;
 import static java.lang.Package.getPackage;
 
 public class CommandLineInterface implements ILoggingAgent {
+    private static final int FHAU_STATUS_UNHANDLED_PARAMETERS = 901;
+
     static void doInteractive(DesktopUsbAmpProvider provider) {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         boolean continueAcceptingCommands=true;
@@ -62,7 +64,7 @@ public class CommandLineInterface implements ILoggingAgent {
     static final int DISCLAIMER_ACCEPTANCE_DURATION_DAYS = 30;
 
     static public void main(String[] args)  {
-        ArrayList<String> argsAL = new ArrayList<>(List.of(args));
+        ArrayList<String> argsAL = inspectArgs(new ArrayList<>(List.of(args)));
         showCopyrightAndNoWarranty();
         doDisclaimerAcceptedCheck();
         if(s_argParamShowDisclaimer==true) {
@@ -70,16 +72,20 @@ public class CommandLineInterface implements ILoggingAgent {
             System.exit(0);
         }
 
-        String outputPath = null;
-        boolean doInteractive = false;
         if(argsAL.size()>0) {
-            outputPath = argsAL.get(0);
-            System.out.println("Output will be generated to " + outputPath);
+            System.err.println(
+                "The following parameter(s) were not recognized: " + String.join(", ",argsAL)
+            );
+            // TODO:
+            //  https://github.com/tim-littlefair/feral-horse-amp-utils/issues/10
+            //  Display usage message
+            System.exit(FHAU_STATUS_UNHANDLED_PARAMETERS);
         }
-        DesktopUsbAmpProvider provider = new DesktopUsbAmpProvider(outputPath);
+
+        DesktopUsbAmpProvider provider = new DesktopUsbAmpProvider(s_argParamOutput);
         provider.startProvider();
         CommandLineInterface cli = new CommandLineInterface();
-        if(doInteractive) {
+        if(s_argParamInteractive) {
             cli.doInteractive(provider);
         }
         provider.stopProvider();
