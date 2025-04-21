@@ -1,5 +1,6 @@
 package net.heretical_camelid.fhau.desktop_app;
 
+import net.heretical_camelid.fhau.lib.FhauLibException;
 import net.heretical_camelid.fhau.lib.interfaces.ILoggingAgent;
 
 import java.io.*;
@@ -14,7 +15,14 @@ import java.util.List;
 import static java.lang.Package.getPackage;
 
 public class CommandLineInterface implements ILoggingAgent {
-    private static final int FHAU_STATUS_UNHANDLED_PARAMETERS = 901;
+    // Integer constants with names prefixed FHAU_STATUS_ are
+    // used as the OS exit status
+
+    // Values 50-59 are reserved for conditions raised within package n.h_c.f.lib
+    // and are defined in FhauLibException.java
+
+    // Values 90-99 are reserved for the desktop app and are defined here
+    private static final int FHAU_STATUS_UNHANDLED_PARAMETERS = 91;
 
     static void doInteractive(DesktopUsbAmpProvider provider) {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
@@ -64,31 +72,37 @@ public class CommandLineInterface implements ILoggingAgent {
     static final int DISCLAIMER_ACCEPTANCE_DURATION_DAYS = 30;
 
     static public void main(String[] args)  {
-        ArrayList<String> argsAL = inspectArgs(new ArrayList<>(List.of(args)));
-        showCopyrightAndNoWarranty();
-        doDisclaimerAcceptedCheck();
-        if(s_argParamShowDisclaimer==true) {
-            showDisclaimerAndPromptForAcceptance();
-            System.exit(0);
-        }
+        try {
+            ArrayList<String> argsAL = inspectArgs(new ArrayList<>(List.of(args)));
+            showCopyrightAndNoWarranty();
+            doDisclaimerAcceptedCheck();
+            if (s_argParamShowDisclaimer == true) {
+                showDisclaimerAndPromptForAcceptance();
+                System.exit(0);
+            }
 
-        if(argsAL.size()>0) {
-            System.err.println(
-                "The following parameter(s) were not recognized: " + String.join(", ",argsAL)
-            );
-            // TODO:
-            //  https://github.com/tim-littlefair/feral-horse-amp-utils/issues/10
-            //  Display usage message
-            System.exit(FHAU_STATUS_UNHANDLED_PARAMETERS);
-        }
+            if (argsAL.size() > 0) {
+                System.err.println(
+                    "The following parameter(s) were not recognized: " + String.join(", ", argsAL)
+                );
+                // TODO:
+                //  https://github.com/tim-littlefair/feral-horse-amp-utils/issues/10
+                //  Display usage message
+                System.exit(FHAU_STATUS_UNHANDLED_PARAMETERS);
+            }
 
-        DesktopUsbAmpProvider provider = new DesktopUsbAmpProvider(s_argParamOutput);
-        provider.startProvider();
-        CommandLineInterface cli = new CommandLineInterface();
-        if(s_argParamInteractive) {
-            cli.doInteractive(provider);
+            DesktopUsbAmpProvider provider = new DesktopUsbAmpProvider(s_argParamOutput);
+            provider.startProvider();
+            CommandLineInterface cli = new CommandLineInterface();
+            if (s_argParamInteractive) {
+                cli.doInteractive(provider);
+            }
+            provider.stopProvider();
         }
-        provider.stopProvider();
+        catch(FhauLibException e) {
+            e.printStackTrace();
+            System.exit(e.getExitStatus());
+        }
     }
 
     static void showCopyrightAndNoWarranty() {

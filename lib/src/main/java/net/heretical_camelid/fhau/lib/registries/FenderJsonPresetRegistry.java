@@ -18,6 +18,8 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
+import net.heretical_camelid.fhau.lib.FhauLibException;
+
 /**
  * The registry class below is an extension of PresetRegistryBase
  * which is aware of the relationship between LT-series presets and
@@ -45,7 +47,10 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
             } catch (FileNotFoundException e) {
                 System.err.println("Unable to create zip file at " + m_outputPath);
                 System.err.println("Check parent directory exists, is writeable, and has capacity");
-                System.exit(1);
+                throw new FhauLibException(
+                    e.getLocalizedMessage(),
+                    FhauLibException.FHAU_EXIT_STATUS_LIB_FILE_CREATION_ERROR
+                );
             }
         } else {
             // Output is to a directory in the filesystem which
@@ -54,28 +59,44 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
             // for presets and suites
             File outputDir = new File(m_outputPath);
             if(!outputDir.exists()) {
-                outputDir.mkdirs();
+                boolean creationStatus = outputDir.mkdirs();
+                if(!creationStatus) {
+                    throw new FhauLibException(
+                        String.format(
+                            "Attempt to create directory at %s failed",
+                            outputDir.getAbsolutePath()
+                        ),
+                        FhauLibException.FHAU_EXIT_STATUS_LIB_DIRECTORY_CREATION_ERROR
+                    );
+                }
             } else if(!outputDir.isDirectory()) {
-                System.err.println(
-                    "Unable to create directory at " +
-                    m_outputPath +
-                    " because something else exists there"
+                throw new FhauLibException(
+                    "Name of directory to be created clashes with preexisting object at " +
+                    outputDir.getAbsolutePath(),
+                    FhauLibException.FHAU_EXIT_STATUS_LIB_DIRECTORY_CREATION_ERROR
                 );
-                System.exit(2);
             } else {
                 // Target directory already exists - we assume this is intended
             }
             for(String subdir: new String[] { "/presets", "/suites" }) {
                 File subdirFile = new File(outputDir + subdir);
                 if(!subdirFile.exists()) {
-                    subdirFile.mkdirs();
+                    boolean creationStatus = subdirFile.mkdirs();
+                    if(!creationStatus) {
+                        throw new FhauLibException(
+                            String.format(
+                                "Attempt to create directory at %s failed",
+                                subdirFile.getAbsolutePath()
+                            ),
+                            FhauLibException.FHAU_EXIT_STATUS_LIB_DIRECTORY_CREATION_ERROR
+                        );
+                    }
                 } else if(!subdirFile.isDirectory()) {
-                    System.err.println(
-                        "Unable to create directory at " +
-                            m_outputPath +
-                            " because something else exists there"
+                    throw new FhauLibException(
+                        "Name of directory to be created clashes with preexisting object at " +
+                        subdirFile.getAbsolutePath(),
+                        FhauLibException.FHAU_EXIT_STATUS_LIB_DIRECTORY_CREATION_ERROR
                     );
-                    System.exit(3);
                 }
             }
         }
