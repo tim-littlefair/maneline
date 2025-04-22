@@ -155,9 +155,9 @@ class DeviceTransportUsbHid implements IDeviceTransport, OnUsbHidDeviceListener 
                                 m_usbDevice.getVendorId(), m_usbDevice.getProductId()
                             );
                             if (m_usbHidDevice == null) {
+                                m_activity.appendToLog("Permission held but factory did not create USB HID device");
+                                m_activity.appendToLog("Attempting background open");
                                 m_usbHidDevice.open(m_provider.m_mainActivity, this);
-                                m_activity.appendToLog("No USB HID device found");
-                                m_state = IAmpProvider.ProviderState_e.PROVIDER_DEVICE_CONNECTION_FAILED;
                                 return m_state;
                             }
                             m_usbHidDevice.open(m_provider.m_mainActivity, null);
@@ -186,7 +186,6 @@ class DeviceTransportUsbHid implements IDeviceTransport, OnUsbHidDeviceListener 
     void registerForPermissionIntent(AndroidUsbAmpProvider m_provider) {
         if (m_usbReceiver == null) {
             m_usbReceiver = new UsbBroadcastReceiver();
-            m_usbReceiver.setTransport(this);
             m_permissionIntent = PendingIntent.getBroadcast(
                 m_activity, 0,
                 new Intent(ACTION_USB_PERMISSION), PendingIntent.FLAG_IMMUTABLE
@@ -210,6 +209,8 @@ class DeviceTransportUsbHid implements IDeviceTransport, OnUsbHidDeviceListener 
     @Override
     public void onUsbHidDeviceConnected(UsbHidDevice device) {
         m_activity.appendToLog("Device connected");
+        IAmpProvider.ProviderState_e cxnStatus = attemptUsbHidConnection();
+        m_activity.onConnectAttemptOutcome(cxnStatus);
     }
 
     @Override
@@ -218,15 +219,19 @@ class DeviceTransportUsbHid implements IDeviceTransport, OnUsbHidDeviceListener 
         m_usbHidDevice.close();
         m_usbHidDevice = null;
         m_usbDevice = null;
-        m_state = IAmpProvider.ProviderState_e.PROVIDER_INITIAL;
+        m_state = IAmpProvider.ProviderState_e.PROVIDER_DEVICE_CONNECTION_FAILED;
+        m_activity.onConnectAttemptOutcome(m_state);
     }
 
     public void usbAccessPermissionGranted() {
         assert m_state==IAmpProvider.ProviderState_e.PROVIDER_CONNECTING_TO_DEVICE;
-        m_provider.attemptConnection();
+        m_activity.appendToLog("USB access permission was granted - attempting HID connection");
+        m_state = attemptUsbHidConnection();
+        m_activity.onConnectAttemptOutcome(m_state);
     }
 
     public void usbAccessPermissionDenied() {
         m_state = IAmpProvider.ProviderState_e.PROVIDER_DEVICE_CONNECTION_FAILED;
+        m_activity.onConnectAttemptOutcome(m_state);
     }
 }

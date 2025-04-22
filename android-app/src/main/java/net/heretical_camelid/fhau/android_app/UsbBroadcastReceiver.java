@@ -6,36 +6,34 @@ import android.content.Intent;
 import android.hardware.usb.UsbManager;
 
 public class UsbBroadcastReceiver extends BroadcastReceiver {
-    DeviceTransportUsbHid m_transport;
-    public UsbBroadcastReceiver() {
-        m_transport = null;
-    }
+    public UsbBroadcastReceiver() { }
 
     void setTransport(DeviceTransportUsbHid transport) {
-        m_transport = transport;
     }
 
     public void onReceive(Context context, Intent intent) {
+        MainActivity mainActivity = MainActivity.getInstance();
+        assert (mainActivity) != null;
         String action = intent.getAction();
         if (
-            UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(action) ||
-                UsbManager.ACTION_USB_ACCESSORY_ATTACHED.equals(action)
+            action.equals(UsbManager.ACTION_USB_DEVICE_ATTACHED) ||
+            action.equals(UsbManager.ACTION_USB_ACCESSORY_ATTACHED)
         ) {
-            //  MainActivity.appendToLog("Device attached");
+            mainActivity.appendToLog("Device attached");
         } else if (
-                   UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action) ||
-                       UsbManager.ACTION_USB_ACCESSORY_DETACHED.equals(action)
+            action.equals(UsbManager.ACTION_USB_DEVICE_DETACHED) ||
+            action.equals(UsbManager.ACTION_USB_ACCESSORY_DETACHED)
         ) {
-            // MainActivity.appendToLog("Device detached");
-        } else if (UsbManager.EXTRA_PERMISSION_GRANTED.equals(action)) {
-            if(intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED,false)) {
-                // MainActivity.appendToLog("USB access permission granted");
-                MainActivity mainActivity = (MainActivity) context;
-                assert (mainActivity) != null;
-                m_transport.usbAccessPermissionGranted();
+            mainActivity.appendToLog("Device detached");
+        } else if (action.equals(DeviceTransportUsbHid.ACTION_USB_PERMISSION)) {
+            if(intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED,true)) {
+                mainActivity.appendToLog("USB access permission granted");
+                mainActivity.m_provider.m_deviceTransportUsbHid.attemptUsbHidConnection();
             } else {
-                m_transport.usbAccessPermissionDenied();
+                mainActivity.appendToLog("USB access permission denied");
             }
+        } else {
+            mainActivity.appendToLog("BroadcastReceiver received unexpected action: " +action);
         }
     }
 }

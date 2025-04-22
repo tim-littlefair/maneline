@@ -65,6 +65,11 @@ public class MainActivity
     TextView m_tvLog;
     Button m_btnConnectionStatus;
 
+    static MainActivity s_instance = null;
+    public static MainActivity getInstance() {
+        return s_instance;
+    }
+
     void appendToLog(String message) {
         System.out.println(message);
         long currentThreadId = Thread.currentThread().getId(); 
@@ -117,6 +122,8 @@ public class MainActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        assert s_instance == null;
+        s_instance=this;
         super.onCreate(savedInstanceState);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
         setContentView(R.layout.activity_main);
@@ -155,6 +162,13 @@ public class MainActivity
         if(m_providerThread ==null) {
             connect();
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        assert s_instance != null;
+        s_instance = null;
     }
 
     @Override
@@ -198,7 +212,7 @@ public class MainActivity
         }
     }
 
-    private void onConnectAttemptOutcome(IAmpProvider.ProviderState_e cxnStatus) {
+    void onConnectAttemptOutcome(IAmpProvider.ProviderState_e cxnStatus) {
         if(cxnStatus == PROVIDER_DEVICE_CONNECTION_SUCCEEDED) {
             appendToLog("Connected to amplifier - retrieving firmware version and presets");
             m_providerHandler.sendEmptyMessage(MESSAGE_PROVIDER_CONNECTED.ordinal());
@@ -267,22 +281,6 @@ public class MainActivity
         // Complete this logic to enable logs and preset JSON files
         // to be exposed when the Android device is connected to a computer
         // as a USB drive.
-        // The purpose of this permission in terms of Play Store policy
-        // compliance will be to enable backup and sharing of presets
-        // and suites of presets
-        /*
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            if(Environment.isExternalStorageManager()==false) {
-                m_permissionIntent = PendingIntent.getBroadcast(
-                    this, 0,
-                    new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION),
-                    PendingIntent.FLAG_IMMUTABLE
-                );
-                IntentFilter filter = new IntentFilter(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
-                filter.addAction(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
-            }
-        }
-         */
     }
 
     private void setupPresetButtonsForSuite(String suiteName, HashMap<Integer, FenderJsonPresetRegistry.Record> suitePresetRecords) {
