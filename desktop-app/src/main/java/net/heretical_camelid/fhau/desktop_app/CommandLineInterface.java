@@ -11,6 +11,7 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
 import static java.lang.Package.getPackage;
 
@@ -105,6 +106,33 @@ public class CommandLineInterface implements ILoggingAgent {
         }
     }
 
+    static void showUsage() {
+        String cmdLine = ProcessHandle.current().info().commandLine().get();
+        if(cmdLine!=null) {
+            // For the usage message we want to see the parts of the command line
+            // which invoked the JVM and the name of the .jar file, but nothing else
+            // The command line probably includes '--usage' or '--help'
+            // and may include other options.
+            int dotJarOffset = cmdLine.toLowerCase().indexOf(".jar");
+            if (dotJarOffset != -1) {
+                cmdLine = cmdLine.substring(0, dotJarOffset + ".jar".length());
+            } else {
+                cmdLine = null;
+            }
+        }
+
+        if(cmdLine==null) {
+            // Exact command line not available - take a stab at it.
+            cmdLine = "java -jar fhauDesktopCLI.jar";
+        }
+        HashMap<String,String> substitutions = new HashMap<>();
+        substitutions.put("%PROG%",cmdLine);
+        showMessageWithSubstitutions(
+            "/assets/dtcli-usage.txt",
+            substitutions
+        );
+    }
+
     static void showCopyrightAndNoWarranty() {
         HashMap<String,String> substitutions = new HashMap<>();
         substitutions.put(
@@ -194,7 +222,10 @@ public class CommandLineInterface implements ILoggingAgent {
         ArrayList<String> retval = new ArrayList<>();
         for(int i=0; i<argsAL.size(); ++i) {
             String arg=argsAL.get(i);
-            if(arg.equals("--interactive")) {
+            if(arg.equals("--help") || arg.equals("--usage")) {
+                showUsage();
+                System.exit(0);
+            } else if(arg.equals("--interactive")) {
                 s_argParamInteractive = true;
             } else if(arg.equals("--disclaimer")) {
                 s_argParamShowDisclaimer = true;

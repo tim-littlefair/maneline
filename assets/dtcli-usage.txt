@@ -1,0 +1,35 @@
+Usage: %PROG% [options]
+  A utility to send commands to the Fender Mustang LT40S modelling guitar
+  amplifier (and other compatible models from the Mustang LT range) using
+  a command line interface.
+  If no options are specified, the default behaviour of the software is to
+  send commands to the amp requesting the JSON descriptions of all of the
+  presets stored in the amplifier's memory, and use the data retrieved to
+  display a table describing each unique preset stored, and to exit once
+  the table has been displayed.
+    --output={directory_name} where directory_name does not end in .zip
+         The table of presets will be displayed as for the no-option case,
+         then the specified directory will be created if it does not already
+         exist and copies of the JSON descriptions of the presets and other
+         information derived from these will be saved to the directory.
+    --output={archive_name} where archive_name does end in zip
+         As for output to directory, but save to a single zip file instead
+         of a directory.
+    --interactive
+         After displaying the table of presets (and saving data as described
+         for option --output=.. if that option was specified), the program
+         will enter an interactive loop accepting single line commands on the
+         console.
+         The command 'help' gets a list of available commands, 'quit', 'exit'
+         or the keypress ctrl-C can be used to exit.
+    --disclaimer
+         Force display of a disclaimer that the software is experimental and
+         that there is a risk that it may leave the attached amplifier in a
+         bad state.
+         When the disclaimer is displayed, the software will require the
+         user to acknowledge and accept the risks described before any
+         commands can be sent to the amplifier.
+         This option is enabled by default when the app runs for the first
+         time in a given directory, and is re-enabled every 30 days.
+    --help, --usage
+         Display this message
