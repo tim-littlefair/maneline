@@ -19,7 +19,8 @@ jar {
         include "LICENSE"
         include "assets/copyright_and_warranty.txt"
         include "assets/warranty_disclaimer.txt"
-        include "assets/dtcli-usage.txt"
+        include "assets/dtcli_usage.txt"
+        include "assets/dtcli_interactive_help.txt"
         include "assets/50-fhau.rules"
     }
 

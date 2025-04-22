@@ -24,29 +24,38 @@ public class CommandLineInterface implements ILoggingAgent {
 
     // Values 90-99 are reserved for the desktop app and are defined here
     private static final int FHAU_STATUS_UNHANDLED_PARAMETERS = 91;
+    private static final int FHAU_STATUS_INTERACTIVE_INPUT_FAILURE = 92;
+    private static final int FHAU_STATUS_UNDELETABLE_DISCLAIMER_ACCEPT_FILE = 93;
 
     static void doInteractive(DesktopUsbAmpProvider provider) {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         boolean continueAcceptingCommands=true;
+        String line=null;
         while(continueAcceptingCommands) {
             try {
                 System.out.println("Command? ");
-                String line=br.readLine();
+                line = br.readLine();
                 String[] lineWords = line.split(" ");
-                if(lineWords[0].equals("exit")) {
+                if(lineWords[0].equals("exit") || lineWords[0].equals("quit")) {
                     System.out.println("Exit requested");
                     continueAcceptingCommands=false;
                 } else if(lineWords[0].equals("preset")) {
-                        int slotIndex = Integer.parseInt(lineWords[1]);
-                        provider.switchPreset(slotIndex);
+                    int slotIndex = Integer.parseInt(lineWords[1]);
+                    provider.switchPreset(slotIndex);
+                } else if(lineWords[0].equals("help")) {
+                    showInteractiveHelp();
                 } else {
+
                     System.out.println("Failed to parse line: "+line);
                 }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
             }
-
-
+            catch (IOException e) {
+                System.out.println("Attempt to read input line failed");
+                System.exit(FHAU_STATUS_INTERACTIVE_INPUT_FAILURE);
+            }
+            catch (NumberFormatException e) {
+                System.out.println("Failed to parse expected integer in command line: " + line);
+            }
         }
     }
 
@@ -76,7 +85,7 @@ public class CommandLineInterface implements ILoggingAgent {
         try {
             ArrayList<String> argsAL = inspectArgs(new ArrayList<>(List.of(args)));
             showCopyrightAndNoWarranty();
-            doDisclaimerAcceptedCheck();
+            doDisclaimerAcceptedCheck(s_argParamShowDisclaimer);
             if (s_argParamShowDisclaimer == true) {
                 showDisclaimerAndPromptForAcceptance();
                 System.exit(0);
@@ -128,8 +137,15 @@ public class CommandLineInterface implements ILoggingAgent {
         HashMap<String,String> substitutions = new HashMap<>();
         substitutions.put("%PROG%",cmdLine);
         showMessageWithSubstitutions(
-            "/assets/dtcli-usage.txt",
+            "/assets/dtcli_usage.txt",
             substitutions
+        );
+    }
+
+    private static void showInteractiveHelp() {
+        showMessageWithSubstitutions(
+            "/assets/dtcli_interactive_help.txt",
+            null
         );
     }
 
@@ -170,8 +186,31 @@ public class CommandLineInterface implements ILoggingAgent {
     }
 
 
-    static void doDisclaimerAcceptedCheck() {
+    static void doDisclaimerAcceptedCheck(boolean forceDisclaimer) {
         try {
+            if(forceDisclaimer) {
+                // If the acceptance record exists, delete it,
+                // then continue
+                File disclaimerAcceptedFile = new File(
+                    DISCLAIMER_ACCEPTANCE_RECORD_FILENAME
+                );
+                if(!disclaimerAcceptedFile.exists()) {
+                    // The file does not exist, so the disclaimer will
+                    // be displayed anyway
+                } else if(disclaimerAcceptedFile.delete()) {
+                    // The file existed but has been deleted, so the
+                    // disclaimer will be displayed until the user accepts it
+                } else {
+                    System.out.println(
+                        "Unable to delete file " +
+                         DISCLAIMER_ACCEPTANCE_RECORD_FILENAME
+                    );
+                    System.out.println(
+                        "Delete this file or make it deletable to enable re-display and \n" +
+                        "re-acceptance of disclaimer"
+                    );
+                }
+            }
             InputStream disclaimerAcceptedUntilFIS = new FileInputStream(
                 DISCLAIMER_ACCEPTANCE_RECORD_FILENAME
             );
@@ -193,7 +232,7 @@ public class CommandLineInterface implements ILoggingAgent {
                 ).compareTo(disclaimerAcceptedUntilDate)<0
             ) {
                 // The program will ignore any attempt to make
-                // acceptance last more than DISCLAIMER_ACCEPTANCE_DURATION_DAYS
+                // acceptance last more than DISCLAIDISCLAIMER_ACCEPTANCE_RECORD_FILENAMEMER_ACCEPTANCE_DURATION_DAYS
                 // by manually editing DISCLAIMER_ACCEPTANCE_RECORD_FILENAME
                 s_argParamShowDisclaimer=true;
             } else {

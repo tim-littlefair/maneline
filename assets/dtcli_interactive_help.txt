@@ -1,0 +1,18 @@
+
+==============================
+FHAU interactive mode commands
+------------------------------
+
+help:
+    Display this text
+
+preset {N} (where {N} is an integer in the range 1-60)
+    Send a command to the amplifier to switch to the selected preset
+
+quit, exit:
+    Exit the program
+    The keypress ctrl-C will also cause the program to exit
+
+==============================
+
+
