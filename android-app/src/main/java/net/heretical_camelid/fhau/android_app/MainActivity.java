@@ -71,24 +71,28 @@ public class MainActivity
     }
 
     void appendToLog(String message) {
-        System.out.println(message);
-        long currentThreadId = Thread.currentThread().getId(); 
-        if( m_providerThread!=null &&
-            currentThreadId==m_providerThread.getId()
+        // All messages are echoed to standard output with a prefix
+        // to show whether they come from:
+        // M - the main looper thread
+        // T - any other thread after the handler exists
+        // X - any other thread before the handler exists
+        long currentThreadId = Thread.currentThread().getId();
+        if (
+            m_loggingAgent!=null &&
+            currentThreadId==this.getMainLooper().getThread().getId()
         ) {
+            System.out.println("M " + message);
+            m_loggingAgent.appendToLog(0,message);
+        } else if (m_providerHandler!=null) {
+            System.out.println("T " + message);
             Message logMessage = new Message();
             logMessage.what = MESSAGE_APPEND_TO_LOG.ordinal();
             Bundle messageBundle = new Bundle();
             messageBundle.putString(MESSAGE_LOG_APPEND_STRING, message);
             logMessage.setData(messageBundle);
             m_providerHandler.sendMessage(logMessage);
-        } else if (
-            m_loggingAgent!=null &&
-            currentThreadId==this.getMainLooper().getThread().getId()    
-        ) {
-            m_loggingAgent.appendToLog(0,message);
         } else {
-            System.out.println("Message will not be displayed: " + message);
+            System.out.println("X " + message);
         }
     }
 
@@ -200,15 +204,19 @@ public class MainActivity
     }
 
     void connect() {
-        if(m_providerThread ==null) {
-            m_providerThread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    IAmpProvider.ProviderState_e cxnStatus = m_provider.attemptConnection();
-                    onConnectAttemptOutcome(cxnStatus);
-                }
-            });
+        Runnable providerRunnable = new Runnable() {
+            @Override
+            public void run() {
+                IAmpProvider.ProviderState_e cxnStatus = m_provider.attemptConnection();
+                onConnectAttemptOutcome(cxnStatus);
+            }
+        };
+        if (m_providerThread==null || !m_providerThread.isAlive()) {
+            appendToLog("Creating new provider thread");
+            m_providerThread = new Thread(providerRunnable);
             m_providerThread.start();
+        } else {
+            appendToLog("Existing provider thread is still alive");
         }
     }
 

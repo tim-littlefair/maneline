@@ -79,8 +79,7 @@ class DeviceTransportUsbHid implements IDeviceTransport, OnUsbHidDeviceListener 
     }
 
     IAmpProvider.ProviderState_e attemptUsbHidConnection() {
-        if(m_usbDevice==null)
-        {
+        if(m_usbDevice==null) {
             UsbDevice usbDevice = null;
             HashMap<String, UsbDevice> usbDeviceMap = m_usbManager.getDeviceList();
             if (usbDeviceMap == null) {
@@ -113,7 +112,7 @@ class DeviceTransportUsbHid implements IDeviceTransport, OnUsbHidDeviceListener 
                         break;
                     }
                 }
-                if(m_usbDevice==null) {
+                if (m_usbDevice == null) {
                     m_activity.appendToLog(
                         "Device map did not contain any applicable devices"
                     );
@@ -121,57 +120,79 @@ class DeviceTransportUsbHid implements IDeviceTransport, OnUsbHidDeviceListener 
                     return m_state;
                 }
             }
-            assert m_usbDevice!=null;
-            if(m_usbHidDevice==null) {
-                if (!m_usbManager.hasPermission(m_usbDevice)) {
-                    m_activity.appendToLog(
-                        "Requesting permission to connect to device"
-                    );
-                    m_provider.registerForPermissionIntent();
-                    m_usbManager.requestPermission(
-                        m_usbDevice,m_provider.m_permissionIntent
-                    );
-                    m_state = IAmpProvider.ProviderState_e.PROVIDER_CONNECTING_TO_DEVICE;
-                    return m_state;
-                } else {
-                    m_activity.appendToLog("Permission to connect to device already held");
-                    m_state = IAmpProvider.ProviderState_e.PROVIDER_CONNECTING_TO_DEVICE;
-                }
+        }
+        assert m_usbDevice!=null;
 
-                if(m_state == IAmpProvider.ProviderState_e.PROVIDER_CONNECTING_TO_DEVICE) {
-                    try {
-                        // If we are still in the function at this point,
-                        // we must have permission, so we try to connect
-                        UsbDeviceConnection cxn = m_usbManager.openDevice(m_usbDevice);
-                        if (cxn != null) {
-                            m_usbHidDevice = UsbHidDevice.factory(
-                                m_activity,
-                                m_usbDevice.getVendorId(), m_usbDevice.getProductId()
-                            );
-                            if (m_usbHidDevice == null) {
-                                m_activity.appendToLog("Permission held but factory did not create USB HID device");
-                                m_activity.appendToLog("Attempting background open");
-                                m_usbHidDevice.open(m_provider.m_mainActivity, this);
-                                return m_state;
-                            }
-                            m_usbHidDevice.open(m_provider.m_mainActivity, null);
-                            m_provider.m_protocol.setDeviceTransport(this);
-                            m_state = IAmpProvider.ProviderState_e.PROVIDER_DEVICE_CONNECTION_SUCCEEDED;
-                        } else {
-                            m_state = IAmpProvider.ProviderState_e.PROVIDER_DEVICE_CONNECTION_FAILED;
+        if(m_state== IAmpProvider.ProviderState_e.PROVIDER_DEVICE_PERMISSION_REQUESTED) {
+            if (!m_usbManager.hasPermission(m_usbDevice)) {
+                m_activity.appendToLog(
+                    "Permission has been requested but not granted yet"
+                );
+            } else {
+                m_activity.appendToLog(
+                    "Permission has been granted"
+                );
+                m_state = IAmpProvider.ProviderState_e.PROVIDER_CONNECTING_TO_DEVICE;
+            }
+        }
+
+        if(m_usbHidDevice==null) {
+            if (!m_usbManager.hasPermission(m_usbDevice)) {
+                m_activity.appendToLog(
+                    "Requesting permission to connect to device"
+                );
+                m_provider.registerForPermissionIntent();
+                m_activity.appendToLog(
+                    "Permission PI state before request: " +
+                    m_provider.m_permissionIntent.toString()
+                );
+                m_usbManager.requestPermission(
+                    m_usbDevice,m_provider.m_permissionIntent
+                );
+                m_activity.appendToLog(
+                    "Permission PI state after request: " +
+                        m_provider.m_permissionIntent.toString()
+                );
+                m_state = IAmpProvider.ProviderState_e.PROVIDER_DEVICE_PERMISSION_REQUESTED;
+                return m_state;
+            } else {
+                m_activity.appendToLog("Permission to connect to device already held");
+                m_state = IAmpProvider.ProviderState_e.PROVIDER_CONNECTING_TO_DEVICE;
+            }
+
+            if(m_state == IAmpProvider.ProviderState_e.PROVIDER_CONNECTING_TO_DEVICE) {
+                try {
+                    // If we are still in the function at this point,
+                    // we must have permission, so we try to connect
+                    UsbDeviceConnection cxn = m_usbManager.openDevice(m_usbDevice);
+                    if (cxn != null) {
+                        m_usbHidDevice = UsbHidDevice.factory(
+                            m_activity,
+                            m_usbDevice.getVendorId(), m_usbDevice.getProductId()
+                        );
+                        if (m_usbHidDevice == null) {
+                            m_activity.appendToLog("Permission held but factory did not create USB HID device");
+                            m_activity.appendToLog("Attempting background open");
+                            m_usbHidDevice.open(m_provider.m_mainActivity, this);
+                            return m_state;
                         }
-                    } catch (Exception e) {
-                        m_activity.appendToLog("Exception caught - see logcat for details");
-                        System.out.println(e.toString());
-                        e.printStackTrace(System.out);
+                        m_usbHidDevice.open(m_provider.m_mainActivity, null);
+                        m_provider.m_protocol.setDeviceTransport(this);
+                        m_state = IAmpProvider.ProviderState_e.PROVIDER_DEVICE_CONNECTION_SUCCEEDED;
+                    } else {
                         m_state = IAmpProvider.ProviderState_e.PROVIDER_DEVICE_CONNECTION_FAILED;
                     }
-                } else {
-                    m_activity.appendToLog("attemptConnection failed, state=" + m_state);
+                } catch (Exception e) {
+                    m_activity.appendToLog("Exception caught - see logcat for details");
+                    System.out.println(e.toString());
+                    e.printStackTrace(System.out);
+                    m_state = IAmpProvider.ProviderState_e.PROVIDER_DEVICE_CONNECTION_FAILED;
                 }
             } else {
-                m_activity.appendToLog("attemptConnection: m_usbHidDevice non-null, state=" + m_state);
+                m_activity.appendToLog("attemptConnection failed, state=" + m_state);
             }
+        } else {
+            m_activity.appendToLog("attemptConnection: m_usbHidDevice non-null, state=" + m_state);
         }
         return m_state;
     }

@@ -27,7 +27,8 @@ public class UsbBroadcastReceiver extends BroadcastReceiver {
                 mainActivity.appendToLog("USB access permission granted");
                 mainActivity.m_provider.m_deviceTransportUsbHid.attemptUsbHidConnection();
             } else {
-                mainActivity.appendToLog("USB access permission denied");
+                mainActivity.appendToLog("USB access permission denied - but trying anyway");
+                mainActivity.m_provider.m_deviceTransportUsbHid.attemptUsbHidConnection();
             }
         } else {
             mainActivity.appendToLog("BroadcastReceiver received unexpected action: " +action);

@@ -143,11 +143,24 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
     void registerForPermissionIntent() {
         if (m_usbReceiver == null) {
             m_usbReceiver = new UsbBroadcastReceiver();
+
+            Intent basePermissionIntent = new Intent(DeviceTransportUsbHid.ACTION_USB_PERMISSION);
+            basePermissionIntent.setPackage("net.heretical_camelid.fhau.android_app");
+            // should use setClass instead of setPackage but not sure which class is
+            // the right target
+            basePermissionIntent.putExtra(UsbManager.EXTRA_PERMISSION_GRANTED,false);
             m_permissionIntent = PendingIntent.getBroadcast(
                 m_mainActivity, 0,
-                new Intent(DeviceTransportUsbHid.ACTION_USB_PERMISSION),
-                PendingIntent.FLAG_IMMUTABLE
+                basePermissionIntent,
+                // Android documentation recommends against using
+                // mutable pending intents, but in this case it
+                // seems the PI must be mutable to allow the
+                // USB service to update EXTRA_PERMISSION_GRANTED
+                // to indicate that the device can be used.
+                PendingIntent.FLAG_MUTABLE
             );
+
+/*
             IntentFilter filter = new IntentFilter(DeviceTransportUsbHid.ACTION_USB_PERMISSION);
             filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
             filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
@@ -158,10 +171,14 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
             } else {
                 m_mainActivity.registerReceiver(m_usbReceiver, filter);
             }
+  */
             m_mainActivity.appendToLog("Registered for permission intent");
         } else {
             m_mainActivity.appendToLog("Already registered for permission intent");
         }
+                // not mutable the permission request outcome
+                // can't be filled in.
+
     }
 }
 
