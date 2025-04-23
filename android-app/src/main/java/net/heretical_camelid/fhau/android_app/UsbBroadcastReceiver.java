@@ -8,9 +8,6 @@ import android.hardware.usb.UsbManager;
 public class UsbBroadcastReceiver extends BroadcastReceiver {
     public UsbBroadcastReceiver() { }
 
-    void setTransport(DeviceTransportUsbHid transport) {
-    }
-
     public void onReceive(Context context, Intent intent) {
         MainActivity mainActivity = MainActivity.getInstance();
         assert (mainActivity) != null;

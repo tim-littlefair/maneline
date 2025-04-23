@@ -1,7 +1,14 @@
 package net.heretical_camelid.fhau.android_app;
 
+import static android.content.Context.RECEIVER_NOT_EXPORTED;
+
 import android.annotation.SuppressLint;
 
+import android.app.PendingIntent;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.hardware.usb.UsbManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Message;
 import net.heretical_camelid.fhau.lib.*;
@@ -16,6 +23,9 @@ import java.util.HashMap;
 public class AndroidUsbAmpProvider implements IAmpProvider {
 
     MainActivity m_mainActivity;
+    UsbBroadcastReceiver m_usbReceiver;
+    PendingIntent m_permissionIntent;
+
     DeviceTransportUsbHid m_deviceTransportUsbHid;
     LTSeriesProtocol m_protocol;
 
@@ -127,6 +137,31 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
         String suiteName = m_presetSuiteRegistry.nameAt(position);
         HashMap<Integer,FenderJsonPresetRegistry.Record> suitePresetRecords = m_presetSuiteRegistry.recordsAt(position);
         m_mainActivity.suiteSelected(suiteName, suitePresetRecords);
+    }
+
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
+    void registerForPermissionIntent() {
+        if (m_usbReceiver == null) {
+            m_usbReceiver = new UsbBroadcastReceiver();
+            m_permissionIntent = PendingIntent.getBroadcast(
+                m_mainActivity, 0,
+                new Intent(DeviceTransportUsbHid.ACTION_USB_PERMISSION),
+                PendingIntent.FLAG_IMMUTABLE
+            );
+            IntentFilter filter = new IntentFilter(DeviceTransportUsbHid.ACTION_USB_PERMISSION);
+            filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
+            filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
+            filter.addAction(UsbManager.EXTRA_PERMISSION_GRANTED);
+            m_mainActivity.appendToLog("Registering for permission intent");
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                m_mainActivity.registerReceiver(m_usbReceiver, filter, RECEIVER_NOT_EXPORTED);
+            } else {
+                m_mainActivity.registerReceiver(m_usbReceiver, filter);
+            }
+            m_mainActivity.appendToLog("Registered for permission intent");
+        } else {
+            m_mainActivity.appendToLog("Already registered for permission intent");
+        }
     }
 }
 

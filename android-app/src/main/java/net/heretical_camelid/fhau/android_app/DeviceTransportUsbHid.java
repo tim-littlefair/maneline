@@ -1,14 +1,11 @@
 package net.heretical_camelid.fhau.android_app;
 
-import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
-import android.os.Build;
+
 import com.benlypan.usbhid.OnUsbHidDeviceListener;
 import com.benlypan.usbhid.UsbHidDevice;
 
@@ -17,8 +14,6 @@ import net.heretical_camelid.fhau.lib.interfaces.IDeviceTransport;
 
 import java.util.HashMap;
 
-import static android.content.Context.RECEIVER_NOT_EXPORTED;
-
 class DeviceTransportUsbHid implements IDeviceTransport, OnUsbHidDeviceListener {
     final static String ACTION_USB_PERMISSION = "net.heretical_camelid.fhau.android_app.USB_PERMISSION";
 
@@ -26,8 +21,6 @@ class DeviceTransportUsbHid implements IDeviceTransport, OnUsbHidDeviceListener 
     final AndroidUsbAmpProvider m_provider;
 
     UsbManager m_usbManager;
-    UsbBroadcastReceiver m_usbReceiver;
-    PendingIntent m_permissionIntent;
     UsbHidDevice m_usbHidDevice;
     UsbDevice m_usbDevice;
     IAmpProvider.ProviderState_e m_state;
@@ -41,7 +34,6 @@ class DeviceTransportUsbHid implements IDeviceTransport, OnUsbHidDeviceListener 
         m_provider = provider;
 
         m_usbManager = (UsbManager) m_activity.getSystemService(Context.USB_SERVICE);
-        m_usbReceiver = null;
         m_usbDevice = null;
         m_usbHidDevice = null;
         m_state = IAmpProvider.ProviderState_e.PROVIDER_INITIAL;
@@ -135,8 +127,10 @@ class DeviceTransportUsbHid implements IDeviceTransport, OnUsbHidDeviceListener 
                     m_activity.appendToLog(
                         "Requesting permission to connect to device"
                     );
-                    registerForPermissionIntent(m_provider);
-                    m_usbManager.requestPermission(m_usbDevice, m_permissionIntent);
+                    m_provider.registerForPermissionIntent();
+                    m_usbManager.requestPermission(
+                        m_usbDevice,m_provider.m_permissionIntent
+                    );
                     m_state = IAmpProvider.ProviderState_e.PROVIDER_CONNECTING_TO_DEVICE;
                     return m_state;
                 } else {
@@ -180,30 +174,6 @@ class DeviceTransportUsbHid implements IDeviceTransport, OnUsbHidDeviceListener 
             }
         }
         return m_state;
-    }
-
-    @SuppressLint("UnspecifiedRegisterReceiverFlag")
-    void registerForPermissionIntent(AndroidUsbAmpProvider m_provider) {
-        if (m_usbReceiver == null) {
-            m_usbReceiver = new UsbBroadcastReceiver();
-            m_permissionIntent = PendingIntent.getBroadcast(
-                m_activity, 0,
-                new Intent(ACTION_USB_PERMISSION), PendingIntent.FLAG_IMMUTABLE
-            );
-            IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
-            filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
-            filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
-            filter.addAction(UsbManager.EXTRA_PERMISSION_GRANTED);
-            m_activity.appendToLog("Registering for permission intent");
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                m_provider.m_mainActivity.registerReceiver(m_usbReceiver, filter, RECEIVER_NOT_EXPORTED);
-            } else {
-                m_provider.m_mainActivity.registerReceiver(m_usbReceiver, filter);
-            }
-            m_activity.appendToLog("Registered for permission intent");
-        } else {
-            m_activity.appendToLog("Already registered for permission intent");
-        }
     }
 
     @Override
