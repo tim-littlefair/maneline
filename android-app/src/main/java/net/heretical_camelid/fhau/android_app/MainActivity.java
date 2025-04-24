@@ -39,6 +39,7 @@ class MainActivityError extends UnsupportedOperationException {
 
 enum MessageType_e {
     MESSAGE_PROVIDER_CONNECTION_FAILED,
+    MESSAGE_PROVIDER_PERMISSION_GRANTED,
     MESSAGE_PROVIDER_CONNECTED,
     MESSAGE_PROVIDER_STARTUP_COMPLETED,
     MESSAGE_PRESETS_DOWNLOADED,
@@ -71,20 +72,20 @@ public class MainActivity
     }
 
     void appendToLog(String message) {
-        // All messages are echoed to standard output with a prefix
-        // to show whether they come from:
-        // M - the main looper thread
-        // T - any other thread after the handler exists
-        // X - any other thread before the handler exists
         long currentThreadId = Thread.currentThread().getId();
         if (
             m_loggingAgent!=null &&
             currentThreadId==this.getMainLooper().getThread().getId()
         ) {
-            System.out.println("M " + message);
+            System.out.println(message);
             m_loggingAgent.appendToLog(0,message);
         } else if (m_providerHandler!=null) {
-            System.out.println("T " + message);
+            // This message will be displayed when the
+            // handler processes it
+            // The following line can be uncommented if we
+            // want to see when it is despatched as well
+            // as when it is handled.
+            // System.out.println("T " + message);
             Message logMessage = new Message();
             logMessage.what = MESSAGE_APPEND_TO_LOG.ordinal();
             Bundle messageBundle = new Bundle();
@@ -92,6 +93,10 @@ public class MainActivity
             logMessage.setData(messageBundle);
             m_providerHandler.sendMessage(logMessage);
         } else {
+            // Message is from a non-main thread but the
+            // handler is not yet up, so it can be
+            // displayed on standard error but it is not
+            // thread safe to send it to the logging agent
             System.out.println("X " + message);
         }
     }
@@ -335,6 +340,11 @@ public class MainActivity
         public void handleMessage(Message m) {
             //assert m_providerThread!=null;
             switch (MessageType_e.values()[m.what]) {
+                case MESSAGE_PROVIDER_PERMISSION_GRANTED:
+                    m_btnConnectionStatus.setText("Permission granted");
+                    m_btnConnectionStatus.callOnClick();
+                    break;
+
                 case MESSAGE_PROVIDER_CONNECTED:
                     assert m_providerThread.isAlive()==false;
                     m_btnConnectionStatus.setText("Click to reconnect");

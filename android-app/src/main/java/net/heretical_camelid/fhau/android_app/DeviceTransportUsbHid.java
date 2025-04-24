@@ -1,5 +1,7 @@
 package net.heretical_camelid.fhau.android_app;
 
+import static net.heretical_camelid.fhau.android_app.MessageType_e.MESSAGE_PROVIDER_CONNECTED;
+
 import android.app.PendingIntent;
 import android.content.Context;
 import android.hardware.usb.UsbDevice;
@@ -133,6 +135,9 @@ class DeviceTransportUsbHid implements IDeviceTransport, OnUsbHidDeviceListener 
                     "Permission has been granted"
                 );
                 m_state = IAmpProvider.ProviderState_e.PROVIDER_CONNECTING_TO_DEVICE;
+                m_activity.m_providerHandler.sendEmptyMessage(
+                    MessageType_e.MESSAGE_PROVIDER_PERMISSION_GRANTED.ordinal()
+                );
             }
         }
 

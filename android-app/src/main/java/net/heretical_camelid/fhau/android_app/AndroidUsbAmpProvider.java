@@ -141,7 +141,9 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     void registerForPermissionIntent() {
-        if (m_usbReceiver == null) {
+        if (m_usbReceiver != null) {
+           m_mainActivity.appendToLog("Already registered for permission intent");
+        } else {
             m_usbReceiver = new UsbBroadcastReceiver();
 
             Intent basePermissionIntent = new Intent(DeviceTransportUsbHid.ACTION_USB_PERMISSION);
@@ -159,26 +161,8 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
                 // to indicate that the device can be used.
                 PendingIntent.FLAG_MUTABLE
             );
-
-/*
-            IntentFilter filter = new IntentFilter(DeviceTransportUsbHid.ACTION_USB_PERMISSION);
-            filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
-            filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
-            filter.addAction(UsbManager.EXTRA_PERMISSION_GRANTED);
-            m_mainActivity.appendToLog("Registering for permission intent");
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                m_mainActivity.registerReceiver(m_usbReceiver, filter, RECEIVER_NOT_EXPORTED);
-            } else {
-                m_mainActivity.registerReceiver(m_usbReceiver, filter);
-            }
-  */
             m_mainActivity.appendToLog("Registered for permission intent");
-        } else {
-            m_mainActivity.appendToLog("Already registered for permission intent");
         }
-                // not mutable the permission request outcome
-                // can't be filled in.
-
     }
 }
 

@@ -10,7 +10,11 @@ public class UsbBroadcastReceiver extends BroadcastReceiver {
 
     public void onReceive(Context context, Intent intent) {
         MainActivity mainActivity = MainActivity.getInstance();
-        assert (mainActivity) != null;
+        if ( mainActivity != null ) {
+            // This notification can arrive during or even after shutdown
+            // TODO: We should deregister rather than just ignoring it
+            return;
+        }
         String action = intent.getAction();
         if (
             action.equals(UsbManager.ACTION_USB_DEVICE_ATTACHED) ||
