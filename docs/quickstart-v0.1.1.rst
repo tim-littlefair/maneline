@@ -6,9 +6,10 @@ Building
 
 Both desktop CLI and Android mobile formats of app form part of a single Gradle 
 project which can be built with the command line
-```
-./gradlew build
-```
+
+.. code-block:: shell
+    ./gradlew build
+
 run from the top level directory of the repository.
 
 This depends on the build machine having appropriate versions of Java and 
@@ -18,16 +19,18 @@ installed and the command above may work first time, but if not there is a
 script in the repository which can be run to download appropriate 
 versions of these initial dependencies, which can be run with the a command 
 like this:
-`
-./scripts/rebuild_sdk.sh FHAU.sdk
-`
+
+.. code-block:: shell
+    ./scripts/rebuild_sdk.sh FHAU.sdk
+
 
 This script will take a few minutes, when it has completed there should be a directory
 ../FHAU.sdk relative to the top level directory of the repository, and running the 
 command 
-`
-. ../FHAU.sdk/fhau_sdk_vars.sh
-`
+
+.. code-block:: shell
+   . ../FHAU.sdk/fhau_sdk_vars.sh
+
 should set PATH and other environment variables to values which allow the new 
 downloaded packages to be activate in preference over pre-installed versions
 of the same utilities ready for the `gradlew` command to run.
@@ -36,20 +39,23 @@ Once Java and Android SDK packages are installed, all other dependencies (includ
 the dependency on gradle itself) should be handled by the gradle command.
 
 The project can also be built using either of the following IDEs:
+
 - Android Studio Android Studio Meerkat | 2024.3.1 Patch 1
+
 - IntelliJ IDEA 2025.1 (Community Edition)
 
 When using an IDE, it may be necessary to manually configure the Java and Android SDK 
-locations to use the packages downloaded by the `scripts/rebuild_sdk.sh` script.
+locations to use the packages downloaded by the ``scripts/rebuild_sdk.sh`` script.
 
 Desktop CLI Usage
 -----------------
 
 From the root directory of the repository, connect the amplifier up via USB, turn it on
 and run the command:
-`
-scripts/run_desktop_cli.sh
-`
+
+.. code-block:: shell
+    scripts/run_desktop_cli.sh
+
 
 On the first run this script will output a wordy disclaimer and request
 that the user reply 'yes' to a request to confirm that they accept the 
@@ -74,13 +80,14 @@ made (which will require system administration 'sudo' privileges),
 and hopefully future runs will succeed as described above.
 
 The desktop app can also be run in interactive mode, using the command
-`
-scripts/run_desktop_cli.sh --interactive
-`
+
+.. code-block:: shell
+    scripts/run_desktop_cli.sh --interactive
+
 
 In this mode the app prompts for commands on the console, and can 
 be used to switch presets by entering a command of the 
-form `preset 27`.  This mode is primarily intended for development
+form ``preset 27``.  This mode is primarily intended for development
 testing and exploration and is not intended to evolve into a 
 feature for normal users.
 
