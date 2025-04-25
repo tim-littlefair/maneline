@@ -8,6 +8,7 @@ Both desktop CLI and Android mobile formats of app form part of a single Gradle
 project which can be built with the command line
 
 .. code-block:: shell
+
     ./gradlew build
 
 run from the top level directory of the repository.
@@ -21,6 +22,7 @@ versions of these initial dependencies, which can be run with the a command
 like this:
 
 .. code-block:: shell
+
     ./scripts/rebuild_sdk.sh FHAU.sdk
 
 
@@ -29,6 +31,7 @@ This script will take a few minutes, when it has completed there should be a dir
 command 
 
 .. code-block:: shell
+
    . ../FHAU.sdk/fhau_sdk_vars.sh
 
 should set PATH and other environment variables to values which allow the new 
@@ -54,6 +57,7 @@ From the root directory of the repository, connect the amplifier up via USB, tur
 and run the command:
 
 .. code-block:: shell
+
     scripts/run_desktop_cli.sh
 
 
@@ -82,8 +86,8 @@ and hopefully future runs will succeed as described above.
 The desktop app can also be run in interactive mode, using the command
 
 .. code-block:: shell
-    scripts/run_desktop_cli.sh --interactive
 
+    scripts/run_desktop_cli.sh --interactive
 
 In this mode the app prompts for commands on the console, and can 
 be used to switch presets by entering a command of the 
