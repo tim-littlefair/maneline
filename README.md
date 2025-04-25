@@ -62,6 +62,7 @@ The project depends on a range of upstream libraries
 which are used under other licenses, including a library called UsbHid, 
 developed by Github user @benlypan, available from 
 [this repository](https://github.com/benlypan/UsbHid).  
+
 I needed to make some minor changes to the code of UsbHid to integrate it 
 under the most up to date Android APIs, so there is a directory 'usb-hid' 
 within  my repository containing the modified version of UsbHid I have 
