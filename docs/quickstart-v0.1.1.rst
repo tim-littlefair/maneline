@@ -93,3 +93,18 @@ the standard capabilities of the ADB program.
 A video demonstration of the usage of the app is available here:
 https://drive.google.com/file/d/1nqPzorRsGRrGbL4jmq64_8rjcI38sLn5/view?usp=sharing
 
+The mobile screen in the video isn't particularly easy to read, so here's an 
+example screenshot:
+
+(./fhau-suite-amps_deluxe65_and_lineargain.png)
+
+In this screenshot the suite containing presets based on the Deluxe65 and LinearGain 
+amplifier models has been selected, the button labelled '029/SPACE/TRAVEL' has 
+been clicked, that preset has been activated and the yellow information area shows 
+that the audio chain for this preset which is now active consists of 
+the following effects and amplifier:
+- stomp effect 'Octobot'
+- mod effect 'StepFilter'
+- amplifier 'LinearGain'
+- delay effect 'MonoDelay'
+- reverb effect 'ArenaReverb'
