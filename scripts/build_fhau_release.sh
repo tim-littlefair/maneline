@@ -25,6 +25,16 @@ export versionCode=$(echo "
 
 env | grep version
 
-sed -e "s/0.0.0/$versionBuildString/" -i build.gradle
-sed -e "s/9999/$versionCode/" -i build.gradle
+# Interactive mode to support development
+if [ "$1" = "--build-signed-bundle" ]
+then
+  sed -e "s/0.0.0/$versionBuildString/" -i build.gradle
+  sed -e "s/9999/$versionCode/" -i build.gradle
+  ./gradlew build :android-app:bundleRelease
+  git restore build.gradle
+
+  jarsigner -keystore /media/tim/AC27-AE16/hc-playstore-upload-2024.jks \
+      ./android-app/build/outputs/bundle/release/androidFHAU-$versionBuildString-release.aab \
+      playstore-upload
+fi
 
