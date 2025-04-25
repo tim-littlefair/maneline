@@ -105,8 +105,13 @@ amplifier models has been selected, the button labelled '029/SPACE/TRAVEL' has
 been clicked, that preset has been activated and the yellow information area shows 
 that the audio chain for this preset which is now active consists of 
 the following effects and amplifier:
+
 - stomp effect 'Octobot'
+
 - mod effect 'StepFilter'
+
 - amplifier 'LinearGain'
+
 - delay effect 'MonoDelay'
+
 - reverb effect 'ArenaReverb'
