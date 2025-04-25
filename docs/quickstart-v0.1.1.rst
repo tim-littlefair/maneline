@@ -96,7 +96,7 @@ https://drive.google.com/file/d/1nqPzorRsGRrGbL4jmq64_8rjcI38sLn5/view?usp=shari
 The mobile screen in the video isn't particularly clear, so here's an 
 example screenshot:
 
-..image:: ./fhau-suite-amps_deluxe65_and_lineargain.png
+.. image:: ./fhau-suite-amps_deluxe65_and_lineargain.png
     :width: 400
     :alt: screenshot of a suite of presets displayed by FHAU Android app
 
