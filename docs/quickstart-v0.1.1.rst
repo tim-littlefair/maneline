@@ -93,10 +93,12 @@ the standard capabilities of the ADB program.
 A video demonstration of the usage of the app is available here:
 https://drive.google.com/file/d/1nqPzorRsGRrGbL4jmq64_8rjcI38sLn5/view?usp=sharing
 
-The mobile screen in the video isn't particularly easy to read, so here's an 
+The mobile screen in the video isn't particularly clear, so here's an 
 example screenshot:
 
-(./fhau-suite-amps_deluxe65_and_lineargain.png)
+..image:: ./fhau-suite-amps_deluxe65_and_lineargain.png
+    :width: 400
+    :alt: screenshot of a suite of presets displayed by FHAU Android app
 
 In this screenshot the suite containing presets based on the Deluxe65 and LinearGain 
 amplifier models has been selected, the button labelled '029/SPACE/TRAVEL' has 
