@@ -85,11 +85,11 @@ both the desktop command line application and the Android mobile
 application.  The code used to build these versions has been 
 tagged and released on Github as release 0.1.1.
 
-The capabilities of the initial version of the desktop command line 
-application are described
+The capabilities of the initial versions of the both the desktop command line 
+application and the Android mobile application are described
 [here](./docs/quickstart-v0.1.1.rst).
 
-There is a short video demo of the features of the Android mobile application 
+There is also short video demo of the features of the Android mobile application 
 [here](https://drive.google.com/file/d/1nqPzorRsGRrGbL4jmq64_8rjcI38sLn5/view?usp=sharing).
 
 # Prior Art and Credits
