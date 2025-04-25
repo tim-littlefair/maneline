@@ -59,9 +59,7 @@ GPL version 2 or any later version published by the Free Software Foundation
 at the user's choice.  
 
 The project depends on a range of upstream libraries
-which are used under other licenses, including a library called UsbHid,   personality physical combination speaker/amplifier hardware
-  devices sold by FMIC, where the amplifier contains sof
-
+which are used under other licenses, including a library called UsbHid, 
 developed by Github user @benlypan, available from 
 [this repository](https://github.com/benlypan/UsbHid).  
 I needed to make some minor changes to the code of UsbHid to integrate it 
@@ -83,11 +81,7 @@ README-usbhid.md in this repository contains the original README of the upstream
 
 As at the end of April 2025, initial versions have been released of 
 both the desktop command line application and the Android mobile 
-application.  The code used to build thyou could use the sound clip at 
-    https://en.wiktionary.org/wiki/phwoar
-    (the FHAU developer does not endorse the sexist overtones of
-    this term, but has a sneaking affection for
-    [Viz Comic](https://en.wikipedia.org/wiki/Viz_(comics))).ese versions has been 
+application.  The code used to build these versions has been 
 tagged and released on Github as release 0.1.1.
 
 The capabilities of the initial version of the desktop command line 
