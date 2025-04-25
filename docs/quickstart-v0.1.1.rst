@@ -35,7 +35,7 @@ command
    . ../FHAU.sdk/fhau_sdk_vars.sh
 
 should set PATH and other environment variables to values which allow the new 
-downloaded packages to be activate in preference over pre-installed versions
+downloaded packages to be activated in preference over pre-installed versions
 of the same utilities ready for the `gradlew` command to run.
 
 Once Java and Android SDK packages are installed, all other dependencies (including
