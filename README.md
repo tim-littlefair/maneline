@@ -52,7 +52,7 @@ Specifically, this project is expected to consist of:
   used by the two applications listed above, and which is available
   to other developers to use in their own integrations.
 
-# Licensing
+# Licensing and Distribution
 
 The original software in this project is licensed under the 
 GPL version 2 or any later version published by the Free Software Foundation
@@ -78,6 +78,27 @@ selected by @benlypan for his upstream directory.
 
 README-usbhid.md in this repository contains the original README of the upstream repository.
 
+I am planning to release the Android application as a paid download in the Android Play Store.
+
+The app is presently in the Play Store's 'Open Testing' state, when it is finally released 
+the Play Store entry for it will be here:
+https://play.google.com/store/apps/details?id=net.heretical_camelid.fhau.android_app.
+
+There is a link later in this document which can be used to register as a tester 
+rather than a purchaser of the app.
+
+My motivation for seeking payment is not so much to seek revenue, but more to 
+discourage feedback on the app except from users who have a reasonably strong motivation 
+to use it.  I would prefer users who have the necessary skills to spend the time building 
+the app from source, but I will be happy to send Play Store free download vouchers to anyone 
+who is interested enough in the project to send me a (non-spammy) message requesting this
+via my LinkedIn profile, which is referenced on my Github profile page.  Although I don't 
+expect to make significant revenue from selling the app, it would be nice to have a little 
+bit of income as an insurance against the risk (described at length 
+[here](https://github.com/tim-littlefair/feral-horse-amp-utils/discussions/13))
+that I might brick one of my personal devices when I start to experiment with
+uploading modified preset configurations to the amp in the next iteration of development.
+
 # Status
 
 As at the end of April 2025, initial versions have been released of 
@@ -91,6 +112,11 @@ application and the Android mobile application are described
 
 There is also short video demo of the features of the Android mobile application 
 [here](https://drive.google.com/file/d/1nqPzorRsGRrGbL4jmq64_8rjcI38sLn5/view?usp=sharing).
+
+If you are interested in trying the Android application out, it is presently in 
+'Open Testing' state on the Android Play Store.  You can apply to become a tester
+for the app by following 
+[this link](https://play.google.com/apps/testing/net.heretical_camelid.fhau.android_app).
 
 # Prior Art and Credits
 
