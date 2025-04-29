@@ -9,7 +9,7 @@ WORKDIR /opt/fhau
 RUN wget https://github.com/tim-littlefair/feral-horse-amp-utils/releases/download/release-0.1.1/desktopFHAUcli-0.1.1-44f72ab-36.jar $WORKDIR
 
 # Also deploy any available builds from the development tree
-#COPY tmp/desktopFHAUcli*.jar .
+COPY /tmp/desktopFHAUcli-0.0.0.jar $WORKDIR
 
 # The present FHAU CLI program is not suitable for use as a Balena service
 # so the service just holds the session open for an hour so that the 
