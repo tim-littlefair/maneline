@@ -84,8 +84,10 @@ The app is presently in the Play Store's 'Open Testing' state, when it is finall
 the Play Store entry for it will be here:
 https://play.google.com/store/apps/details?id=net.heretical_camelid.fhau.android_app.
 
-There is a link later in this document which can be used to register as a tester 
-rather than a purchaser of the app.
+**See later in this document for information on how to register as a tester of the app
+using a free promo code so you don't have to pay for it.  The current version is a 
+proof of concept only and I do not consider anyone should pay any amount for it in 
+its current state**
 
 My motivation for seeking payment is not so much to seek revenue, but more to 
 discourage feedback on the app except from users who have a reasonably strong motivation 
@@ -114,9 +116,15 @@ There is also short video demo of the features of the Android mobile application
 [here](https://drive.google.com/file/d/1nqPzorRsGRrGbL4jmq64_8rjcI38sLn5/view?usp=sharing).
 
 If you are interested in trying the Android application out, it is presently in 
-'Open Testing' state on the Android Play Store.  You can apply to become a tester
-for the app by following 
-[this link](https://play.google.com/apps/testing/net.heretical_camelid.fhau.android_app).
+'Open Testing' state on the Android Play Store.  The page for the app on the 
+Play Store is here: 
+(https://play.google.com/apps/testing/net.heretical_camelid.fhau.android_app).
+
+Note that the app is a paid app, at this stage of development I would not claim 
+it is worth the amount charged, so please use one of the free redemption promo codes
+for the app on 
+[this page](docs/playstore-promo-codes.rst).
+
 
 # Prior Art and Credits
 
@@ -225,6 +233,9 @@ future envisioned work related to BLE transport support) including:
 - https://fender-mustang-amps-and-fuse.fandom.com/wiki/Fender_Mustang_Amps_and_Fuse_Wiki
 - [this archive of preset definitions in Fender FUSE formats, collected before FMIC shut down the web site provided to Fender FUSE users for storing and sharing presets](https://guitarpedaldemos.com/fender-fuse-mustang-v2-archive/)
 - [this Google Sheets page containing requests and answers for Mustang presets matching particular artists/songs](https://docs.google.com/spreadsheets/d/1KWvjJ6q6Ora2MqmxtUAWjq9Uerp0Ycza5ouuKuol5HQ/edit?pli=1&gid=0#gid=0)
+- The Remuda and Remuda/SC apps published on the Play Store by 
+  [Triton Interactive](https://play.google.com/store/apps/developer?id=Triton+Interactive), 
+  which are Android apps interoperating with other ranges of Fender Mustang amps.
 
 
 # Other credits
