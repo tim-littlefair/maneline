@@ -33,7 +33,7 @@ then
   ./gradlew build :android-app:bundleRelease
   git restore build.gradle
 
-  jarsigner -keystore /media/tim/AC27-AE16/hc-playstore-upload-2024.jks \
+  jarsigner -keystore $jkspath \
       ./android-app/build/outputs/bundle/release/androidFHAU-$versionBuildString-release.aab \
       playstore-upload
 fi
