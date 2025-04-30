@@ -11,9 +11,6 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
-
-import static java.lang.Package.getPackage;
 
 public class CommandLineInterface implements ILoggingAgent {
     // Integer constants with names prefixed FHAU_STATUS_ are
@@ -25,7 +22,7 @@ public class CommandLineInterface implements ILoggingAgent {
     // Values 90-99 are reserved for the desktop app and are defined here
     private static final int FHAU_STATUS_UNHANDLED_PARAMETERS = 91;
     private static final int FHAU_STATUS_INTERACTIVE_INPUT_FAILURE = 92;
-    private static final int FHAU_STATUS_UNDELETABLE_DISCLAIMER_ACCEPT_FILE = 93;
+    private static final int FHAU_STATUS_DISCLAIMER_ACCEPT_FILE_PERMISSION_ERROR = 93;
 
     static void doInteractive(DesktopUsbAmpProvider provider) {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
@@ -75,7 +72,7 @@ public class CommandLineInterface implements ILoggingAgent {
     }
 
 
-    static boolean s_argParamShowDisclaimer = true;
+    static boolean s_argParamForceDisclaimer = false;
     static boolean s_argParamInteractive = false;
     static String s_argParamOutput = null;
     static final String DISCLAIMER_ACCEPTANCE_RECORD_FILENAME = ".fhau_disclaimer_accepted_until";
@@ -85,8 +82,8 @@ public class CommandLineInterface implements ILoggingAgent {
         try {
             ArrayList<String> argsAL = inspectArgs(new ArrayList<>(List.of(args)));
             showCopyrightAndNoWarranty();
-            doDisclaimerAcceptedCheck(s_argParamShowDisclaimer);
-            if (s_argParamShowDisclaimer == true) {
+            boolean shouldShowDisclaimer = doDisclaimerAcceptedCheck(s_argParamForceDisclaimer);
+            if (shouldShowDisclaimer == true) {
                 showDisclaimerAndPromptForAcceptance();
                 System.exit(0);
             }
@@ -186,20 +183,23 @@ public class CommandLineInterface implements ILoggingAgent {
     }
 
 
-    static void doDisclaimerAcceptedCheck(boolean forceDisclaimer) {
+    static boolean doDisclaimerAcceptedCheck(boolean forceDisclaimer) {
+        boolean shouldDisplayDisclaimer = true;
         try {
+            File disclaimerAcceptedFile = new File(
+                DISCLAIMER_ACCEPTANCE_RECORD_FILENAME
+            );
             if(forceDisclaimer) {
                 // If the acceptance record exists, delete it,
                 // then continue
-                File disclaimerAcceptedFile = new File(
-                    DISCLAIMER_ACCEPTANCE_RECORD_FILENAME
-                );
                 if(!disclaimerAcceptedFile.exists()) {
                     // The file does not exist, so the disclaimer will
                     // be displayed anyway
+                    return true;
                 } else if(disclaimerAcceptedFile.delete()) {
                     // The file existed but has been deleted, so the
                     // disclaimer will be displayed until the user accepts it
+                    return true;
                 } else {
                     System.out.println(
                         "Unable to delete file " +
@@ -209,50 +209,60 @@ public class CommandLineInterface implements ILoggingAgent {
                         "Delete this file or make it deletable to enable re-display and \n" +
                         "re-acceptance of disclaimer"
                     );
+                    System.exit(FHAU_STATUS_DISCLAIMER_ACCEPT_FILE_PERMISSION_ERROR);
                 }
-            }
-            InputStream disclaimerAcceptedUntilFIS = new FileInputStream(
-                DISCLAIMER_ACCEPTANCE_RECORD_FILENAME
-            );
-            LocalDate disclaimerAcceptedUntilDate = LocalDate.parse(
-                new String(
-                    disclaimerAcceptedUntilFIS.readAllBytes(),
-                    Charset.defaultCharset()
-                ),
-                DateTimeFormatter.BASIC_ISO_DATE
-            );
-            disclaimerAcceptedUntilFIS.close();
-            if(LocalDate.now().compareTo(disclaimerAcceptedUntilDate)>0) {
-                // The disclaimer has not been displayed and accepted
-                // recently, so show it again
-                s_argParamShowDisclaimer=true;
-            } else if(
-                LocalDate.now().plusDays(
-                    DISCLAIMER_ACCEPTANCE_DURATION_DAYS
-                ).compareTo(disclaimerAcceptedUntilDate)<0
-            ) {
-                // The program will ignore any attempt to make
-                // acceptance last more than DISCLAIDISCLAIMER_ACCEPTANCE_RECORD_FILENAMEMER_ACCEPTANCE_DURATION_DAYS
-                // by manually editing DISCLAIMER_ACCEPTANCE_RECORD_FILENAME
-                s_argParamShowDisclaimer=true;
             } else {
-                // The disclaimer has been displayed and accepted
-                // recently
-                s_argParamShowDisclaimer=false;
+                InputStream disclaimerAcceptedUntilFIS = new FileInputStream(
+                    DISCLAIMER_ACCEPTANCE_RECORD_FILENAME
+                );
+                LocalDate disclaimerAcceptedUntilDate = LocalDate.parse(
+                    new String(
+                        disclaimerAcceptedUntilFIS.readAllBytes(),
+                        Charset.defaultCharset()
+                    ),
+                    DateTimeFormatter.BASIC_ISO_DATE
+                );
+                disclaimerAcceptedUntilFIS.close();
+                if (LocalDate.now().compareTo(disclaimerAcceptedUntilDate) > 0) {
+                    // The disclaimer has not been displayed and accepted
+                    // recently, so show it again
+                    return true;
+                } else if (
+                    LocalDate.now().plusDays(
+                        DISCLAIMER_ACCEPTANCE_DURATION_DAYS
+                    ).compareTo(disclaimerAcceptedUntilDate) < 0
+                ) {
+                    // The program will ignore any attempt to make
+                    // acceptance last more than DISCLAIMER_ACCEPTANCE_DURATION_DAYS
+                    // by manually editing DISCLAIMER_ACCEPTANCE_RECORD_FILENAME
+                    return true;
+                } else {
+                    // The disclaimer has been displayed and accepted
+                    // recently
+                    return false;
+                }
             }
         } catch (FileNotFoundException e) {
             // Expected behaviour on first run or if disclaimer is displayed
             // and not accepted.
-            s_argParamShowDisclaimer=true;
+            return true;
         } catch (DateTimeParseException e) {
             System.err.println("Parse error checking for disclaimer acceptance -");
             System.err.println("Disclaimer will be displayed and must be accepted again");
-            s_argParamShowDisclaimer=true;
+            return true;
         } catch (IOException e) {
-            // File exists but there is a permission error or other runtime problem
-            // Not sure how to handle this so let it propagate to the process
-            throw new RuntimeException(e);
+            System.out.println(
+                "Unable to process file " +
+                    DISCLAIMER_ACCEPTANCE_RECORD_FILENAME
+            );
+            System.out.println(
+                "Delete this file or make it readable and writeable to enable re-display and \n" +
+                    "re-acceptance of disclaimer"
+            );
+            System.exit(FHAU_STATUS_DISCLAIMER_ACCEPT_FILE_PERMISSION_ERROR);
         }
+        // Is this reachable?
+        return true;
     }
 
     static  ArrayList<String> inspectArgs(ArrayList<String> argsAL) {
@@ -267,7 +277,7 @@ public class CommandLineInterface implements ILoggingAgent {
             } else if(arg.equals("--interactive")) {
                 s_argParamInteractive = true;
             } else if(arg.equals("--disclaimer")) {
-                s_argParamShowDisclaimer = true;
+                s_argParamForceDisclaimer = true;
             } else if(arg.startsWith("--output=")) {
                 s_argParamOutput = arg.replace("--output=","");
             } else {
