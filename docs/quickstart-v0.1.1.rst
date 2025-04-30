@@ -1,6 +1,10 @@
 Quickstart for FHAU applications version 0.1.1
 ##############################################
 
+***<span color="red">The desktop CLI application in release 0.1.1 has been found to have a fatal
+bug described
+[here](https://github.com/tim-littlefair/feral-horse-amp-utils/issues/24).</span>***
+
 Building
 --------
 

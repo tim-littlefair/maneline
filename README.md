@@ -1,6 +1,6 @@
 # Feral Horse Amp Utils
 
-A collection of code and data related to the protocols used to control Fender Musical Instrument Corporation's Mustang® modelling guitar amplifiers
+A collection of code and data related to the protocols used to control Fender Musical Instrument Corporation's Mustang® modelling guitar amplifiers.
 
 # Abbreviations and Definitions
 
@@ -103,10 +103,16 @@ uploading modified preset configurations to the amp in the next iteration of dev
 
 # Status
 
+***<span color="red">The desktop CLI application in release 0.1.1 has been found to have a fatal
+bug described
+[here](https://github.com/tim-littlefair/feral-horse-amp-utils/issues/24).</span>***
+
 As at the end of April 2025, initial versions have been released of 
 both the desktop command line application and the Android mobile 
 application.  The code used to build these versions has been 
 tagged and released on Github as release 0.1.1.
+
+
 
 The capabilities of the initial versions of the both the desktop command line 
 application and the Android mobile application are described
