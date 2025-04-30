@@ -1,0 +1,17 @@
+# To get started with Dependabot version updates, you'll need to specify which
+# package ecosystems to update and where the package manifests are located.
+# Please see the documentation for all configuration options:
+# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+## Tim Littlefair note 250430:
+## It's not clear to me from GitHub documentation whether gradle support can parse build.gradle files 
+## directly or whether I would need to build files in the style described for libs.versions.toml.
+## I don't plan to move the dependencies out of my build.gradle files so if they can't be accessed 
+## directly I'll not bother with dependabot and come back and delete this in a week or two.
+
+version: 2
+updates:
+  - package-ecosystem: "gradle" 
+    directories: [ "/", "usb-hid", "lib", "desktop-app", "android-app" ] 
+    schedule:
+      interval: "weekly"
