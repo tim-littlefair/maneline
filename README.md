@@ -103,9 +103,11 @@ uploading modified preset configurations to the amp in the next iteration of dev
 
 # Status
 
-***<span color="red">The desktop CLI application in release 0.1.1 has been found to have a fatal
+***<span color="red">The desktop CLI application in release 0.1.1 was found to have a fatal
 bug described
 [here](https://github.com/tim-littlefair/feral-horse-amp-utils/issues/24).</span>***
+
+***Release 0.1.3 contains a hotfix for this bug.***
 
 As at the end of April 2025, initial versions have been released of 
 both the desktop command line application and the Android mobile 
@@ -132,8 +134,6 @@ for the app on
 [This](docs/mustang-lt-json-examples.rst)
 is a short document describing the format of the JSON preset definitions
 which can be downloaded from the amplifier using the desktop command line application.
-
-
 
 # Prior Art and Credits
 
