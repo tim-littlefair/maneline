@@ -8,14 +8,14 @@ LT-40S amplifier, the JSON payload received looks like this:
 
   {"nodeType":"preset","nodeId":"preset","version":"1.1","numInputs":2,"numOutputs":2,"info":{"displayName":"FHAU    ONE     ","preset_id":"82701e3e-caf7-11e7-b721-171e6c7d3090","author":"","source_id":"","timestamp":1510855005,"created_at":0,"product_id":"mustang-lt","is_factory_default":true,"bpm":0},"audioGraph":{"nodes":[{"nodeId":"stomp","nodeType":"dspUnit","FenderId":"DUBS_Overdrive","dspUnitParameters":{"bypass":false,"bypassType":"Post","level":0.500000,"gain":0.500000,"low":0.500000,"mid":0.500000,"high":0.500000}},{"nodeId":"mod","nodeType":"dspUnit","FenderId":"DUBS_Vibratone","dspUnitParameters":{"bypass":false,"bypassType":"Post","level":0.960000,"rotor":5.670000,"tapTimeBPM":340.200012,"noteDivision":"off","depth":0.180000,"feedback":0.680000,"phase":0.520000}},{"nodeId":"amp","nodeType":"dspUnit","FenderId":"DUBS_Deluxe57","dspUnitParameters":{"volume":-6.413170,"gatePreset":"off","gateDetectorPosition":"jack","cabsimType":"57dlx","gain":0.600000,"treb":0.720000,"mid":0.500000,"bass":0.500000,"sag":"match","bias":0.500000}},{"nodeId":"delay","nodeType":"dspUnit","FenderId":"DUBS_ReverseDelay","dspUnitParameters":{"bypass":false,"bypassType":"Pre","level":0.750000,"time":0.400000,"tapTimeBPM":150,"noteDivision":"off","feedback":0.300000,"attenuate":1,"chase":0.650000}},{"nodeId":"reverb","nodeType":"dspUnit","FenderId":"DUBS_SmallRoomReverb","dspUnitParameters":{"bypass":false,"bypassType":"Pre","level":0.500000,"decay":0.500000,"dwell":0.500000,"diffuse":0.500000,"tone":0.500000}}],"connections":[{"input":{"nodeId":"preset","index":0},"output":{"nodeId":"stomp","index":0}},{"input":{"nodeId":"preset","index":1},"output":{"nodeId":"stomp","index":1}},{"input":{"nodeId":"stomp","index":0},"output":{"nodeId":"mod","index":0}},{"input":{"nodeId":"stomp","index":1},"output":{"nodeId":"mod","index":1}},{"input":{"nodeId":"mod","index":0},"output":{"nodeId":"amp","index":0}},{"input":{"nodeId":"mod","index":1},"output":{"nodeId":"amp","index":1}},{"input":{"nodeId":"amp","index":0},"output":{"nodeId":"delay","index":0}},{"input":{"nodeId":"amp","index":1},"output":{"nodeId":"delay","index":1}},{"input":{"nodeId":"delay","index":0},"output":{"nodeId":"reverb","index":0}},{"input":{"nodeId":"delay","index":1},"output":{"nodeId":"reverb","index":1}},{"input":{"nodeId":"reverb","index":0},"output":{"nodeId":"preset","index":0}},{"input":{"nodeId":"reverb","index":1},"output":{"nodeId":"preset","index":1}}]}}
 
+
 When FHAU output is enabled and a payload like this is read,
 it makes a verbatim copy in the output directory or zip file
 with a filename ending .raw_preset.json, and also parses and 
 reserializes the JSON data out with a filename ending .pretty_preset.json
 in a format which is intended to be easier to read:
 
-.. code-block::
-  :language: json
+.. code:: JSON
 
   {
     "nodeType": "preset",
