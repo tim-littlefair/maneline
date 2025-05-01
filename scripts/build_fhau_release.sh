@@ -30,7 +30,7 @@ if [ "$1" = "--build-signed-bundle" ]
 then
   sed -e "s/0.0.0/$versionBuildString/" -i build.gradle
   sed -e "s/9999/$versionCode/" -i build.gradle
-  ./gradlew build :android-app:bundleRelease
+  ./gradlew clean build :android-app:bundleRelease
   git restore build.gradle
 
   #jarsigner -keystore $jkspath \
