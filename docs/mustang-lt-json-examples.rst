@@ -4,8 +4,7 @@ Example JSON Preset definitions
 When the FHAU desktop app retrieves preset definitions from the 
 LT-40S amplifier, the JSON payload received looks like this:
 
-.. include:: ../assets/FHAU____ONE_____-c9-eb4d.raw_preset.json
-   :code: 
+.. include:: ../assets/FHAU____ONE_____-c9-eb4d.raw_preset.json.rst
 
 When FHAU output is enabled and a payload like this is read,
 it makes a verbatim copy in the output directory or zip file
@@ -13,8 +12,7 @@ with a filename ending .raw_preset.json, and also parses and
 reserializes the JSON data out with a filename ending .pretty_preset.json
 in a format which is intended to be easier to read:
 
-.. include:: ../assets/FHAU____ONE_____-c9-eb4d.pretty_preset.json
-   :code: json
+.. include:: ../assets/FHAU____ONE_____-c9-eb4d.pretty_preset.json.rst
 
 As well as being more readable in terms of line length and whitespace 
 spacing, the .pretty_preset.json is intended to be consistent 
