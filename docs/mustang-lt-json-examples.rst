@@ -218,7 +218,7 @@ content but are serialized with different order of JSON elements
 are able to be identified as being identical.
 
 See the source file 
-(PresetCanonicalSerializer.java|https://github.com/tim-littlefair/feral-horse-amp-utils/blob/main/lib/src/main/java/net/heretical_camelid/fhau/lib/registries/PresetCanonicalSerializer.java)
+`PresetCanonicalSerializer.java<https://github.com/tim-littlefair/feral-horse-amp-utils/blob/main/lib/src/main/java/net/heretical_camelid/fhau/lib/registries/PresetCanonicalSerializer.java>`
 for details of how FHAU reads and writes the JSON format.
 
 Some initial notes on this format:
