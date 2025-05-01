@@ -21,9 +21,8 @@ pipeline {
                 script {
                     if( params.RELEASE_VERSION_MAJOR != "" ) {
                         sh """
-                        . ./scripts/build_fhau_release.sh $RELEASE_VERSION_MAJOR $RELEASE_VERSION_MINOR $RELEASE_VERSION_PATCH
                         . ../$SDK_NAME/fhau_sdk_vars.sh
-                        ./gradlew clean build
+                        . ./scripts/build_fhau_release.sh --build-signed-bundle
                         """
                     } else {
                         echo 'Not a release'
