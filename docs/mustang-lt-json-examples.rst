@@ -229,9 +229,10 @@ Some initial notes on this format:
 - The sound quality of the preset is almost primarily determined by the 
   content of the audioGraph subtree.
 - The connections subtree defines the sequence of processors the audio
-  will pass through.  Typically this will reflect 
-  [this illustration from one of the FMIC documents about the LT40S](../assets/LT40S-signal-path.png),
-  but it is possible (but probably a very bad idea) to configure presets in which 
+  will pass through.  Typically this will reflect the sequence stomp/mod/amp/delay/reverb
+  as shown in this illustration from one of the FMIC documents about the LT40S:
+  https://github.com/tim-littlefair/feral-horse-amp-utils/blob/main/assets/LT40S-signal-path.png,
+  but it is possible (but probably a bad idea) to configure presets in which 
   the effects are not in this canonical order.
 
 *NB In the interests of respecting any copyright FMIC may hold over the
