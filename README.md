@@ -112,8 +112,6 @@ both the desktop command line application and the Android mobile
 application.  The code used to build these versions has been 
 tagged and released on Github as release 0.1.1.
 
-
-
 The capabilities of the initial versions of the both the desktop command line 
 application and the Android mobile application are described
 [here](./docs/quickstart-v0.1.1.rst).
@@ -130,6 +128,11 @@ Note that the app is a paid app, at this stage of development I would not claim
 it is worth the amount charged, so please use one of the free redemption promo codes
 for the app on 
 [this page](docs/playstore-promo-codes.rst).
+
+[This](docs/mustang-lt-json-examples.rst)
+is a short document describing the format of the JSON preset definitions
+which can be downloaded from the amplifier using the desktop command line application.
+
 
 
 # Prior Art and Credits
