@@ -33,8 +33,8 @@ then
   ./gradlew build :android-app:bundleRelease
   git restore build.gradle
 
-  jarsigner -keystore $jkspath \
-      ./android-app/build/outputs/bundle/release/androidFHAU-$versionBuildString-release.aab \
-      playstore-upload
+  #jarsigner -keystore $jkspath \
+  #    ./android-app/build/outputs/bundle/release/androidFHAU-$versionBuildString-release.aab \
+  #    playstore-upload
 fi
 

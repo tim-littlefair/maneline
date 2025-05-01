@@ -21,13 +21,16 @@ pipeline {
                 script {
                     if( params.RELEASE_VERSION_MAJOR != "" ) {
                         sh """
-                        . ../$SDK_NAME/fhau_sdk_vars.sh
-                        . ./scripts/build_fhau_release.sh --build-signed-bundle
+                            echo 'Release!'
+                            . ../$SDK_NAME/fhau_sdk_vars.sh
+                            . ./scripts/build_fhau_release.sh --build-signed-bundle
                         """
                     } else {
                         echo 'Not a release'
-                        . ../$SDK_NAME/fhau_sdk_vars.sh
-                        ./gradlew clean build
+                        sh """
+                            . ../$SDK_NAME/fhau_sdk_vars.sh
+                            ./gradlew clean build
+                        """
                     }
                 }
             }
