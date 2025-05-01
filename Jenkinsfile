@@ -20,14 +20,16 @@ pipeline {
             steps {
                 script {
                     if( params.RELEASE_VERSION_MAJOR != "" ) {
-                        sh "./scripts/build_fhau_release.sh $RELEASE_VERSION_MAJOR $RELEASE_VERSION_MINOR $RELEASE_VERSION_PATCH"
-                    } else {
-                        echo 'Not a release'
-                    }
-                    sh """
+                        sh """
+                            ./scripts/build_fhau_release.sh $RELEASE_VERSION_MAJOR $RELEASE_VERSION_MINOR $RELEASE_VERSION_PATCH
                         . ../$SDK_NAME/fhau_sdk_vars.sh
                         ./gradlew clean build
-                    """
+                        """
+                    } else {
+                        echo 'Not a release'
+                        . ../$SDK_NAME/fhau_sdk_vars.sh
+                        ./gradlew clean build
+                    }
                 }
             }
         }
