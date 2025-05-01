@@ -1,4 +1,5 @@
 .. code:: json
+
   {
     "nodeType": "preset",
     "version": "1.1",
