@@ -27,12 +27,23 @@ public class PresetCanonicalSerializer {
     static Gson s_gsonCompact = new Gson();
 
     String nodeType;
-    String NodeId;
+
+    String nodeId;
+
     String version;
+
     int numInputs;
+
     int numOutputs;
+
     PCS_Info info;
+
     PCS_AudioGraph audioGraph;
+
+
+
+
+
     public PresetCanonicalSerializer() {}
     public void validate() {
         assert audioGraph.nodes.length==5;
@@ -98,6 +109,13 @@ public class PresetCanonicalSerializer {
         String nodeId;
         String dspUnit;
         String FenderId;
+
+        // We want to be able to calculate a hash which excludes
+        // the dspUnitParameters subtrees so that we can easily
+        // spot pairs or sets of presets which use the same
+        // DSP unit type but differ in unit parameters only.
+        // The @Since(91) annotation allows us to do this
+        @Since(91)
         PCS_DspUnitParameters dspUnitParameters;
         PCS_Node() {}
         public int compareTo(PCS_Node other) {
