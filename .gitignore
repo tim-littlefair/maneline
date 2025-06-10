@@ -14,6 +14,8 @@
 
 # Directory for input and output files I don't want in version control
 _work
+deployment/balena/tmp
+
 
 
 
