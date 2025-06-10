@@ -48,7 +48,7 @@ dependencies {
     implementation 'androidx.compose.material:material:1.8.2'
     implementation 'androidx.appcompat:appcompat:1.7.0'
     implementation "androidx.constraintlayout:constraintlayout:2.2.1"
-    implementation "androidx.constraintlayout:constraintlayout-compose:1.1.0"
+    implementation "androidx.constraintlayout:constraintlayout-compose:1.1.1"
     testImplementation 'androidx.test.espresso:espresso-core:3.6.1'
     implementation project(':lib')
     implementation project(':usb-hid')
