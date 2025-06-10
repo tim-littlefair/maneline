@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.Since;
 
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * This class and its static inner classes are constructed to satisfy
@@ -19,6 +20,10 @@ import java.util.Arrays;
  * preset #1 "FENDER  CLEAN   ".
  */
 public class PresetCanonicalSerializer {
+    static final List<String> _NODEID_ORDER = Arrays.asList(
+        "preset", "stomp", "mod", "amp", "delay", "reverb"
+    );
+
     static Gson s_gsonCompact = new Gson();
 
     String nodeType;
@@ -29,17 +34,46 @@ public class PresetCanonicalSerializer {
     PCS_Info info;
     PCS_AudioGraph audioGraph;
     public PresetCanonicalSerializer() {}
+    public void validate() {
+        assert audioGraph.nodes.length==5;
+        assert audioGraph.connections.length==6;
+        // All of the raw preset JSON seen to date have the audioGraph.connections
+        // array ordered as follows:
+        // preset-0 to stomp-0, preset-1 to stomp-1,
+        // stomp-0 to mod-0, stomp-1 to mod-1
+        // ... mod to amp ...
+        // ... amp to delay ...
+        // ... delay to reverb ...
+        // ... reverb to preset
+
+        // For the moment, we assume that any JSON which deviates
+        // from this will give rise to undefined behaviour if uploaded
+        // to a Mustang device, so this validation function can be
+        // used to protect devices from non-conformant JSON.
+
+        // PCS_Connection implements Comparable<>.compareTo
+        // with a function which matches this.
+        PCS_Connection[] sorted_connections = audioGraph.connections.clone();
+        Arrays.sort(sorted_connections);
+        assert sorted_connections == audioGraph.connections;
+    }
     public void makeCanonical() {
-        // The two arrays have inconsistent order when the same preset
+        // The array nodes can have inconsistent order when the same preset
         // is copied to a different slot (or maybe when it is edited
         // in Fender Tone, even if the final state is equal to the
         // original state).
         // Sorting the arrays resolves the inconsistency and helps to
         // reduce the number of presets with the same name and
         // identical parameters but different hashes due to JSON
-        // element ordering
-        Arrays.sort(audioGraph.connections);
+        // element ordering.
+
+        // The canonical ordering of this array is as described in
+        // LT40S documents from Fender:
+        // stomp < mod < amp < reverb < delay
         Arrays.sort(audioGraph.nodes);
+
+        // It does not appear to be necessary to sort the connections
+        // array
     }
 
     static class PCS_AudioGraph {
@@ -67,7 +101,9 @@ public class PresetCanonicalSerializer {
         PCS_DspUnitParameters dspUnitParameters;
         PCS_Node() {}
         public int compareTo(PCS_Node other) {
-            return s_gsonCompact.toJson(this).compareTo(s_gsonCompact.toJson(other));
+            int nodeid_index_this = _NODEID_ORDER.indexOf(this.nodeId);
+            int nodeid_index_other = _NODEID_ORDER.indexOf(other.nodeId);
+            return Integer.compare(nodeid_index_this, nodeid_index_other);
         }
     }
 
@@ -178,7 +214,15 @@ public class PresetCanonicalSerializer {
         PCS_Connection_IO output;
         PCS_Connection() { }
         public int compareTo(PCS_Connection other) {
-            return s_gsonCompact.toJson(this).compareTo(s_gsonCompact.toJson(other));
+            int nodeid_index_this = _NODEID_ORDER.indexOf(this.input.nodeId);
+            int nodeid_index_other = _NODEID_ORDER.indexOf(other.input.nodeId);
+            if(nodeid_index_this>nodeid_index_other) {
+                return +1;
+            } else if(nodeid_index_this<nodeid_index_other) {
+                return -1;
+            } else {
+                return Integer.compare(this.input.index, other.input.index);
+            }
         }
     }
 
