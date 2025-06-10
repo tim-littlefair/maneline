@@ -145,10 +145,14 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
         acceptVisitor(new PresetDetailsTableGenerator(printStream));
     }
 
+    private List<Integer> m_slotsNotExportedYet = null;
     private SlotBasedPresetSuiteExporter createSuite(
         String outputPrefix, String suiteName, Integer... desiredSlotIndexes
     ) {
         List<Integer> dsiList = new ArrayList<Integer>(List.of(desiredSlotIndexes));
+        if(m_slotsNotExportedYet!=null) {
+            m_slotsNotExportedYet.removeAll(dsiList);
+        }
         return new SlotBasedPresetSuiteExporter(
             outputPrefix, suiteName,
             dsiList.stream().toArray(Integer[]::new)
@@ -175,14 +179,22 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
 
             // Export suite records
             String suitePathPrefix =  outputPathBase + "suites";
+            m_slotsNotExportedYet = new ArrayList<Integer>();
+            m_slotsNotExportedYet.addAll(m_slotsToRecords.keySet());
             List<SlotBasedPresetSuiteExporter> suiteExporters =
                 Arrays.asList(new SlotBasedPresetSuiteExporter[]{
-                    createSuite(suitePathPrefix, "Favourites", 1, 2, 3),
-                    createSuite(suitePathPrefix, "Folk", 4, 5, 6),
-                    createSuite(suitePathPrefix, "Jazz", 1, 2, 3),
-                    createSuite(suitePathPrefix, "Blues", 1, 2, 3),
-                    createSuite(suitePathPrefix, "Rock", 1, 2, 3),
-                    createSuite(suitePathPrefix, "Heavy", 1, 2, 3)
+                    createSuite(suitePathPrefix, "General",
+                        // TL: really this is just my favourites
+                        31, 1, 30, 2, 7, 8, 15, 29
+                    ),
+                    createSuite(suitePathPrefix, "Folk", 5, 6, 30),
+                    createSuite(suitePathPrefix, "Jazz", 9, 12, 13),
+                    createSuite(suitePathPrefix, "Blues", 3, 26, 1, 2, 3),
+                    createSuite(suitePathPrefix, "Rock", 4, 8, 10, 17, 18, 19, 22, 27),
+                    createSuite(suitePathPrefix, "Heavy", 11, 14, 16, 20, 23, 24, 28),
+                    createSuite(suitePathPrefix, "Everything Else",
+                        m_slotsNotExportedYet.stream().toArray(Integer[]::new)
+                    )
                 }
             );
 
@@ -367,7 +379,7 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
                     sb.append(UNICODE_NON_BREAKING_SPACE);
                 }
             }
-            return sb.toString();
+            return sb.toString().strip();
         }
     }
 }
@@ -495,7 +507,6 @@ class SlotBasedPresetSuiteExporter implements PresetRegistryBase.Visitor {
         if(m_desiredSlotIndexes.contains(slotIndex)) {
             JsonObject presetObject = new JsonObject();
             presetObject.addProperty("presetName", fjpr.m_name);
-            presetObject.addProperty( "displayName", fjpr.displayName());
             presetObject.addProperty( "audioHash", fjpr.audioHash());
             presetObject.addProperty("effects", fjpr.effects());
             m_suite.getAsJsonArray("presets").add(presetObject);
@@ -505,7 +516,7 @@ class SlotBasedPresetSuiteExporter implements PresetRegistryBase.Visitor {
     public void visitAfterRecords(PresetRegistryBase registry) {
         String jsonForSuite = m_gson.toJson(m_suite);
         String suiteFilename = m_suiteName.replace(" ","_");
-        String targetPath = m_outputPrefix + "/" + suiteFilename + ".amp_presets.json";
+        String targetPath = m_outputPrefix + "/" + suiteFilename + ".preset_suite.json";
         FenderJsonPresetRegistry.outputToFile(targetPath, jsonForSuite);
     }
 }
