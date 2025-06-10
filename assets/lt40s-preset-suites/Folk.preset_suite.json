@@ -1,0 +1,20 @@
+{
+  "suiteName": "Folk",
+  "presets": [
+    {
+      "presetName": "DREAMY          ",
+      "audioHash": "a7c9-43a2",
+      "effects": "s:SimpleCompressor m:Vibratone a:Twin65 d:TapeDelayLite r:LargePlate "
+    },
+    {
+      "presetName": "COUNTRY PICKING ",
+      "audioHash": "8cbf-9815",
+      "effects": "s:SimpleCompressor a:Deluxe65 d:TapeDelayLite "
+    },
+    {
+      "presetName": "ACOUSTICSIM     ",
+      "audioHash": "c270-30c7",
+      "effects": "s:MustangFiveBandEq1 a:LinearGain r:LargeHallReverb "
+    }
+  ]
+}
