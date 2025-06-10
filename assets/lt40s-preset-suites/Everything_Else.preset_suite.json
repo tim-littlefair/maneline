@@ -1,0 +1,50 @@
+{
+  "suiteName": "Everything Else",
+  "presets": [
+    {
+      "presetName": "TOUCH   WAH     ",
+      "audioHash": "8d07-46b4",
+      "effects": "m:EcFilter a:Deluxe57 r:SmallRoomReverb "
+    },
+    {
+      "presetName": "SURF    MUSIC   ",
+      "audioHash": "bc39-206c",
+      "effects": "a:Bassman59 d:MonoDelay r:Spring65 "
+    },
+    {
+      "presetName": "ANGRY   CHAMP   ",
+      "audioHash": "3595-726c",
+      "effects": "s:Blackbox a:Champ57 d:TapeDelayLite r:SmallRoomReverb "
+    },
+    {
+      "presetName": "BACK IN BLACK   ",
+      "audioHash": "4a85-aa71",
+      "effects": "s:MustangFiveBandEq1 a:Plexi87 r:SmallRoomReverb "
+    },
+    {
+      "presetName": "BLACK   DOG     ",
+      "audioHash": "94c7-1a47",
+      "effects": "s:SimpleCompressor m:ChorusTriangle a:Ac30Tb d:MonoDelay r:SmallRoomReverb "
+    },
+    {
+      "presetName": "BLUES   LEAD 2  ",
+      "audioHash": "5106-c914",
+      "effects": "s:Greenbox a:Deluxe65 r:SmallRoomReverb "
+    },
+    {
+      "presetName": "BRIGHT  PRINCE  ",
+      "audioHash": "d28b-0e71",
+      "effects": "a:Princeton65 r:Spring65 "
+    },
+    {
+      "presetName": "BROKEN  DREAMS  ",
+      "audioHash": "e985-cd92",
+      "effects": "m:SineTremolo a:Jcm800 r:SmallRoomReverb "
+    },
+    {
+      "presetName": "FHAU    ONE     ",
+      "audioHash": "a207-2763",
+      "effects": "s:Overdrive m:Vibratone a:Deluxe57 d:ReverseDelay r:SmallRoomReverb "
+    }
+  ]
+}
