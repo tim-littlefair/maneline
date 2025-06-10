@@ -145,25 +145,51 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
         acceptVisitor(new PresetDetailsTableGenerator(printStream));
     }
 
+    private SlotBasedPresetSuiteExporter createSuite(
+        String outputPrefix, String suiteName, Integer... desiredSlotIndexes
+    ) {
+        List<Integer> dsiList = new ArrayList<Integer>(List.of(desiredSlotIndexes));
+        return new SlotBasedPresetSuiteExporter(
+            outputPrefix, suiteName,
+            dsiList.stream().toArray(Integer[]::new)
+        );
+    }
+
     public void dump(PresetSuiteRegistry presetSuiteRegistry) {
         if(m_outputPath == null) {
             generatePresetDetails(System.out);
         } else {
             generatePresetDetails(System.out);
 
+            String outputPathBase;
+            if(s_outputZipStream!=null) {
+                outputPathBase = "/";
+            } else {
+                outputPathBase = m_outputPath + "/";
+            }
+
             // Export raw (compact format) and pretty (more readaable)
             // renderings of the presets as JSON.
-            AmpDefinitionExporter ade;
-            AmpBasedPresetSuiteExporter abpse;
-            if(s_outputZipStream!=null) {
-                ade = new AmpDefinitionExporter("presets");
-                abpse = new AmpBasedPresetSuiteExporter("suites");
-            } else {
-                ade = new AmpDefinitionExporter(m_outputPath + "/presets");
-                abpse = new AmpBasedPresetSuiteExporter(m_outputPath + "/suites");
-            }
+            String presetPathPrefix = outputPathBase + "presets";
+            AmpDefinitionExporter ade = new AmpDefinitionExporter(presetPathPrefix);
+
+            // Export suite records
+            String suitePathPrefix =  outputPathBase + "suites";
+            List<SlotBasedPresetSuiteExporter> suiteExporters =
+                Arrays.asList(new SlotBasedPresetSuiteExporter[]{
+                    createSuite(suitePathPrefix, "Favourites", 1, 2, 3),
+                    createSuite(suitePathPrefix, "Folk", 4, 5, 6),
+                    createSuite(suitePathPrefix, "Jazz", 1, 2, 3),
+                    createSuite(suitePathPrefix, "Blues", 1, 2, 3),
+                    createSuite(suitePathPrefix, "Rock", 1, 2, 3),
+                    createSuite(suitePathPrefix, "Heavy", 1, 2, 3)
+                }
+            );
+
             acceptVisitor(ade);
-            acceptVisitor(abpse);
+            for(SlotBasedPresetSuiteExporter suiteExporter: suiteExporters) {
+                acceptVisitor(suiteExporter);
+            }
 
             if(presetSuiteRegistry!=null) {
                 System.out.println();
@@ -437,59 +463,50 @@ class AmpDefinitionExporter implements PresetRegistryBase.Visitor {
     public void visitAfterRecords(PresetRegistryBase registry)  { }
 }
 
-class AmpBasedPresetSuiteExporter implements PresetRegistryBase.Visitor {
-    HashMap<String,JsonObject> m_ampPresetSuites;
+class SlotBasedPresetSuiteExporter implements PresetRegistryBase.Visitor {
+    static final Gson m_gson = new GsonBuilder().setPrettyPrinting().create();
+
     final String m_outputPrefix;
-    final Gson m_gson;
 
-    AmpBasedPresetSuiteExporter(String outputPrefix) {
+    final String m_suiteName;
+
+    final List<Integer> m_desiredSlotIndexes;
+
+    JsonObject m_suite;
+
+    SlotBasedPresetSuiteExporter(
+        String outputPrefix, String suiteName, Integer... desiredSlotIndexes
+    ) {
         m_outputPrefix = outputPrefix;
-        m_gson = new GsonBuilder().setPrettyPrinting().create();
-        m_ampPresetSuites = new HashMap<>();
-    }
-
-    // The user may want to select a range of presets for export
-    // (for example on LT40S to capture only firmware default presets 1-30)
-    int m_minSlotIndex = 1;
-    int m_maxSlotIndex = 999;
-    void setRange(int minSlotIndex, int maxSlotIndex) {
-        m_minSlotIndex = minSlotIndex;
-        m_maxSlotIndex = maxSlotIndex;
+        m_suiteName = suiteName;
+        m_desiredSlotIndexes = Arrays.asList(desiredSlotIndexes);
+        m_suite = new JsonObject();
+        m_suite.addProperty("suiteName", suiteName);
+        m_suite.add("presets",new JsonArray());
     }
 
     @Override
-    public void visitBeforeRecords(PresetRegistryBase registry) {
-    }
+    public void visitBeforeRecords(PresetRegistryBase registry) {  }
 
     @Override
     public void visitRecord(int slotIndex, Object record) {
-        if(slotIndex<=m_minSlotIndex || slotIndex>=m_maxSlotIndex) {
-            return;
-        }
         FenderJsonPresetRegistry.Record fjpr = (FenderJsonPresetRegistry.Record) record;
         assert fjpr != null;
-        JsonObject suiteForThisAmp = m_ampPresetSuites.get(fjpr.ampName());
-        if(suiteForThisAmp==null) {
-            suiteForThisAmp = new JsonObject();
-            suiteForThisAmp.addProperty("ampName", fjpr.ampName());
-            suiteForThisAmp.add("presets", new JsonArray());
-            m_ampPresetSuites.put(fjpr.ampName(), suiteForThisAmp);
+        if(m_desiredSlotIndexes.contains(slotIndex)) {
+            JsonObject presetObject = new JsonObject();
+            presetObject.addProperty("presetName", fjpr.m_name);
+            presetObject.addProperty( "displayName", fjpr.displayName());
+            presetObject.addProperty( "audioHash", fjpr.audioHash());
+            presetObject.addProperty("effects", fjpr.effects());
+            m_suite.getAsJsonArray("presets").add(presetObject);
         }
-        JsonArray presetArray = suiteForThisAmp.getAsJsonArray("presets");
-        JsonObject newPreset = new JsonObject();
-        newPreset.addProperty("slotIndex", slotIndex);
-        newPreset.addProperty("presetName", fjpr.displayName());
-        newPreset.addProperty("audioHash", fjpr.audioHash());
-        newPreset.addProperty("effects", fjpr.effects());
-        presetArray.add(newPreset);
     }
     @Override
     public void visitAfterRecords(PresetRegistryBase registry) {
-        for(String suiteName: m_ampPresetSuites.keySet()) {
-            String jsonForSuite = m_gson.toJson(m_ampPresetSuites.get(suiteName));
-            String targetPath = m_outputPrefix + "/" + suiteName + ".amp_presets.json";
-            FenderJsonPresetRegistry.outputToFile(targetPath, jsonForSuite);
-        }
+        String jsonForSuite = m_gson.toJson(m_suite);
+        String suiteFilename = m_suiteName.replace(" ","_");
+        String targetPath = m_outputPrefix + "/" + suiteFilename + ".amp_presets.json";
+        FenderJsonPresetRegistry.outputToFile(targetPath, jsonForSuite);
     }
 }
 

@@ -40,10 +40,6 @@ public class PresetCanonicalSerializer {
 
     PCS_AudioGraph audioGraph;
 
-
-
-
-
     public PresetCanonicalSerializer() {}
     public void validate() {
         assert audioGraph.nodes.length==5;
