@@ -140,7 +140,7 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
     }
 
     public void generatePresetDetails(PrintStream printStream) {
-        // acceptVisitor(new PresetDetailsTableGenerator(printStream));
+        acceptVisitor(new PresetDetailsTableGenerator(printStream));
     }
 
     // We start with a list of all slots containing
@@ -406,6 +406,53 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
 
         public boolean isFactoryDefault() {
             return m_presetCanonicalSerializer.info.is_factory_default;
+        }
+    }
+
+    public static class PresetDetailsTableGenerator implements Visitor {
+        private final static String _LINE_FORMAT = "%3d %-16s %-9s %-70s";
+        PrintStream m_printStream;
+
+        public PresetDetailsTableGenerator(PrintStream printStream) {
+            m_printStream = printStream;
+        }
+
+        @Override
+        public void visitBeforeRecords(PresetRegistryBase registry) {
+            m_printStream.println();
+            m_printStream.println("Unique Presets");
+            m_printStream.println(String.format(
+                _LINE_FORMAT.replace("%3d", "%3s"),
+                "#", "Name", "Hash", "Effect Chain"
+            ));
+        }
+
+        @Override
+        public void visitRecord(int slotIndex, Object record) {
+            Record fjpr = (Record) record;
+            assert fjpr != null;
+            m_printStream.println(String.format(
+                _LINE_FORMAT,
+                slotIndex, fjpr.displayName(), fjpr.audioHash(), fjpr.effects()
+            ));
+        }
+
+        @Override
+        public void visitAfterRecords(PresetRegistryBase registry) {
+            FenderJsonPresetRegistry fjpRegistry = (FenderJsonPresetRegistry) registry;
+            assert fjpRegistry != null;
+            m_printStream.println();
+            m_printStream.println("Duplicated Presets");
+            for (String duplicateKey : fjpRegistry.m_duplicateSlots.keySet()) {
+                ArrayList<Integer> duplicateSlotList = fjpRegistry.m_duplicateSlots.get(duplicateKey);
+                if (duplicateSlotList.size() == 1) {
+                    continue;
+                }
+                m_printStream.println(String.format(
+                    "The preset with %s is duplicated at the following slots: %s",
+                    duplicateKey, duplicateSlotList
+                ));
+            }
         }
     }
 }
