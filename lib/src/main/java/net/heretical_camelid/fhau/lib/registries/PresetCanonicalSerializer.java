@@ -42,8 +42,6 @@ public class PresetCanonicalSerializer {
 
     public PresetCanonicalSerializer() {}
     public void validate() {
-        assert audioGraph.nodes.length==5;
-        assert audioGraph.connections.length==6;
         // All of the raw preset JSON seen to date have the audioGraph.connections
         // array ordered as follows:
         // preset-0 to stomp-0, preset-1 to stomp-1,
@@ -60,9 +58,14 @@ public class PresetCanonicalSerializer {
 
         // PCS_Connection implements Comparable<>.compareTo
         // with a function which matches this.
+        assert audioGraph.connections.length==6;
         PCS_Connection[] sorted_connections = audioGraph.connections.clone();
         Arrays.sort(sorted_connections);
         assert sorted_connections == audioGraph.connections;
+
+        // We also expect exactly 5 entries in the nodes array.
+        // The order of these seems to vary in a way I don't understand.
+        assert audioGraph.nodes.length==5;
     }
     public void makeCanonical() {
         // The array nodes can have inconsistent order when the same preset
@@ -95,7 +98,7 @@ public class PresetCanonicalSerializer {
         String source_id;
         int timestamp;
         int created_at;
-        String productId;
+        String product_id;
         boolean is_factory_default = true;
         int bpm;
         PCS_Info() { }
