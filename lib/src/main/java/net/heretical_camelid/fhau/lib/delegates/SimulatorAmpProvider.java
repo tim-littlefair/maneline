@@ -146,6 +146,11 @@ public class SimulatorAmpProvider implements IAmpProvider {
     }
 
     @Override
+    public ArrayList<PresetSuiteRegistry.PresetSuiteEntry> loadCuratedPresetSuites() {
+        return null;
+    }
+
+    @Override
     public ProviderState_e attemptConnection() {
         return ProviderState_e.PROVIDER_DEVICE_CONNECTION_SUCCEEDED;
     }

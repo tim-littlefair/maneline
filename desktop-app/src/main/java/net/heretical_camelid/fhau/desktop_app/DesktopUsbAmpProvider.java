@@ -90,7 +90,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
             boolean requestReport = false;
             int productId = fmicDevice.getProductId();
             System.out.println(String.format(
-                "Using FMIC device with VID/PID=we do know%04x:%04x product='%s' serial#=%s release=%d path=%s",
+                "Using FMIC device with VID/PID=%04x:%04x product='%s' serial#=%s release=%d path=%s",
                 fmicDevice.getVendorId(), productId, fmicDevice.getProduct(),
                 fmicDevice.getSerialNumber(), fmicDevice.getReleaseNumber(), fmicDevice.getPath()
             ));
@@ -318,6 +318,11 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
     }
 
     @Override
+    public ArrayList<PresetSuiteRegistry.PresetSuiteEntry> loadCuratedPresetSuites() {
+        return null;
+    }
+
+    @Override
     public ProviderState_e attemptConnection() {
         // The interface requires this as the Android/USB
         // provider needs to do the connection in stages
@@ -327,7 +332,4 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
         // don't expect it to be called.
         return null;
     }
-
-
 }
-

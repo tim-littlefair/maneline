@@ -145,16 +145,34 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
         acceptVisitor(new PresetDetailsTableGenerator(printStream));
     }
 
+    // We start with a list of all slots containing
+    // unique (i.e. first-occurring) presets
+    // and remove each slot index from it as it is explicitly
+    // included in a curated suite.
+    // This allows us to create the 'Everything Else'
+    // suite to include items which are not included elsewhere.
     private List<Integer> m_slotsNotExportedYet = null;
+
+    // the filenames for suites contain a leading running number
+    // so that the dictionary order of filenames can be used
+    // to display suites on the UI in the order they are
+    // created in the code
+    private int m_suiteNumber=0;
+
     private SlotBasedPresetSuiteExporter createSuite(
         String outputPrefix, String suiteName, Integer... desiredSlotIndexes
     ) {
+        if(desiredSlotIndexes.length==0) {
+            return null;
+        }
         List<Integer> dsiList = new ArrayList<Integer>(List.of(desiredSlotIndexes));
         if(m_slotsNotExportedYet!=null) {
             m_slotsNotExportedYet.removeAll(dsiList);
         }
+        m_suiteNumber++;
         return new SlotBasedPresetSuiteExporter(
-            outputPrefix, suiteName,
+            outputPrefix,
+            String.format("%02d-%s", m_suiteNumber, suiteName),
             dsiList.stream().toArray(Integer[]::new)
         );
     }
@@ -181,26 +199,31 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
             String suitePathPrefix =  outputPathBase + "suites";
             m_slotsNotExportedYet = new ArrayList<Integer>();
             m_slotsNotExportedYet.addAll(m_slotsToRecords.keySet());
+            m_suiteNumber = 0;
             List<SlotBasedPresetSuiteExporter> suiteExporters =
                 Arrays.asList(new SlotBasedPresetSuiteExporter[]{
-                    createSuite(suitePathPrefix, "General",
+                    createSuite(
                         // TL: really this is just my favourites
+                        suitePathPrefix, "General",
                         31, 1, 30, 2, 7, 8, 15, 29
                     ),
-                    createSuite(suitePathPrefix, "Folk", 5, 6, 30),
+                    createSuite(suitePathPrefix, "Folk", 6, 30),
                     createSuite(suitePathPrefix, "Jazz", 9, 12, 13),
                     createSuite(suitePathPrefix, "Blues", 3, 26, 1, 2, 3),
                     createSuite(suitePathPrefix, "Rock", 4, 8, 10, 17, 18, 19, 22, 27),
                     createSuite(suitePathPrefix, "Heavy", 11, 14, 16, 20, 23, 24, 28),
-                    createSuite(suitePathPrefix, "Everything Else",
+                    createSuite(suitePathPrefix, "Trippy", 5, 18, 29),
+                    createSuite(
+                        suitePathPrefix, "Everything Else",
                         m_slotsNotExportedYet.stream().toArray(Integer[]::new)
                     )
                 }
             );
-
             acceptVisitor(ade);
             for(SlotBasedPresetSuiteExporter suiteExporter: suiteExporters) {
-                acceptVisitor(suiteExporter);
+                if(suiteExporter!=null) {
+                    acceptVisitor(suiteExporter);
+                }
             }
 
             if(presetSuiteRegistry!=null) {
@@ -381,6 +404,10 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
             }
             return sb.toString().strip();
         }
+
+        public boolean isFactoryDefault() {
+            return m_presetCanonicalSerializer.info.is_factory_default;
+        }
     }
 }
 
@@ -461,7 +488,7 @@ class AmpDefinitionExporter implements PresetRegistryBase.Visitor {
         // We also export the GSON compact rendering so that we can compare
         // it to the raw JSON received from the amp.
         String compactJson = m_compactGson.toJson(fjpr.m_presetCanonicalSerializer);
-        String compactTargetPath = m_outputPrefix + "/" + presetBasename +".compact.json";
+        String compactTargetPath = m_outputPrefix + "/" + presetBasename +".compact_preset.json";
         FenderJsonPresetRegistry.outputToFile(compactTargetPath, compactJson);
 
         // The pretty export is the GSON pretty rendering of the parsed JSON object
@@ -478,6 +505,8 @@ class AmpDefinitionExporter implements PresetRegistryBase.Visitor {
 class SlotBasedPresetSuiteExporter implements PresetRegistryBase.Visitor {
     static final Gson m_gson = new GsonBuilder().setPrettyPrinting().create();
 
+    static String s_sourceDeviceDetails = null;
+
     final String m_outputPrefix;
 
     final String m_suiteName;
@@ -485,6 +514,10 @@ class SlotBasedPresetSuiteExporter implements PresetRegistryBase.Visitor {
     final List<Integer> m_desiredSlotIndexes;
 
     JsonObject m_suite;
+
+    static void setSourceDeviceDetails(String sdd) {
+        s_sourceDeviceDetails = sdd;
+    }
 
     SlotBasedPresetSuiteExporter(
         String outputPrefix, String suiteName, Integer... desiredSlotIndexes
@@ -509,6 +542,14 @@ class SlotBasedPresetSuiteExporter implements PresetRegistryBase.Visitor {
             presetObject.addProperty("presetName", fjpr.m_name);
             presetObject.addProperty( "audioHash", fjpr.audioHash());
             presetObject.addProperty("effects", fjpr.effects());
+            if(s_sourceDeviceDetails!=null) {
+                presetObject.addProperty(
+                    "source",
+                    String.format("%s slot %d (is_factory_default=%s)",
+                        s_sourceDeviceDetails, slotIndex, fjpr.isFactoryDefault()
+                    )
+                );
+            }
             m_suite.getAsJsonArray("presets").add(presetObject);
         }
     }
