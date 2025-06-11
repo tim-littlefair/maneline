@@ -21,7 +21,7 @@ public class SlotBasedPresetSuiteExporter implements PresetRegistryBase.Visitor 
 
     JsonObject m_suite;
 
-    static void setSourceDeviceDetails(String sdd) {
+    public static void setSourceDeviceDetails(String sdd) {
         s_sourceDeviceDetails = sdd;
     }
 
@@ -49,11 +49,12 @@ public class SlotBasedPresetSuiteExporter implements PresetRegistryBase.Visitor 
             presetObject.addProperty("presetName", fjpr.m_name);
             presetObject.addProperty("audioHash", fjpr.audioHash());
             presetObject.addProperty("effects", fjpr.effects());
+            presetObject.addProperty("shortInfo", fjpr.shortInfo());
             if (s_sourceDeviceDetails != null) {
                 presetObject.addProperty(
-                    "source",
-                    String.format("%s slot %d (is_factory_default=%s)",
-                        s_sourceDeviceDetails, slotIndex, fjpr.isFactoryDefault()
+                    "sourceDevice",
+                    String.format("%s slot %d",
+                        s_sourceDeviceDetails, slotIndex
                     )
                 );
             }

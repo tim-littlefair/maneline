@@ -382,30 +382,44 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
          */
         public String effects() {
             StringBuilder sb = new StringBuilder();
+            boolean insertSeparator=false;
             for(
                 PresetCanonicalSerializer.PCS_Node node:
                 m_presetCanonicalSerializer.audioGraph.nodes
             ) {
-                boolean insertSeparator=false;
                 String nextNodeType = node.nodeId;
                 String nodeName = node.FenderId.replace("DUBS_","");
                 if(!nodeName.equals("Passthru")) {
+                    if(insertSeparator) {
+                        final String UNICODE_NON_BREAKING_SPACE = "\u00A0";
+                        sb.append(UNICODE_NON_BREAKING_SPACE);
+                    }
                     sb.append(
                         nextNodeType.substring(0,1) + ":" + nodeName
                     );
                     insertSeparator = true;
                 }
 
-                if(insertSeparator) {
-                    final String UNICODE_NON_BREAKING_SPACE = "\u00A0";
-                    sb.append(UNICODE_NON_BREAKING_SPACE);
-                }
             }
-            return sb.toString().strip();
+            return sb.toString();
         }
 
-        public boolean isFactoryDefault() {
-            return m_presetCanonicalSerializer.info.is_factory_default;
+        public String shortInfo() {
+            StringBuilder sb = new StringBuilder();
+            if(m_presetCanonicalSerializer.info.author.isEmpty()) {
+                sb.append("no author, ");
+            } else {
+                sb.append("author:"+m_presetCanonicalSerializer.info.author+", ");
+            }
+            if(m_presetCanonicalSerializer.info.source_id.isEmpty()) {
+                sb.append("no source_id, ");
+            } else {
+                sb.append("source_id:"+m_presetCanonicalSerializer.info.source_id+", ");
+            }
+            sb.append("product_id:"+m_presetCanonicalSerializer.info.product_id+", ");
+            sb.append("is_factory_default:"+m_presetCanonicalSerializer.info.is_factory_default);
+
+            return sb.toString();
         }
     }
 

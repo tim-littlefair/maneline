@@ -18,9 +18,9 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 
+import net.heretical_camelid.fhau.lib.registries.SlotBasedPresetSuiteExporter;
 import static net.heretical_camelid.fhau.lib.AbstractMessageProtocolBase.printAsHex2;
 import static net.heretical_camelid.fhau.lib.AbstractMessageProtocolBase.enable_printAsHex2;
-
 import com.sun.security.auth.module.UnixSystem;
 
 public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
@@ -244,6 +244,16 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
         String[] firmwareVersionEtc = new String[] { null };
         int startupStatus = m_protocol.doStartup(firmwareVersionEtc);
         m_firmwareVersion = firmwareVersionEtc[0];
+
+        // The desktop app is used to generate curated suites of presets.
+        // notify the relevant class in the library of the product name,
+        // serial number and firmware version so that the source can
+        // be documented.
+        SlotBasedPresetSuiteExporter.setSourceDeviceDetails(String.format(
+            "%s serial number %s running firmware %s",
+            hidDevice.getProduct(), hidDevice.getSerialNumber(), m_firmwareVersion
+        ));
+
         // The Mustang LT40S with firmware 1.0.7 has 60 presets
         // According to the internet, Mustang LT50, Mustang/Rumble LT25
         // had 30 presets on early firmware, but have since had updated
