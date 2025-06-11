@@ -15,8 +15,6 @@ import java.util.zip.ZipOutputStream;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 
 import net.heretical_camelid.fhau.lib.FhauLibException;
 
@@ -142,13 +140,14 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
     }
 
     public void generatePresetDetails(PrintStream printStream) {
-        acceptVisitor(new PresetDetailsTableGenerator(printStream));
+        // acceptVisitor(new PresetDetailsTableGenerator(printStream));
     }
 
     // We start with a list of all slots containing
-    // unique (i.e. first-occurring) presets
-    // and remove each slot index from it as it is explicitly
-    // included in a curated suite.
+    // unique presets (including the lowest index copy
+    // of presets which are identified as duplicated).
+    // We remove each slot index from the list as it is
+    // explicitly included in a curated suite.
     // This allows us to create the 'Everything Else'
     // suite to include items which are not included elsewhere.
     private List<Integer> m_slotsNotExportedYet = null;
@@ -408,157 +407,6 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
         public boolean isFactoryDefault() {
             return m_presetCanonicalSerializer.info.is_factory_default;
         }
-    }
-}
-
-class PresetDetailsTableGenerator implements PresetRegistryBase.Visitor {
-    private final static String _LINE_FORMAT = "%3d %-16s %-9s %-70s";
-    PrintStream m_printStream;
-    PresetDetailsTableGenerator(PrintStream printStream) {
-        m_printStream = printStream;
-    }
-    @Override
-    public void visitBeforeRecords(PresetRegistryBase registry) {
-        m_printStream.println();
-        m_printStream.println("Unique Presets");
-        m_printStream.println(String.format(
-            _LINE_FORMAT.replace("%3d", "%3s"),
-            "#", "Name", "Hash", "Effect Chain"
-        ));
-    }
-
-    @Override
-    public void visitRecord(int slotIndex, Object record) {
-        FenderJsonPresetRegistry.Record fjpr = (FenderJsonPresetRegistry.Record) record;
-        assert fjpr != null;
-        m_printStream.println(String.format(
-            _LINE_FORMAT,
-            slotIndex, fjpr.displayName(), fjpr.audioHash(), fjpr.effects()
-        ));
-    }
-
-    @Override
-    public void visitAfterRecords(PresetRegistryBase registry) {
-        FenderJsonPresetRegistry fjpRegistry = (FenderJsonPresetRegistry) registry;
-        assert fjpRegistry!=null;
-        m_printStream.println();
-        m_printStream.println("Duplicated Presets");
-        for(String duplicateKey: fjpRegistry.m_duplicateSlots.keySet()) {
-            ArrayList<Integer> duplicateSlotList = fjpRegistry.m_duplicateSlots.get(duplicateKey);
-            if(duplicateSlotList.size()==1) {
-                continue;
-            }
-            m_printStream.println(String.format(
-                "The preset with %s is duplicated at the following slots: %s",
-                duplicateKey, duplicateSlotList
-            ));
-        }
-    }
-}
-
-class AmpDefinitionExporter implements PresetRegistryBase.Visitor {
-    final String m_outputPrefix;
-    final Gson m_compactGson;
-    final Gson m_prettyGson;
-    AmpDefinitionExporter(String outputPrefix) {
-        m_outputPrefix = outputPrefix;
-        m_compactGson = new Gson();
-        m_prettyGson = new GsonBuilder().setPrettyPrinting().create();
-    }
-
-    @Override
-    public void visitBeforeRecords(PresetRegistryBase registry) {  }
-
-    @Override
-    public void visitRecord(int slotIndex, Object record) {
-        FenderJsonPresetRegistry.Record fjpr = (FenderJsonPresetRegistry.Record) record;
-        assert fjpr != null;
-        String presetBasename = String.format(
-            "%s-%s",
-            fjpr.displayName().replace(" ","_"),
-            fjpr.audioHash()
-        );
-
-        // The raw export is the JSON exactly as it was retrieved from the protocol,
-        // i.e. compact, with order of dictionary keys preserved.
-        String rawJson = fjpr.m_definitionRawJson;
-        String rawTargetPath = m_outputPrefix + "/" + presetBasename +".raw_preset.json";
-        FenderJsonPresetRegistry.outputToFile(rawTargetPath, rawJson);
-
-        // We also export the GSON compact rendering so that we can compare
-        // it to the raw JSON received from the amp.
-        String compactJson = m_compactGson.toJson(fjpr.m_presetCanonicalSerializer);
-        String compactTargetPath = m_outputPrefix + "/" + presetBasename +".compact_preset.json";
-        FenderJsonPresetRegistry.outputToFile(compactTargetPath, compactJson);
-
-        // The pretty export is the GSON pretty rendering of the parsed JSON object
-        // i.e. indented, with dictionary keys sorted.
-        String prettyJson = m_prettyGson.toJson(fjpr.m_presetCanonicalSerializer);
-        String prettyTargetPath = m_outputPrefix + "/" + presetBasename +".pretty_preset.json";
-        FenderJsonPresetRegistry.outputToFile(prettyTargetPath, prettyJson);
-    }
-
-    @Override
-    public void visitAfterRecords(PresetRegistryBase registry)  { }
-}
-
-class SlotBasedPresetSuiteExporter implements PresetRegistryBase.Visitor {
-    static final Gson m_gson = new GsonBuilder().setPrettyPrinting().create();
-
-    static String s_sourceDeviceDetails = null;
-
-    final String m_outputPrefix;
-
-    final String m_suiteName;
-
-    final List<Integer> m_desiredSlotIndexes;
-
-    JsonObject m_suite;
-
-    static void setSourceDeviceDetails(String sdd) {
-        s_sourceDeviceDetails = sdd;
-    }
-
-    SlotBasedPresetSuiteExporter(
-        String outputPrefix, String suiteName, Integer... desiredSlotIndexes
-    ) {
-        m_outputPrefix = outputPrefix;
-        m_suiteName = suiteName;
-        m_desiredSlotIndexes = Arrays.asList(desiredSlotIndexes);
-        m_suite = new JsonObject();
-        m_suite.addProperty("suiteName", suiteName);
-        m_suite.add("presets",new JsonArray());
-    }
-
-    @Override
-    public void visitBeforeRecords(PresetRegistryBase registry) {  }
-
-    @Override
-    public void visitRecord(int slotIndex, Object record) {
-        FenderJsonPresetRegistry.Record fjpr = (FenderJsonPresetRegistry.Record) record;
-        assert fjpr != null;
-        if(m_desiredSlotIndexes.contains(slotIndex)) {
-            JsonObject presetObject = new JsonObject();
-            presetObject.addProperty("presetName", fjpr.m_name);
-            presetObject.addProperty( "audioHash", fjpr.audioHash());
-            presetObject.addProperty("effects", fjpr.effects());
-            if(s_sourceDeviceDetails!=null) {
-                presetObject.addProperty(
-                    "source",
-                    String.format("%s slot %d (is_factory_default=%s)",
-                        s_sourceDeviceDetails, slotIndex, fjpr.isFactoryDefault()
-                    )
-                );
-            }
-            m_suite.getAsJsonArray("presets").add(presetObject);
-        }
-    }
-    @Override
-    public void visitAfterRecords(PresetRegistryBase registry) {
-        String jsonForSuite = m_gson.toJson(m_suite);
-        String suiteFilename = m_suiteName.replace(" ","_");
-        String targetPath = m_outputPrefix + "/" + suiteFilename + ".preset_suite.json";
-        FenderJsonPresetRegistry.outputToFile(targetPath, jsonForSuite);
     }
 }
 
