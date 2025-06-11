@@ -105,6 +105,11 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
         );
     }
 
+    @Override
+    public ArrayList<PresetSuiteRegistry.PresetSuiteEntry> loadCuratedPresetSuites() {
+        return null;
+    }
+
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     public ProviderState_e attemptConnection() {
         ProviderState_e state = m_deviceTransportUsbHid.attemptUsbHidConnection();

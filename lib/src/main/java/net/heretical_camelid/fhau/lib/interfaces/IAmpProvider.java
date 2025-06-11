@@ -6,7 +6,7 @@ import java.util.ArrayList;
 
 public interface IAmpProvider {
 
-    public static enum ProviderState_e {
+    enum ProviderState_e {
         PROVIDER_INITIAL,
         PROVIDER_NO_APPLICABLE_DEVICE,
         PROVIDER_DEVICE_PERMISSION_REQUESTED,
@@ -18,6 +18,9 @@ public interface IAmpProvider {
     ArrayList<PresetSuiteRegistry.PresetSuiteEntry> buildAmpBasedPresetSuites(
         int maxPresetsPerSuite, int targetPresetsPerSuite, int maxAmpsPerSuite
     );
+
+    ArrayList<PresetSuiteRegistry.PresetSuiteEntry> loadCuratedPresetSuites();
+
 
     void switchPreset(int slotIndex);
 
