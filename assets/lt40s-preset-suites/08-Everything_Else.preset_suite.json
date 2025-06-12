@@ -1,0 +1,19 @@
+{
+  "suiteName": "08-Everything Else",
+  "presets": [
+    {
+      "presetName": "TOUCH   WAH     ",
+      "audioHash": "8d07-46b4",
+      "effects": "m:EcFilter a:Deluxe57 r:SmallRoomReverb",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 21"
+    },
+    {
+      "presetName": "SURF    MUSIC   ",
+      "audioHash": "bc39-206c",
+      "effects": "a:Bassman59 d:MonoDelay r:Spring65",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 25"
+    }
+  ]
+}

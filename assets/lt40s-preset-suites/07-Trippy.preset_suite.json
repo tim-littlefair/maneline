@@ -1,0 +1,26 @@
+{
+  "suiteName": "07-Trippy",
+  "presets": [
+    {
+      "presetName": "DREAMY          ",
+      "audioHash": "a7c9-43a2",
+      "effects": "s:SimpleCompressor m:Vibratone a:Twin65 d:TapeDelayLite r:LargePlate",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 5"
+    },
+    {
+      "presetName": "PHASER  SWIRL   ",
+      "audioHash": "c20d-9cf9",
+      "effects": "s:SimpleCompressor m:Phaser a:Twin65 r:Spring65",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 18"
+    },
+    {
+      "presetName": "SPACE   TRAVEL  ",
+      "audioHash": "f718-9a67",
+      "effects": "s:Octobot m:StepFilter a:Deluxe65 d:MonoDelay r:ArenaReverb",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 29"
+    }
+  ]
+}
