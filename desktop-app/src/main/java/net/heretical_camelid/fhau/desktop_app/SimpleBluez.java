@@ -1,4 +1,4 @@
-package org.github.hypfvieh.sandbox.bluez;
+package net.heretical_camelid.fhau.desktop_app;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,6 +14,7 @@ import org.bluez.exceptions.BluezNotReadyException;
 import org.freedesktop.dbus.DBusPath;
 import org.freedesktop.dbus.connections.impl.DBusConnection;
 import org.freedesktop.dbus.connections.impl.DBusConnection.DBusBusType;
+import org.freedesktop.dbus.connections.impl.DBusConnectionBuilder;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.handlers.AbstractInterfacesAddedHandler;
 import org.freedesktop.dbus.handlers.AbstractInterfacesRemovedHandler;
@@ -32,8 +33,11 @@ public class SimpleBluez implements DBusInterface, ObjectManager {
     private Map<String, Device1> btDevices = new HashMap<>();
 
     public SimpleBluez() throws DBusException {
-        // open connection to bluez on SYSTEM Bus
-        connection = DBusConnection.getConnection(DBusBusType.SYSTEM);
+
+        // build and open connection to bluez on SYSTEM Bus
+        DBusConnectionBuilder connectionBuilder = DBusConnectionBuilder.forSystemBus();
+        connection = connectionBuilder.build();
+
         // create profile to export
         profile = new GattProfile1Impl("/com/github/hypfvieh/bluez/Paulmannprofile");
     }
