@@ -36,4 +36,5 @@ dependencies {
     implementation project(':lib')
     implementation 'net.java.dev.jna:jna:5.17.0'
     implementation 'org.hid4java:hid4java:0.8.0'
+    implementation 'com.github.hypfvieh:bluez-dbus:0.3.2'
 }
