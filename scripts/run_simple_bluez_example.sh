@@ -12,6 +12,6 @@ else
   args=
 fi
 
-sudo java -cp ../desktop-app/build/libs/desktopFHAUcli-0.0.0.jar net.heretical_camelid.fhau.desktop_app.SimpleBluez $args
+java -cp ../desktop-app/build/libs/desktopFHAUcli-0.0.0.jar net.heretical_camelid.fhau.desktop_app.SimpleBluez $args
 echo SimpleBluez exited with status $?
 

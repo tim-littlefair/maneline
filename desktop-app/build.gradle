@@ -38,4 +38,6 @@ dependencies {
     implementation 'org.hid4java:hid4java:0.8.0'
     implementation 'com.github.hypfvieh:bluez-dbus:0.3.2'
     implementation 'com.github.hypfvieh:dbus-java-transport-native-unixsocket:5.1.1'
+    implementation 'org.slf4j:slf4j-api:2.0.17'
+    implementation 'org.slf4j:slf4j-simple:2.0.0'
 }
