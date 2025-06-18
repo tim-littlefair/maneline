@@ -91,15 +91,16 @@ its current state**
 
 My motivation for seeking payment is not so much to seek revenue, but more to 
 discourage feedback on the app except from users who have a reasonably strong motivation 
-to use it.  I would prefer users who have the necessary skills to spend the time building 
-the app from source, but I will be happy to send Play Store free download vouchers to anyone 
-who is interested enough in the project to send me a (non-spammy) message requesting this
-via my LinkedIn profile, which is referenced on my Github profile page.  Although I don't 
-expect to make significant revenue from selling the app, it would be nice to have a little 
-bit of income as an insurance against the risk (described at length 
+to use it.  Although I don't expect to make significant revenue from selling the app, it would 
+be nice to have a little bit of income as an insurance against the risk (described at length 
 [here](https://github.com/tim-littlefair/feral-horse-amp-utils/discussions/13))
 that I might brick one of my personal devices when I start to experiment with
 uploading modified preset configurations to the amp in the next iteration of development.
+
+I would prefer users who have the necessary skills to spend the time building 
+the app from source, but I will be happy to send Play Store free download vouchers to anyone 
+who is interested enough in the project to send me a (non-spammy) message requesting this
+via my LinkedIn profile, which is referenced on my Github profile page.  
 
 # Status
 
