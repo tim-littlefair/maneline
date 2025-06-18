@@ -1,0 +1,54 @@
+{
+  "suiteName": "06-Heavy",
+  "presets": [
+    {
+      "presetName": "METAL   LEAD    ",
+      "audioHash": "4e35-635c",
+      "effects": "m:ChorusTriangle a:MetalRect2 d:MonoDelay",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 11"
+    },
+    {
+      "presetName": "THRASH  OVERKILL",
+      "audioHash": "2919-217e",
+      "effects": "s:ChromeGate a:MetalEvh3",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 14"
+    },
+    {
+      "presetName": "OCTOBOT ONE NOTE",
+      "audioHash": "74a1-a285",
+      "effects": "s:Octobot a:Jcm800 d:MonoDelay",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 16"
+    },
+    {
+      "presetName": "MYTHIC  CRUNCH  ",
+      "audioHash": "f0de-ba10",
+      "effects": "s:MythicDrive a:Plexi87",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 20"
+    },
+    {
+      "presetName": "NICE    FLANGER ",
+      "audioHash": "bf1b-af89",
+      "effects": "s:SimpleCompressor m:TriangleFlanger a:Princeton65 d:MonoDelay",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 23"
+    },
+    {
+      "presetName": "VIBRA   DOOM    ",
+      "audioHash": "7b7f-8ddd",
+      "effects": "s:Greenbox m:Vibratone a:Or120 r:LargeHallReverb",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 24"
+    },
+    {
+      "presetName": "GARAGE  FUZZ    ",
+      "audioHash": "91d8-c73c",
+      "effects": "s:BigFuzz a:Excelsior r:LargePlate",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 28"
+    }
+  ]
+}

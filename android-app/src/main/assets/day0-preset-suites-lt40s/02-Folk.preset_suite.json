@@ -1,0 +1,19 @@
+{
+  "suiteName": "02-Folk",
+  "presets": [
+    {
+      "presetName": "COUNTRY PICKING ",
+      "audioHash": "8cbf-9815",
+      "effects": "s:SimpleCompressor a:Deluxe65 d:TapeDelayLite",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 6"
+    },
+    {
+      "presetName": "ACOUSTICSIM     ",
+      "audioHash": "c270-30c7",
+      "effects": "s:MustangFiveBandEq1 a:LinearGain r:LargeHallReverb",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 30"
+    }
+  ]
+}
