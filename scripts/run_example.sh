@@ -39,17 +39,14 @@ fi
 # check in the .jar file and the two .so files required to expore this further
 
 # Uncomment the following 3 lines to unpack the releaseable .zip file from
-# a checkout of this library as a sibling to the current checkout
+# a checkout of tl-tinyb as a sibling to the current checkout
 #cd ../desktop-app/libs
 #unzip -o ../../../tl-tinyb/precompiled-release-artifacts/tinyb-0.5.1.tl250617.zip
 #cd ../../_work
 
-# For example HelloTinyB, we presently need the native libraries to be installed into the filesystem
-# On TL's development machine this hs done, these files are installed to /usr/local/lib, and the runtime
-# Java path needs tweaking to include this.
-# TBD: find a way of packaging them into the JAR
-LD_LIBRARY_PATH=../desktop-app/libs/linux-x86_64:$LD_LIBRARY_PATH
-#LD_LIBRARY_PATH=../../tl-tinyb/precompiled-release-artifacts/linux-x86_64:$LD_LIBRARY_PATH
+# For example HelloTinyB, we presently need LD_LIBRARY_PATH to include the directory
+# containing (tl-)tinyb native libraries.
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../desktop-app/libs/linux-x86_64
 export LD_LIBRARY_PATH
 
 java -cp ../desktop-app/build/libs/desktopFHAUcli-0.0.0.jar net.heretical_camelid.fhau.desktop_app.$example_class $args
