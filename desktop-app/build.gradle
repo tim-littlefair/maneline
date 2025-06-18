@@ -24,6 +24,10 @@ jar {
         include "assets/50-fhau.rules"
     }
 
+    from('libs') {
+        include "**/*.so"
+    }
+
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     dependsOn(':lib:jar')
 }
@@ -40,4 +44,29 @@ dependencies {
     implementation 'com.github.hypfvieh:dbus-java-transport-native-unixsocket:5.1.1'
     implementation 'org.slf4j:slf4j-api:2.0.17'
     implementation 'org.slf4j:slf4j-simple:2.0.0'
+
+    // TL 25/06/17
+    // I want to experiment with a library called tinyb
+    // from archived Github project
+    // https://github.com/intel-iot-devkit/tinyb:master.
+
+    // There used to be a gradle package for that at
+    // in a repository on the bintray collection, but
+    // that collection is no longer online
+    // implementation 'intel-iot-devkit:tinyb:0.5.1'
+
+    // So for the moment I have forked the code,
+    // made some changes required to get it to
+    // compile under Ubuntu 24.04/Java17, and
+    // checked the compiled JAR into this package.
+    implementation files('libs/tinyb-0.5.1.tl250617.jar')
+
+    // The fork can be found here:
+    // https://github.com/tim-littlefair/tl-tinyb
+    // Note that the default branch on my fork is
+    // called 250617-ubuntu2404_and_java17.
+    // I plan to leave upstream master unmodified
+    // as it is clear that the original owners
+    // at Intel have no intention of accepting
+    // PRs.
 }

@@ -1,3 +1,5 @@
+package net.heretical_camelid.fhau.desktop_app;
+
 import tinyb.*;
 import java.util.*;
 import java.util.concurrent.locks.*;
