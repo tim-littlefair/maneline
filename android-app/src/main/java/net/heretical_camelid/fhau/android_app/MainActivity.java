@@ -187,6 +187,8 @@ public class MainActivity
     }
 
     void populatePresetSuiteDropdown() {
+        PresetSuiteManager psm = new PresetSuiteManager(this);
+        psm.processDay0Suites();
         assert m_provider!=null;
         ArrayList<PresetSuiteRegistry.PresetSuiteEntry> presetSuites = m_provider.buildAmpBasedPresetSuites(
             9,5,3
