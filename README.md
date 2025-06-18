@@ -214,9 +214,11 @@ Features I intend to work on in the near future include:
 - releasing a version of the Android app on the Google Play Store so that users
   don't need to build it themselves or sideload a prebuilt copy without the 
   (limited) malware protections offered by Google Play;
-- finding some way that users of the Android app can select their own screens 
-  of favourite presets rather than using the fairly arbitrary ones that app builds 
-  at the moment; and
+- in the short term, replacing the runtime-generated amplifier-based preset suites in
+  Android app version 0.1.X with hard-coded suites dividing the initial factory
+  presets up according to musical genre;
+- in the longer term, finding some way that users of the Android app can select their
+  own suites of favourite presets; and
 - adding support to the desktop app for the user to upload a preset definition 
   to the amp.
 
@@ -229,6 +231,13 @@ and BLE transport they implement is similar enough to the corresponding protocol
 for the MMP.  As the older Mustang Micro (no 'Plus') has a different method of 
 selecting presets in its physical UI, I think it is unlikely that support for 
 this device is feasible.
+
+There is a branch called 250613-bluez-dbus-experiment which contains some initial
+work on evaluating two possible Java/BLE libraries for use in the desktop-app product.
+This branch is not yet merged into main - I intend to integrate this branch when the 
+work described above on hard-coded genre-based preset suites has stabilized.  Integration
+of a BLE capability will be a necessary precondition for interoperation with Mustang 
+Micro Plus at least (probably also GT/GTX).
 
 # References
 
