@@ -7,7 +7,10 @@ import net.heretical_camelid.fhau.lib.interfaces.IAmpProvider;
 import net.heretical_camelid.fhau.lib.interfaces.ILoggingAgent;
 import net.heretical_camelid.fhau.lib.registries.PresetSuiteRegistry;
 
+import org.json.JSONObject;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class SimulatorAmpProvider implements IAmpProvider {
     private final ILoggingAgent m_loggingAgent;
@@ -138,6 +141,10 @@ public class SimulatorAmpProvider implements IAmpProvider {
     @Override
     public void switchPreset(int slotIndex) {
 
+    }
+
+    public PresetSuiteRegistry.PresetSuiteEntry buildPresetSuite(String suiteName, ArrayList<HashMap<String, String>> presets) {
+        return null;
     }
 
     @Override

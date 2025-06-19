@@ -297,6 +297,22 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
         return m_slotsToRecords.get(slotIndex);
     }
 
+    public Record findAudioHash(String audioHash, String presetName) {
+        for(int i: m_slotsToRecords.keySet()) {
+            Record r = m_slotsToRecords.get(i);
+            if(r.audioHash().equals(audioHash)) {
+                return r;
+            } else if(r.displayName().equals(presetName)) {
+                System.out.println(String.format(
+                    "Name matches but hash doesn't (%s:%s/%s:%s)",
+                    presetName, audioHash, r.displayName(), r.audioHash()
+                ));
+                return r;
+            }
+        }
+        return null;
+    }
+
     public static class Record extends PresetRecordBase {
         final String m_definitionRawJson;
         final PresetCanonicalSerializer m_presetCanonicalSerializer;

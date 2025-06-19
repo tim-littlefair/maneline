@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import net.heretical_camelid.fhau.lib.registries.SlotBasedPresetSuiteExporter;
 import static net.heretical_camelid.fhau.lib.AbstractMessageProtocolBase.printAsHex2;
@@ -317,6 +318,13 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
     @Override
     public void switchPreset(int slotIndex) {
         m_protocol.switchPreset(slotIndex);
+    }
+
+    @Override
+    public PresetSuiteRegistry.PresetSuiteEntry buildPresetSuite(String suiteName, ArrayList<HashMap<String, String>> presets) {
+        throw new RuntimeException(
+            "DesktopUsbAmpProvider.buildPresetSuite(...) not implemented yet"
+        );
     }
 
     @Override

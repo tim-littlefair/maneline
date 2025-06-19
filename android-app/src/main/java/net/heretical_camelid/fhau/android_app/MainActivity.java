@@ -187,18 +187,18 @@ public class MainActivity
     }
 
     void populatePresetSuiteDropdown() {
-        PresetSuiteManager psm = new PresetSuiteManager(this);
-        psm.processDay0Suites();
         assert m_provider!=null;
-        ArrayList<PresetSuiteRegistry.PresetSuiteEntry> presetSuites = m_provider.buildAmpBasedPresetSuites(
-            9,5,3
+        PresetSuiteManager psm = new PresetSuiteManager(this);
+        ArrayList<PresetSuiteRegistry.PresetSuiteEntry> presetSuites = psm.processDay0Suites(
+            m_provider
         );
-        int itemLayoutId = R.layout.preset_suite_dropdown_item;
 
         ArrayList<String> suiteNames = new ArrayList<>();
         for(PresetSuiteRegistry.PresetSuiteEntry pse: presetSuites) {
             suiteNames.add(pse.name());
         }
+
+        int itemLayoutId = R.layout.preset_suite_dropdown_item;
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
             this, itemLayoutId, suiteNames.toArray(new String[]{ }
         ));
