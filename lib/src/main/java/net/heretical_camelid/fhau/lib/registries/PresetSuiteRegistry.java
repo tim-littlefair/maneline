@@ -1,5 +1,8 @@
 package net.heretical_camelid.fhau.lib.registries;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -162,6 +165,38 @@ public class PresetSuiteRegistry implements PresetRegistryBase.Visitor {
 
     public HashMap<Integer, FenderJsonPresetRegistry.Record> recordsAt(int position) {
         return m_presetSuites.get(position).m_presetRecords;
+    }
+
+    public PresetSuiteEntry createPresetSuiteEntry(
+        String suiteName,
+        ArrayList<HashMap<String,String>> presets
+    ) {
+        HashMap<Integer,FenderJsonPresetRegistry.Record> presetRecords = new HashMap<>();
+        int presetIndex = 0;
+        for(HashMap<String,String> presetAttributes: presets) {
+            String presetName = presetAttributes.get("presetName");
+            String audioHash = presetAttributes.get("audioHash");
+            FenderJsonPresetRegistry.Record presetRecord = m_registry.findAudioHash(audioHash, presetName);
+            if(presetRecord!=null) {
+                System.out.println(String.format(
+                    "Preset '%s' found for preset '%s' audioHash='%s'",
+                    presetRecord.displayName(), presetName, audioHash
+                ));
+                presetRecords.put(presetIndex,presetRecord);
+                presetIndex++;
+            } else {
+                System.out.println(String.format(
+                    "No preset record found for preset '%s' audioHash='%s'",
+                    presetName, audioHash
+                ));
+            }
+        }
+        if(presetRecords.isEmpty()) {
+            System.out.println("No preset records found for suite " + suiteName);
+            return null;
+        } else {
+            return new PresetSuiteEntry(suiteName,presetRecords);
+        }
     }
 
     public static class PresetSuiteEntry {

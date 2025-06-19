@@ -1,14 +1,10 @@
 package net.heretical_camelid.fhau.android_app;
 
-import static android.content.Context.RECEIVER_NOT_EXPORTED;
-
 import android.annotation.SuppressLint;
 
 import android.app.PendingIntent;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.hardware.usb.UsbManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Message;
 import net.heretical_camelid.fhau.lib.*;
@@ -41,8 +37,7 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
         m_deviceTransportUsbHid = new DeviceTransportUsbHid(m_mainActivity, this);
         m_presetRegistry = new FenderJsonPresetRegistry(null);
         m_protocol = new LTSeriesProtocol(m_presetRegistry,true);
-
-        m_presetSuiteRegistry = null;
+        m_presetSuiteRegistry = new PresetSuiteRegistry(m_presetRegistry);
     }
 
     public boolean getFirmwareVersionAndPresets() {
@@ -98,8 +93,17 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
     }
 
     @Override
+    public PresetSuiteRegistry.PresetSuiteEntry buildPresetSuite(
+        String suiteName, ArrayList<HashMap<String, String>> presets
+    ) {
+        PresetSuiteRegistry.PresetSuiteEntry newPSE = m_presetSuiteRegistry.createPresetSuiteEntry(
+            suiteName, presets
+        );
+        return newPSE;
+    }
+
+    @Override
     public ArrayList<PresetSuiteRegistry.PresetSuiteEntry> buildAmpBasedPresetSuites(int maxPresetsPerSuite, int targetPresetsPerSuite, int maxAmpsPerSuite) {
-        m_presetSuiteRegistry = new PresetSuiteRegistry(m_presetRegistry);
         return m_presetSuiteRegistry.buildPresetSuites(
             maxPresetsPerSuite, targetPresetsPerSuite, maxAmpsPerSuite
         );
