@@ -42,13 +42,18 @@ public class SlotBasedPresetSuiteExporter implements PresetRegistryBase.Visitor 
 
     @Override
     public void visitRecord(int slotIndex, Object record) {
-        FenderJsonPresetRegistry.Record fjpr = (FenderJsonPresetRegistry.Record) record;
+        FenderJsonPresetRecord fjpr = (FenderJsonPresetRecord) record;
         assert fjpr != null;
         if (m_desiredSlotIndexes.contains(slotIndex)) {
             JsonObject presetObject = new JsonObject();
             presetObject.addProperty("presetName", fjpr.m_name);
             presetObject.addProperty("audioHash", fjpr.audioHash());
-            presetObject.addProperty("effects", fjpr.effects());
+            presetObject.addProperty("effectsSummary", fjpr.effects(
+                FenderJsonPresetRecord.EffectsLevelOfDetails.MODULES_ONLY
+            ));
+            presetObject.addProperty("effectsDetails", fjpr.effects(
+                FenderJsonPresetRecord.EffectsLevelOfDetails.MODULES_AND_PARAMETERS
+            ));
             presetObject.addProperty("shortInfo", fjpr.shortInfo());
             if (s_sourceDeviceDetails != null) {
                 presetObject.addProperty(
