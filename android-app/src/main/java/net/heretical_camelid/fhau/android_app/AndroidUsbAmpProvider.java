@@ -109,13 +109,6 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
     }
 
     @Override
-    public ArrayList<PresetSuiteRegistry.PresetSuiteEntry> buildAmpBasedPresetSuites(int maxPresetsPerSuite, int targetPresetsPerSuite, int maxAmpsPerSuite) {
-        return m_presetSuiteRegistry.buildPresetSuites(
-            maxPresetsPerSuite, targetPresetsPerSuite, maxAmpsPerSuite
-        );
-    }
-
-    @Override
     public ArrayList<PresetSuiteRegistry.PresetSuiteEntry> loadCuratedPresetSuites() {
         return null;
     }
@@ -143,7 +136,6 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
             m_protocol.getPresetNamesList(firstPreset, lastPreset);
 
             m_protocol.startHeartbeatThread();
-            buildAmpBasedPresetSuites(9, 7, 3);
         }
         return state;
     }

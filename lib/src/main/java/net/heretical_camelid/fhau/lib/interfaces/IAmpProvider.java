@@ -21,10 +21,6 @@ public interface IAmpProvider {
         String suiteName, ArrayList<HashMap<String, String>> presets
     );
 
-    ArrayList<PresetSuiteRegistry.PresetSuiteEntry> buildAmpBasedPresetSuites(
-        int maxPresetsPerSuite, int targetPresetsPerSuite, int maxAmpsPerSuite
-    );
-
     ArrayList<PresetSuiteRegistry.PresetSuiteEntry> loadCuratedPresetSuites();
 
 
