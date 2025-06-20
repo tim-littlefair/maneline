@@ -17,7 +17,7 @@ import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 
 import net.heretical_camelid.fhau.lib.interfaces.IAmpProvider;
-import net.heretical_camelid.fhau.lib.registries.FenderJsonPresetRegistry;
+import net.heretical_camelid.fhau.lib.registries.FenderJsonPresetRecord;
 import net.heretical_camelid.fhau.lib.registries.PresetSuiteRegistry;
 
 import java.util.*;
@@ -298,14 +298,14 @@ public class MainActivity
         // as a USB drive.
     }
 
-    private void setupPresetButtonsForSuite(String suiteName, HashMap<Integer, FenderJsonPresetRegistry.Record> suitePresetRecords) {
+    private void setupPresetButtonsForSuite(String suiteName, HashMap<Integer, FenderJsonPresetRecord> suitePresetRecords) {
         clearPresetButtons();
         appendToLog("Preset suite '" + suiteName + "' selected");
         ArrayList<Integer> slotIndices = new ArrayList<>(suitePresetRecords.keySet());
         slotIndices.sort(null);
         for(int i=0; i<slotIndices.size(); ++i) {
             int slotIndex = slotIndices.get(i);
-            FenderJsonPresetRegistry.Record presetRecord = suitePresetRecords.get(slotIndex);
+            FenderJsonPresetRecord presetRecord = suitePresetRecords.get(slotIndex);
             setPresetButton(
                 i+1, slotIndex,
                 PresetSuiteRegistry.buttonLabel(slotIndex, presetRecord.displayName())
@@ -325,11 +325,11 @@ public class MainActivity
 
     void suiteSelected(
         String suiteName,
-        HashMap<Integer,FenderJsonPresetRegistry.Record> suitePresetRecords
+        HashMap<Integer, FenderJsonPresetRecord> suitePresetRecords
     ) {
         /*
         String suiteName = m_presetSuiteRegistry.nameAt(position);
-        HashMap<Integer,FenderJsonPresetRegistry.Record> suitePresetRecords = m_presetSuiteRegistry.recordsAt(position);
+        HashMap<Integer,FenderJsonPresetRegistry.FenderJsonPresetRecord> suitePresetRecords = m_presetSuiteRegistry.recordsAt(position);
          */
         setupPresetButtonsForSuite(suiteName, suitePresetRecords);
     }
@@ -372,6 +372,7 @@ public class MainActivity
                     int slotIndex = messageData.getInt(MESSAGE_SLOT_INDEX);
                     String presetName = messageData.getString(MESSAGE_PRESET_NAME);
                     String effects = messageData.getString(MESSAGE_PRESET_EFFECTS);
+                    /*
                     // expand abbreviations in effects for readability
                     effects = effects
                                   // Note that changing ':' to '=' is required
@@ -386,6 +387,7 @@ public class MainActivity
                                   .replace("d:","\ndelay=")
                                   .replace("r:","\nreverb=")
                                   .strip();
+                     */
                     appendToLog("Preset loaded: " + presetName);
                     appendToLog("Effects:\n"+effects+"\n");
                     break;

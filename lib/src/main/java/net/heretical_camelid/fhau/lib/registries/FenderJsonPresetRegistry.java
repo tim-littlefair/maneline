@@ -31,7 +31,7 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
 
     final String m_outputPath;
     static ZipOutputStream s_outputZipStream = null;
-    HashMap<Integer,Record> m_slotsToRecords;
+    HashMap<Integer, FenderJsonPresetRecord> m_slotsToRecords;
     HashMap<String, ArrayList<Integer>> m_duplicateSlots;
 
 
@@ -109,7 +109,7 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
         // This registry requires a definition
         assert definition != null;
 
-        Record newRecord = new Record(name, definition);
+        FenderJsonPresetRecord newRecord = new FenderJsonPresetRecord(name, definition);
         String dsk = duplicateSlotKey(newRecord);
         ArrayList<Integer> existingDuplicateSlotList = m_duplicateSlots.get(dsk);
         if(existingDuplicateSlotList==null) {
@@ -123,7 +123,7 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
         }
     }
 
-    public int firstSlotIndex(Record record) {
+    public int firstSlotIndex(FenderJsonPresetRecord record) {
         String dsk = duplicateSlotKey(record);
         ArrayList<Integer> duplicateSlotIndexes = m_duplicateSlots.get(dsk);
         assert duplicateSlotIndexes != null;
@@ -131,7 +131,7 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
         return duplicateSlotIndexes.get(0);
     }
 
-    static String duplicateSlotKey(Record newRecord) {
+    static String duplicateSlotKey(FenderJsonPresetRecord newRecord) {
         String retval = String.format(
             "name='%s' hash=%s",
             newRecord.displayName(), newRecord.audioHash()
@@ -249,7 +249,7 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
     }
 
     /**
-     * non-public class Record requires a hash function
+     * non-public class FenderJsonPresetRecord requires a hash function
      * in order to enable consumers of the preset details report or
      * the amp-based preset suite JSON files to determine whether the
      * audio parameters of a preset have been modified relative to a
@@ -260,14 +260,22 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
      * SHA-256 hash of the string.
      */
     public static String stringHash(String inputString, int prefixLength) {
+        String retval;
+        String method;
         try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            method = "SHA-256";
+            MessageDigest md = MessageDigest.getInstance(method);
             md.update(inputString.getBytes(StandardCharsets.UTF_8));
             String mdHexString = new BigInteger(md.digest()).toString(16);
-            return mdHexString.substring(mdHexString.length()-prefixLength, mdHexString.length());
+            retval = mdHexString.substring(mdHexString.length()-prefixLength, mdHexString.length());
         } catch (NoSuchAlgorithmException e) {
-            return Integer.toHexString(inputString.hashCode()).substring(0, prefixLength);
+            method = "Object.hashCode()";
+            retval = Integer.toHexString(inputString.hashCode()).substring(0, prefixLength);
         }
+        System.out.println(String.format(
+            "Hashing %d bytes using %s: %s", inputString.length(), method, inputString
+        ));
+        return retval;
     }
 
     public static int outputToFile(String rawTargetPath, String jsonForSuite) {
@@ -293,13 +301,13 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
         }
     }
 
-    public Record get(int slotIndex) {
+    public FenderJsonPresetRecord get(int slotIndex) {
         return m_slotsToRecords.get(slotIndex);
     }
 
-    public Record findAudioHash(String audioHash, String presetName) {
+    public FenderJsonPresetRecord findAudioHash(String audioHash, String presetName) {
         for(int i: m_slotsToRecords.keySet()) {
-            Record r = m_slotsToRecords.get(i);
+            FenderJsonPresetRecord r = m_slotsToRecords.get(i);
             if(r.audioHash().equals(audioHash)) {
                 return r;
             } else if(r.displayName().equals(presetName)) {
@@ -311,132 +319,6 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
             }
         }
         return null;
-    }
-
-    public static class Record extends PresetRecordBase {
-        final String m_definitionRawJson;
-        final PresetCanonicalSerializer m_presetCanonicalSerializer;
-
-        public Record(String name, byte[] definitionBytes) {
-            super(name);
-            m_definitionRawJson = new String(definitionBytes, StandardCharsets.UTF_8);
-            m_presetCanonicalSerializer = FenderJsonPresetRegistry.s_gsonCompact.fromJson(
-                m_definitionRawJson,
-                PresetCanonicalSerializer.class
-            );
-            // Presets with different histories (i.e. unmodified firmware presets
-            // vs presets imported or modified by Fender Tone) can have JSON
-            // structures which are identical in meaning but different in
-            // element ordering.  We run the makeCanonical function to standardize
-            // the sort order of elements in order to ensure that presets which are
-            // exact equivalants from an audio PoV generate the same hash code.
-            m_presetCanonicalSerializer.makeCanonical();
-        }
-
-        public String displayName() {
-            return m_presetCanonicalSerializer.info.displayName;
-        }
-
-        public String ampName() {
-            for(
-                PresetCanonicalSerializer.PCS_Node node:
-                m_presetCanonicalSerializer.audioGraph.nodes
-            ) {
-                if(node.nodeId.equals("amp")) {
-                    return node.FenderId.replace("DUBS_","");
-                }
-            }
-            return null;
-        }
-
-        public String audioHash() {
-            // We use the GSON @Since annotation to exclude a small number
-            // of fields in the DspUnitParameters JSON substructure which
-            // have inconsistent serialization according to whether they
-            // are original firmware presets, presets edited or imported
-            // by FenderTone or via the amp's own controls.
-            // Excluding these fields enables us to get the same hash
-            // values for presets which are functionally identical but
-            // have specific attributes represented differently at the
-            // DspUnitParameter level.
-            Gson hashingGson1 = new GsonBuilder().setVersion(90.0).create();
-            Gson hashingGson2 = new GsonBuilder().setVersion(92.0).create();
-
-            /*
-             * As far as we are aware at the moment, there is only one
-             * variant of the connections array present in raw JSON
-             * sent by the LT40S device => for now, this is not
-             * a useful discriminant for the hash.
-            String cxnsHash = FenderJsonPresetRegistry.stringHash(
-                hashingGson.toJson(
-                    m_presetCanonicalSerializer.audioGraph.connections
-                ),2
-            );
-             */
-
-            String nodesHash1 = FenderJsonPresetRegistry.stringHash(
-                hashingGson1.toJson(
-                    m_presetCanonicalSerializer.audioGraph.nodes
-                ),4
-            );
-
-            String nodesHash2 = FenderJsonPresetRegistry.stringHash(
-                hashingGson2.toJson(
-                    m_presetCanonicalSerializer.audioGraph.nodes
-                ),4
-            );
-
-            return String.format("%s-%s", nodesHash1, nodesHash2);
-        }
-
-        /**
-         * This function generates a string summarizing the
-         * DSP unit types of nodes in the audio chain.
-         * This string can help to recognize similarities between presets
-         * which differ only in parameters, or which share most DSP units.
-         * @return string listing types of non-passthru units in the chain
-         */
-        public String effects() {
-            StringBuilder sb = new StringBuilder();
-            boolean insertSeparator=false;
-            for(
-                PresetCanonicalSerializer.PCS_Node node:
-                m_presetCanonicalSerializer.audioGraph.nodes
-            ) {
-                String nextNodeType = node.nodeId;
-                String nodeName = node.FenderId.replace("DUBS_","");
-                if(!nodeName.equals("Passthru")) {
-                    if(insertSeparator) {
-                        final String UNICODE_NON_BREAKING_SPACE = "\u00A0";
-                        sb.append(UNICODE_NON_BREAKING_SPACE);
-                    }
-                    sb.append(
-                        nextNodeType.substring(0,1) + ":" + nodeName
-                    );
-                    insertSeparator = true;
-                }
-
-            }
-            return sb.toString();
-        }
-
-        public String shortInfo() {
-            StringBuilder sb = new StringBuilder();
-            if(m_presetCanonicalSerializer.info.author.isEmpty()) {
-                sb.append("no author, ");
-            } else {
-                sb.append("author:"+m_presetCanonicalSerializer.info.author+", ");
-            }
-            if(m_presetCanonicalSerializer.info.source_id.isEmpty()) {
-                sb.append("no source_id, ");
-            } else {
-                sb.append("source_id:"+m_presetCanonicalSerializer.info.source_id+", ");
-            }
-            sb.append("product_id:"+m_presetCanonicalSerializer.info.product_id+", ");
-            sb.append("is_factory_default:"+m_presetCanonicalSerializer.info.is_factory_default);
-
-            return sb.toString();
-        }
     }
 
     public static class PresetDetailsTableGenerator implements Visitor {
@@ -459,11 +341,12 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
 
         @Override
         public void visitRecord(int slotIndex, Object record) {
-            Record fjpr = (Record) record;
+            FenderJsonPresetRecord fjpr = (FenderJsonPresetRecord) record;
             assert fjpr != null;
             m_printStream.println(String.format(
                 _LINE_FORMAT,
-                slotIndex, fjpr.displayName(), fjpr.audioHash(), fjpr.effects()
+                slotIndex, fjpr.displayName(), fjpr.audioHash(),
+                fjpr.effects(FenderJsonPresetRecord.EffectsLevelOfDetails.MODULES_ONLY)
             ));
         }
 

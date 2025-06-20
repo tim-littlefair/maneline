@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.os.Message;
 import net.heretical_camelid.fhau.lib.*;
 import net.heretical_camelid.fhau.lib.interfaces.IAmpProvider;
+import net.heretical_camelid.fhau.lib.registries.FenderJsonPresetRecord;
 import net.heretical_camelid.fhau.lib.registries.FenderJsonPresetRegistry;
 import net.heretical_camelid.fhau.lib.registries.PresetRegistryBase;
 import net.heretical_camelid.fhau.lib.registries.PresetSuiteRegistry;
@@ -73,7 +74,7 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
 
     @Override
     public void switchPreset(int slotIndex) {
-        FenderJsonPresetRegistry.Record presetRecord = m_presetRegistry.get(slotIndex);
+        FenderJsonPresetRecord presetRecord = m_presetRegistry.get(slotIndex);
         if(presetRecord == null) {
             m_mainActivity.appendToLog("No preset found for slot id " + slotIndex);
         } else {
@@ -84,7 +85,12 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
                 MainActivity.MESSAGE_PRESET_NAME,
                 presetRecord.displayName().replaceAll("( )+", " ").strip()
             );
-            msgData.putString(MainActivity.MESSAGE_PRESET_EFFECTS, presetRecord.effects());
+            msgData.putString(
+                MainActivity.MESSAGE_PRESET_EFFECTS,
+                presetRecord.effects(
+                    FenderJsonPresetRecord.EffectsLevelOfDetails.MODULES_AND_PARAMETERS
+                )
+            );
             Message presetChangeMsg = new Message();
             presetChangeMsg.what = MessageType_e.MESSAGE_PRESET_SELECTED.ordinal();
             presetChangeMsg.setData(msgData);
@@ -144,7 +150,7 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
 
     public void switchSuite(int position) {
         String suiteName = m_presetSuiteRegistry.nameAt(position);
-        HashMap<Integer,FenderJsonPresetRegistry.Record> suitePresetRecords = m_presetSuiteRegistry.recordsAt(position);
+        HashMap<Integer, FenderJsonPresetRecord> suitePresetRecords = m_presetSuiteRegistry.recordsAt(position);
         m_mainActivity.suiteSelected(suiteName, suitePresetRecords);
     }
 

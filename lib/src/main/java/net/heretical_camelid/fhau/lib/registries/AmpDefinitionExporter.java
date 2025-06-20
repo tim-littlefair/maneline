@@ -20,7 +20,7 @@ class AmpDefinitionExporter implements PresetRegistryBase.Visitor {
 
     @Override
     public void visitRecord(int slotIndex, Object record) {
-        FenderJsonPresetRegistry.Record fjpr = (FenderJsonPresetRegistry.Record) record;
+        FenderJsonPresetRecord fjpr = (FenderJsonPresetRecord) record;
         assert fjpr != null;
         String presetBasename = String.format(
             "%s-%s",
