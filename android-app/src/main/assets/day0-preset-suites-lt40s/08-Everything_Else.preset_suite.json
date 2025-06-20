@@ -3,15 +3,17 @@
   "presets": [
     {
       "presetName": "TOUCH   WAH     ",
-      "audioHash": "8d07-46b4",
-      "effects": "m:EcFilter a:Deluxe57 r:SmallRoomReverb",
+      "audioHash": "feb9-dd06",
+      "effectsSummary": "mod:EcFilter amp:Deluxe57 reverb:SmallRoomReverb",
+      "effectsDetails": "mod:EcFilter(level:0.811111,mode:High Up,q:0.5,thresh:0.5,type:Band Pass)\namp:Deluxe57(bass:0.5,bias:0.5,cabsimType:57dlx,gain:0.722222,gateDetectorPosition:jack,gatePreset:off,mid:0.5,sag:match,treb:0.844444,volume:-9.208964)\nreverb:SmallRoomReverb(decay:0.5,diffuse:0.5,dwell:0.5,level:0.5)",
       "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
       "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 21"
     },
     {
       "presetName": "SURF    MUSIC   ",
-      "audioHash": "bc39-206c",
-      "effects": "a:Bassman59 d:MonoDelay r:Spring65",
+      "audioHash": "3db6-df68",
+      "effectsSummary": "amp:Bassman59 delay:MonoDelay reverb:Spring65",
+      "effectsDetails": "amp:Bassman59(bass:0.62,bias:0.5,blend:0.62,cabsimType:59bman,gain:0.4,gateDetectorPosition:jack,gatePreset:off,mid:0.49,presence:0.62,sag:match,treb:0.566667,volume:-11.261283)\ndelay:MonoDelay(attenuate:0.5,brite:0.977778,feedback:0.144444,level:0.455556,noteDivision:off,tapTimeBPM:120.0,time:0.103647)\nreverb:Spring65(decay:1.0,diffuse:1.0,dwell:0.28889,wetLvl:0.8)",
       "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
       "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 25"
     }

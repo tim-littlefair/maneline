@@ -272,9 +272,11 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
             method = "Object.hashCode()";
             retval = Integer.toHexString(inputString.hashCode()).substring(0, prefixLength);
         }
+        /*
         System.out.println(String.format(
             "Hashing %d bytes using %s: %s", inputString.length(), method, inputString
         ));
+         */
         return retval;
     }
 

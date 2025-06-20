@@ -3,50 +3,57 @@
   "presets": [
     {
       "presetName": "METAL   LEAD    ",
-      "audioHash": "4e35-635c",
-      "effects": "m:ChorusTriangle a:MetalRect2 d:MonoDelay",
+      "audioHash": "9faf-03e8",
+      "effectsSummary": "mod:ChorusTriangle amp:MetalRect2 delay:MonoDelay",
+      "effectsDetails": "mod:ChorusTriangle(avgDelay:0.22,depth:1.0,level:0.458346,lrPhase:0.5,noteDivision:off,rateHz:0.08,tapTimeBPM:4.8)\namp:MetalRect2(bass:0.857598,bias:0.5,cabsimType:4x12r,gain:0.769145,gateDetectorPosition:jack,gatePreset:super,master:0.380392,mid:0.135629,presence:0.392157,sag:match,treb:0.602199,volume:-10.206342)\ndelay:MonoDelay(attenuate:0.5,brite:0.0,feedback:0.144444,level:0.288889,noteDivision:off,tapTimeBPM:126.26387,time:0.475195)",
       "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
       "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 11"
     },
     {
       "presetName": "THRASH  OVERKILL",
-      "audioHash": "2919-217e",
-      "effects": "s:ChromeGate a:MetalEvh3",
+      "audioHash": "1af2-298c",
+      "effectsSummary": "stomp:ChromeGate amp:MetalEvh3",
+      "effectsDetails": "stomp:ChromeGate(attenuation:-120.0,gateDetectorPosition:jack,hysteresis:2.5,threshold:-65.55556)\namp:MetalEvh3(bass:0.078254,bias:0.5,cabsimType:4x12frd,gain:0.77273,gateDetectorPosition:jack,gatePreset:super,master:0.5,mid:0.188889,presence:0.5,sag:match,treb:0.785082,volume:-13.988875)",
       "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
       "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 14"
     },
     {
       "presetName": "OCTOBOT ONE NOTE",
-      "audioHash": "74a1-a285",
-      "effects": "s:Octobot a:Jcm800 d:MonoDelay",
+      "audioHash": "0dc9-9e9e",
+      "effectsSummary": "stomp:Octobot amp:Jcm800 delay:MonoDelay",
+      "effectsDetails": "stomp:Octobot(level:0.5,octdown:1,octup:1)\namp:Jcm800(bass:0.75,bias:0.5,cabsimType:4x12m,gain:0.99,gateDetectorPosition:jack,gatePreset:low,master:0.5,mid:0.4,presence:0.5,sag:match,treb:0.67,volume:-11.999981)\ndelay:MonoDelay(attenuate:0.5,brite:0.5,feedback:0.177778,level:1.0,noteDivision:off,tapTimeBPM:120.0,time:0.439479)",
       "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
       "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 16"
     },
     {
       "presetName": "MYTHIC  CRUNCH  ",
-      "audioHash": "f0de-ba10",
-      "effects": "s:MythicDrive a:Plexi87",
+      "audioHash": "ee31-06a9",
+      "effectsSummary": "stomp:MythicDrive amp:Plexi87",
+      "effectsDetails": "stomp:MythicDrive(gain:0.5,outputLevel:0.5,treble:0.777778)\namp:Plexi87(bass:0.0,bias:0.5,blend:0.5,cabsimType:4x12g2,gain:1.0,gateDetectorPosition:jack,gatePreset:low,mid:1.0,presence:0.5,sag:match,treb:1.0,volume:-9.867807)",
       "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
       "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 20"
     },
     {
       "presetName": "NICE    FLANGER ",
-      "audioHash": "bf1b-af89",
-      "effects": "s:SimpleCompressor m:TriangleFlanger a:Princeton65 d:MonoDelay",
+      "audioHash": "e5b6-4bcd",
+      "effectsSummary": "stomp:SimpleCompressor mod:TriangleFlanger amp:Princeton65 delay:MonoDelay",
+      "effectsDetails": "stomp:SimpleCompressor(type:low)\nmod:TriangleFlanger(depth:0.666667,feedback:0.777778,level:1.0,noteDivision:off,phase:0.25,rate:0.106745,tapTimeBPM:120.0)\namp:Princeton65(bass:0.337255,bias:0.5,cabsimType:65prince,gain:0.233333,gateDetectorPosition:jack,gatePreset:off,mid:0.839216,sag:match,treb:1.0,volume:-13.167182)\ndelay:MonoDelay(attenuate:0.5,brite:1.0,feedback:0.133333,level:0.555556,noteDivision:off,tapTimeBPM:120.0,time:0.28)",
       "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
       "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 23"
     },
     {
       "presetName": "VIBRA   DOOM    ",
-      "audioHash": "7b7f-8ddd",
-      "effects": "s:Greenbox m:Vibratone a:Or120 r:LargeHallReverb",
+      "audioHash": "6f17-5ca1",
+      "effectsSummary": "stomp:Greenbox mod:Vibratone amp:Or120 reverb:LargeHallReverb",
+      "effectsDetails": "stomp:Greenbox(blend:1.0,gain:0.288889,level:-6.0)\nmod:Vibratone(depth:0.277778,feedback:0.68,level:0.96,noteDivision:off,phase:0.52,rotor:5.048129,tapTimeBPM:302.88773)\namp:Or120(bass:0.666667,bias:0.5,cabsimType:4x12m2,gain:0.5,gateDetectorPosition:jack,gatePreset:off,master:0.498039,mid:0.611111,sag:match,treb:0.588889,volume:-7.07374)\nreverb:LargeHallReverb(decay:0.277778,diffuse:0.0222,dwell:0.5,level:0.1675)",
       "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
       "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 24"
     },
     {
       "presetName": "GARAGE  FUZZ    ",
-      "audioHash": "91d8-c73c",
-      "effects": "s:BigFuzz a:Excelsior r:LargePlate",
+      "audioHash": "c7ae-315d",
+      "effectsSummary": "stomp:BigFuzz amp:Excelsior reverb:LargePlate",
+      "effectsDetails": "stomp:BigFuzz(gain:0.311111,level:-24.711111)\namp:Excelsior(bass:0.922222,bias:0.5,bright:true,cabsimType:exlsr,gain:0.233333,gateDetectorPosition:jack,gatePreset:off,mid:0.5,sag:match,treb:0.222222,volume:-16.220806)\nreverb:LargePlate(decay:0.5,diffuse:0.5,dwell:0.5,level:0.122222)",
       "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
       "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 28"
     }

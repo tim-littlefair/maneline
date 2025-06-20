@@ -3,22 +3,25 @@
   "presets": [
     {
       "presetName": "DREAMY          ",
-      "audioHash": "a7c9-43a2",
-      "effects": "s:SimpleCompressor m:Vibratone a:Twin65 d:TapeDelayLite r:LargePlate",
+      "audioHash": "f641-e9d3",
+      "effectsSummary": "stomp:SimpleCompressor mod:Vibratone amp:Twin65 delay:TapeDelayLite reverb:LargePlate",
+      "effectsDetails": "stomp:SimpleCompressor(type:high)\nmod:Vibratone(depth:0.18,feedback:0.68,level:0.96,noteDivision:off,phase:0.52,rotor:1.07,tapTimeBPM:120.0)\namp:Twin65(bass:0.662745,bias:0.5,bright:true,cabsimType:65twn,gain:0.337255,gateDetectorPosition:jack,gatePreset:off,mid:0.780392,sag:match,treb:0.717647,volume:-14.413998)\ndelay:TapeDelayLite(dlyTime:0.253888,feedback:0.211111,noteDivision:off,stereoSpread:0.0,tapTimeBPM:120.0,wetLvl:0.4672,wowLevel:0.5)\nreverb:LargePlate(decay:0.5,diffuse:0.5,dwell:0.5,level:0.433333)",
       "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
       "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 5"
     },
     {
       "presetName": "PHASER  SWIRL   ",
-      "audioHash": "c20d-9cf9",
-      "effects": "s:SimpleCompressor m:Phaser a:Twin65 r:Spring65",
+      "audioHash": "fd02-92ca",
+      "effectsSummary": "stomp:SimpleCompressor mod:Phaser amp:Twin65 reverb:Spring65",
+      "effectsDetails": "stomp:SimpleCompressor(type:medium)\nmod:Phaser(depth:0.99,feedback:0.72,level:0.99,noteDivision:off,rate:0.46695,tapTimeBPM:120.0)\namp:Twin65(bass:0.555556,bias:0.5,bright:true,cabsimType:65twn,gain:0.337255,gateDetectorPosition:jack,gatePreset:off,mid:0.5,sag:match,treb:0.555556,volume:-14.849238)\nreverb:Spring65(decay:0.388889,diffuse:1.0,dwell:0.28889,wetLvl:0.5)",
       "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
       "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 18"
     },
     {
       "presetName": "SPACE   TRAVEL  ",
-      "audioHash": "f718-9a67",
-      "effects": "s:Octobot m:StepFilter a:Deluxe65 d:MonoDelay r:ArenaReverb",
+      "audioHash": "6f2b-046c",
+      "effectsSummary": "stomp:Octobot mod:StepFilter amp:Deluxe65 delay:MonoDelay reverb:ArenaReverb",
+      "effectsDetails": "stomp:Octobot(level:0.5,octdown:1,octup:1)\nmod:StepFilter(hiFrq:0.5,level:0.733333,loFrq:0.5,noteDivision:off,rate:5.07,reson:0.5,tapTimeBPM:120.0)\namp:Deluxe65(bass:0.227451,bias:0.5,cabsimType:65dlx,gain:0.447059,gateDetectorPosition:jack,gatePreset:off,mid:0.913726,sag:match,treb:0.560784,volume:-25.243275)\ndelay:MonoDelay(attenuate:0.5,brite:0.5,feedback:0.177778,level:1.0,noteDivision:off,tapTimeBPM:120.0,time:0.404128)\nreverb:ArenaReverb(decay:0.5,diffuse:0.5,dwell:0.5,level:0.4)",
       "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
       "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 29"
     }

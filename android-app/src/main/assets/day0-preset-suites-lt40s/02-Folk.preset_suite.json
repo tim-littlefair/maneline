@@ -3,15 +3,17 @@
   "presets": [
     {
       "presetName": "COUNTRY PICKING ",
-      "audioHash": "8cbf-9815",
-      "effects": "s:SimpleCompressor a:Deluxe65 d:TapeDelayLite",
+      "audioHash": "b30b-5e04",
+      "effectsSummary": "stomp:SimpleCompressor amp:Deluxe65 delay:TapeDelayLite",
+      "effectsDetails": "stomp:SimpleCompressor(type:medium)\namp:Deluxe65(bass:0.344444,bias:0.5,cabsimType:65dlx,gain:0.254883,gateDetectorPosition:jack,gatePreset:off,mid:0.744444,sag:match,treb:0.560784,volume:-15.752095)\ndelay:TapeDelayLite(dlyTime:0.138998,feedback:0.211111,noteDivision:off,stereoSpread:0.0,tapTimeBPM:120.0,wetLvl:0.1675,wowLevel:0.5)",
       "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
       "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 6"
     },
     {
       "presetName": "ACOUSTICSIM     ",
-      "audioHash": "c270-30c7",
-      "effects": "s:MustangFiveBandEq1 a:LinearGain r:LargeHallReverb",
+      "audioHash": "509c-b680",
+      "effectsSummary": "stomp:MustangFiveBandEq1 amp:LinearGain reverb:LargeHallReverb",
+      "effectsDetails": "stomp:MustangFiveBandEq1(gain:0.0,high:12.0,highmid:0.0,low:12.0,lowmid:2.5,mid:-12.0)\namp:LinearGain(bass:0.322222,cabsimType:none,gain:0.5,gateDetectorPosition:jack,gatePreset:off,mid:0.0,treb:0.611111,volume:-2.06803)\nreverb:LargeHallReverb(decay:0.2,diffuse:0.0222,dwell:0.5,level:0.3562)",
       "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
       "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 30"
     }

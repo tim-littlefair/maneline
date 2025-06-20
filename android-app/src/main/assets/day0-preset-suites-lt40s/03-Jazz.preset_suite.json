@@ -3,22 +3,25 @@
   "presets": [
     {
       "presetName": "JAZZ       AMP  ",
-      "audioHash": "7380-45c2",
-      "effects": "s:SimpleCompressor a:LinearGain r:SmallRoomReverb",
+      "audioHash": "bf47-69d9",
+      "effectsSummary": "stomp:SimpleCompressor amp:LinearGain reverb:SmallRoomReverb",
+      "effectsDetails": "stomp:SimpleCompressor(type:medium)\namp:LinearGain(bass:0.5,cabsimType:none,gain:0.5,gateDetectorPosition:jack,gatePreset:off,mid:0.5,treb:0.5,volume:-2.06803)\nreverb:SmallRoomReverb(decay:0.5,diffuse:0.5,dwell:0.5,level:0.2896)",
       "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
       "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 9"
     },
     {
       "presetName": "VINTAGE TREMOLO ",
-      "audioHash": "e3ac-5d2e",
-      "effects": "m:SineTremolo a:Deluxe65",
+      "audioHash": "7b19-8807",
+      "effectsSummary": "mod:SineTremolo amp:Deluxe65",
+      "effectsDetails": "mod:SineTremolo(dist:0.0,duty:0.5,level:0.78976,noteDivision:off,rate:5.07,tapTimeBPM:120.0)\namp:Deluxe65(bass:0.227451,bias:0.5,cabsimType:65dlx,gain:0.447059,gateDetectorPosition:jack,gatePreset:off,mid:0.913726,sag:match,treb:0.560784,volume:-15.295096)",
       "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
       "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 12"
     },
     {
       "presetName": "SUPER   DRYCLEAN",
-      "audioHash": "86f2-6638",
-      "effects": "s:Sustain a:LinearGain",
+      "audioHash": "fc81-cdb8",
+      "effectsSummary": "stomp:Sustain amp:LinearGain",
+      "effectsDetails": "stomp:Sustain(outputLevel:0.577778,sensitivity:0.5)\namp:LinearGain(bass:0.5,cabsimType:none,gain:0.588889,gateDetectorPosition:jack,gatePreset:off,mid:0.644444,treb:1.0,volume:-3.196921)",
       "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
       "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 13"
     }

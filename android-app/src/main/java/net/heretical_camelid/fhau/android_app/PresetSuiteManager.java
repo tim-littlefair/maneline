@@ -58,7 +58,9 @@ public class PresetSuiteManager {
 
     static ArrayList<HashMap<String,String>> repackPresets(JSONArray presets) {
         String[] PRESET_ATTRIBUTE_KEYS = new String[] {
-            "presetName", "audioHash", "effects", "shortInfo", "sourceDevice"
+            "presetName", "audioHash",
+            "shortInfo", "sourceDevice",
+            "effectsSummary", "effectsDetails"
         };
         ArrayList<HashMap<String,String>> retval = new ArrayList<>(presets.length());
         for(int i=0; i<presets.length(); ++i) {
@@ -70,7 +72,7 @@ public class PresetSuiteManager {
                 }
                 retval.add(presetHM);
             } catch (JSONException e) {
-                throw new RuntimeException(e);
+                System.out.println(e.getLocalizedMessage());
             }
         }
         return retval;

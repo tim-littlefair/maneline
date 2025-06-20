@@ -3,29 +3,33 @@
   "presets": [
     {
       "presetName": "FENDER  CLEAN   ",
-      "audioHash": "5355-a27f",
-      "effects": "s:SimpleCompressor a:Twin65 r:Spring65",
+      "audioHash": "adbd-9b33",
+      "effectsSummary": "stomp:SimpleCompressor amp:Twin65 reverb:Spring65",
+      "effectsDetails": "stomp:SimpleCompressor(type:medium)\namp:Twin65(bass:0.555556,bias:0.5,bright:true,cabsimType:65twn,gain:0.337255,gateDetectorPosition:jack,gatePreset:off,mid:0.5,sag:match,treb:0.342816,volume:-11.12674)\nreverb:Spring65(decay:0.388889,diffuse:1.0,dwell:0.28889,wetLvl:0.5)",
       "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
       "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 1"
     },
     {
       "presetName": "SILKY   SOLO    ",
-      "audioHash": "afde-98e6",
-      "effects": "s:Overdrive a:SuperSonic d:TapeDelayLite r:Spring65",
+      "audioHash": "2ba9-3772",
+      "effectsSummary": "stomp:Overdrive amp:SuperSonic delay:TapeDelayLite reverb:Spring65",
+      "effectsDetails": "stomp:Overdrive(gain:0.653935,high:0.5,level:0.444444,low:0.5,mid:0.5)\namp:SuperSonic(bass:0.666667,bias:0.5,cabsimType:1x12ss,gain:0.333333,gain2:0.5,gateDetectorPosition:jack,gatePreset:mid,master:0.360784,mid:0.722222,sag:match,treb:0.722222,volume:-14.849238)\ndelay:TapeDelayLite(dlyTime:0.18,feedback:0.044444,noteDivision:off,stereoSpread:0.0,tapTimeBPM:120.0,wetLvl:0.223,wowLevel:1.0)\nreverb:Spring65(decay:0.133333,diffuse:1.0,dwell:0.28889,wetLvl:0.277778)",
       "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
       "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 2"
     },
     {
       "presetName": "CHICAGO BLUES   ",
-      "audioHash": "8e00-223b",
-      "effects": "a:Bassman59 d:MonoDelay r:SmallRoomReverb",
+      "audioHash": "46e1-c1f0",
+      "effectsSummary": "amp:Bassman59 delay:MonoDelay reverb:SmallRoomReverb",
+      "effectsDetails": "amp:Bassman59(bass:0.62,bias:0.5,blend:0.62,cabsimType:59bman,gain:0.555556,gateDetectorPosition:jack,gatePreset:off,mid:0.49,presence:0.62,sag:match,treb:0.377778,volume:-14.413998)\ndelay:MonoDelay(attenuate:0.5,brite:0.5,feedback:0.222222,level:0.288889,noteDivision:off,tapTimeBPM:631.57886,time:0.095)\nreverb:SmallRoomReverb(decay:0.5,diffuse:0.5,dwell:0.5,level:0.3118)",
       "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
       "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 3"
     },
     {
       "presetName": "BLUES   LEAD    ",
-      "audioHash": "d88f-2fc2",
-      "effects": "s:Greenbox a:Deluxe57 r:SmallRoomReverb",
+      "audioHash": "c6e6-3814",
+      "effectsSummary": "stomp:Greenbox amp:Deluxe57 reverb:SmallRoomReverb",
+      "effectsDetails": "stomp:Greenbox(blend:0.844444,gain:0.69,level:-12.0)\namp:Deluxe57(bass:0.5,bias:0.5,cabsimType:57dlx,gain:0.6,gateDetectorPosition:jack,gatePreset:off,mid:0.5,sag:match,treb:0.72,volume:-8.573037)\nreverb:SmallRoomReverb(decay:1.0,diffuse:0.5,dwell:0.5,level:0.5)",
       "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
       "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 26"
     }
