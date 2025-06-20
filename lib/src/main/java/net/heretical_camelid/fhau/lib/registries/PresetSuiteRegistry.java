@@ -5,14 +5,15 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 
-public class PresetSuiteRegistry implements PresetRegistryBase.Visitor {
+public class PresetSuiteRegistry {
     final FenderJsonPresetRegistry m_registry;
-    final HashMap<String, HashMap<Integer, FenderJsonPresetRecord>> m_ampPresets;
+    final HashMap<String, HashMap<Integer, FenderJsonPresetRecord>> m_suitePresets;
     ArrayList<PresetSuiteEntry> m_presetSuites;
 
     public PresetSuiteRegistry(FenderJsonPresetRegistry registry) {
         m_registry = registry;
-        m_ampPresets = new HashMap<>();
+        m_suitePresets = new HashMap<>();
+        m_presetSuites = new ArrayList<>();
     }
 
     // The user may want to select a range of presets for export
@@ -24,9 +25,10 @@ public class PresetSuiteRegistry implements PresetRegistryBase.Visitor {
         m_maxSlotIndex = maxSlotIndex;
     }
 
+    /*
     @Override
     public void visitBeforeRecords(PresetRegistryBase registry) {
-        m_ampPresets.clear();
+        m_suitePresets.clear();
     }
 
     @Override
@@ -36,11 +38,11 @@ public class PresetSuiteRegistry implements PresetRegistryBase.Visitor {
         }
         FenderJsonPresetRecord fjpr = (FenderJsonPresetRecord) record;
         assert fjpr != null;
-        HashMap<Integer, FenderJsonPresetRecord> presetsForThisAmp = m_ampPresets.get(fjpr.ampName());
+        HashMap<Integer, FenderJsonPresetRecord> presetsForThisAmp = m_suitePresets.get(fjpr.ampName());
         if(presetsForThisAmp==null) {
             presetsForThisAmp = new HashMap<>();
             presetsForThisAmp.put(slotIndex,fjpr);
-            m_ampPresets.put(fjpr.ampName(), presetsForThisAmp);
+            m_suitePresets.put(fjpr.ampName(), presetsForThisAmp);
         } else {
             presetsForThisAmp.put(slotIndex,fjpr);
         }
@@ -56,7 +58,7 @@ public class PresetSuiteRegistry implements PresetRegistryBase.Visitor {
     ) {
         m_registry.acceptVisitor(this);
         ArrayList<PresetSuiteEntry> retval = new ArrayList<>();
-        ArrayList<String> ampNames = new ArrayList<>(m_ampPresets.keySet());
+        ArrayList<String> ampNames = new ArrayList<>(m_suitePresets.keySet());
         int remainingPresetCount = m_registry.m_records.size();
         while(!ampNames.isEmpty()) {
             // We sort the amplifiers in decreasing order of number
@@ -64,8 +66,8 @@ public class PresetSuiteRegistry implements PresetRegistryBase.Visitor {
             ampNames.sort(new Comparator<String>() {
                 @Override
                 public int compare(String o1, String o2) {
-                    int size1 = m_ampPresets.get(o1).size();
-                    int size2 = m_ampPresets.get(o2).size();
+                    int size1 = m_suitePresets.get(o1).size();
+                    int size2 = m_suitePresets.get(o2).size();
                     int sizeCompareResult = Integer.valueOf(size1).compareTo(size2);
                     if(sizeCompareResult==0) {
                         return o1.compareTo(o2);
@@ -79,7 +81,7 @@ public class PresetSuiteRegistry implements PresetRegistryBase.Visitor {
             Iterator<String> ampNameIter = ampNames.iterator();
             while (ampNameIter.hasNext()) {
                 String firstAmpName = ampNameIter.next();
-                HashMap<Integer, FenderJsonPresetRecord> presetsForThisSuite = m_ampPresets.get(firstAmpName);
+                HashMap<Integer, FenderJsonPresetRecord> presetsForThisSuite = m_suitePresets.get(firstAmpName);
                 if (presetsForThisSuite.size() >= targetPresetsPerSuite) {
                     retval.add(new PresetSuiteEntry("Amplifier " + firstAmpName, presetsForThisSuite));
                     processedAmpNames.add(firstAmpName);
@@ -90,7 +92,7 @@ public class PresetSuiteRegistry implements PresetRegistryBase.Visitor {
                     while(ampNameIter.hasNext()) {
                         int maxAdditionalPresets = maxPresetsPerSuite - presetsForThisSuite.size();
                         String nextAmpName = ampNameIter.next();
-                        HashMap<Integer, FenderJsonPresetRecord> presetsForNextAmp = m_ampPresets.get(nextAmpName);
+                        HashMap<Integer, FenderJsonPresetRecord> presetsForNextAmp = m_suitePresets.get(nextAmpName);
                         if(presetsForNextAmp.size()>maxAdditionalPresets) {
                             System.out.println("Overflow: " + nextAmpName);
                             continue;
@@ -135,7 +137,7 @@ public class PresetSuiteRegistry implements PresetRegistryBase.Visitor {
                         if(remainingPresetCount<=maxPresetsPerSuite) {
                             HashMap<Integer, FenderJsonPresetRecord> presetsForOtherAmpSuite = new HashMap<>();
                             for(String ampName: ampNames) {
-                                HashMap<Integer, FenderJsonPresetRecord> presetMap = m_ampPresets.get(ampName);
+                                HashMap<Integer, FenderJsonPresetRecord> presetMap = m_suitePresets.get(ampName);
                                 for(int slotIndex: presetMap.keySet()) {
                                     presetsForOtherAmpSuite.put(slotIndex, presetMap.get(slotIndex));
                                 }
@@ -151,10 +153,10 @@ public class PresetSuiteRegistry implements PresetRegistryBase.Visitor {
                 }
             }
         }
-
         m_presetSuites = retval;
         return retval;
     }
+     */
 
     public String nameAt(int position) {
         return m_presetSuites.get(position).m_suiteName;
@@ -169,18 +171,18 @@ public class PresetSuiteRegistry implements PresetRegistryBase.Visitor {
         ArrayList<HashMap<String,String>> presets
     ) {
         HashMap<Integer, FenderJsonPresetRecord> presetRecords = new HashMap<>();
-        int presetIndex = 0;
         for(HashMap<String,String> presetAttributes: presets) {
             String presetName = presetAttributes.get("presetName");
             String audioHash = presetAttributes.get("audioHash");
-            FenderJsonPresetRecord presetRecord = m_registry.findAudioHash(audioHash, presetName);
-            if(presetRecord!=null) {
+            Integer slotIndex = m_registry.findAudioHash(audioHash, presetName);
+            if(slotIndex!=null) {
+                FenderJsonPresetRecord presetRecord=m_registry.get(slotIndex);
+                assert presetRecord!=null;
                 System.out.println(String.format(
-                    "Preset '%s' found for preset '%s' audioHash='%s'",
-                    presetRecord.displayName(), presetName, audioHash
+                     "Preset '%s' found for audioHash='%s'",
+                     presetName, audioHash
                 ));
-                presetRecords.put(presetIndex,presetRecord);
-                presetIndex++;
+                presetRecords.put(slotIndex,presetRecord);
             } else {
                 System.out.println(String.format(
                     "No preset record found for preset '%s' audioHash='%s'",
@@ -192,7 +194,10 @@ public class PresetSuiteRegistry implements PresetRegistryBase.Visitor {
             System.out.println("No preset records found for suite " + suiteName);
             return null;
         } else {
-            return new PresetSuiteEntry(suiteName,presetRecords);
+            PresetSuiteEntry newPSE = new PresetSuiteEntry(suiteName,presetRecords);
+            m_presetSuites.add(newPSE);
+            m_suitePresets.put(suiteName,newPSE.m_presetRecords);
+            return newPSE;
         }
     }
 

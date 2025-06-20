@@ -32,11 +32,16 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
     final String m_outputPath;
     static ZipOutputStream s_outputZipStream = null;
     HashMap<Integer, FenderJsonPresetRecord> m_slotsToRecords;
+    HashMap<String, Integer> m_audioHashesToSlots;
     HashMap<String, ArrayList<Integer>> m_duplicateSlots;
 
 
     public FenderJsonPresetRegistry(String outputPath) {
         m_outputPath = outputPath;
+        m_slotsToRecords = new HashMap<>();
+        m_audioHashesToSlots = new HashMap<>();
+        m_duplicateSlots = new HashMap<>();
+
         if (m_outputPath==null) {
             // all output is to console standard output, no need for filesystem access
         } else if (m_outputPath.toLowerCase().endsWith(".zip")) {
@@ -98,8 +103,6 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
                 }
             }
         }
-        m_slotsToRecords = new HashMap<>();
-        m_duplicateSlots = new HashMap<>();
     }
 
     @Override
@@ -116,6 +119,7 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
             ArrayList<Integer> newDuplicateSlotList = new ArrayList<>();
             newDuplicateSlotList.add(slotIndex);
             m_slotsToRecords.put(slotIndex,newRecord);
+            m_audioHashesToSlots.put(newRecord.audioHash(), slotIndex);
             m_duplicateSlots.put(dsk,newDuplicateSlotList);
             m_records.put(slotIndex, newRecord);
         } else {
@@ -307,20 +311,26 @@ public class FenderJsonPresetRegistry extends PresetRegistryBase {
         return m_slotsToRecords.get(slotIndex);
     }
 
-    public FenderJsonPresetRecord findAudioHash(String audioHash, String presetName) {
-        for(int i: m_slotsToRecords.keySet()) {
-            FenderJsonPresetRecord r = m_slotsToRecords.get(i);
-            if(r.audioHash().equals(audioHash)) {
-                return r;
-            } else if(r.displayName().equals(presetName)) {
-                System.out.println(String.format(
-                    "Name matches but hash doesn't (%s:%s/%s:%s)",
-                    presetName, audioHash, r.displayName(), r.audioHash()
-                ));
-                return r;
+    public Integer findAudioHash(String audioHash, String presetName) {
+        Integer retval = m_audioHashesToSlots.get(audioHash);
+        if(retval==null) {
+            System.out.println(String.format(
+                "No match found for audioHash %s (presetName %s)",
+                audioHash, presetName
+            ));
+        } else {
+            for (int i : m_slotsToRecords.keySet()) {
+                FenderJsonPresetRecord r = m_slotsToRecords.get(i);
+                if (r.displayName().equals(presetName)) {
+                    System.out.println(String.format(
+                        "Name matches but hash doesn't (%s:%s/%s:%s)",
+                        presetName, audioHash, r.displayName(), r.audioHash()
+                    ));
+                    retval = i;
+                }
             }
         }
-        return null;
+        return retval;
     }
 
     public static class PresetDetailsTableGenerator implements Visitor {

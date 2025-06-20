@@ -280,7 +280,6 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
             return false;
         } else {
             m_protocol.startHeartbeatThread();
-            m_presetSuiteRegistry.buildPresetSuites(9, 7, 3);
             System.out.println();
             m_presetRegistry.dump(m_presetSuiteRegistry);
             System.out.println();
@@ -324,14 +323,6 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
     public PresetSuiteRegistry.PresetSuiteEntry buildPresetSuite(String suiteName, ArrayList<HashMap<String, String>> presets) {
         throw new RuntimeException(
             "DesktopUsbAmpProvider.buildPresetSuite(...) not implemented yet"
-        );
-    }
-
-    @Override
-    public ArrayList<PresetSuiteRegistry.PresetSuiteEntry> buildAmpBasedPresetSuites(int maxPresetsPerSuite, int targetPresetsPerSuite, int maxAmpsPerSuite) {
-        m_presetSuiteRegistry = new PresetSuiteRegistry(m_presetRegistry);
-        return m_presetSuiteRegistry.buildPresetSuites(
-            maxPresetsPerSuite, targetPresetsPerSuite, maxAmpsPerSuite
         );
     }
 

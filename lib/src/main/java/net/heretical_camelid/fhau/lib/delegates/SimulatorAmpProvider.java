@@ -148,11 +148,6 @@ public class SimulatorAmpProvider implements IAmpProvider {
     }
 
     @Override
-    public ArrayList<PresetSuiteRegistry.PresetSuiteEntry> buildAmpBasedPresetSuites(int maxPresetsPerSuite, int targetPresetsPerSuite, int maxAmpsPerSuite) {
-        return null;
-    }
-
-    @Override
     public ArrayList<PresetSuiteRegistry.PresetSuiteEntry> loadCuratedPresetSuites() {
         return null;
     }

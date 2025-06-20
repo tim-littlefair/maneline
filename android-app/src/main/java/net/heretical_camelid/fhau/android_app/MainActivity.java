@@ -250,15 +250,18 @@ public class MainActivity
             return;
         }
         if(slotId==0) {
-            assert presetName==null;
-            presetName = "NOT\nIN\nUSE";
+            if(presetName==null) {
+                presetName = "NOT\nIN\nUSE";
+            }
             presetButton.setClickable(false);
             presetButton.setOnClickListener(null);
             presetButton.setEnabled(false);
             buttonColor = R.color.fhauGrey;
             buttonAlpha = 0.5F;
         } else {
-            assert presetName!=null;
+            if(presetName==null) {
+                presetName="NULL";
+            }
             presetButton.setClickable(true);
             presetButton.setOnClickListener((new View.OnClickListener() {
                 @Override
