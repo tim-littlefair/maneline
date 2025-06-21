@@ -136,69 +136,69 @@ public class PresetCanonicalSerializer {
         // a small number of exceptions which require
         // comments and/or annotations, these appear
         // at the end
-        Float attenuate;
-        Float attenuation;
-        Float avgDelay;
-        Float bass;
-        Float bias;
-        Float blend;
+        Double attenuate;
+        Double attenuation;
+        Double avgDelay;
+        Double bass;
+        Double bias;
+        Double blend;
         Boolean bright;
-        Float brite;
+        Double brite;
         // bypass: at end of list
         // bypassType: at end of list
         String cabsimType;
-        Float chase;
-        Float cut;
-        Float decay;
-        Float depth;
-        Float diffuse;
-        Float dist;
-        Float dlyTime;
-        Float duty;
-        Float dwell;
-        Float feedback;
-        Float gain;
-        Float gain2;
+        Double chase;
+        Double cut;
+        Double decay;
+        Double depth;
+        Double diffuse;
+        Double dist;
+        Double dlyTime;
+        Double duty;
+        Double dwell;
+        Double feedback;
+        Double gain;
+        Double gain2;
         String gateDetectorPosition;
         String gatePreset;
-        Float hiFrq;
-        Float high;
-        Float highmid;
-        Float hysteresis;
-        Float level;
-        Float loFrq;
-        Float low;
-        Float lowmid;
-        Float lrPhase;
-        Float master;
-        Float mid;
+        Double hiFrq;
+        Double high;
+        Double highmid;
+        Double hysteresis;
+        Double level;
+        Double loFrq;
+        Double low;
+        Double lowmid;
+        Double lrPhase;
+        Double master;
+        Double mid;
         String mode;
         String noteDivision;
         Integer octdown;
         Integer octup;
-        Float outputLevel;
-        Float phase;
-        Float presence;
-        Float q;
-        Float rate;
-        Float rateHz;
-        Float reson;
-        Float rotor;
+        Double outputLevel;
+        Double phase;
+        Double presence;
+        Double q;
+        Double rate;
+        Double rateHz;
+        Double reson;
+        Double rotor;
         String sag;
-        Float sensitivity;
+        Double sensitivity;
         // shape: at end of list
-        Float stereoSpread;
-        Float tapTimeBPM;
-        Float thresh;
-        Float threshold;
-        Float time;
+        Double stereoSpread;
+        Double tapTimeBPM;
+        Double thresh;
+        Double threshold;
+        Double time;
         // tone: at end of list
-        Float treb;
-        Float treble;
+        Double treb;
+        Double treble;
         String type;
-        Float volume;
-        Float wetLvl;
-        Float wowLevel;
+        Double volume;
+        Double wetLvl;
+        Double wowLevel;
 
         // The remaining attributes have been identified
         // as taking on inconsistent values and/or types when a preset
