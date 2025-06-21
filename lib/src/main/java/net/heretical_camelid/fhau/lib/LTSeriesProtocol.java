@@ -1,6 +1,6 @@
 package net.heretical_camelid.fhau.lib;
 
-import net.heretical_camelid.fhau.lib.registries.PresetRegistryBase;
+import net.heretical_camelid.fhau.lib.registries.PresetRegistry;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -10,11 +10,11 @@ import java.util.Arrays;
 
 public class LTSeriesProtocol extends AbstractMessageProtocolBase {
     String m_firmwareVersion;
-    PresetRegistryBase m_presetRegistry;
+    PresetRegistry m_presetRegistry;
     final Thread m_heartbeatThread;
     boolean m_heartbeatStopped = false;
 
-    public LTSeriesProtocol(PresetRegistryBase presetRegistry, boolean startHeartbeat) {
+    public LTSeriesProtocol(PresetRegistry presetRegistry, boolean startHeartbeat) {
         m_firmwareVersion = null;
         m_presetRegistry = presetRegistry;
         m_heartbeatStopped = !startHeartbeat;

@@ -17,8 +17,8 @@ import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 
 import net.heretical_camelid.fhau.lib.interfaces.IAmpProvider;
-import net.heretical_camelid.fhau.lib.registries.FenderJsonPresetRecord;
-import net.heretical_camelid.fhau.lib.registries.PresetSuiteRegistry;
+import net.heretical_camelid.fhau.lib.registries.PresetRecord;
+import net.heretical_camelid.fhau.lib.registries.SuiteRegistry;
 
 import java.util.*;
 
@@ -189,12 +189,12 @@ public class MainActivity
     void populatePresetSuiteDropdown() {
         assert m_provider!=null;
         PresetSuiteManager psm = new PresetSuiteManager(this);
-        ArrayList<PresetSuiteRegistry.PresetSuiteEntry> presetSuites = psm.processDay0Suites(
+        ArrayList<SuiteRegistry.PresetSuiteEntry> presetSuites = psm.processDay0Suites(
             m_provider
         );
 
         ArrayList<String> suiteNames = new ArrayList<>();
-        for(PresetSuiteRegistry.PresetSuiteEntry pse: presetSuites) {
+        for(SuiteRegistry.PresetSuiteEntry pse: presetSuites) {
             suiteNames.add(pse.name());
         }
 
@@ -301,17 +301,17 @@ public class MainActivity
         // as a USB drive.
     }
 
-    private void setupPresetButtonsForSuite(String suiteName, HashMap<Integer, FenderJsonPresetRecord> suitePresetRecords) {
+    private void setupPresetButtonsForSuite(String suiteName, HashMap<Integer, PresetRecord> suitePresetRecords) {
         clearPresetButtons();
         appendToLog("Preset suite '" + suiteName + "' selected");
         ArrayList<Integer> slotIndices = new ArrayList<>(suitePresetRecords.keySet());
         slotIndices.sort(null);
         for(int i=0; i<slotIndices.size(); ++i) {
             int slotIndex = slotIndices.get(i);
-            FenderJsonPresetRecord presetRecord = suitePresetRecords.get(slotIndex);
+            PresetRecord presetRecord = suitePresetRecords.get(slotIndex);
             setPresetButton(
                 i+1, slotIndex,
-                PresetSuiteRegistry.buttonLabel(slotIndex, presetRecord.displayName())
+                SuiteRegistry.buttonLabel(slotIndex, presetRecord.displayName())
             );
         }
     }
@@ -328,11 +328,11 @@ public class MainActivity
 
     void suiteSelected(
         String suiteName,
-        HashMap<Integer, FenderJsonPresetRecord> suitePresetRecords
+        HashMap<Integer, PresetRecord> suitePresetRecords
     ) {
         /*
-        String suiteName = m_presetSuiteRegistry.nameAt(position);
-        HashMap<Integer,FenderJsonPresetRegistry.FenderJsonPresetRecord> suitePresetRecords = m_presetSuiteRegistry.recordsAt(position);
+        String suiteName = m_SuiteRegistry.nameAt(position);
+        HashMap<Integer,FenderJsonPresetRegistry.PresetRecord> suitePresetRecords = m_SuiteRegistry.recordsAt(position);
          */
         setupPresetButtonsForSuite(suiteName, suitePresetRecords);
     }

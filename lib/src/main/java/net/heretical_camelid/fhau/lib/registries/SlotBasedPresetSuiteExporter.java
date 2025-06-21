@@ -6,9 +6,10 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
-public class SlotBasedPresetSuiteExporter implements PresetRegistryBase.Visitor {
+public class SlotBasedPresetSuiteExporter implements PresetRegistry.Visitor {
     static final Gson m_gson = new GsonBuilder().setPrettyPrinting().create();
 
     static String s_sourceDeviceDetails = null;
@@ -20,6 +21,7 @@ public class SlotBasedPresetSuiteExporter implements PresetRegistryBase.Visitor 
     final List<Integer> m_desiredSlotIndexes;
 
     JsonObject m_suite;
+    HashMap<Integer,PresetRecord> m_presetRecords;
 
     public static void setSourceDeviceDetails(String sdd) {
         s_sourceDeviceDetails = sdd;
@@ -34,25 +36,26 @@ public class SlotBasedPresetSuiteExporter implements PresetRegistryBase.Visitor 
         m_suite = new JsonObject();
         m_suite.addProperty("suiteName", suiteName);
         m_suite.add("presets", new JsonArray());
+        m_presetRecords = new HashMap<>();
     }
 
     @Override
-    public void visitBeforeRecords(PresetRegistryBase registry) {
+    public void visitBeforeRecords(PresetRegistry registry) {
     }
 
     @Override
     public void visitRecord(int slotIndex, Object record) {
-        FenderJsonPresetRecord fjpr = (FenderJsonPresetRecord) record;
+        PresetRecord fjpr = (PresetRecord) record;
         assert fjpr != null;
         if (m_desiredSlotIndexes.contains(slotIndex)) {
             JsonObject presetObject = new JsonObject();
             presetObject.addProperty("presetName", fjpr.m_name);
             presetObject.addProperty("audioHash", fjpr.audioHash());
             presetObject.addProperty("effectsSummary", fjpr.effects(
-                FenderJsonPresetRecord.EffectsLevelOfDetails.MODULES_ONLY
+                PresetRecord.EffectsLevelOfDetails.MODULES_ONLY
             ));
             presetObject.addProperty("effectsDetails", fjpr.effects(
-                FenderJsonPresetRecord.EffectsLevelOfDetails.MODULES_AND_PARAMETERS
+                PresetRecord.EffectsLevelOfDetails.MODULES_AND_PARAMETERS
             ));
             presetObject.addProperty("shortInfo", fjpr.shortInfo());
             if (s_sourceDeviceDetails != null) {
@@ -64,14 +67,16 @@ public class SlotBasedPresetSuiteExporter implements PresetRegistryBase.Visitor 
                 );
             }
             m_suite.getAsJsonArray("presets").add(presetObject);
+            m_presetRecords.put(slotIndex,fjpr);
         }
+
     }
 
     @Override
-    public void visitAfterRecords(PresetRegistryBase registry) {
+    public void visitAfterRecords(PresetRegistry registry) {
         String jsonForSuite = m_gson.toJson(m_suite);
         String suiteFilename = m_suiteName.replace(" ", "_");
         String targetPath = m_outputPrefix + "/" + suiteFilename + ".preset_suite.json";
-        FenderJsonPresetRegistry.outputToFile(targetPath, jsonForSuite);
+        PresetRegistry.outputToFile(targetPath, jsonForSuite);
     }
 }
