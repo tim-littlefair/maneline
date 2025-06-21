@@ -4,7 +4,8 @@ import com.google.gson.GsonBuilder;
 
 import java.nio.charset.StandardCharsets;
 
-public class FenderJsonPresetRecord extends PresetRecordBase {
+public class PresetRecord {
+    final String m_name;
     final String m_definitionRawJson;
     final PresetCanonicalSerializer m_presetCanonicalSerializer;
 
@@ -13,10 +14,10 @@ public class FenderJsonPresetRecord extends PresetRecordBase {
     static Gson s_dspParamGson = new GsonBuilder().setVersion(92.0).create();
 
 
-    public FenderJsonPresetRecord(String name, byte[] definitionBytes) {
-        super(name);
+    public PresetRecord(String name, byte[] definitionBytes) {
+        m_name = name;
         m_definitionRawJson = new String(definitionBytes, StandardCharsets.UTF_8);
-        m_presetCanonicalSerializer = FenderJsonPresetRegistry.s_gsonCompact.fromJson(
+        m_presetCanonicalSerializer = PresetRegistry.s_gsonCompact.fromJson(
             m_definitionRawJson,
             PresetCanonicalSerializer.class
         );
@@ -53,11 +54,11 @@ public class FenderJsonPresetRecord extends PresetRecordBase {
         }
 
         // Otherwise we calculate it and store it for future reference.
-        String nodesHash1 = FenderJsonPresetRegistry.stringHash(
+        String nodesHash1 = PresetRegistry.stringHash(
             effects(EffectsLevelOfDetails.MODULES_ONLY), 4
         );
 
-        String nodesHash2 = FenderJsonPresetRegistry.stringHash(
+        String nodesHash2 = PresetRegistry.stringHash(
             effects(EffectsLevelOfDetails.PARAMETERS_ONLY), 4
         );
 

@@ -2,8 +2,8 @@ package net.heretical_camelid.fhau.desktop_app;
 
 import net.heretical_camelid.fhau.lib.interfaces.IAmpProvider;
 import net.heretical_camelid.fhau.lib.interfaces.ILoggingAgent;
-import net.heretical_camelid.fhau.lib.registries.FenderJsonPresetRegistry;
-import net.heretical_camelid.fhau.lib.registries.PresetSuiteRegistry;
+import net.heretical_camelid.fhau.lib.registries.PresetRegistry;
+import net.heretical_camelid.fhau.lib.registries.SuiteRegistry;
 import org.hid4java.*;
 import org.hid4java.event.HidServicesEvent;
 import org.hid4java.jna.HidApi;
@@ -14,15 +14,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import net.heretical_camelid.fhau.lib.registries.SlotBasedPresetSuiteExporter;
-import static net.heretical_camelid.fhau.lib.AbstractMessageProtocolBase.printAsHex2;
+
 import static net.heretical_camelid.fhau.lib.AbstractMessageProtocolBase.enable_printAsHex2;
-import com.sun.security.auth.module.UnixSystem;
 
 public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
 {
@@ -31,16 +28,16 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
     static ILoggingAgent s_loggingAgent;
     AbstractMessageProtocolBase m_protocol;
     String m_firmwareVersion;
-    FenderJsonPresetRegistry m_presetRegistry;
-    PresetSuiteRegistry m_presetSuiteRegistry;
+    PresetRegistry m_presetRegistry;
+    SuiteRegistry m_SuiteRegistry;
     HidServices m_hidServices;
 
     public DesktopUsbAmpProvider(String outputPath) {
         if(s_loggingAgent==null) {
             s_loggingAgent = new DefaultLoggingAgent(2);
         }
-        m_presetRegistry = new FenderJsonPresetRegistry(outputPath);
-        m_presetSuiteRegistry = new PresetSuiteRegistry((FenderJsonPresetRegistry) m_presetRegistry);
+        m_presetRegistry = new PresetRegistry(outputPath);
+        m_SuiteRegistry = new SuiteRegistry(m_presetRegistry);
         m_protocol = new LTSeriesProtocol(m_presetRegistry,true);
     }
 
@@ -281,7 +278,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
         } else {
             m_protocol.startHeartbeatThread();
             System.out.println();
-            m_presetRegistry.dump(m_presetSuiteRegistry);
+            m_presetRegistry.dump(m_SuiteRegistry);
             System.out.println();
         }
         return true;
@@ -320,14 +317,14 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
     }
 
     @Override
-    public PresetSuiteRegistry.PresetSuiteEntry buildPresetSuite(String suiteName, ArrayList<HashMap<String, String>> presets) {
+    public SuiteRegistry.PresetSuiteEntry buildPresetSuite(String suiteName, ArrayList<HashMap<String, String>> presets) {
         throw new RuntimeException(
             "DesktopUsbAmpProvider.buildPresetSuite(...) not implemented yet"
         );
     }
 
     @Override
-    public ArrayList<PresetSuiteRegistry.PresetSuiteEntry> loadCuratedPresetSuites() {
+    public ArrayList<SuiteRegistry.PresetSuiteEntry> loadCuratedPresetSuites() {
         return null;
     }
 

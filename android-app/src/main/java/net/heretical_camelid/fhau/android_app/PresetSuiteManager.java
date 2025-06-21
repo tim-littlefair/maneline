@@ -2,8 +2,8 @@ package net.heretical_camelid.fhau.android_app;
 
 import android.content.res.AssetManager;
 
-import net.heretical_camelid.fhau.lib.registries.PresetRegistryBase;
-import net.heretical_camelid.fhau.lib.registries.PresetSuiteRegistry;
+import net.heretical_camelid.fhau.lib.registries.PresetRegistry;
+import net.heretical_camelid.fhau.lib.registries.SuiteRegistry;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -23,11 +23,11 @@ public class PresetSuiteManager {
         m_presetSuiteDir = "day0-preset-suites-lt40s";
     }
 
-    ArrayList<PresetSuiteRegistry.PresetSuiteEntry>  processDay0Suites(
+    ArrayList<SuiteRegistry.PresetSuiteEntry>  processDay0Suites(
         AndroidUsbAmpProvider provider
     ) {
-        PresetRegistryBase registry = provider.getPresetRegistry();
-        ArrayList<PresetSuiteRegistry.PresetSuiteEntry> presetSuites = new ArrayList<>();
+        PresetRegistry registry = provider.getPresetRegistry();
+        ArrayList<SuiteRegistry.PresetSuiteEntry> presetSuites = new ArrayList<>();
         AssetManager am = m_mainActivity.getAssets();
         int itemLayoutId = R.layout.preset_suite_dropdown_item;
         ArrayList<String> suiteNames = new ArrayList<>();
@@ -41,7 +41,7 @@ public class PresetSuiteManager {
                 String jsonString = new String(jsonBytes);
                 JSONObject psJsonObject = new JSONObject(jsonString);
                 String suiteName = psJsonObject.getString("suiteName");
-                PresetSuiteRegistry.PresetSuiteEntry pse = provider.buildPresetSuite(
+                SuiteRegistry.PresetSuiteEntry pse = provider.buildPresetSuite(
                     suiteName,repackPresets(psJsonObject.getJSONArray("presets"))
                 );
                 if(pse!=null) {

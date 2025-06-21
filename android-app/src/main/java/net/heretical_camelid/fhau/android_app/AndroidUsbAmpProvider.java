@@ -9,10 +9,9 @@ import android.os.Bundle;
 import android.os.Message;
 import net.heretical_camelid.fhau.lib.*;
 import net.heretical_camelid.fhau.lib.interfaces.IAmpProvider;
-import net.heretical_camelid.fhau.lib.registries.FenderJsonPresetRecord;
-import net.heretical_camelid.fhau.lib.registries.FenderJsonPresetRegistry;
-import net.heretical_camelid.fhau.lib.registries.PresetRegistryBase;
-import net.heretical_camelid.fhau.lib.registries.PresetSuiteRegistry;
+import net.heretical_camelid.fhau.lib.registries.PresetRecord;
+import net.heretical_camelid.fhau.lib.registries.PresetRegistry;
+import net.heretical_camelid.fhau.lib.registries.SuiteRegistry;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,8 +25,8 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
     DeviceTransportUsbHid m_deviceTransportUsbHid;
     LTSeriesProtocol m_protocol;
 
-    FenderJsonPresetRegistry m_presetRegistry;
-    PresetSuiteRegistry m_presetSuiteRegistry;
+    PresetRegistry m_presetRegistry;
+    SuiteRegistry m_SuiteRegistry;
     String m_ampModel;
     String m_firmwareVersion;
 
@@ -36,9 +35,9 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
     ) {
         m_mainActivity = mainActivity;
         m_deviceTransportUsbHid = new DeviceTransportUsbHid(m_mainActivity, this);
-        m_presetRegistry = new FenderJsonPresetRegistry(null);
+        m_presetRegistry = new PresetRegistry(null);
         m_protocol = new LTSeriesProtocol(m_presetRegistry,true);
-        m_presetSuiteRegistry = new PresetSuiteRegistry(m_presetRegistry);
+        m_SuiteRegistry = new SuiteRegistry(m_presetRegistry);
     }
 
     public boolean getFirmwareVersionAndPresets() {
@@ -68,13 +67,13 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
         return startupStatus==AbstractMessageProtocolBase.STATUS_OK;
     }
 
-    public PresetRegistryBase getPresetRegistry() {
+    public PresetRegistry getPresetRegistry() {
         return m_presetRegistry;
     }
 
     @Override
     public void switchPreset(int slotIndex) {
-        FenderJsonPresetRecord presetRecord = m_presetRegistry.get(slotIndex);
+        PresetRecord presetRecord = m_presetRegistry.get(slotIndex);
         if(presetRecord == null) {
             m_mainActivity.appendToLog("No preset found for slot id " + slotIndex);
         } else {
@@ -88,7 +87,7 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
             msgData.putString(
                 MainActivity.MESSAGE_PRESET_EFFECTS,
                 presetRecord.effects(
-                    FenderJsonPresetRecord.EffectsLevelOfDetails.MODULES_AND_PARAMETERS
+                    PresetRecord.EffectsLevelOfDetails.MODULES_AND_PARAMETERS
                 )
             );
             Message presetChangeMsg = new Message();
@@ -99,17 +98,17 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
     }
 
     @Override
-    public PresetSuiteRegistry.PresetSuiteEntry buildPresetSuite(
+    public SuiteRegistry.PresetSuiteEntry buildPresetSuite(
         String suiteName, ArrayList<HashMap<String, String>> presets
     ) {
-        PresetSuiteRegistry.PresetSuiteEntry newPSE = m_presetSuiteRegistry.createPresetSuiteEntry(
+        SuiteRegistry.PresetSuiteEntry newPSE = m_SuiteRegistry.createPresetSuiteEntry(
             suiteName, presets
         );
         return newPSE;
     }
 
     @Override
-    public ArrayList<PresetSuiteRegistry.PresetSuiteEntry> loadCuratedPresetSuites() {
+    public ArrayList<SuiteRegistry.PresetSuiteEntry> loadCuratedPresetSuites() {
         return null;
     }
 
@@ -141,8 +140,8 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
     }
 
     public void switchSuite(int position) {
-        String suiteName = m_presetSuiteRegistry.nameAt(position);
-        HashMap<Integer, FenderJsonPresetRecord> suitePresetRecords = m_presetSuiteRegistry.recordsAt(position);
+        String suiteName = m_SuiteRegistry.nameAt(position);
+        HashMap<Integer, PresetRecord> suitePresetRecords = m_SuiteRegistry.recordsAt(position);
         m_mainActivity.suiteSelected(suiteName, suitePresetRecords);
     }
 
