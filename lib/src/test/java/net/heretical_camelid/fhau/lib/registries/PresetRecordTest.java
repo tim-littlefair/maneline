@@ -102,6 +102,15 @@ public class PresetRecordTest {
         );
     }
 
+    // The static functions making up the remainder of this test class
+    // enable building of instances of PresetRecord which closely match
+    // some of the testable behaviour of the LT40S presets called 'EMPTY'
+    // and 'FENDER CLEAN'.
+    // The focus of the tests which are enabled is on ensuring that tests
+    // are sensitive to changes which impact the audioHash() return value
+    // as this function is important to the registry classes provided
+    // to manage presets and suites.
+
     public static final String PRESET_NAME_EMPTY = "EMPTY           ";
     public static PresetRecord presetRecord_EMPTY() {
         return new PresetRecordBuilder()
