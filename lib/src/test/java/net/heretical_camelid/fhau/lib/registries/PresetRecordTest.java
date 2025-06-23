@@ -1,13 +1,12 @@
 package net.heretical_camelid.fhau.lib.registries;
 
-import com.google.gson.Gson;
-
+import org.junit.Assert;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 
-import java.nio.charset.StandardCharsets;
-
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class PresetRecordTest {
-
     @org.junit.Before
     public void setUp() throws Exception {
     }
@@ -15,124 +14,142 @@ public class PresetRecordTest {
     @org.junit.After
     public void tearDown() throws Exception {
     }
+
     @Test
-    public void displayName() {
-        PresetRecord dnTestPR = PresetRecordBuilder.presetRecord_EMPTY();
+    public void test01_displayName() {
+        PresetRecord dnTestPR = presetRecord_EMPTY();
         System.out.println(String.format(
-            "Preset created with name %s",dnTestPR.displayName()
+            "Preset created with name '%s'",dnTestPR.displayName()
         ));
-        assert(PresetRecordBuilder.PRESET_NAME_EMPTY.equals(dnTestPR.displayName()));
+        Assert.assertEquals(PRESET_NAME_EMPTY,dnTestPR.displayName());
     }
 
     @Test
-    public void ampName() {
-        PresetRecord anTestPR = PresetRecordBuilder.presetRecord_FENDER_CLEAN();
+    public void test02_ampName() {
+        PresetRecord anTestPR = presetRecord_FENDER_CLEAN();
         System.out.println(String.format(
-            "Preset created with name %s using amplifier %s",
+            "Preset created with name '%s' using amplifier '%s'",
             anTestPR.displayName(), anTestPR.ampName()
         ));
-        assert(PresetRecordBuilder.AMP_NAME_TWIN65.equals(
-            "DUBS_" + anTestPR.ampName()
+        Assert.assertEquals(AMP_NAME_TWIN65, "DUBS_" + anTestPR.ampName());
+    }
+
+    @Test
+    public void test03_audioHash() {
+        // Audio hashes extracted from suites/01-General.preset_suite.json
+        // generated during desktop CLI run
+        PresetRecord testPR1 = presetRecord_EMPTY();
+        System.out.println(String.format(
+            "Audio hash for preset '%s' is '%s'",
+            testPR1.displayName(), testPR1.audioHash()
         ));
+        Assert.assertEquals("b4ed-d311",testPR1.audioHash());
+
+        PresetRecord testPR2 = presetRecord_FENDER_CLEAN();
+        System.out.println(String.format(
+            "Audio hash for preset '%s' is '%s'",
+            testPR2.displayName(), testPR2.audioHash()
+        ));
+        Assert.assertEquals("adbd-9b33",testPR2.audioHash());
     }
 
     @Test
-    public void audioHash() {
-        PresetRecord dnTestPR = PresetRecordBuilder.presetRecord_EMPTY();
-        PresetRecord anTestPR = PresetRecordBuilder.presetRecord_FENDER_CLEAN();
+    public void test04_effects() {
+        // Effect strings extracted from suites/01-General.preset_suite.json
+        // generated during desktop CLI run
+        // NB the EffectsLevelOfDetails param values MODULES_ONLY and
+        // PARAMETERS only are exercised by the audioHash() algorithm
+        // so they aren't retested here.
+        PresetRecord testPR1 = presetRecord_EMPTY();
+        System.out.println(String.format(
+            "Effect string for preset '%s' is:\n<<<\n%s\n>>>",
+            testPR1.displayName(),
+            testPR1.effects(PresetRecord.EffectsLevelOfDetails.MODULES_AND_PARAMETERS)
+        ));
+        Assert.assertEquals(
+            "amp:LinearGain(bass:0.5,cabsimType:none,gain:0.5,gateDetectorPosition:jack,gatePreset:off,mid:0.5,treb:0.5,volume:0.0)",
+            testPR1.effects(PresetRecord.EffectsLevelOfDetails.MODULES_AND_PARAMETERS)
+        );
 
-    }
-
-    @Test
-    public void effects() {
-    }
-
-    @Test
-    public void shortInfo() {
-    }
-}
-
-class PresetRecordBuilder {
-    PresetCanonicalSerializer m_pcs;
-    PresetRecordBuilder() {
-        m_pcs = new PresetCanonicalSerializer();
-        m_pcs.info = new PresetCanonicalSerializer.PCS_Info();
-        m_pcs.audioGraph = new PresetCanonicalSerializer.PCS_AudioGraph();
-        m_pcs.audioGraph.nodes = new PresetCanonicalSerializer.PCS_Node[5];
-        String[] nodeIdValues = new String[] {
-            "stomp", "mod", "amp", "delay", "reverb"
-        };
-        for(int i=0; i<m_pcs.audioGraph.nodes.length; ++i) {
-            m_pcs.audioGraph.nodes[i] = new PresetCanonicalSerializer.PCS_Node();
-            m_pcs.audioGraph.nodes[i].nodeId = nodeIdValues[i];
-            m_pcs.audioGraph.nodes[i].FenderId = "DUBS_Passthru";
-            m_pcs.audioGraph.nodes[i].dspUnitParameters = new PresetCanonicalSerializer.PCS_DspUnitParameters();
-        }
-    }
-
-    final static String PRESET_NAME_EMPTY = "EMPTY           ";
-    static PresetRecord presetRecord_EMPTY() {
-        return new PresetRecordBuilder()
-            .setDisplayName(PRESET_NAME_EMPTY)
-            .setAmpNameAndVolume(
-                "DUBS_LinearGain",
-                0.0
-            )
-            .build();
-    }
-
-    final static String PRESET_NAME_FENDER_CLEAN = "FENDER  CLEAN   ";
-    final static String AMP_NAME_TWIN65 = "DUBS_Twin65";
-    private static final String DELAY_EFFECT_NAME_SPRING65 = "DUBS_Spring65";
-    static PresetRecord presetRecord_FENDER_CLEAN() {
-        return new PresetRecordBuilder()
-            .setDisplayName(PRESET_NAME_FENDER_CLEAN)
-            .setEffectNameAndParams(
-                0,"DUBS_SimpleCompressor",
-                0.5555556, 0.5, 0.342816
-            )
-            .setAmpNameAndVolume(
-                AMP_NAME_TWIN65,
-                0.0
-            )
-            .setEffectNameAndParams(
-                0,DELAY_EFFECT_NAME_SPRING65,
-                0.5, 0.5, 0.5
-            )
-            .build();
-    }
-
-    PresetRecordBuilder setDisplayName(
-        String displayName
-    ) {
-        m_pcs.info.displayName = displayName;
-        return this;
-    }
-    PresetRecordBuilder setAmpNameAndVolume(
-        String ampName,
-        double ampVolume
-    ) {
-        m_pcs.audioGraph.nodes[2].FenderId = ampName;
-        m_pcs.audioGraph.nodes[2].dspUnitParameters.volume = ampVolume;
-        return this;
-    }
-
-    PresetRecordBuilder setEffectNameAndParams(
-        int nodeIndex,
-        String effectName,
-        double bass, double mid, double treb
-    ) {
-        m_pcs.audioGraph.nodes[nodeIndex].FenderId = effectName;
-        m_pcs.audioGraph.nodes[nodeIndex].dspUnitParameters.bass = bass;
-        m_pcs.audioGraph.nodes[nodeIndex].dspUnitParameters.mid = mid;
-        m_pcs.audioGraph.nodes[nodeIndex].dspUnitParameters.treb = treb;
-        return this;
-    }
-
-    PresetRecord build() {
-        return new PresetRecord(
-            m_pcs.info.displayName,
-            new Gson().toJson(m_pcs).getBytes(StandardCharsets.UTF_8)
+        PresetRecord testPR2 = presetRecord_FENDER_CLEAN();
+        System.out.println(String.format(
+            "Effect string for preset '%s' is:\n<<<\n%s\n>>>",
+            testPR2.displayName(),
+            testPR2.effects(PresetRecord.EffectsLevelOfDetails.MODULES_AND_PARAMETERS)
+        ));
+        Assert.assertEquals(
+            "stomp:SimpleCompressor(type:medium)\namp:Twin65(bass:0.555556,bias:0.5,bright:true,cabsimType:65twn,gain:0.337255,gateDetectorPosition:jack,gatePreset:off,mid:0.5,sag:match,treb:0.342816,volume:-11.12674)\nreverb:Spring65(decay:0.388889,diffuse:1.0,dwell:0.28889,wetLvl:0.5)",
+            testPR2.effects(PresetRecord.EffectsLevelOfDetails.MODULES_AND_PARAMETERS)
         );
     }
+
+    @Test
+    public void test05_shortInfo() {
+        // PresetRecordBuilder does not yet support
+        // setting fields other than displayName
+        // For the moment we aren't worried about this method
+        // (but we may care more about the fields covered when
+        // we start sending JSON to devices)
+        PresetRecord testPR1 = presetRecord_EMPTY();
+        System.out.println(String.format(
+            "Short info for preset '%s' is '%s'",
+            testPR1.displayName(),
+            testPR1.shortInfo()
+        ));
+        Assert.assertEquals(
+            "no author, no source_id, product_id:null, is_factory_default:true",
+            testPR1.shortInfo()
+        );
+    }
+
+    public static final String PRESET_NAME_EMPTY = "EMPTY           ";
+    public static PresetRecord presetRecord_EMPTY() {
+        return new PresetRecordBuilder()
+            .setDisplayName(PRESET_NAME_EMPTY)
+            .setAmpName("DUBS_LinearGain")
+            .setDspUnitParameter(2, "bass", 0.5)
+            .setDspUnitParameter(2, "cabsimType", "none")
+            .setDspUnitParameter(2, "gain", 0.5)
+            .setDspUnitParameter(2, "gateDetectorPosition", "jack")
+            .setDspUnitParameter(2, "gatePreset", "off")
+            .setDspUnitParameter(2, "mid", 0.5)
+            .setDspUnitParameter(2, "treb", 0.5)
+            .setDspUnitParameter(2, "volume", 0.0)
+            .build();
+    }
+
+    public static final String PRESET_NAME_FENDER_CLEAN = "FENDER  CLEAN   ";
+    public static final String AMP_NAME_TWIN65 = "DUBS_Twin65";
+    public static final String DELAY_EFFECT_NAME_SPRING65 = "DUBS_Spring65";
+    public static PresetRecord presetRecord_FENDER_CLEAN() {
+        return new PresetRecordBuilder()
+            .setDisplayName(PRESET_NAME_FENDER_CLEAN)
+            .setEffectName(0, "DUBS_SimpleCompressor")
+            .setDspUnitParameter(0, "type", "medium")
+            .setDspUnitParameter(0, "bypass", false)
+            .setDspUnitParameter(0, "bypassType", "Post")
+            .setAmpName(AMP_NAME_TWIN65)
+            .setDspUnitParameter(2, "bass", 0.555556)
+            .setDspUnitParameter(2, "bias", 0.5)
+            .setDspUnitParameter(2, "bright", true)
+            .setDspUnitParameter(2, "cabsimType", "65twn")
+            .setDspUnitParameter(2, "gain", 0.337255)
+            .setDspUnitParameter(2, "gateDetectorPosition", "jack")
+            .setDspUnitParameter(2, "gatePreset", "off")
+            .setDspUnitParameter(2, "mid", 0.5)
+            .setDspUnitParameter(2, "sag", "match")
+            .setDspUnitParameter(2, "treb", 0.342816)
+            .setDspUnitParameter(2, "volume", -11.12674)
+            .setEffectName(4, DELAY_EFFECT_NAME_SPRING65)
+            .setDspUnitParameter(4, "decay", 0.388889)
+            .setDspUnitParameter(4, "diffuse", 1.0)
+            .setDspUnitParameter(4, "dwell", 0.28889)
+            .setDspUnitParameter(4, "wetLvl", 0.5)
+            .setDspUnitParameter(4, "bypass", false)
+            .setDspUnitParameter(4, "bypassType", "Pre")
+            .setDspUnitParameter(4, "tone", "1")
+            .build();
+    }
+
 }
+

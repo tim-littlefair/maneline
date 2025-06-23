@@ -123,12 +123,18 @@ public class PresetRecord {
 
     public String shortInfo() {
         StringBuilder sb = new StringBuilder();
-        if (m_presetCanonicalSerializer.info.author.isEmpty()) {
+        if (
+            m_presetCanonicalSerializer.info.author==null ||
+            m_presetCanonicalSerializer.info.author.isEmpty()
+        ) {
             sb.append("no author, ");
         } else {
             sb.append("author:" + m_presetCanonicalSerializer.info.author + ", ");
         }
-        if (m_presetCanonicalSerializer.info.source_id.isEmpty()) {
+        if (
+            m_presetCanonicalSerializer.info.source_id == null ||
+            m_presetCanonicalSerializer.info.source_id.isEmpty()
+        ) {
             sb.append("no source_id, ");
         } else {
             sb.append("source_id:" + m_presetCanonicalSerializer.info.source_id + ", ");
