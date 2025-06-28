@@ -1,4 +1,4 @@
-version: "2"
+version: "0.2.0-rpi-balena"
 
 services:
   fhau-device-cli:
