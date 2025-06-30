@@ -1,9 +1,47 @@
-FROM eclipse-temurin:17
+# Dockerfile.template for the container to run the desktopFHAUcli 
+# application.
 
+# Copyright Tim Littlefair 2025
+
+# The design concept for the appliance which uses this container is
+# as follows:
+# - web UI presented using a kiosk-mode browser (in another container);
+# - start page for the web UI is served out of an HTTPS server running
+#   in the current container;
+# - the HTTPS server process running in this container also integrates
+#   a USB HID client connected to the USB interface of a Fender LT40S 
+#   modelling guitar amplifier; and
+# - the HTTPS server responds to requiests from the web client by 
+#   providing a proxy UI for the LT40S device.
+
+# The HTTPS server/USB HID client process running in the current container
+# is implemented as a Java .jar file.
+
+# Presently, the kiosk-mode browser container uses an example balena 'block'
+# published on GitHub by Balena.  This may be replaced by a more lightweight 
+# kiosk solution at some time in the future but is not critical to the design
+# of the appliance.
+
+
+# The base image for this container is selected from the range 
+# of Docker images built by the Eclipse Temurin project for 
+# different OpenJDK versions.
+
+# When we try to run the FHAU CLI using OpenJDK 21 it
+# fails with the following as the first error line preceding the stack trace:
+# "Exception in thread "main" org.hid4java.HidException: Hidapi did not initialise: com/sun/jna/FromNativeContext"
+# This is believed to be related to an incompatibility between the aarch64 builds of the native libraries packaged 
+# in the hid4java gradle dependency and OpenJDK 21.
+# FROM eclipse-temurin:21
+
+# The current default eclipse-temurin image for OpenJDK 17 as at 30/06/2026
+# (built on top of Ubuntu 24.04.2 LTS)
+# has been tested and works
+FROM eclipse-temurin:17
 
 WORKDIR /opt/fhau
 
-# Uncomment these lines to get a specific release of d-F-c from GitHub
+# Uncomment these lines and update as required to get a specific release of d-F-cli from GitHub
 #RUN apt update
 #RUN apt install wget
 #RUN wget https://github.com/tim-littlefair/feral-horse-amp-utils/releases/download/release-0.1.1/desktopFHAUcli-0.1.1-44f72ab-36.jar $WORKDIR
