@@ -36,8 +36,13 @@
 
 # The current default eclipse-temurin image for OpenJDK 17 as at 30/06/2026
 # (built on top of Ubuntu 24.04.2 LTS)
-# has been tested and works
+# has been tested and works - but is not lightweight
 FROM eclipse-temurin:17
+
+# The Alpine variant is much lighter, which would be helpful as the browser 
+# container is quite heavy, but presently this fails with the message:
+# "fhau-cli: no matching manifest for linux/arm64/v8 in the manifest list entries"
+# FROM eclipse-temurin:17-jdk-alpine-3.21
 
 WORKDIR /opt/fhau
 
