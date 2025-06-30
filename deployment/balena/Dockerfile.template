@@ -1,19 +1,19 @@
-# Docker images should always be pinned to specific versions to avoid breaking changes (i.e. 3.16 as seen below)!
-FROM balenalib/%%BALENA_MACHINE_NAME%%-alpine
+FROM eclipse-temurin:17
 
-RUN install_packages openjdk21 libusb wget
 
 WORKDIR /opt/fhau
 
-# Always deploy the latest release
-RUN wget https://github.com/tim-littlefair/feral-horse-amp-utils/releases/download/release-0.1.1/desktopFHAUcli-0.1.1-44f72ab-36.jar $WORKDIR
+# Uncomment these lines to get a specific release of d-F-c from GitHub
+#RUN apt update
+#RUN apt install wget
+#RUN wget https://github.com/tim-littlefair/feral-horse-amp-utils/releases/download/release-0.1.1/desktopFHAUcli-0.1.1-44f72ab-36.jar $WORKDIR
 
 # Also deploy any available builds from the development tree
 COPY /tmp/desktopFHAUcli-0.0.0.jar $WORKDIR
 
 # The present FHAU CLI program is not suitable for use as a Balena service
 # so the service just holds the session open for an hour so that the 
-# CLI can be run on the console via balenaCloud or local mode
-#CMD ["java", "-jar", "desktopFHAUcli-0.1.1-44f72ab-36.jar"]
+# CLI can be run on the console via balenaCloud or local mode SSH
+#CMD ["java", "-jar", "desktopFHAUcli-0.0.0.jar"]
 
-CMD [ "sleep", "3600" ]
+CMD [ "sleep","3600" ]
