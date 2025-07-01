@@ -1,23 +1,25 @@
 version: "2"
 
 services:
-  fhau-cli:
-    build: .
-    devices:
-      - "/dev/hidraw0"
-    cap_add:
-      - SYS_RAWIO
+  #fhau-cli:
+    #build: .
+    #devices:
+    #  - "/dev/hidraw0"
+    #cap_add:
+    #  - SYS_RAWIO
 
-  browser:
+
+  balenalabs-browser:
     image: bh.cr/balenalabs/browser-aarch64
     privileged: true
     ports:
-        - '5011' # management API (optional)
-        - '35173' # Chromium debugging port (optional)
+      - '5011' # management API (optional)
+      - '35173' # Chromium debugging port (optional)
     environment: 
-        EXTRA_FLAGS: --no-memcheck
-        SHOW_CURSOR: 1
-        KIOSK: 1
-        LAUNCH_URL: https://heretical-camelid.net
-    # volumes:
-    #  - 'settings:/data' # Only required if using PERSISTENT flag (see below)
+      EXTRA_FLAGS: --no-memcheck
+      SHOW_CURSOR: 1
+      KIOSK: 1
+      LAUNCH_URL: https://heretical-camelid.net
+      PERSISTENT: 0
+    #volumes:
+    #  - 'settings:/data'
