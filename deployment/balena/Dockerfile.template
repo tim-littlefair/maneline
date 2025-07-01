@@ -77,6 +77,5 @@ COPY /tmp/desktopFHAUcli-0.0.0.jar $WORKDIR
 
 COPY run.sh $WORKDIR
 RUN chmod +x run.sh
-RUN ls -l run.sh
 
-CMD [ "sleep","3600" ]
+CMD [ "./run.sh" ]

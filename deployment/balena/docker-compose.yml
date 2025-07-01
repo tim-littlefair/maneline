@@ -3,8 +3,11 @@ version: "2"
 services:
   tl-fhau-cli:
     build: .
+    privileged: true
+    environment:
+      - UDEV=1
     devices:
-      - "/dev/hidraw0"
+      - "/dev:/dev"
     cap_add:
       - SYS_RAWIO
 

@@ -1,4 +1,20 @@
 #!/bin/sh
 
-sleep 3600
+restart_seconds=20
+
+while true
+do
+    if [ ! -c /dev/hidraw0 ]
+    then
+        echo No HID USB device detected - is Mustang LT turned on?
+        echo Container will restart in $restart_seconds seconds
+        sleep $restart_seconds
+        echo Restarting 
+        exit
+    else
+        echo HID device OK
+        sleep 60
+    fi
+    sleep 600
+done
 
