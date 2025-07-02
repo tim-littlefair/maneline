@@ -2,6 +2,10 @@
 
 restart_seconds=20
 
+ls -lR .
+
+lua ./run_pegasus.lua &
+
 while true
 do
     if [ ! -c /dev/hidraw0 ]
@@ -15,6 +19,5 @@ do
         echo HID device OK
         sleep 60
     fi
-    sleep 600
 done
 

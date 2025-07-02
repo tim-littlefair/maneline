@@ -69,6 +69,19 @@ WORKDIR /opt/fhau
 # Also deploy any available builds from the development tree
 COPY /tmp/desktopFHAUcli-0.0.0.jar $WORKDIR
 
+ENV DEBIAN_FRONTEND noninteractive
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends --no-install-suggests apt-utils
+RUN apt-get install -y --no-install-recommends --no-install-suggests readline-common git
+RUN apt-get install -y --no-install-recommends --no-install-suggests lua5.1 luarocks lua-socket lua-filesystem lua-sec lua-zlib lua-cjson
+RUN apt-get install -y --no-install-recommends --no-install-suggests gcc liblz-dev zlib1g-dev
+
+RUN luarocks install pegasus
+
+COPY /lua_pegasus/run_pegasus.lua $WORKDIR
+RUN mkdir public_html
+COPY /tmp/app-icon-512x512.png $WORKDIR
+
 
 # The present FHAU CLI program is not suitable for use as a Balena service
 # so the service just holds the session open for an hour so that the 

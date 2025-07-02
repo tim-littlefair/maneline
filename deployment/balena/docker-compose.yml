@@ -8,20 +8,33 @@ services:
       - UDEV=1
     devices:
       - "/dev:/dev"
+    ports:
+      - 9090
     cap_add:
       - SYS_RAWIO
+    healthcheck:
+      test: ["CMD-SHELL", "ps ax | grep lua" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   balenalabs-browser:
     image: bh.cr/balenalabs/browser-aarch64
     privileged: true
+    devices:
+      - "/dev:/dev"
     ports:
       - '5011' # management API (optional)
       - '35173' # Chromium debugging port (optional)
+    depends_on:
+      tl-fhau-cli:
+        condition: service_started
     environment: 
       EXTRA_FLAGS: --no-memcheck
       SHOW_CURSOR: 1
       KIOSK: 1
-      LAUNCH_URL: https://heretical-camelid.net
+      #LAUNCH_URL: https://heretical-camelid.net
+      LAUNCH_URL: http://127.0.0.1:9090/app-icon-512x512.png
       PERSISTENT: 0
     #volumes:
     #  - 'settings:/data'
