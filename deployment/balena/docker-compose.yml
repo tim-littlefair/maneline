@@ -20,17 +20,6 @@
 
 version: "2"
 
-x-services:
-  tl-fhau-web:
-    build: .
-    ports:
-      - '9090'
-    environment:
-      UDEV: '1'
-    devices:
-      - /dev/hidraw0
-    cap_add:
-      - SYS_RAWIO
      
 services:
   balenalabs-browser:
@@ -50,3 +39,15 @@ services:
       - PERSISTENT=0
     #volumes:
     #  - 'settings:/data'
+
+# x-services:
+  tl-fhau-web:
+    build: .
+    ports:
+      - '9090'
+    #environment:
+    #  UDEV: '1'
+    devices:
+      - /dev/hidraw0
+    cap_add:
+      - SYS_RAWIO
