@@ -1,40 +1,52 @@
+# docker-compose.yml
+
+# The design for the Balena image this file will render
+# is that it should contain the following two service containers:
+# + tl-fhau-web
+#   This container will contain the FHAU CLI binary, and also a
+#   minimal web server which will serve a GUI reflecting the 
+#   FHAU application state and servicing requests to send messages
+#   to the attached Mustang amp (which will be relayed to CLI 
+#   commands to the application)
+# + balenalabs-browser
+#   This is a kiosk browser provided as an example by balena.io.
+#   The intent of this service is that that the FHAU web GUI
+#   will be presented on the HDMI screen of the balena device.
+
+# Version notes:
+# This version of the dockerfile disables running of the the 
+# tl-fhau-web service container to enable the balenalabs-browser to
+# start up without interference.
+
 version: "2"
 
-services:
-  tl-fhau-cli:
+x-services:
+  tl-fhau-web:
     build: .
-    privileged: true
-    environment:
-      - UDEV=1
-    devices:
-      - "/dev:/dev"
     ports:
-      - 9090
+      - '9090'
+    environment:
+      UDEV: '1'
+    devices:
+      - /dev/hidraw0
     cap_add:
       - SYS_RAWIO
-    healthcheck:
-      test: ["CMD-SHELL", "ps ax | grep lua" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
+     
+services:
   balenalabs-browser:
     image: bh.cr/balenalabs/browser-aarch64
     privileged: true
     devices:
-      - "/dev:/dev"
+      - /dev/fb0
     ports:
       - '5011' # management API (optional)
       - '35173' # Chromium debugging port (optional)
-    depends_on:
-      tl-fhau-cli:
-        condition: service_started
     environment: 
-      EXTRA_FLAGS: --no-memcheck
-      SHOW_CURSOR: 1
-      KIOSK: 1
-      #LAUNCH_URL: https://heretical-camelid.net
-      LAUNCH_URL: http://127.0.0.1:9090/app-icon-512x512.png
-      PERSISTENT: 0
+      - UDEV=1
+      - EXTRA_FLAGS=--no-memcheck
+      - SHOW_CURSOR=1
+      - KIOSK=1
+      - LAUNCH_URL=https://heretical-camelid.net/_static/heretical-camelid-noattr.svg
+      - PERSISTENT=0
     #volumes:
     #  - 'settings:/data'
