@@ -19,9 +19,9 @@
     },
     {
       "presetName": "CHICAGO BLUES   ",
-      "audioHash": "46e1-c1f0",
+      "audioHash": "46e1-2036",
       "effectsSummary": "amp:Bassman59 delay:MonoDelay reverb:SmallRoomReverb",
-      "effectsDetails": "amp:Bassman59(bass:0.62,bias:0.5,blend:0.62,cabsimType:59bman,gain:0.555556,gateDetectorPosition:jack,gatePreset:off,mid:0.49,presence:0.62,sag:match,treb:0.377778,volume:-14.413998)\ndelay:MonoDelay(attenuate:0.5,brite:0.5,feedback:0.222222,level:0.288889,noteDivision:off,tapTimeBPM:631.57886,time:0.095)\nreverb:SmallRoomReverb(decay:0.5,diffuse:0.5,dwell:0.5,level:0.3118)",
+      "effectsDetails": "amp:Bassman59(bass:0.62,bias:0.5,blend:0.62,cabsimType:59bman,gain:0.555556,gateDetectorPosition:jack,gatePreset:off,mid:0.49,presence:0.62,sag:match,treb:0.377778,volume:-14.413998)\ndelay:MonoDelay(attenuate:0.5,brite:0.5,feedback:0.222222,level:0.288889,noteDivision:off,tapTimeBPM:631.578857,time:0.095)\nreverb:SmallRoomReverb(decay:0.5,diffuse:0.5,dwell:0.5,level:0.3118)",
       "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
       "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 3"
     },

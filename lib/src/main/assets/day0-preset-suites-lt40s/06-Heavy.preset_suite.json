@@ -11,9 +11,9 @@
     },
     {
       "presetName": "THRASH  OVERKILL",
-      "audioHash": "1af2-298c",
+      "audioHash": "1af2-e073",
       "effectsSummary": "stomp:ChromeGate amp:MetalEvh3",
-      "effectsDetails": "stomp:ChromeGate(attenuation:-120.0,gateDetectorPosition:jack,hysteresis:2.5,threshold:-65.55556)\namp:MetalEvh3(bass:0.078254,bias:0.5,cabsimType:4x12frd,gain:0.77273,gateDetectorPosition:jack,gatePreset:super,master:0.5,mid:0.188889,presence:0.5,sag:match,treb:0.785082,volume:-13.988875)",
+      "effectsDetails": "stomp:ChromeGate(attenuation:-120.0,gateDetectorPosition:jack,hysteresis:2.5,threshold:-65.555557)\namp:MetalEvh3(bass:0.078254,bias:0.5,cabsimType:4x12frd,gain:0.77273,gateDetectorPosition:jack,gatePreset:super,master:0.5,mid:0.188889,presence:0.5,sag:match,treb:0.785082,volume:-13.988875)",
       "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
       "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 14"
     },

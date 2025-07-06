@@ -225,11 +225,11 @@ public class PresetRegistry {
                         31, 1, 30, 2, 7, 8, 15, 29
                     ),
                     createSuite(suitePathPrefix, "Folk", 6, 30),
-                    createSuite(suitePathPrefix, "Jazz", 9, 12, 13),
+                    createSuite(suitePathPrefix, "Jazz", 9, 12, 13, 23),
                     createSuite(suitePathPrefix, "Blues", 3, 26, 1, 2, 3),
                     createSuite(suitePathPrefix, "Rock", 4, 8, 10, 17, 18, 19, 22, 27),
-                    createSuite(suitePathPrefix, "Heavy", 11, 14, 16, 20, 23, 24, 28),
-                    createSuite(suitePathPrefix, "Trippy", 5, 18, 29),
+                    createSuite(suitePathPrefix, "Heavy", 11, 14, 16, 20, 28),
+                    createSuite(suitePathPrefix, "Trippy", 5, 18, 24, 29),
                 }
             );
             for(SlotBasedPresetSuiteExporter suiteExporter: suiteExporters) {

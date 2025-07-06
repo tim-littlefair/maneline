@@ -27,9 +27,9 @@
     },
     {
       "presetName": "SOLO    MIDBOOST",
-      "audioHash": "751c-0294",
+      "audioHash": "751c-b9c8",
       "effectsSummary": "stomp:MustangFiveBandEq1 amp:Silvertone delay:TapeDelayLite reverb:SmallRoomReverb",
-      "effectsDetails": "stomp:MustangFiveBandEq1(gain:0.0,high:0.0,highmid:1.5,low:0.0,lowmid:2.5,mid:11.000001)\namp:Silvertone(bass:0.662745,bias:0.5,cabsimType:57dlx,gain:1.0,gateDetectorPosition:jack,gatePreset:off,mid:0.898039,sag:match,treb:0.67,volume:-18.225922)\ndelay:TapeDelayLite(dlyTime:0.06,feedback:0.25,noteDivision:off,stereoSpread:0.0,tapTimeBPM:999.99994,wetLvl:0.5,wowLevel:0.5)\nreverb:SmallRoomReverb(decay:0.5,diffuse:0.5,dwell:0.5,level:0.4006)",
+      "effectsDetails": "stomp:MustangFiveBandEq1(gain:0.0,high:0.0,highmid:1.5,low:0.0,lowmid:2.5,mid:11.000001)\namp:Silvertone(bass:0.662745,bias:0.5,cabsimType:57dlx,gain:1.0,gateDetectorPosition:jack,gatePreset:off,mid:0.898039,sag:match,treb:0.67,volume:-18.225922)\ndelay:TapeDelayLite(dlyTime:0.06,feedback:0.25,noteDivision:off,stereoSpread:0.0,tapTimeBPM:999.999939,wetLvl:0.5,wowLevel:0.5)\nreverb:SmallRoomReverb(decay:0.5,diffuse:0.5,dwell:0.5,level:0.4006)",
       "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
       "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 8"
     },

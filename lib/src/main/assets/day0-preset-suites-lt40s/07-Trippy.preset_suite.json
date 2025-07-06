@@ -19,9 +19,9 @@
     },
     {
       "presetName": "VIBRA   DOOM    ",
-      "audioHash": "6f17-5ca1",
+      "audioHash": "6f17-7ebe",
       "effectsSummary": "stomp:Greenbox mod:Vibratone amp:Or120 reverb:LargeHallReverb",
-      "effectsDetails": "stomp:Greenbox(blend:1.0,gain:0.288889,level:-6.0)\nmod:Vibratone(depth:0.277778,feedback:0.68,level:0.96,noteDivision:off,phase:0.52,rotor:5.048129,tapTimeBPM:302.88773)\namp:Or120(bass:0.666667,bias:0.5,cabsimType:4x12m2,gain:0.5,gateDetectorPosition:jack,gatePreset:off,master:0.498039,mid:0.611111,sag:match,treb:0.588889,volume:-7.07374)\nreverb:LargeHallReverb(decay:0.277778,diffuse:0.0222,dwell:0.5,level:0.1675)",
+      "effectsDetails": "stomp:Greenbox(blend:1.0,gain:0.288889,level:-6.0)\nmod:Vibratone(depth:0.277778,feedback:0.68,level:0.96,noteDivision:off,phase:0.52,rotor:5.048129,tapTimeBPM:302.887726)\namp:Or120(bass:0.666667,bias:0.5,cabsimType:4x12m2,gain:0.5,gateDetectorPosition:jack,gatePreset:off,master:0.498039,mid:0.611111,sag:match,treb:0.588889,volume:-7.07374)\nreverb:LargeHallReverb(decay:0.277778,diffuse:0.0222,dwell:0.5,level:0.1675)",
       "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
       "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 24"
     },
