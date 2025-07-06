@@ -34,22 +34,6 @@
       "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 20"
     },
     {
-      "presetName": "NICE    FLANGER ",
-      "audioHash": "e5b6-4bcd",
-      "effectsSummary": "stomp:SimpleCompressor mod:TriangleFlanger amp:Princeton65 delay:MonoDelay",
-      "effectsDetails": "stomp:SimpleCompressor(type:low)\nmod:TriangleFlanger(depth:0.666667,feedback:0.777778,level:1.0,noteDivision:off,phase:0.25,rate:0.106745,tapTimeBPM:120.0)\namp:Princeton65(bass:0.337255,bias:0.5,cabsimType:65prince,gain:0.233333,gateDetectorPosition:jack,gatePreset:off,mid:0.839216,sag:match,treb:1.0,volume:-13.167182)\ndelay:MonoDelay(attenuate:0.5,brite:1.0,feedback:0.133333,level:0.555556,noteDivision:off,tapTimeBPM:120.0,time:0.28)",
-      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
-      "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 23"
-    },
-    {
-      "presetName": "VIBRA   DOOM    ",
-      "audioHash": "6f17-5ca1",
-      "effectsSummary": "stomp:Greenbox mod:Vibratone amp:Or120 reverb:LargeHallReverb",
-      "effectsDetails": "stomp:Greenbox(blend:1.0,gain:0.288889,level:-6.0)\nmod:Vibratone(depth:0.277778,feedback:0.68,level:0.96,noteDivision:off,phase:0.52,rotor:5.048129,tapTimeBPM:302.88773)\namp:Or120(bass:0.666667,bias:0.5,cabsimType:4x12m2,gain:0.5,gateDetectorPosition:jack,gatePreset:off,master:0.498039,mid:0.611111,sag:match,treb:0.588889,volume:-7.07374)\nreverb:LargeHallReverb(decay:0.277778,diffuse:0.0222,dwell:0.5,level:0.1675)",
-      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
-      "sourceDevice": "Mustang LT 40S serial number 00000000001A running firmware 1.0.7 slot 24"
-    },
-    {
       "presetName": "GARAGE  FUZZ    ",
       "audioHash": "c7ae-315d",
       "effectsSummary": "stomp:BigFuzz amp:Excelsior reverb:LargePlate",

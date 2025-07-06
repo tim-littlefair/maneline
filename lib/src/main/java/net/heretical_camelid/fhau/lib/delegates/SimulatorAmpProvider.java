@@ -5,10 +5,12 @@ import net.heretical_camelid.fhau.lib.PresetInfo;
 import net.heretical_camelid.fhau.lib.PresetRecord;
 import net.heretical_camelid.fhau.lib.interfaces.IAmpProvider;
 import net.heretical_camelid.fhau.lib.interfaces.ILoggingAgent;
+import net.heretical_camelid.fhau.lib.registries.SuiteRecord;
 import net.heretical_camelid.fhau.lib.registries.SuiteRegistry;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Set;
 
 public class SimulatorAmpProvider implements IAmpProvider {
     private final ILoggingAgent m_loggingAgent;
@@ -141,12 +143,17 @@ public class SimulatorAmpProvider implements IAmpProvider {
 
     }
 
-    public SuiteRegistry.PresetSuiteEntry buildPresetSuite(String suiteName, ArrayList<HashMap<String, String>> presets) {
+    @Override
+    public SuiteRegistry getSuiteRegistry() {
+        return null;
+    }
+
+    public SuiteRecord buildPresetSuite(String suiteName, ArrayList<HashMap<String, String>> presets, Set<Integer> remainingPresetIndices) {
         return null;
     }
 
     @Override
-    public ArrayList<SuiteRegistry.PresetSuiteEntry> loadCuratedPresetSuites() {
+    public ArrayList<SuiteRecord> loadCuratedPresetSuites() {
         return null;
     }
 

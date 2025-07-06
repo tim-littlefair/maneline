@@ -1,11 +1,15 @@
 package net.heretical_camelid.fhau.lib.interfaces;
 
+import net.heretical_camelid.fhau.lib.registries.SuiteRecord;
 import net.heretical_camelid.fhau.lib.registries.SuiteRegistry;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Set;
 
 public interface IAmpProvider {
+    SuiteRegistry getSuiteRegistry();
+
     enum ProviderState_e {
         PROVIDER_INITIAL,
         PROVIDER_NO_APPLICABLE_DEVICE,
@@ -15,11 +19,11 @@ public interface IAmpProvider {
         PROVIDER_DEVICE_CONNECTION_SUCCEEDED
     }
 
-    SuiteRegistry.PresetSuiteEntry buildPresetSuite(
-        String suiteName, ArrayList<HashMap<String, String>> presets
-    );
+    SuiteRecord buildPresetSuite(
+        String suiteName, ArrayList<HashMap<String, String>> presets,
+        Set<Integer> remainingPresetIndices);
 
-    ArrayList<SuiteRegistry.PresetSuiteEntry> loadCuratedPresetSuites();
+    ArrayList<SuiteRecord> loadCuratedPresetSuites();
 
 
     void switchPreset(int slotIndex);

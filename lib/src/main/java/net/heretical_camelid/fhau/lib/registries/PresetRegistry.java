@@ -13,13 +13,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -216,8 +216,6 @@ public class PresetRegistry {
 
             // Export suite records
             String suitePathPrefix =  outputPathBase + "suites";
-            m_slotsNotExportedYet = new ArrayList<Integer>();
-            m_slotsNotExportedYet.addAll(m_slotsToRecords.keySet());
             m_suiteNumber = 0;
             List<SlotBasedPresetSuiteExporter> suiteExporters =
                 Arrays.asList(new SlotBasedPresetSuiteExporter[]{
@@ -232,25 +230,20 @@ public class PresetRegistry {
                     createSuite(suitePathPrefix, "Rock", 4, 8, 10, 17, 18, 19, 22, 27),
                     createSuite(suitePathPrefix, "Heavy", 11, 14, 16, 20, 23, 24, 28),
                     createSuite(suitePathPrefix, "Trippy", 5, 18, 29),
-                    createSuite(
-                        suitePathPrefix, "Everything Else",
-                        m_slotsNotExportedYet.stream().toArray(Integer[]::new)
-                    )
                 }
             );
             for(SlotBasedPresetSuiteExporter suiteExporter: suiteExporters) {
                 if(suiteExporter!=null) {
                     acceptVisitor(suiteExporter);
-                    suiteRegistry.m_suites.add(new SuiteRegistry.PresetSuiteEntry(
+                    suiteRegistry.m_suites.add(new SuiteRecord(
                         suiteExporter.m_suiteName, suiteExporter.m_presetRecords
                     ));
                 }
             }
-            if(suiteRegistry !=null) {
-                System.out.println();
-                suiteRegistry.dump();
-                System.out.println();
-            }
+
+            System.out.println();
+            suiteRegistry.dump();
+            System.out.println();
 
             if(s_outputZipStream !=null) {
                 try {
@@ -357,6 +350,10 @@ public class PresetRegistry {
                 }
             }
         }
+    }
+
+    public Set<Integer> getUniquePresetIndices() {
+        return m_records.keySet();
     }
 
     public static interface Visitor {

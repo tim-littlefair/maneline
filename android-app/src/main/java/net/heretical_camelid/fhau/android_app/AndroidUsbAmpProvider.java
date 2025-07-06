@@ -11,10 +11,13 @@ import net.heretical_camelid.fhau.lib.*;
 import net.heretical_camelid.fhau.lib.interfaces.IAmpProvider;
 import net.heretical_camelid.fhau.lib.registries.PresetRecord;
 import net.heretical_camelid.fhau.lib.registries.PresetRegistry;
+import net.heretical_camelid.fhau.lib.registries.SuiteRecord;
 import net.heretical_camelid.fhau.lib.registries.SuiteRegistry;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 public class AndroidUsbAmpProvider implements IAmpProvider {
 
@@ -26,7 +29,7 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
     LTSeriesProtocol m_protocol;
 
     PresetRegistry m_presetRegistry;
-    SuiteRegistry m_SuiteRegistry;
+    SuiteRegistry m_suiteRegistry;
     String m_ampModel;
     String m_firmwareVersion;
 
@@ -37,7 +40,7 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
         m_deviceTransportUsbHid = new DeviceTransportUsbHid(m_mainActivity, this);
         m_presetRegistry = new PresetRegistry(null);
         m_protocol = new LTSeriesProtocol(m_presetRegistry,true);
-        m_SuiteRegistry = new SuiteRegistry(m_presetRegistry);
+        m_suiteRegistry = new SuiteRegistry(m_presetRegistry);
     }
 
     public boolean getFirmwareVersionAndPresets() {
@@ -98,17 +101,27 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
     }
 
     @Override
-    public SuiteRegistry.PresetSuiteEntry buildPresetSuite(
-        String suiteName, ArrayList<HashMap<String, String>> presets
+    public SuiteRegistry getSuiteRegistry() {
+        return m_suiteRegistry;
+    }
+
+    @Override
+    public SuiteRecord buildPresetSuite(
+        String suiteName,
+        ArrayList<HashMap<String, String>> presets,
+        Set<Integer> remainingPresetIndices
     ) {
-        SuiteRegistry.PresetSuiteEntry newPSE = m_SuiteRegistry.createPresetSuiteEntry(
+        SuiteRecord newPSE = m_suiteRegistry.createPresetSuiteEntry(
             suiteName, presets
         );
+        for(int slotIndex: newPSE.getSlotIndices()) {
+            remainingPresetIndices.remove(slotIndex);
+        }
         return newPSE;
     }
 
     @Override
-    public ArrayList<SuiteRegistry.PresetSuiteEntry> loadCuratedPresetSuites() {
+    public ArrayList<SuiteRecord> loadCuratedPresetSuites() {
         return null;
     }
 
@@ -140,8 +153,8 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
     }
 
     public void switchSuite(int position) {
-        String suiteName = m_SuiteRegistry.nameAt(position);
-        HashMap<Integer, PresetRecord> suitePresetRecords = m_SuiteRegistry.recordsAt(position);
+        String suiteName = m_suiteRegistry.nameAt(position);
+        Map<Integer, PresetRecord> suitePresetRecords = m_suiteRegistry.recordsAt(position);
         m_mainActivity.suiteSelected(suiteName, suitePresetRecords);
     }
 

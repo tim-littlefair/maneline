@@ -7,12 +7,17 @@ import com.google.gson.JsonObject;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class SlotBasedPresetSuiteExporter implements PresetRegistry.Visitor {
     static final Gson m_gson = new GsonBuilder().setPrettyPrinting().create();
 
     static String s_sourceDeviceDetails = null;
+    public static void setSourceDeviceDetails(String sdd) {
+        s_sourceDeviceDetails = sdd;
+    }
 
     final String m_outputPrefix;
 
@@ -23,9 +28,6 @@ public class SlotBasedPresetSuiteExporter implements PresetRegistry.Visitor {
     JsonObject m_suite;
     HashMap<Integer,PresetRecord> m_presetRecords;
 
-    public static void setSourceDeviceDetails(String sdd) {
-        s_sourceDeviceDetails = sdd;
-    }
 
     SlotBasedPresetSuiteExporter(
         String outputPrefix, String suiteName, Integer... desiredSlotIndexes

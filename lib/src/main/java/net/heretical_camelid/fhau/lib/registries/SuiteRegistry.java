@@ -2,15 +2,16 @@ package net.heretical_camelid.fhau.lib.registries;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 public class SuiteRegistry {
     final PresetRegistry m_presetRegistry;
-    ArrayList<PresetSuiteEntry> m_suites;
-    final HashMap<String, HashMap<Integer, PresetRecord>> m_suitePresets;
+    ArrayList<SuiteRecord> m_suites;
+    HashMap<String, Map<Integer, PresetRecord>> m_suitePresets;
 
     public SuiteRegistry(PresetRegistry registry) {
         m_presetRegistry = registry;
-        m_suitePresets = new HashMap<>();
+        m_suitePresets = new HashMap<String, Map<Integer, PresetRecord>>();
         m_suites = new ArrayList<>();
     }
 
@@ -27,11 +28,11 @@ public class SuiteRegistry {
         return m_suites.get(position).m_suiteName;
     }
 
-    public HashMap<Integer, PresetRecord> recordsAt(int position) {
+    public Map<Integer, PresetRecord> recordsAt(int position) {
         return m_suites.get(position).m_presetRecords;
     }
 
-    public PresetSuiteEntry createPresetSuiteEntry(
+    public SuiteRecord createPresetSuiteEntry(
         String suiteName,
         ArrayList<HashMap<String,String>> presets
     ) {
@@ -59,27 +60,16 @@ public class SuiteRegistry {
             System.out.println("No preset records found for suite " + suiteName);
             return null;
         } else {
-            PresetSuiteEntry newPSE = new PresetSuiteEntry(suiteName,presetRecords);
-            m_suites.add(newPSE);
-            m_suitePresets.put(suiteName,newPSE.m_presetRecords);
+            SuiteRecord newPSE = addSuite(suiteName, presetRecords);
             return newPSE;
         }
     }
 
-    public static class PresetSuiteEntry {
-        String m_suiteName;
-        HashMap<Integer, PresetRecord> m_presetRecords;
-        PresetSuiteEntry(
-            String suiteName,
-            HashMap<Integer, PresetRecord> presetRecords
-        ) {
-            m_suiteName = suiteName;
-            m_presetRecords = presetRecords;
-        }
-
-        public String name() {
-            return m_suiteName;
-        }
+    public SuiteRecord addSuite(String suiteName, Map<Integer, PresetRecord> presetRecords) {
+        SuiteRecord newPSE = new SuiteRecord(suiteName, presetRecords);
+        m_suites.add(newPSE);
+        m_suitePresets.put(suiteName,newPSE.m_presetRecords);
+        return newPSE;
     }
 
     public static String buttonLabel(int slotIndex, String displayName) {
@@ -109,7 +99,7 @@ public class SuiteRegistry {
 
     public void dump() {
         System.out.println("Preset Suites");
-        for(PresetSuiteEntry pse: m_suites) {
+        for(SuiteRecord pse: m_suites) {
             System.out.println(pse.m_suiteName);
             ArrayList<Integer> presetSlots = new ArrayList<>(pse.m_presetRecords.keySet());
             presetSlots.sort(null);

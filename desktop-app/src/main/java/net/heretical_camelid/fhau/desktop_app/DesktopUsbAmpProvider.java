@@ -3,6 +3,7 @@ package net.heretical_camelid.fhau.desktop_app;
 import net.heretical_camelid.fhau.lib.interfaces.IAmpProvider;
 import net.heretical_camelid.fhau.lib.interfaces.ILoggingAgent;
 import net.heretical_camelid.fhau.lib.registries.PresetRegistry;
+import net.heretical_camelid.fhau.lib.registries.SuiteRecord;
 import net.heretical_camelid.fhau.lib.registries.SuiteRegistry;
 import org.hid4java.*;
 import org.hid4java.event.HidServicesEvent;
@@ -16,6 +17,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Set;
 
 import net.heretical_camelid.fhau.lib.registries.SlotBasedPresetSuiteExporter;
 
@@ -29,7 +31,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
     AbstractMessageProtocolBase m_protocol;
     String m_firmwareVersion;
     PresetRegistry m_presetRegistry;
-    SuiteRegistry m_SuiteRegistry;
+    SuiteRegistry m_suiteRegistry;
     HidServices m_hidServices;
 
     public DesktopUsbAmpProvider(String outputPath) {
@@ -37,7 +39,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
             s_loggingAgent = new DefaultLoggingAgent(2);
         }
         m_presetRegistry = new PresetRegistry(outputPath);
-        m_SuiteRegistry = new SuiteRegistry(m_presetRegistry);
+        m_suiteRegistry = new SuiteRegistry(m_presetRegistry);
         m_protocol = new LTSeriesProtocol(m_presetRegistry,true);
     }
 
@@ -278,7 +280,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
         } else {
             m_protocol.startHeartbeatThread();
             System.out.println();
-            m_presetRegistry.dump(m_SuiteRegistry);
+            m_presetRegistry.dump(m_suiteRegistry);
             System.out.println();
         }
         return true;
@@ -317,14 +319,19 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
     }
 
     @Override
-    public SuiteRegistry.PresetSuiteEntry buildPresetSuite(String suiteName, ArrayList<HashMap<String, String>> presets) {
+    public SuiteRegistry getSuiteRegistry() {
+        return m_suiteRegistry;
+    }
+
+    @Override
+    public SuiteRecord buildPresetSuite(String suiteName, ArrayList<HashMap<String, String>> presets, Set<Integer> remainingPresetIndices) {
         throw new RuntimeException(
             "DesktopUsbAmpProvider.buildPresetSuite(...) not implemented yet"
         );
     }
 
     @Override
-    public ArrayList<SuiteRegistry.PresetSuiteEntry> loadCuratedPresetSuites() {
+    public ArrayList<SuiteRecord> loadCuratedPresetSuites() {
         return null;
     }
 

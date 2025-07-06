@@ -18,6 +18,7 @@ import androidx.lifecycle.LifecycleOwner;
 
 import net.heretical_camelid.fhau.lib.interfaces.IAmpProvider;
 import net.heretical_camelid.fhau.lib.registries.PresetRecord;
+import net.heretical_camelid.fhau.lib.registries.SuiteRecord;
 import net.heretical_camelid.fhau.lib.registries.SuiteRegistry;
 
 import java.util.*;
@@ -189,12 +190,12 @@ public class MainActivity
     void populatePresetSuiteDropdown() {
         assert m_provider!=null;
         PresetSuiteManager psm = new PresetSuiteManager(this);
-        ArrayList<SuiteRegistry.PresetSuiteEntry> presetSuites = psm.processDay0Suites(
+        ArrayList<SuiteRecord> presetSuites = psm.processDay0Suites(
             m_provider
         );
 
         ArrayList<String> suiteNames = new ArrayList<>();
-        for(SuiteRegistry.PresetSuiteEntry pse: presetSuites) {
+        for(SuiteRecord pse: presetSuites) {
             suiteNames.add(pse.name());
         }
 
@@ -301,7 +302,7 @@ public class MainActivity
         // as a USB drive.
     }
 
-    private void setupPresetButtonsForSuite(String suiteName, HashMap<Integer, PresetRecord> suitePresetRecords) {
+    private void setupPresetButtonsForSuite(String suiteName, Map<Integer, PresetRecord> suitePresetRecords) {
         clearPresetButtons();
         appendToLog("Preset suite '" + suiteName + "' selected");
         ArrayList<Integer> slotIndices = new ArrayList<>(suitePresetRecords.keySet());
@@ -328,7 +329,7 @@ public class MainActivity
 
     void suiteSelected(
         String suiteName,
-        HashMap<Integer, PresetRecord> suitePresetRecords
+        Map<Integer, PresetRecord> suitePresetRecords
     ) {
         /*
         String suiteName = m_SuiteRegistry.nameAt(position);
