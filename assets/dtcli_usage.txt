@@ -17,7 +17,7 @@ Usage: %PROG% [options]
          of a directory.
     --interactive
          After displaying the table of presets (and saving data as described
-         for option --output=.. if that option was specified), the program
+         for option --output=... if that option was specified), the program
          will enter an interactive loop accepting single line commands on the
          console.
          The command 'help' gets a list of available commands, 'quit', 'exit'
@@ -31,5 +31,7 @@ Usage: %PROG% [options]
          commands can be sent to the amplifier.
          This option is enabled by default when the app runs for the first
          time in a given directory, and is re-enabled every 30 days.
+    --no-disclaimer
+         Do not display the disclaimer described in the preceding option.
     --help, --usage
          Display this message

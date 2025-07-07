@@ -73,6 +73,7 @@ public class CommandLineInterface implements ILoggingAgent {
 
 
     static boolean s_argParamForceDisclaimer = false;
+    static boolean s_argParamNoDisclaimer = false;
     static boolean s_argParamInteractive = false;
     static String s_argParamOutput = null;
     static final String DISCLAIMER_ACCEPTANCE_RECORD_FILENAME = ".fhau_disclaimer_accepted_until";
@@ -184,6 +185,12 @@ public class CommandLineInterface implements ILoggingAgent {
 
 
     static boolean doDisclaimerAcceptedCheck(boolean forceDisclaimer) {
+        if(s_argParamNoDisclaimer==true) {
+            // Disclaimer has been implicitly accepted
+            // for this run only by the specification
+            // of argument --no-disclaimer on the command line
+            return false;
+        }
         boolean shouldDisplayDisclaimer = true;
         try {
             File disclaimerAcceptedFile = new File(
@@ -278,6 +285,10 @@ public class CommandLineInterface implements ILoggingAgent {
                 s_argParamInteractive = true;
             } else if(arg.equals("--disclaimer")) {
                 s_argParamForceDisclaimer = true;
+                s_argParamNoDisclaimer = false;
+            } else if(arg.equals("--no-disclaimer")) {
+                s_argParamNoDisclaimer = true;
+                s_argParamForceDisclaimer = false;
             } else if(arg.startsWith("--output=")) {
                 s_argParamOutput = arg.replace("--output=","");
             } else {
