@@ -19,14 +19,14 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    namespace "net.heretical_camelid.fhau.android_app"
+    namespace = "net.heretical_camelid.fhau.android_app"
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
     }
     buildFeatures {
-        android.buildFeatures.buildConfig true
-        viewBinding true
+        android.buildFeatures.buildConfig = true
+        viewBinding = true
     }
     // Occasional lint false positives with message
     // 'MainActivity must extend android.app.Activity (Instantiable)'

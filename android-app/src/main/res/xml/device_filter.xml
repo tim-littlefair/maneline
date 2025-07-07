@@ -1,6 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Primary test platform is Mustang LT40S -->
+    <usb-device vendor-id="0x1ed8" product-id="0x0046" />
+
     <!--
-    <usb-device vendor-id="7896" product-id="70" />
-    -->
+      The same protocol is also expected to work for:
+      + Mustang LT25 (product-id=0x0037),
+      + Rumble LT25 (product-id=0x0038),
+      + Mustang LT50 (product-id not known yet)
+      If you have access to any of these and can advise
+      whether or not they work (+ product-id for LT50)
+      please add a comment to:
+      https://github.com/tim-littlefair/feral-horse-amp-utils/issues/2
+      -->
+    <usb-device vendor-id="0x1ed8" product-id="0x0037" />
+    <usb-device vendor-id="0x1ed8" product-id="0x0038" />
+
 </resources>

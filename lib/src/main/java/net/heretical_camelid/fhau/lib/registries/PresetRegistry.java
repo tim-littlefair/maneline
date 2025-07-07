@@ -140,7 +140,7 @@ public class PresetRegistry {
         generateNameTable(System.out);
     }
 
-    public Object uniquePresetCount() {
+    public int uniquePresetCount() {
         return m_records.size();
     }
 
@@ -269,11 +269,6 @@ public class PresetRegistry {
     public Integer findAudioHash(String audioHash, String presetName) {
         Integer retval = m_audioHashesToSlots.get(audioHash);
         if(retval==null) {
-            System.out.println(String.format(
-                "No match found for audioHash %s (presetName %s)",
-                audioHash, presetName
-            ));
-        } else {
             for (int i : m_slotsToRecords.keySet()) {
                 PresetRecord r = m_slotsToRecords.get(i);
                 if (r.displayName().equals(presetName)) {
@@ -282,7 +277,14 @@ public class PresetRegistry {
                         presetName, audioHash, r.displayName(), r.audioHash()
                     ));
                     retval = i;
+                    break;
                 }
+            }
+            if(retval==null) {
+                System.out.println(String.format(
+                    "No match found for audioHash %s (presetName %s)",
+                    audioHash, presetName
+                ));
             }
         }
         return retval;

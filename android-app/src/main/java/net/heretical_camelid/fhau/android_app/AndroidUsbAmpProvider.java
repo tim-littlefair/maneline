@@ -16,6 +16,7 @@ import net.heretical_camelid.fhau.lib.registries.SuiteRegistry;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -64,6 +65,7 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
         int presetNamesStatus = m_protocol.getPresetNamesList(firstPreset, lastPreset);
 
         m_mainActivity.appendToLog(String.format(
+            Locale.getDefault(),
             "Amp contains %d unique presets", m_presetRegistry.uniquePresetCount()
         ));
 
