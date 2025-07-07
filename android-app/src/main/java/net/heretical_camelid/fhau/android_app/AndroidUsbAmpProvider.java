@@ -114,8 +114,10 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
         SuiteRecord newPSE = m_suiteRegistry.createPresetSuiteEntry(
             suiteName, presets
         );
-        for(int slotIndex: newPSE.getSlotIndices()) {
-            remainingPresetIndices.remove(slotIndex);
+        if(newPSE!=null) {
+            for (int slotIndex : newPSE.getSlotIndices()) {
+                remainingPresetIndices.remove(slotIndex);
+            }
         }
         return newPSE;
     }

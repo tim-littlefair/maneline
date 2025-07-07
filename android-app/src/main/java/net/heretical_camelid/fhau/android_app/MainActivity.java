@@ -2,6 +2,8 @@ package net.heretical_camelid.fhau.android_app;
 
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Looper;
 import android.os.Message;
@@ -130,6 +132,13 @@ public class MainActivity
         return super.onOptionsItemSelected(item);
     }
 
+    private static final int PRESET_BUTTON_IDS[] = {
+        0, // so that array aligns with 1-based id names
+        R.id.button1, R.id.button2, R.id.button3,
+        R.id.button4, R.id.button5, R.id.button6,
+        R.id.button7, R.id.button8, R.id.button9
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         assert s_instance == null;
@@ -238,16 +247,13 @@ public class MainActivity
     }
 
     void setPresetButton(int buttonIndex, int slotId, String presetName) {
-        String presetButtonName = String.format("button%d", buttonIndex);
-        int buttonId = getResources().getIdentifier(
-            presetButtonName, "id", getPackageName()
-        );
+        int buttonId = PRESET_BUTTON_IDS[buttonIndex];
         int buttonColor;
         String buttonText;
         float buttonAlpha;
         Button presetButton = findViewById(buttonId);
         if(presetButton==null) {
-            appendToLog("Failed to find button " + presetButtonName);
+            appendToLog("Failed to find button with index " + buttonId);
             return;
         }
         if(slotId==0) {
@@ -270,6 +276,7 @@ public class MainActivity
                     m_loggingAgent.clearLog();
                     appendToLog("preset " + slotId + " requested");
                     m_provider.switchPreset(slotId);
+                    highlightSelectedButton(buttonIndex);
                 }
             }));
             presetButton.setEnabled(true);
@@ -281,6 +288,30 @@ public class MainActivity
             getResources().getColor(buttonColor,null)
         );
         presetButton.setAlpha(buttonAlpha);
+    }
+
+    private void highlightSelectedButton(int buttonIndex) {
+        for(int i = 1; i<PRESET_BUTTON_IDS.length; ++i) {
+            int buttonId = PRESET_BUTTON_IDS[i];
+            Button button = (Button) findViewById(buttonId);
+            int textColor;
+            int textWeight;
+            if(button==null) {
+                continue;
+            } else if(i==buttonIndex) {
+                textColor = getResources().getColor(
+                    R.color.fhauBlack,null
+                );
+                textWeight = Typeface.BOLD;
+            } else {
+                textColor = getResources().getColor(
+                    R.color.fhauWhite, null
+                );
+                textWeight = Typeface.NORMAL;
+            }
+            button.setTextColor(textColor);
+            button.setTypeface(button.getTypeface(),textWeight);
+        }
     }
 
     void clearPresetButtons() {
@@ -307,6 +338,7 @@ public class MainActivity
         appendToLog("Preset suite '" + suiteName + "' selected");
         ArrayList<Integer> slotIndices = new ArrayList<>(suitePresetRecords.keySet());
         slotIndices.sort(null);
+        int selectedButtonIndex = 0;
         for(int i=0; i<slotIndices.size(); ++i) {
             int slotIndex = slotIndices.get(i);
             PresetRecord presetRecord = suitePresetRecords.get(slotIndex);
@@ -314,7 +346,13 @@ public class MainActivity
                 i+1, slotIndex,
                 SuiteRegistry.buttonLabel(slotIndex, presetRecord.displayName())
             );
+            // TODO: if we knew which amp slot was active we could
+            // and that slot matched this item, we could set ...
+            // selectedButtonIndex=i;
+            // ... to ensure that its button was highlighted as soon as
+            // the suite was displayed
         }
+        highlightSelectedButton(selectedButtonIndex);
     }
 
     @Override

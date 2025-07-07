@@ -26,4 +26,8 @@
         <item name="android:textSize">18sp</item>
     </style>
 
+    <style name="SelectedPresetButtonStyle" parent="PresetButtonStyle">
+        <item name="android:backgroundTint">@color/fhauBlack</item>
+    </style>
+
 </resources>

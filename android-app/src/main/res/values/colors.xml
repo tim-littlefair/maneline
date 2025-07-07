@@ -11,5 +11,7 @@
     <color name="fhauCream">#FFFFAA</color>
     <color name="fhauBlue">#4444FF</color>
     <color name="fhauGrey">#AAAAAA</color>
+    <color name="fhauBlack">#000000</color>
+    <color name="fhauWhite">#FFFFFF</color>
 
 </resources>
