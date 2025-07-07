@@ -68,7 +68,7 @@ public class MainActivity
     Handler m_providerHandler;
 
     TextView m_tvLog;
-    static Button s_btnConnectionStatus;
+    Button m_btnConnectionStatus;
 
     static MainActivity s_instance = null;
     public static MainActivity getInstance() {
@@ -84,6 +84,14 @@ public class MainActivity
             // not available we have to use the deprecated
             // Thread.getId();
             return t.getId();
+        }
+    }
+    static void appendToLogStatic(String message) {
+        if (s_instance == null) {
+            System.out.println(message);
+            return;
+        } else {
+            s_instance.appendToLog(message);
         }
     }
     void appendToLog(String message) {
@@ -175,12 +183,12 @@ public class MainActivity
         m_providerThread = null;
         m_providerHandler = new Handler();
 
-        s_btnConnectionStatus = findViewById(R.id.btn_cxn_status);
-        s_btnConnectionStatus.setOnClickListener(new View.OnClickListener() {
+        m_btnConnectionStatus = findViewById(R.id.btn_cxn_status);
+        m_btnConnectionStatus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 m_loggingAgent.clearLog();
-                s_btnConnectionStatus.setText("Connecting");
+                m_btnConnectionStatus.setText("Connecting");
                 connect();
             }
         });
@@ -392,37 +400,38 @@ public class MainActivity
     public void onUsbDeviceAttached() {
     }
 
-    class Handler extends android.os.Handler {
+    static class Handler extends android.os.Handler {
         public Handler() {
             super(Looper.getMainLooper());
         }
 
         public void handleMessage(Message m) {
+            MainActivity mainActivity = MainActivity.s_instance;
             //assert m_providerThread!=null;
             switch (MessageType_e.values()[m.what]) {
                 case MESSAGE_PROVIDER_PERMISSION_GRANTED:
-                    s_btnConnectionStatus.setText("Permission granted");
-                    s_btnConnectionStatus.callOnClick();
+                    mainActivity.m_btnConnectionStatus.setText("Permission granted");
+                    mainActivity.m_btnConnectionStatus.callOnClick();
                     break;
 
                 case MESSAGE_PROVIDER_CONNECTED:
-                    assert m_providerThread.isAlive()==false;
-                    s_btnConnectionStatus.setText("Click to reconnect");
-                    m_providerThread = new Thread() {
+                    assert mainActivity.m_providerThread.isAlive()==false;
+                    mainActivity.m_btnConnectionStatus.setText("Click to reconnect");
+                    mainActivity.m_providerThread = new Thread() {
                         @Override
                         public void run() {
-                            m_provider.getFirmwareVersionAndPresets();
-                            m_providerHandler.sendEmptyMessage(MESSAGE_PRESETS_DOWNLOADED.ordinal());
+                            MainActivity.s_instance.m_provider.getFirmwareVersionAndPresets();
+                            MainActivity.s_instance.m_providerHandler.sendEmptyMessage(MESSAGE_PRESETS_DOWNLOADED.ordinal());
                         }
                     };
-                    m_providerThread.start();
+                    MainActivity.s_instance.m_providerThread.start();
                     break;
 
                 case MESSAGE_PRESETS_DOWNLOADED:
-                    assert m_providerThread.isAlive()==false;
-                    m_providerThread = null;
-                    appendToLog("Presets retrieved - grouping into suites");
-                    populatePresetSuiteDropdown();
+                    assert mainActivity.m_providerThread.isAlive()==false;
+                    mainActivity.m_providerThread = null;
+                    mainActivity.appendToLog("Presets retrieved - grouping into suites");
+                    mainActivity.populatePresetSuiteDropdown();
                     break;
 
                 case MESSAGE_PRESET_SELECTED:
@@ -430,32 +439,16 @@ public class MainActivity
                     int slotIndex = messageData.getInt(MESSAGE_SLOT_INDEX);
                     String presetName = messageData.getString(MESSAGE_PRESET_NAME);
                     String effects = messageData.getString(MESSAGE_PRESET_EFFECTS);
-                    /*
-                    // expand abbreviations in effects for readability
-                    effects = effects
-                                  // Note that changing ':' to '=' is required
-                                  // to prevent every mod: being changed to mo\ndelay:
-                                  // Alternatively we could have reordered substitutions
-                                  // so delay is done before mod, but changing the
-                                  // separator allows us to process the effects in their
-                                  // typical order, and feels OK for readability
-                                  .replace("s:","\nstomp=")
-                                  .replace("m:", "\nmod=")
-                                  .replace( "a:", "\namp=")
-                                  .replace("d:","\ndelay=")
-                                  .replace("r:","\nreverb=")
-                                  .strip();
-                     */
-                    appendToLog("Preset loaded: " + presetName);
-                    appendToLog("Effects:\n"+effects+"\n");
+                    mainActivity.appendToLog("Preset loaded: " + presetName);
+                    mainActivity.appendToLog("Effects:\n"+effects+"\n");
                     break;
 
                 case MESSAGE_APPEND_TO_LOG:
-                    appendToLog(m.getData().getString(MESSAGE_LOG_APPEND_STRING));
+                    mainActivity.appendToLog(m.getData().getString(MESSAGE_LOG_APPEND_STRING));
                     break;
 
                 default:
-                    appendToLog("Unexpected message received by providerHandler: " + m.what);
+                    mainActivity.appendToLog("Unexpected message received by providerHandler: " + m.what);
             }
         }
     }
