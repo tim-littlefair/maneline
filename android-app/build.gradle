@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdk 35
+    compileSdk 36
     defaultConfig {
         applicationId "net.heretical_camelid.fhau.android_app"
         minSdkVersion 25
@@ -9,7 +9,7 @@ android {
         versionName rootProject.ext.versionName
     }
     defaultConfig {
-        targetSdkVersion 35
+        targetSdkVersion 36
         def buildTime = new Date()
         buildConfigField "String", "BUILD_TIME", "\"${buildTime.format('yyyy-MM-dd HH:mm:ss')}\""
     }
@@ -45,7 +45,7 @@ base {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.google.android.material:material:1.12.0'
-    implementation 'androidx.compose.material:material:1.8.2'
+    implementation 'androidx.compose.material:material:1.8.3'
     implementation 'androidx.appcompat:appcompat:1.7.1'
     implementation "androidx.constraintlayout:constraintlayout:2.2.1"
     implementation "androidx.constraintlayout:constraintlayout-compose:1.1.1"

@@ -1,8 +1,8 @@
 package net.heretical_camelid.fhau.android_app;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Looper;
@@ -67,7 +67,7 @@ public class MainActivity
     Handler m_providerHandler;
 
     TextView m_tvLog;
-    Button m_btnConnectionStatus;
+    static Button s_btnConnectionStatus;
 
     static MainActivity s_instance = null;
     public static MainActivity getInstance() {
@@ -139,6 +139,7 @@ public class MainActivity
         R.id.button7, R.id.button8, R.id.button9
     };
 
+    @SuppressLint("SourceLockedOrientationActivity")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         assert s_instance == null;
@@ -162,12 +163,12 @@ public class MainActivity
         m_providerThread = null;
         m_providerHandler = new Handler();
 
-        m_btnConnectionStatus = findViewById(R.id.btn_cxn_status);
-        m_btnConnectionStatus.setOnClickListener(new View.OnClickListener() {
+        s_btnConnectionStatus = findViewById(R.id.btn_cxn_status);
+        s_btnConnectionStatus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 m_loggingAgent.clearLog();
-                m_btnConnectionStatus.setText("Connecting");
+                s_btnConnectionStatus.setText("Connecting");
                 connect();
             }
         });
@@ -385,13 +386,13 @@ public class MainActivity
             //assert m_providerThread!=null;
             switch (MessageType_e.values()[m.what]) {
                 case MESSAGE_PROVIDER_PERMISSION_GRANTED:
-                    m_btnConnectionStatus.setText("Permission granted");
-                    m_btnConnectionStatus.callOnClick();
+                    s_btnConnectionStatus.setText("Permission granted");
+                    s_btnConnectionStatus.callOnClick();
                     break;
 
                 case MESSAGE_PROVIDER_CONNECTED:
                     assert m_providerThread.isAlive()==false;
-                    m_btnConnectionStatus.setText("Click to reconnect");
+                    s_btnConnectionStatus.setText("Click to reconnect");
                     m_providerThread = new Thread() {
                         @Override
                         public void run() {
