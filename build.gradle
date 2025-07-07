@@ -19,6 +19,9 @@ allprojects {
         google()
         mavenCentral()
     }
+    tasks.withType(JavaCompile) {
+        options.deprecation = true
+    }
 }
 
 // For Android apps relased via PlayStore, versionCode must

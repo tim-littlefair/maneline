@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.Typeface;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 import android.os.Message;
@@ -74,11 +75,22 @@ public class MainActivity
         return s_instance;
     }
 
+    @SuppressWarnings("deprecation")
+    private long getThreadId(Thread t) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA) {
+            return t.threadId();
+        } else {
+            // For build environments where Thread.threadId() is
+            // not available we have to use the deprecated
+            // Thread.getId();
+            return t.getId();
+        }
+    }
     void appendToLog(String message) {
-        long currentThreadId = Thread.currentThread().getId();
+        long currentThreadId = getThreadId(Thread.currentThread());
         if (
             m_loggingAgent!=null &&
-            currentThreadId==this.getMainLooper().getThread().getId()
+            currentThreadId==getThreadId(this.getMainLooper().getThread())
         ) {
             System.out.println(message);
             m_loggingAgent.appendToLog(0,message);
@@ -375,6 +387,9 @@ public class MainActivity
         HashMap<Integer,FenderJsonPresetRegistry.PresetRecord> suitePresetRecords = m_SuiteRegistry.recordsAt(position);
          */
         setupPresetButtonsForSuite(suiteName, suitePresetRecords);
+    }
+
+    public void onUsbDeviceAttached() {
     }
 
     class Handler extends android.os.Handler {

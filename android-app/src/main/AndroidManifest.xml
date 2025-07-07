@@ -24,9 +24,6 @@
             android:name=".UsbBroadcastReceiver"
             android:exported="true">
                 <intent-filter>
-                    <!--
-                    <action android:name="net.heretical_camelid.fhau.android_app.USB_PERMISSION" />
-                    -->
                     <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
                     <action android:name="android.hardware.usb.action.USB_DEVICE_DETACHED" />
                 </intent-filter>

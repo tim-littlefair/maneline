@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdk 36
+    compileSdk = 36
     defaultConfig {
         applicationId "net.heretical_camelid.fhau.android_app"
         minSdkVersion 25

@@ -21,6 +21,7 @@ public class UsbBroadcastReceiver extends BroadcastReceiver {
             action.equals(UsbManager.ACTION_USB_ACCESSORY_ATTACHED)
         ) {
             mainActivity.appendToLog("Device attached");
+            mainActivity.onUsbDeviceAttached();
         } else if (
             action.equals(UsbManager.ACTION_USB_DEVICE_DETACHED) ||
             action.equals(UsbManager.ACTION_USB_ACCESSORY_DETACHED)
@@ -29,10 +30,10 @@ public class UsbBroadcastReceiver extends BroadcastReceiver {
         } else if (action.equals(DeviceTransportUsbHid.ACTION_USB_PERMISSION)) {
             if(intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED,true)) {
                 mainActivity.appendToLog("USB access permission granted");
-                mainActivity.m_provider.m_deviceTransportUsbHid.attemptUsbHidConnection();
+                // mainActivity.onUsbDeviceAttached();
             } else {
                 mainActivity.appendToLog("USB access permission denied - but trying anyway");
-                mainActivity.m_provider.m_deviceTransportUsbHid.attemptUsbHidConnection();
+                // mainActivity.onUsbDeviceAttached();
             }
         } else {
             mainActivity.appendToLog("BroadcastReceiver received unexpected action: " +action);
