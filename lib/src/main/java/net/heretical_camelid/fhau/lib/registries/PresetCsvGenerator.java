@@ -3,7 +3,7 @@ package net.heretical_camelid.fhau.lib.registries;
 import java.io.PrintStream;
 
 class PresetCsvGenerator implements PresetRegistry.Visitor {
-    private static final String DATA_LINE_FORMAT = "%4d,%-16s,%-20s,%-20s,%-20s,%-20s,%-20s\n";
+    private static final String DATA_LINE_FORMAT = "%4d,%-16s,%-18s,%-18s,%-18s,%-18s,%-18s,%-9s\n";
     private static final String HEADER_LINE_FORMAT = DATA_LINE_FORMAT.replace("%4d","%4s");
     String m_outputPath;
     StringBuilder m_stringBuilder;
@@ -18,7 +18,7 @@ class PresetCsvGenerator implements PresetRegistry.Visitor {
     public void visitBeforeRecords(PresetRegistry registry) {
         m_stringBuilder.append(String.format(
             HEADER_LINE_FORMAT,
-            "slot","name", "stomp","mod","amp","delay","reverb"
+            "slot","name", "stomp","mod","amp","delay","reverb","fhau-hash"
         ));
     }
     @Override
@@ -33,7 +33,8 @@ class PresetCsvGenerator implements PresetRegistry.Visitor {
             prb.moduleName("mod"),
             prb.moduleName("amp"),
             prb.moduleName("delay"),
-            prb.moduleName("reverb")
+            prb.moduleName("reverb"),
+            prb.audioHash()
         ));
     }
 
