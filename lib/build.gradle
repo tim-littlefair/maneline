@@ -16,6 +16,6 @@ jar {
 
 dependencies {
     implementation 'com.google.code.gson:gson:2.13.1'
-    implementation 'org.json:json:20240303'
+    implementation 'org.json:json:20250517'
     testImplementation 'junit:junit:4.12'
 }
