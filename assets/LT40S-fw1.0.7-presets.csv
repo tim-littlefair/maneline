@@ -1,0 +1,33 @@
+slot,name            ,stomp             ,mod               ,amp               ,delay             ,reverb            ,fhau-hash
+   1,FENDER  CLEAN   ,SimpleCompressor  ,                  ,Twin65            ,                  ,Spring65          ,adbd-9b33
+   2,SILKY   SOLO    ,Overdrive         ,                  ,SuperSonic        ,TapeDelayLite     ,Spring65          ,2ba9-3772
+   3,CHICAGO BLUES   ,                  ,                  ,Bassman59         ,MonoDelay         ,SmallRoomReverb   ,46e1-2036
+   4,CLASSIC ROCK    ,                  ,                  ,Plexi87           ,                  ,LargePlate        ,f7d8-938b
+   5,DREAMY          ,SimpleCompressor  ,Vibratone         ,Twin65            ,TapeDelayLite     ,LargePlate        ,f641-e9d3
+   6,COUNTRY PICKING ,SimpleCompressor  ,                  ,Deluxe65          ,TapeDelayLite     ,                  ,b30b-5e04
+   7,SKATE   PUNK    ,                  ,                  ,Rect2             ,                  ,                  ,4f20-5f99
+   8,SOLO    MIDBOOST,MustangFiveBandEq1,                  ,Silvertone        ,TapeDelayLite     ,SmallRoomReverb   ,751c-b9c8
+   9,JAZZ       AMP  ,SimpleCompressor  ,                  ,LinearGain        ,                  ,SmallRoomReverb   ,bf47-69d9
+  10,BRIT 64 RHYTHM  ,                  ,                  ,Ac30Tb            ,                  ,LargePlate        ,5c3f-68d7
+  11,METAL   LEAD    ,                  ,ChorusTriangle    ,MetalRect2        ,MonoDelay         ,                  ,9faf-03e8
+  12,VINTAGE TREMOLO ,                  ,SineTremolo       ,Deluxe65          ,                  ,                  ,7b19-8807
+  13,SUPER   DRYCLEAN,Sustain           ,                  ,LinearGain        ,                  ,                  ,fc81-cdb8
+  14,THRASH  OVERKILL,ChromeGate        ,                  ,MetalEvh3         ,                  ,                  ,1af2-e073
+  15,CLEAN   DELAY   ,SimpleCompressor  ,ChorusTriangle    ,DR103             ,TapeDelayLite     ,SmallRoomReverb   ,9a72-ba47
+  16,OCTOBOT ONE NOTE,Octobot           ,                  ,Jcm800            ,MonoDelay         ,                  ,0dc9-9e9e
+  17,LITTLE  CHAMP   ,SimpleCompressor  ,                  ,Champ57           ,TapeDelayLite     ,SmallRoomReverb   ,4335-af2c
+  18,PHASER  SWIRL   ,SimpleCompressor  ,Phaser            ,Twin65            ,                  ,Spring65          ,fd02-92ca
+  19,60S     FUZZ    ,VariFuzz          ,                  ,Plexi87           ,TapeDelayLite     ,LargePlate        ,0af8-25b3
+  20,MYTHIC  CRUNCH  ,MythicDrive       ,                  ,Plexi87           ,                  ,                  ,ee31-06a9
+  21,TOUCH   WAH     ,                  ,EcFilter          ,Deluxe57          ,                  ,SmallRoomReverb   ,feb9-dd06
+  22,SUPER   ROCK    ,SimpleCompressor  ,                  ,Jcm800            ,MonoDelay         ,                  ,0989-8372
+  23,NICE    FLANGER ,SimpleCompressor  ,TriangleFlanger   ,Princeton65       ,MonoDelay         ,                  ,e5b6-4bcd
+  24,VIBRA   DOOM    ,Greenbox          ,Vibratone         ,Or120             ,                  ,LargeHallReverb   ,6f17-7ebe
+  25,SURF    MUSIC   ,                  ,                  ,Bassman59         ,MonoDelay         ,Spring65          ,3db6-df68
+  26,BLUES   LEAD    ,Greenbox          ,                  ,Deluxe57          ,                  ,SmallRoomReverb   ,c6e6-3814
+  27,ROCK A  BILLY   ,                  ,                  ,Twin57            ,TapeDelayLite     ,SmallRoomReverb   ,24b9-5e75
+  28,GARAGE  FUZZ    ,BigFuzz           ,                  ,Excelsior         ,                  ,LargePlate        ,c7ae-315d
+  29,SPACE   TRAVEL  ,Octobot           ,StepFilter        ,Deluxe65          ,MonoDelay         ,ArenaReverb       ,6f2b-046c
+  30,ACOUSTICSIM     ,MustangFiveBandEq1,                  ,LinearGain        ,                  ,LargeHallReverb   ,509c-b680
+  31,EMPTY           ,                  ,                  ,LinearGain        ,                  ,                  ,b4ed-d311
+  41,EVENING RAGE    ,SimpleCompressor  ,TriangleFlanger   ,Twin65            ,MonoDelay         ,LargeHallReverb   ,d481-5503
