@@ -24,6 +24,8 @@ public class CommandLineInterface implements ILoggingAgent {
     private static final int FHAU_STATUS_INTERACTIVE_INPUT_FAILURE = 92;
     private static final int FHAU_STATUS_DISCLAIMER_ACCEPT_FILE_PERMISSION_ERROR = 93;
 
+    private static PrintStream s_cliLogStream = null;
+
     static void doInteractive(DesktopUsbAmpProvider provider) {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         boolean continueAcceptingCommands=true;
@@ -69,6 +71,9 @@ public class CommandLineInterface implements ILoggingAgent {
     @Override
     public void appendToLog(int loggingLevel, String messageToAppend) {
         System.out.println(messageToAppend);
+        if(s_cliLogStream !=null) {
+            s_cliLogStream.println(messageToAppend);
+        }
     }
 
 

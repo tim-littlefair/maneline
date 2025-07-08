@@ -36,15 +36,25 @@ public class PresetRecord {
     }
 
     public String ampName() {
+        return moduleName("amp");
+    }
+
+    public String moduleName(String whichModule) {
         for (
             PresetCanonicalSerializer.PCS_Node node :
             m_presetCanonicalSerializer.audioGraph.nodes
         ) {
-            if (node.nodeId.equals("amp")) {
-                return node.FenderId.replace("DUBS_", "");
+            if (node.nodeId.equals(whichModule)) {
+                return node.FenderId.
+                    // LT40S prefix
+                    replace("DUBS_", "").
+                    // MMP prefix
+                    replace("ACD_", "").
+                    // placeholder where no module selected
+                    replace("Passthru","");
             }
         }
-        return null;
+        return "";
     }
 
     public String audioHash() {

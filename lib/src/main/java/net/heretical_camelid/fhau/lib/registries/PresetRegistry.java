@@ -98,17 +98,17 @@ public class PresetRegistry {
         return retval;
     }
 
-    public static int outputToFile(String rawTargetPath, String jsonForSuite) {
+    public static int outputToFile(String rawTargetPath, String content) {
         try {
             if(s_outputZipStream !=null) {
                 ZipEntry e = new ZipEntry(rawTargetPath);
                 s_outputZipStream.putNextEntry(e);
-                s_outputZipStream.write(jsonForSuite.getBytes(UTF_8));
+                s_outputZipStream.write(content.getBytes(UTF_8));
                 s_outputZipStream.closeEntry();
             } else {
                 FileOutputStream fos;
                 fos = new FileOutputStream(rawTargetPath);
-                fos.write(jsonForSuite.getBytes(UTF_8));
+                fos.write(content.getBytes(UTF_8));
             }
             return 0;
         } catch (FileNotFoundException e) {
@@ -196,11 +196,8 @@ public class PresetRegistry {
     }
 
     public void dump(SuiteRegistry suiteRegistry) {
-        if(m_outputPath == null) {
-            generatePresetDetails(System.out);
-        } else {
-            generatePresetDetails(System.out);
-
+        generatePresetDetails(System.out);
+        if(m_outputPath != null) {
             String outputPathBase;
             if(s_outputZipStream !=null) {
                 outputPathBase = "/";
@@ -213,6 +210,11 @@ public class PresetRegistry {
             String presetPathPrefix = outputPathBase + "presets";
             AmpDefinitionExporter ade = new AmpDefinitionExporter(presetPathPrefix);
             acceptVisitor(ade);
+
+            // Export a CSV listing the modules for each preset
+            acceptVisitor(
+                new PresetCsvGenerator(outputPathBase + "presets.csv")
+            );
 
             // Export suite records
             String suitePathPrefix =  outputPathBase + "suites";
