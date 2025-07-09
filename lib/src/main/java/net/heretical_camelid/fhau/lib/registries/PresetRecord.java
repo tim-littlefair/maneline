@@ -29,16 +29,26 @@ public class PresetRecord {
     // this function is used in composition of the value returned by audioHash() which is
     // used to determine whether the audio settings of a preset constitute an exact copy
     // of another preset in the same amp.
-    // The .setVersion(92.0) qualifier on the builder is used with the @Since(99.99) annotations
-    // on four of the possible parameters in PresetCanonicalSerializer.PCS_DspUnitParameters
-    // to filter them out, as these four parameters take on different values according to whether
-    // the preset was loaded from factory firmware or was copied using the controls on the amp or
-    // the desktop Fender Tone app.  The intent of the filtering is to ensure that copied presets
-    // are treated as duplicates of the original unless at least one _intended_ parameter change
-    // has been introduced since the copy operation.
-    // TODO: Investigate further and replace the filtering behaviour with search and replace
-    // TODO: to align the serialized value to the copied form.
-    static Gson s_dspParamGson = new GsonBuilder().setVersion(92.0).create();
+    // There two other parameters which are typed as String in .PCS_DspUnitParameters
+    // (which can only cope with one type per parameter name), but are sometimes returned
+    // from the amp as integer or fixed point numerics.  Before we start sending JSON back
+    // to the amp we probably need to reflect the amp's typing for these, which are:
+    // + tone - usually either 1 or a fixed point positive number less than 1, except for
+    //   the value for the DUBS_VariFuzz stomp module in '60S FUZZ' where it takes the string
+    //   'normal' (when this is numeric, trailing zeroes in the mantissa are sometimes present
+    //   in the copied presets but absent in the original);
+    // + shape - 'sine' for the DUBS_Phaser mod module in 'PHASER_SWIRL', 0 for the
+    //   DUBS_SineTremolo mod module in VINTAGE_TREMOLO.
+    // Two of the other possible parameters in PresetCanonicalSerializer.PCS_DspUnitParameters
+    // take on inconsistent values when a preset is copied to another slot without (intentionally)
+    // introducing any changes.  These four parameters are:
+    // + bypass - boolean, absent in initial presets, false in copied presets;
+    // + bypassType - can be absent, Pre, Post or PostNoPreKill in initial presets, often changes
+    // from absent or Pre to Post, changes from Post to Pre less often.
+    // TODO: Investigate further and implement search and replace to align the serialized values
+    // TODO: to the copied form and to align typing for each parameter exactly to what the
+    // TODO: FenderTone LT Desktop sends to the amp for the same module.
+    static Gson s_dspParamGson = new GsonBuilder().create();
 
     public PresetRecord(String name, byte[] definitionBytes) {
         m_name = name;

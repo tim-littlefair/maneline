@@ -203,24 +203,20 @@ public class PresetCanonicalSerializer {
         // The remaining attributes have been identified
         // as taking on inconsistent values and/or types when a preset
         // is copied, or edited or imported using Fender Tone
-        // The @Since annotation is used on these so that
-        // they can be excluded from the JSON used to calculate
-        // a hash.
+        // This results in a copy returning a different value
+        // in the second part of the audio hash (last 4 nybbles).
 
         // bypass switches between False and absent
-        @Since(99.99)
         Boolean bypass;
 
         // bypassType switches between 'Post', 'Pre' and absent
-        @Since(99.99)
         String bypassType;
 
-        // tone switches between 'normal' and (numeric) 0.5
-        @Since(99.99)
+        // tone switches between 'normal' and (numeric) 0.5,
+        // and 0.500000
         String tone;
 
         // shape switches between 'sine' and (numeric) 0
-        @Since(99.99)
         String shape;
 
         PCS_DspUnitParameters() { }
