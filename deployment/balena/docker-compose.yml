@@ -45,9 +45,13 @@ services:
     build: .
     ports:
       - '9090'
-    #environment:
-    #  UDEV: '1'
+    environment:
+      UDEV: '1'
     devices:
       - /dev/hidraw0
+      - /dev/hidraw1
+      - /dev/hidraw2
+      - /dev/hidraw3
+      - /dev/hidraw4
     cap_add:
       - SYS_RAWIO
