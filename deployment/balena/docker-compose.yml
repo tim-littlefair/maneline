@@ -23,7 +23,7 @@ version: "2"
      
 services:
   balenalabs-browser:
-    image: bh.cr/balenalabs/browser-aarch64
+    image: bh.cr/gh_tim_littlefair/fb91/3c03c0fc2358fd573fae6cc47a2d65bba55064de
     privileged: true
     devices:
       - /dev/fb0
@@ -32,13 +32,15 @@ services:
       - '35173' # Chromium debugging port (optional)
     environment: 
       - UDEV=1
-      - EXTRA_FLAGS=--no-memcheck
       - SHOW_CURSOR=1
       - KIOSK=1
-      - LAUNCH_URL=https://heretical-camelid.net/_static/heretical-camelid-noattr.svg
       - PERSISTENT=0
+      - FORCE_RPI_REPO=1
+      - LAUNCH_URL=https://heretical-camelid.net
     #volumes:
     #  - 'settings:/data'
+    depends_on:
+      - tl-fhau-web
 
 # x-services:
   tl-fhau-web:
