@@ -25,6 +25,7 @@ services:
   balenalabs-browser:
     image: bh.cr/gh_tim_littlefair/fb91/3c03c0fc2358fd573fae6cc47a2d65bba55064de
     privileged: true
+    network_mode: host
     devices:
       - /dev/fb0
     ports:
@@ -34,9 +35,9 @@ services:
       - UDEV=1
       - SHOW_CURSOR=1
       - KIOSK=1
-      - PERSISTENT=0
+      #- PERSISTENT=1
       - FORCE_RPI_REPO=1
-      - LAUNCH_URL=https://heretical-camelid.net
+      #- LAUNCH_URL=http://127.0.0.1:9090/web_ui/start-fhau.html
     #volumes:
     #  - 'settings:/data'
     depends_on:
@@ -45,10 +46,12 @@ services:
 # x-services:
   tl-fhau-web:
     build: .
+    network_mode: host
     ports:
       - '9090'
     environment:
       UDEV: '1'
+      #PERSISTENT: '1'
     devices:
       - /dev/hidraw0
       - /dev/hidraw1
@@ -57,3 +60,5 @@ services:
       - /dev/hidraw4
     cap_add:
       - SYS_RAWIO
+    #volumes:
+      #- 'settings:/data'

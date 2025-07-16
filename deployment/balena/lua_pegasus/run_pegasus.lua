@@ -12,7 +12,7 @@ local server = pegasus:new({
 })
 
 server:start(function (request, response)
-  print("Request:", request:path())
+  print("\nRequest:", request:path())
   response:writeFile("."..request:path())
   --return response.close()
 end)
