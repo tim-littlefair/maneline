@@ -1,20 +1,22 @@
 #!/bin/sh
 
-restart_seconds=20
-
-ls -lR .
-
+# This script is the glue which starts a web server
+# and the FHAU CLI program, and passes messages between
+# these two processes.
+# It will be brought back to the foreground after
+# the browser container has started up and is displaying
+# the UI provided by the web server.
 lua ./run_pegasus.lua &
 
 # Give the Lua web server time to get its port open before
 # telling the browser to display it
 browser_api_url=http://localhost:5011/url
 fhau_url=http://localhost:9090/start-fhau.html
-sleep_length=5
+sleep_length=2
 while true
 do
     fhau_web_response=$( curl --silent -X GET $fhau_url 2>&1 )
-    echo $fhau_web_response | grep "<!DOCTYPE html>"
+    echo $fhau_web_response | grep --silent "<!DOCTYPE html>"
     if [ ! "$?" = "0" ]
     then
         echo $fhau_web_response
@@ -23,7 +25,7 @@ do
     else
         echo FHAU web server is ready
         browser_api_response=$(curl --silent -X GET $browser_api_url 2>&1 )
-        echo $browser_api_response | grep "file:///"
+        echo $browser_api_response | grep --silent -e "file:///" -e "http://"
         if [ ! "$?" = "0" ]
         then
             echo $browser_api_response
@@ -37,18 +39,9 @@ done
 
 curl -X POST --data "url=$fhau_url" http://localhost:5011/url
 
-while true
-do
-    if [ ! -c /dev/hidraw0 ]
-    then
-        echo No HID USB device detected - is Mustang LT turned on?
-        echo Container will restart in $restart_seconds seconds
-        sleep $restart_seconds
-        echo Restarting 
-        exit
-    else
-        echo HID device OK
-        sleep 60
-    fi
-done
+# Bring the Lua script which integrates FHAU CLI with the
+# Pegasus web server back to the foreground
+wait
+
+
 

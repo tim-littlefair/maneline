@@ -78,9 +78,8 @@ RUN apt-get install -y --no-install-recommends --no-install-suggests gcc liblz-d
 
 RUN luarocks install pegasus
 
-COPY /lua_pegasus/run_pegasus.lua $WORKDIR
-RUN mkdir public_html
-COPY ./web_ui $WORKDIR
+COPY /lua $WORKDIR
+COPY /web_ui $WORKDIR
 
 # The present FHAU CLI program is not suitable for use as a Balena service
 # so the service just holds the session open for an hour so that the 
