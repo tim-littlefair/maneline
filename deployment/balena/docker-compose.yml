@@ -20,10 +20,9 @@
 
 version: "2"
 
-     
 services:
   balenalabs-browser:
-    image: bh.cr/gh_tim_littlefair/tl-browser-aarch64/35b6c642df0226e39d928233690c32dd67cde88f
+    image: bh.cr/gh_tim_littlefair/tl-browser-aarch64/624cbaae48b3d587486746d5505ba5ad2af7b967
     privileged: true
     network_mode: host
     devices:
@@ -36,8 +35,7 @@ services:
       - SHOW_CURSOR=1
       - KIOSK=1
       #- PERSISTENT=1
-      - FORCE_RPI_REPO=1
-      #- LAUNCH_URL=http://127.0.0.1:9090/web_ui/start-fhau.html
+      #- LAUNCH_URL=http://127.0.0.1:9090/start-fhau.html
     #volumes:
     #  - 'settings:/data'
     depends_on:
@@ -53,11 +51,13 @@ services:
       UDEV: '1'
       #PERSISTENT: '1'
     devices:
+      # On RPiZeroW2 this service only starts successfully if
+      # all /dev/hidraw* devices defined here are plugged in
+      # when it starts.  RPi3-64bit seems to be more tolerant
+      # and can cope with nodes being mentioned here but not
+      # found at startup.
       - /dev/hidraw0
       - /dev/hidraw1
-      - /dev/hidraw2
-      - /dev/hidraw3
-      - /dev/hidraw4
     cap_add:
       - SYS_RAWIO
     #volumes:
