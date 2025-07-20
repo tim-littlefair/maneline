@@ -49,7 +49,7 @@ services:
       - '9090'
     environment:
       UDEV: '1'
-      #PERSISTENT: '1'
+      LOCAL_BROWSER: '1'
     devices:
       # On RPiZeroW2 this service only starts successfully if
       # all /dev/hidraw* devices defined here are plugged in

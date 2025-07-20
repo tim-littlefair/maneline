@@ -26,6 +26,12 @@ do
         sleep $sleep_length
     else
         echo FHAU web server is ready
+
+        if [ ! "$LOCAL_BROWSER" = "1" ]
+        then
+            break
+        fi
+
         browser_api_response=$(curl --silent -X GET $browser_api_url 2>&1 )
         echo $browser_api_response | grep --silent -e "file:///" -e "http://"
         if [ ! "$?" = "0" ]
