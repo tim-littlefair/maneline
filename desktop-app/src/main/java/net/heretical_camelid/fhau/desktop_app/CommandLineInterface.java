@@ -5,6 +5,7 @@ import net.heretical_camelid.fhau.lib.interfaces.ILoggingAgent;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -25,6 +26,7 @@ public class CommandLineInterface implements ILoggingAgent {
     private static final int FHAU_STATUS_DISCLAIMER_ACCEPT_FILE_PERMISSION_ERROR = 93;
 
     private static PrintStream s_cliLogStream = null;
+    private static boolean s_webMode = false;
 
     static void doInteractive(DesktopUsbAmpProvider provider) {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
@@ -80,7 +82,7 @@ public class CommandLineInterface implements ILoggingAgent {
     static boolean s_argParamForceDisclaimer = false;
     static boolean s_argParamNoDisclaimer = false;
     static boolean s_argParamInteractive = false;
-    static String s_argParamOutput = null;
+    static String s_argParamOutputDir = null;
     static final String DISCLAIMER_ACCEPTANCE_RECORD_FILENAME = ".fhau_disclaimer_accepted_until";
     static final int DISCLAIMER_ACCEPTANCE_DURATION_DAYS = 30;
 
@@ -104,7 +106,7 @@ public class CommandLineInterface implements ILoggingAgent {
                 System.exit(FHAU_STATUS_UNHANDLED_PARAMETERS);
             }
 
-            DesktopUsbAmpProvider provider = new DesktopUsbAmpProvider(s_argParamOutput);
+            DesktopUsbAmpProvider provider = new DesktopUsbAmpProvider(s_webMode, s_argParamOutputDir);
             provider.startProvider();
             CommandLineInterface cli = new CommandLineInterface();
             if (s_argParamInteractive) {
@@ -294,12 +296,18 @@ public class CommandLineInterface implements ILoggingAgent {
             } else if(arg.equals("--no-disclaimer")) {
                 s_argParamNoDisclaimer = true;
                 s_argParamForceDisclaimer = false;
+            } else if(arg.startsWith("--web=")) {
+                assert s_argParamOutputDir == null;
+                s_webMode = true;
+                s_argParamOutputDir = arg.replace("--web=","");
             } else if(arg.startsWith("--output=")) {
-                s_argParamOutput = arg.replace("--output=","");
+                assert s_argParamOutputDir == null;
+                s_argParamOutputDir = arg.replace("--output=","");
             } else {
                 retval.add(arg);
             }
         }
+
         return retval;
     }
 

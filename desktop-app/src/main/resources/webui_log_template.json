@@ -1,0 +1,14 @@
+{
+  "instant": {
+    "$resolver": "timestamp",
+    "pattern": {
+      "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+      "timeZone": "UTC"
+    }
+  },
+  "someConstant": 1,
+  "message": {
+    "$resolver": "message",
+    "stringified": true
+  }
+}

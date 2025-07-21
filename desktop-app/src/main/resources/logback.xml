@@ -1,0 +1,37 @@
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!--
+    // JSON logging based on a tutorial at:
+    // https://tobydevlin.com/blog/structured-logging-in-java-with-slf4j-and-logback
+    -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>null</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <file>null</file>
+            <fileNamePattern>fhau-%d{}-%i.qqq</fileNamePattern>
+            <maxFileSize>1</maxFileSize>
+        </rollingPolicy>
+        <!-- triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <maxFileSize>1</maxFileSize>
+        </triggeringPolicy -->
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <includeMdc>false</includeMdc>
+            <includeContext>false</includeContext>
+            <fieldNames>
+                <timestamp>[ignore]</timestamp>
+                <version>[ignore]</version>
+            </fieldNames>
+            <shortenedLoggerNameLength>0</shortenedLoggerNameLength>
+        </encoder>
+    </appender>
+
+    <root level="info">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FILE"/>
+    </root>
+</configuration>

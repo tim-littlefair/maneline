@@ -34,19 +34,27 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
     SuiteRegistry m_suiteRegistry;
     HidServices m_hidServices;
 
-    public DesktopUsbAmpProvider(String outputPath) {
-        if(s_loggingAgent==null) {
+    public DesktopUsbAmpProvider(boolean s_webMode, String outputPath) {
+        if(s_loggingAgent!=null) {
+            // Logging agent already exists, no need to recreate it
+        } else if (s_webMode) {
+            s_loggingAgent = new WebModeLoggingAgent();
+            WebModeLoggingAgent.setLogFile("xxx");
+        } else {
             s_loggingAgent = new DefaultLoggingAgent(2);
         }
+        s_loggingAgent.appendToLog(0,"Compiling preset registry");
         m_presetRegistry = new PresetRegistry(outputPath);
+        s_loggingAgent.appendToLog(0,"Compiling suite registry");
         m_suiteRegistry = new SuiteRegistry(m_presetRegistry);
+        s_loggingAgent.appendToLog(0,"Starting protocol");
         m_protocol = new LTSeriesProtocol(m_presetRegistry,true);
     }
 
     void startProvider() {
         
         // Demonstrate low level traffic logging
-        HidApi.logTraffic = false;
+        HidApi.logTraffic = true;
 
         // Configure to use custom specification
         HidServicesSpecification hidServicesSpecification = new HidServicesSpecification();
