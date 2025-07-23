@@ -11,14 +11,19 @@
     -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>null</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+
+        <!-- rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <file>null</file>
             <fileNamePattern>fhau-%d{}-%i.qqq</fileNamePattern>
             <maxFileSize>1</maxFileSize>
-        </rollingPolicy>
+        </rollingPolicy -->
+
+        <rollingPolicy class="net.heretical_camelid.fhau.desktop_app.LogbackRollingPolicy_SingleMessagePerFile"/>
+
         <!-- triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
             <maxFileSize>1</maxFileSize>
         </triggeringPolicy -->
+
         <encoder class="net.logstash.logback.encoder.LogstashEncoder">
             <includeMdc>false</includeMdc>
             <includeContext>false</includeContext>

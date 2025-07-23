@@ -35,11 +35,18 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
     HidServices m_hidServices;
 
     public DesktopUsbAmpProvider(boolean s_webMode, String outputPath) {
+
+        File outputDir = new File(outputPath);
+        if(!outputDir.exists()) {
+            outputDir.mkdirs();
+        }
+        assert outputDir.exists() : "Failed to create output directory";
+
         if(s_loggingAgent!=null) {
             // Logging agent already exists, no need to recreate it
         } else if (s_webMode) {
             s_loggingAgent = new WebModeLoggingAgent();
-            WebModeLoggingAgent.setLogFile("xxx");
+            WebModeLoggingAgent.setSessionName(outputPath);
         } else {
             s_loggingAgent = new DefaultLoggingAgent(2);
         }
@@ -52,6 +59,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
     }
 
     void startProvider() {
+        WebModeLoggingAgent.setTransactionName("txn-startProvider");
         
         // Demonstrate low level traffic logging
         HidApi.logTraffic = true;
@@ -93,47 +101,61 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
 
         if (fmicDevice == null) {
             // Shut down and rely on auto-shutdown hook to clear HidApi resources
-            System.out.println("No relevant devices attached.");
+            s_loggingAgent.appendToLog(0, "No relevant devices attached");
         } else {
             boolean requestReport = false;
             int productId = fmicDevice.getProductId();
-            System.out.println(String.format(
+            s_loggingAgent.appendToLog(0, String.format(
                 "Using FMIC device with VID/PID=%04x:%04x product='%s' serial#=%s release=%d path=%s",
                 fmicDevice.getVendorId(), productId, fmicDevice.getProduct(),
                 fmicDevice.getSerialNumber(), fmicDevice.getReleaseNumber(), fmicDevice.getPath()
             ));
             if (productId==0x0046) {
                 // Mustang LT40S - tested with firmware 1.0.7
-                System.out.println("Mustang LT40S - tested with firmware 1.0.7 - expected to work");
+                s_loggingAgent.appendToLog(0,
+                    "Mustang LT40S - tested with firmware 1.0.7 - expected to work"
+                );
             } else if (productId==0x0043) {
                 // Original Mustang Micro - with 2024/2025 firmware this does not enumerate as a USB
                 // HID Device - including it here in the distant hope that a future firmware might
-                System.out.println("Original Mustang Micro - not expected to be detected via USB HID");                
+                s_loggingAgent.appendToLog(0,
+                    "Original Mustang Micro - not expected to be detected via USB HID"
+                );
             } else if (productId==0x003a) {
                 // Mustang Micro Plus - with 2024/2025 firmware this does not enumerate as a USB
                 // HID Device - including it here in the slightly less distant hope that a future firmware might
-                System.out.println("Mustang Micro Plus - not expected to be detected via USB HID");
-                System.out.println("A future version of FHAU may be able to connect to this device over BLE");
+                s_loggingAgent.appendToLog(0,
+                    "Mustang Micro Plus - not expected to be detected via USB HID"
+                );
+                s_loggingAgent.appendToLog(0,
+                    "A future version of FHAU may be able to connect to this device over BLE"
+                );
             } else if(
                 fmicDevice.getProduct().contains(" LT")
             ) {
-                System.out.println("Probable LT series device - not tested - may or may not work");
+                s_loggingAgent.appendToLog(0,
+                    "Probable LT series device - not tested - may or may not work"
+                );
                 requestReport = true;
             } else if(
                 fmicDevice.getProduct().contains(" GT")
             ) {
-                System.out.println("Probable GT/GTX series device - not expected to be detected via USB HID");
-                System.out.println("A future version of FHAU may be able to connect to this device over BLE");
+                s_loggingAgent.appendToLog(0,
+                    "Probable GT/GTX series device - not expected to be detected via USB HID"
+                );
+                s_loggingAgent.appendToLog(0,
+                    "A future version of FHAU may be able to connect to this device over BLE"
+                );
                 requestReport = true;
                 // TODO?: Consider implementing a CLI switch for 'have a go anyway'?
                 fmicDevice = null;
             } else if(fmicDevice.getProductId()<=15){
-                System.out.println(
+                s_loggingAgent.appendToLog(0,
                     "Older FMIC device - possibly supported by mustang-plug - disabled because not expected to work"
                 );
                 fmicDevice = null;
             } else {
-                System.out.println(
+                s_loggingAgent.appendToLog(0,
                     "Unrecognized FMIC device - disabled because not expected to work"
                 );
                 requestReport=true;
@@ -141,6 +163,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
                 fmicDevice = null;
 
             }
+            WebModeLoggingAgent.setTransactionName(null);
             if (requestReport) {
                 System.out.println();
                 System.out.println("The USB device you have connected to is not yet confirmed to work with FHAU.");
@@ -234,7 +257,6 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
                 handleInitialise(fmicDevice);
             }
         }
-
     }
 
     public void stopProvider() {
