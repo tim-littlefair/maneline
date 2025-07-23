@@ -94,7 +94,7 @@ public class SimulatorAmpProvider implements IAmpProvider {
         if(loggingAgent!=null) {
             m_loggingAgent = loggingAgent;
         } else {
-            m_loggingAgent = new DefaultLoggingAgent(2);
+            m_loggingAgent = new DefaultLoggingAgent();
         }
         PresetInfo pi = new PresetInfo();
         switch(requiredMode)
@@ -131,7 +131,7 @@ public class SimulatorAmpProvider implements IAmpProvider {
         }
     }
     public boolean connect() {
-        m_loggingAgent.appendToLog(0,String.format(
+        m_loggingAgent.appendToLog(String.format(
             "Connected to device '%s', firmware version '%s'",
             m_deviceDescription, m_firmwareVersion
         ));

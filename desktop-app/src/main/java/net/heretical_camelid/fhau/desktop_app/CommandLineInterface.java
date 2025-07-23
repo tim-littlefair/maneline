@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class CommandLineInterface implements ILoggingAgent {
+public class CommandLineInterface {
     // Integer constants with names prefixed FHAU_STATUS_ are
     // used as the OS exit status
 
@@ -59,25 +59,6 @@ public class CommandLineInterface implements ILoggingAgent {
             }
         }
     }
-
-    @Override
-    public void clearLog() {
-
-    }
-
-    @Override
-    public void setLevel(int loggingLevel) {
-
-    }
-
-    @Override
-    public void appendToLog(int loggingLevel, String messageToAppend) {
-        System.out.println(messageToAppend);
-        if(s_cliLogStream !=null) {
-            s_cliLogStream.println(messageToAppend);
-        }
-    }
-
 
     static boolean s_argParamForceDisclaimer = false;
     static boolean s_argParamNoDisclaimer = false;

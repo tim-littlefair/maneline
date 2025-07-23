@@ -3,8 +3,11 @@ package net.heretical_camelid.fhau.android_app;
 import android.widget.TextView;
 
 import net.heretical_camelid.fhau.lib.interfaces.ILoggingAgent;
+import net.heretical_camelid.fhau.lib.interfaces.LoggingAgentBase;
 
-public class LoggingAgent implements ILoggingAgent {
+public class LoggingAgent
+    extends LoggingAgentBase
+    implements ILoggingAgent {
 
     StringBuilder m_sbLog;
     final TextView m_tvLog;
@@ -16,8 +19,13 @@ public class LoggingAgent implements ILoggingAgent {
         m_sbLog = new StringBuilder();
     }
 
-    public void setLevel(int loggingLevel) { }
-    public void appendToLog(int loggingLevel, String messageToAppend) {
+    @Override
+    public void appendToLog(String messageToAppend, Object extraObject) {
+        if(extraObject!=null) {
+            assert messageToAppend!=null;
+            messageToAppend += extraObject.toString();
+        }
+
         if(messageToAppend!=null) {
             m_sbLog.append(messageToAppend + "\n");
         } else {

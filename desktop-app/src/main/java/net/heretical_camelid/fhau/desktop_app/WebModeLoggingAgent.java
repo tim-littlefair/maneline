@@ -12,12 +12,13 @@ import org.slf4j.LoggerFactory;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
 import net.heretical_camelid.fhau.lib.interfaces.ILoggingAgent;
+import net.heretical_camelid.fhau.lib.interfaces.LoggingAgentBase;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 
-public class WebModeLoggingAgent implements ILoggingAgent {
+public class WebModeLoggingAgent extends LoggingAgentBase {
     private static final Logger m_logger = LoggerFactory.getLogger(WebModeLoggingAgent.class.getName());
 
     private static String m_sessionName = null;
@@ -25,9 +26,15 @@ public class WebModeLoggingAgent implements ILoggingAgent {
 
     private static PrintStream m_sessionLog;
 
+    static WebModeLoggingAgent s_instance = null;
+
     public WebModeLoggingAgent() {
         m_sessionName = null;
         m_transactionName = null;
+
+        // Hopefully this is only instantiated once
+        assert s_instance == null;
+        s_instance = this;
     }
     @Override
     public void clearLog() {
@@ -35,15 +42,10 @@ public class WebModeLoggingAgent implements ILoggingAgent {
     }
 
     @Override
-    public void setLevel(int loggingLevel) {
-
-    }
-
-    @Override
-    public void appendToLog(int loggingLevel, String messageToAppend) {
+    public void appendToLog(String messageToAppend, Object o) {
         if(m_transactionName != null) {
             m_sessionLog.println(messageToAppend);
-            m_logger.info(messageToAppend, kv("abc", "def"));
+            m_logger.info(messageToAppend, o);
         } else {
             assert m_sessionLog != null: "Session log has not been created";
             m_sessionLog.println(messageToAppend);

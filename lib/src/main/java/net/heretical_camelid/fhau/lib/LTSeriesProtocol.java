@@ -115,7 +115,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
     }
 
     synchronized private int sendCommandBytes(byte[] commandBytes, boolean responseExpected) {
-        printAsHex2(commandBytes, "<");
+        logAsHex2(commandBytes, "<");
         int bytesWritten = m_deviceTransport.write(commandBytes);
         if (bytesWritten < 0) {
             log(m_deviceTransport.getLastErrorMessage());
@@ -231,7 +231,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
                 return STATUS_READ_FAIL;
             } /* else */
             {
-                printAsHex2(packetBuffer, ">");
+                logAsHex2(packetBuffer, ">");
             }
             assert packetBuffer[0] == 0x00;
             int packetContentStart = 3;
@@ -267,7 +267,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
 
         // Dump the reassembled message with a distinctive direction character
         byte[] reassembledMessage = Arrays.copyOfRange(assemblyBuffer, 0, assemblyBufferOffset);
-        printAsHex2(reassembledMessage, "+>");
+        logAsHex2(reassembledMessage, "+>");
         parseResponse(reassembledMessage);
         return STATUS_OK;
     }

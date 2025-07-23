@@ -8,6 +8,8 @@ import net.heretical_camelid.fhau.lib.registries.SuiteRegistry;
 import org.hid4java.*;
 import org.hid4java.event.HidServicesEvent;
 import org.hid4java.jna.HidApi;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import net.heretical_camelid.fhau.lib.*;
 
@@ -48,21 +50,22 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
             s_loggingAgent = new WebModeLoggingAgent();
             WebModeLoggingAgent.setSessionName(outputPath);
         } else {
-            s_loggingAgent = new DefaultLoggingAgent(2);
+            s_loggingAgent = new DefaultLoggingAgent();
         }
-        s_loggingAgent.appendToLog(0,"Compiling preset registry");
+        s_loggingAgent.appendToLog("Compiling preset registry");
         m_presetRegistry = new PresetRegistry(outputPath);
-        s_loggingAgent.appendToLog(0,"Compiling suite registry");
+        s_loggingAgent.appendToLog("Compiling suite registry");
         m_suiteRegistry = new SuiteRegistry(m_presetRegistry);
-        s_loggingAgent.appendToLog(0,"Starting protocol");
+        s_loggingAgent.appendToLog("Starting protocol");
         m_protocol = new LTSeriesProtocol(m_presetRegistry,true);
     }
 
     void startProvider() {
+        AbstractMessageProtocolBase.setLoggingAgent(WebModeLoggingAgent.s_instance);
         WebModeLoggingAgent.setTransactionName("txn-startProvider");
         
         // Demonstrate low level traffic logging
-        HidApi.logTraffic = true;
+        // HidApi.logTraffic = true;
 
         // Configure to use custom specification
         HidServicesSpecification hidServicesSpecification = new HidServicesSpecification();
@@ -101,61 +104,61 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
 
         if (fmicDevice == null) {
             // Shut down and rely on auto-shutdown hook to clear HidApi resources
-            s_loggingAgent.appendToLog(0, "No relevant devices attached");
+            s_loggingAgent.appendToLog( "No relevant devices attached");
         } else {
             boolean requestReport = false;
             int productId = fmicDevice.getProductId();
-            s_loggingAgent.appendToLog(0, String.format(
+            s_loggingAgent.appendToLog( String.format(
                 "Using FMIC device with VID/PID=%04x:%04x product='%s' serial#=%s release=%d path=%s",
                 fmicDevice.getVendorId(), productId, fmicDevice.getProduct(),
                 fmicDevice.getSerialNumber(), fmicDevice.getReleaseNumber(), fmicDevice.getPath()
             ));
             if (productId==0x0046) {
                 // Mustang LT40S - tested with firmware 1.0.7
-                s_loggingAgent.appendToLog(0,
+                s_loggingAgent.appendToLog(
                     "Mustang LT40S - tested with firmware 1.0.7 - expected to work"
                 );
             } else if (productId==0x0043) {
                 // Original Mustang Micro - with 2024/2025 firmware this does not enumerate as a USB
                 // HID Device - including it here in the distant hope that a future firmware might
-                s_loggingAgent.appendToLog(0,
+                s_loggingAgent.appendToLog(
                     "Original Mustang Micro - not expected to be detected via USB HID"
                 );
             } else if (productId==0x003a) {
                 // Mustang Micro Plus - with 2024/2025 firmware this does not enumerate as a USB
                 // HID Device - including it here in the slightly less distant hope that a future firmware might
-                s_loggingAgent.appendToLog(0,
+                s_loggingAgent.appendToLog(
                     "Mustang Micro Plus - not expected to be detected via USB HID"
                 );
-                s_loggingAgent.appendToLog(0,
+                s_loggingAgent.appendToLog(
                     "A future version of FHAU may be able to connect to this device over BLE"
                 );
             } else if(
                 fmicDevice.getProduct().contains(" LT")
             ) {
-                s_loggingAgent.appendToLog(0,
+                s_loggingAgent.appendToLog(
                     "Probable LT series device - not tested - may or may not work"
                 );
                 requestReport = true;
             } else if(
                 fmicDevice.getProduct().contains(" GT")
             ) {
-                s_loggingAgent.appendToLog(0,
+                s_loggingAgent.appendToLog(
                     "Probable GT/GTX series device - not expected to be detected via USB HID"
                 );
-                s_loggingAgent.appendToLog(0,
+                s_loggingAgent.appendToLog(
                     "A future version of FHAU may be able to connect to this device over BLE"
                 );
                 requestReport = true;
                 // TODO?: Consider implementing a CLI switch for 'have a go anyway'?
                 fmicDevice = null;
             } else if(fmicDevice.getProductId()<=15){
-                s_loggingAgent.appendToLog(0,
+                s_loggingAgent.appendToLog(
                     "Older FMIC device - possibly supported by mustang-plug - disabled because not expected to work"
                 );
                 fmicDevice = null;
             } else {
-                s_loggingAgent.appendToLog(0,
+                s_loggingAgent.appendToLog(
                     "Unrecognized FMIC device - disabled because not expected to work"
                 );
                 requestReport=true;
@@ -272,7 +275,9 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
     private boolean handleInitialise(HidDevice hidDevice) {
         m_protocol.setDeviceTransport(new DeviceTransportHid4Java(hidDevice));
         String[] firmwareVersionEtc = new String[] { null };
+        WebModeLoggingAgent.setTransactionName("txn-doStartup");
         int startupStatus = m_protocol.doStartup(firmwareVersionEtc);
+        WebModeLoggingAgent.setTransactionName(null);
         m_firmwareVersion = firmwareVersionEtc[0];
 
         // The desktop app is used to generate curated suites of presets.
@@ -301,7 +306,9 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
             "Requesting presets %d-%d - should take about 5 seconds",
             firstPreset, lastPreset
         ));
+        WebModeLoggingAgent.setTransactionName("txnGetPresetNamesList");
         int presetNamesStatus = m_protocol.getPresetNamesList(firstPreset,lastPreset);
+        WebModeLoggingAgent.setTransactionName(null);
         if(startupStatus!=0 || presetNamesStatus!=0) {
             System.out.println("doStartup returned " + startupStatus);
             System.out.println("getPresetNamesList returned " + presetNamesStatus);

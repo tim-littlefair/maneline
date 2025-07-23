@@ -101,7 +101,7 @@ public class MainActivity
             currentThreadId==getThreadId(this.getMainLooper().getThread())
         ) {
             System.out.println(message);
-            m_loggingAgent.appendToLog(0,message);
+            m_loggingAgent.appendToLog(message);
         } else if (m_providerHandler!=null) {
             // This message will be displayed when the
             // handler processes it

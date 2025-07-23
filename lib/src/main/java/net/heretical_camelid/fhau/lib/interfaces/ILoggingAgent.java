@@ -6,9 +6,8 @@ package net.heretical_camelid.fhau.lib.interfaces;
  */
 public interface ILoggingAgent {
     void clearLog();
-    void setLevel(int loggingLevel);
-
-    void appendToLog(int loggingLevel, String messageToAppend);
+    void appendToLog(String messageToAppend, Object extraObject);
+    void appendToLog(String messageToAppend);
 
     public static void main(String[] args) {
         System.out.println("No tests for ILoggingAgent");

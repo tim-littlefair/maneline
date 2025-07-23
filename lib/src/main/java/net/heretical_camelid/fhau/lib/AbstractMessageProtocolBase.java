@@ -1,6 +1,7 @@
 package net.heretical_camelid.fhau.lib;
 
 import net.heretical_camelid.fhau.lib.interfaces.IDeviceTransport;
+import net.heretical_camelid.fhau.lib.interfaces.ILoggingAgent;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -12,6 +13,10 @@ import java.util.regex.Pattern;
  * implementation is expected to provide.
  */
 public abstract class AbstractMessageProtocolBase {
+    private static ILoggingAgent s_loggingAgent = null;
+    public static void setLoggingAgent(ILoggingAgent loggingAgent) {
+        s_loggingAgent = loggingAgent;
+    }
 
     // Abstract interface begins
     public abstract int doStartup(String[] firmwareVersionEtc);
@@ -61,12 +66,15 @@ public abstract class AbstractMessageProtocolBase {
     // log files with empty bytes (e.g. for the report descriptor).
     // This variant is also suitable for use with both sent
     // and received data, and is controlled by an enablement variable
-    public static boolean enable_printAsHex2=false;
-    public static void printAsHex2(byte[] dataSentOrReceived, String directionChar) {
+    public static boolean enable_printAsHex2=true;
+    public static void logAsHex2(byte[] dataSentOrReceived, String directionChar) {
         if(enable_printAsHex2==false) {
             return;
+        } else if(s_loggingAgent==null) {
+            return;
         }
-        System.out.printf("%s [%02x]:", directionChar, dataSentOrReceived.length);
+        StringBuffer sb = new StringBuffer();
+        sb.append(String.format("%s [%02x]:", directionChar, dataSentOrReceived.length));
         int trailingZeroByteCount = -1; // -1 signifies 'no non-zero bytes seen yet'
         for (int i=dataSentOrReceived.length-1; i>0; --i) {
             if (dataSentOrReceived[i]!=0) {
@@ -75,13 +83,17 @@ public abstract class AbstractMessageProtocolBase {
             }
         }
         for (int i=0; i<dataSentOrReceived.length; ++i) {
-            System.out.printf(" %02x", dataSentOrReceived[i]);
+            sb.append(String.format(" %02x", dataSentOrReceived[i]));
             if (dataSentOrReceived.length-i==trailingZeroByteCount) {
-                System.out.printf(" ...");
+                sb.append(" ...");
                 break;
             }
         }
-        System.out.println();
+        if(s_loggingAgent!=null) {
+
+        }
+        sb.append("\n");
+        s_loggingAgent.appendToLog(sb.toString());
     }
 
     public static String getStringAttribute(
