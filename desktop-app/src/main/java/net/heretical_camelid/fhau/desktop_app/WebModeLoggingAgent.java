@@ -43,29 +43,38 @@ public class WebModeLoggingAgent extends LoggingAgentBase {
 
     @Override
     public void appendToLog(String messageToAppend, Object o) {
-        if(m_transactionName != null) {
-            m_sessionLog.println(messageToAppend);
-            m_logger.info(messageToAppend, o);
+        assert messageToAppend != null;
+        final String messageToAppendWithObject;
+        if(o!=null) {
+            messageToAppendWithObject = String.format(
+                "%s object=%s", messageToAppend, o
+            );
         } else {
-            assert m_sessionLog != null: "Session log has not been created";
-            m_sessionLog.println(messageToAppend);
+            messageToAppendWithObject = messageToAppend;
+        }
+        if(m_sessionLog==null) {
+            System.out.println(messageToAppendWithObject);
+        } else if(m_transactionName != null) {
+            m_logger.info(messageToAppend, o);
+            m_sessionLog.println(messageToAppendWithObject);
+        } else {
+            m_sessionLog.println(messageToAppendWithObject);
         }
     }
 
-    static public void setSessionName(String sessionName) {
-        assert m_sessionName == null: "Session name should only be set once";
-        m_sessionName = sessionName;
+    @Override
+    public void setSessionName(String sessionName) {
+        super.setSessionName(sessionName);
         try {
             m_sessionLog = new PrintStream(new FileOutputStream(
-                m_sessionName + "/session.log"
+                sessionName + "/session.log"
             ));
         }
         catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
     }
-    static public void setTransactionName(String transactionName) {
-        assert m_sessionName != null: "Transaction name should not be set before session name";
+    public void setTransactionName(String transactionName) {
         if(transactionName!=null) {
             m_sessionLog.println(String.format(
                 "Logging for transaction %s begins", transactionName

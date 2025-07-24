@@ -5,6 +5,8 @@ package net.heretical_camelid.fhau.lib.interfaces;
  * logging.
  */
 public interface ILoggingAgent {
+    void setSessionName(String sessionName);
+    void setTransactionName(String transactionName);
     void clearLog();
     void appendToLog(String messageToAppend, Object extraObject);
     void appendToLog(String messageToAppend);

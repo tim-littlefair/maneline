@@ -48,7 +48,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
             // Logging agent already exists, no need to recreate it
         } else if (s_webMode) {
             s_loggingAgent = new WebModeLoggingAgent();
-            WebModeLoggingAgent.setSessionName(outputPath);
+            s_loggingAgent.setSessionName(outputPath);
         } else {
             s_loggingAgent = new DefaultLoggingAgent();
         }
@@ -62,7 +62,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
 
     void startProvider() {
         AbstractMessageProtocolBase.setLoggingAgent(WebModeLoggingAgent.s_instance);
-        WebModeLoggingAgent.setTransactionName("txn-startProvider");
+        s_loggingAgent.setTransactionName("txn-startProvider");
         
         // Demonstrate low level traffic logging
         // HidApi.logTraffic = true;
@@ -166,7 +166,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
                 fmicDevice = null;
 
             }
-            WebModeLoggingAgent.setTransactionName(null);
+            s_loggingAgent.setTransactionName(null);
             if (requestReport) {
                 System.out.println();
                 System.out.println("The USB device you have connected to is not yet confirmed to work with FHAU.");
@@ -275,9 +275,9 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
     private boolean handleInitialise(HidDevice hidDevice) {
         m_protocol.setDeviceTransport(new DeviceTransportHid4Java(hidDevice));
         String[] firmwareVersionEtc = new String[] { null };
-        WebModeLoggingAgent.setTransactionName("txn-doStartup");
+        s_loggingAgent.setTransactionName("txn-doStartup");
         int startupStatus = m_protocol.doStartup(firmwareVersionEtc);
-        WebModeLoggingAgent.setTransactionName(null);
+        s_loggingAgent.setTransactionName(null);
         m_firmwareVersion = firmwareVersionEtc[0];
 
         // The desktop app is used to generate curated suites of presets.
@@ -306,9 +306,9 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
             "Requesting presets %d-%d - should take about 5 seconds",
             firstPreset, lastPreset
         ));
-        WebModeLoggingAgent.setTransactionName("txnGetPresetNamesList");
+        s_loggingAgent.setTransactionName("txnGetPresetNamesList");
         int presetNamesStatus = m_protocol.getPresetNamesList(firstPreset,lastPreset);
-        WebModeLoggingAgent.setTransactionName(null);
+        s_loggingAgent.setTransactionName(null);
         if(startupStatus!=0 || presetNamesStatus!=0) {
             System.out.println("doStartup returned " + startupStatus);
             System.out.println("getPresetNamesList returned " + presetNamesStatus);
