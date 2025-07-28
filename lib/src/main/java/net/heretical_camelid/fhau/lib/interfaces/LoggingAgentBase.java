@@ -8,6 +8,7 @@ public abstract class LoggingAgentBase implements ILoggingAgent {
         assert m_sessionName == null:
             "LoggingAgentBase::setSessionName(...) has already been called"
         ;
+        m_sessionName = sessionName;
         appendToLog(String.format("Session name is %s",sessionName));
     }
 

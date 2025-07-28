@@ -21,19 +21,27 @@ public class LogbackRollingPolicy_SingleMessagePerFile<E>
     extends RollingPolicyBase
     implements TriggeringPolicy<E> {
 
-    static public void setFilenamePattern(String fnpStr) {
-        fileNamePatternStr = fnpStr;
-        rollingNumber = 0;
-    }
 
     static String fileNamePatternStr;
     static private int rollingNumber = 0;
+
+    static private LogbackRollingPolicy_SingleMessagePerFile s_instance = null;
+
+    static public void setFilenamePattern(String fnpStr) {
+        fileNamePatternStr = fnpStr;
+        rollingNumber = 0;
+        if(s_instance!=null) {
+            s_instance.rollover();
+        }
+    }
 
     FileAppender<?> parentAppender;
 
     public LogbackRollingPolicy_SingleMessagePerFile() {
         super();
         setFilenamePattern("log-%03d.txt");
+        assert s_instance == null;
+        s_instance = this;
     }
 
     /**

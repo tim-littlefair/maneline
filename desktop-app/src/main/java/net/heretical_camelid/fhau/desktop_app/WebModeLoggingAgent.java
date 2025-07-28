@@ -19,7 +19,7 @@ import java.io.FileOutputStream;
 import java.io.PrintStream;
 
 public class WebModeLoggingAgent extends LoggingAgentBase {
-    private static final Logger m_logger = LoggerFactory.getLogger(WebModeLoggingAgent.class.getName());
+    private static final Logger m_logger = LoggerFactory.getLogger("FILE");
 
     private static PrintStream m_sessionLog;
 
@@ -82,7 +82,7 @@ public class WebModeLoggingAgent extends LoggingAgentBase {
                 String.format("%s/%s-%%03d.%s",getSessionName(), transactionName,"json")
             );
         } else {
-            super.setTransactionName(transactionName);
+            super.setTransactionName(null);
         }
     }
 }

@@ -49,15 +49,24 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
         } else if (s_webMode) {
             s_loggingAgent = new WebModeLoggingAgent();
             WebModeLoggingAgent.setSessionNameStatic(outputPath);
+            s_loggingAgent.appendToLog("Web mode logging enabled");
         } else {
             s_loggingAgent = new DefaultLoggingAgent();
         }
+        s_loggingAgent.setTransactionName("txnCompilingPresetRegistry");
         s_loggingAgent.appendToLog("Compiling preset registry");
         m_presetRegistry = new PresetRegistry(outputPath);
+        s_loggingAgent.setTransactionName(null);
+
+        s_loggingAgent.setTransactionName("txnCompilingSuiteRegistry");
         s_loggingAgent.appendToLog("Compiling suite registry");
         m_suiteRegistry = new SuiteRegistry(m_presetRegistry);
+        s_loggingAgent.setTransactionName(null);
+
+        s_loggingAgent.setTransactionName("txnStartingProtocol");
         s_loggingAgent.appendToLog("Starting protocol");
         m_protocol = new LTSeriesProtocol(m_presetRegistry,true);
+        s_loggingAgent.setTransactionName(null);
     }
 
     void startProvider() {
