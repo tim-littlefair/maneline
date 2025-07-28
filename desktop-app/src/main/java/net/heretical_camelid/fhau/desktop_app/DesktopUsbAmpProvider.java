@@ -49,30 +49,18 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
         } else if (s_webMode) {
             s_loggingAgent = new WebModeLoggingAgent();
             WebModeLoggingAgent.setSessionNameStatic(outputPath);
+            AbstractMessageProtocolBase.setLoggingAgent(WebModeLoggingAgent.s_instance);
             s_loggingAgent.appendToLog("Web mode logging enabled");
         } else {
             s_loggingAgent = new DefaultLoggingAgent();
         }
-        s_loggingAgent.setTransactionName("txnCompilingPresetRegistry");
-        s_loggingAgent.appendToLog("Compiling preset registry");
         m_presetRegistry = new PresetRegistry(outputPath);
-        s_loggingAgent.setTransactionName(null);
-
-        s_loggingAgent.setTransactionName("txnCompilingSuiteRegistry");
-        s_loggingAgent.appendToLog("Compiling suite registry");
         m_suiteRegistry = new SuiteRegistry(m_presetRegistry);
-        s_loggingAgent.setTransactionName(null);
-
-        s_loggingAgent.setTransactionName("txnStartingProtocol");
-        s_loggingAgent.appendToLog("Starting protocol");
         m_protocol = new LTSeriesProtocol(m_presetRegistry,true);
-        s_loggingAgent.setTransactionName(null);
     }
 
     void startProvider() {
-        AbstractMessageProtocolBase.setLoggingAgent(WebModeLoggingAgent.s_instance);
-        s_loggingAgent.setTransactionName("txn-startProvider");
-        
+        s_loggingAgent.setTransactionName("txn00-startProvider");
         // Demonstrate low level traffic logging
         // HidApi.logTraffic = true;
 
@@ -94,7 +82,6 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
         m_hidServices = HidManager.getHidServices(hidServicesSpecification);
         // Register for service events
         m_hidServices.addHidServicesListener(this);
-
 
         // Manually start HID services
         m_hidServices.start();
@@ -175,7 +162,6 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
                 fmicDevice = null;
 
             }
-            s_loggingAgent.setTransactionName(null);
             if (requestReport) {
                 System.out.println();
                 System.out.println("The USB device you have connected to is not yet confirmed to work with FHAU.");
@@ -243,6 +229,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
                             }
                         }
                         // Attempt to open the device failed, so we stop here
+                        s_loggingAgent.setTransactionName(null);
                         return;
                     }
                 }
@@ -264,6 +251,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
                     //printAsHex2(reportDescriptor,"<");
                     enable_printAsHex2 = e_pah2_prev_state;
                 }
+                s_loggingAgent.setTransactionName(null);
 
                 // Initialise the Fender Mustang/Rumble device
                 handleInitialise(fmicDevice);
@@ -284,9 +272,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
     private boolean handleInitialise(HidDevice hidDevice) {
         m_protocol.setDeviceTransport(new DeviceTransportHid4Java(hidDevice));
         String[] firmwareVersionEtc = new String[] { null };
-        s_loggingAgent.setTransactionName("txn-doStartup");
         int startupStatus = m_protocol.doStartup(firmwareVersionEtc);
-        s_loggingAgent.setTransactionName(null);
         m_firmwareVersion = firmwareVersionEtc[0];
 
         // The desktop app is used to generate curated suites of presets.
@@ -315,9 +301,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
             "Requesting presets %d-%d - should take about 5 seconds",
             firstPreset, lastPreset
         ));
-        s_loggingAgent.setTransactionName("txnGetPresetNamesList");
         int presetNamesStatus = m_protocol.getPresetNamesList(firstPreset,lastPreset);
-        s_loggingAgent.setTransactionName(null);
         if(startupStatus!=0 || presetNamesStatus!=0) {
             System.out.println("doStartup returned " + startupStatus);
             System.out.println("getPresetNamesList returned " + presetNamesStatus);

@@ -1,5 +1,6 @@
 package net.heretical_camelid.fhau.lib;
 
+import net.heretical_camelid.fhau.lib.interfaces.ILoggingAgent;
 import net.heretical_camelid.fhau.lib.registries.PresetRegistry;
 
 import java.nio.charset.StandardCharsets;
@@ -14,7 +15,9 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
     final Thread m_heartbeatThread;
     boolean m_heartbeatStopped = false;
 
-    public LTSeriesProtocol(PresetRegistry presetRegistry, boolean startHeartbeat) {
+    public LTSeriesProtocol(
+        PresetRegistry presetRegistry, boolean startHeartbeat
+    ) {
         m_firmwareVersion = null;
         m_presetRegistry = presetRegistry;
         m_heartbeatStopped = !startHeartbeat;
@@ -25,16 +28,33 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         assert m_deviceTransport!=null;
 
         String[][] startupCommands = new String[][]{
-            new String[]{"35:09:08:00:8a:07:04:08:00:10:00", "initialisation request"},
-            new String[]{"35:07:08:00:b2:06:02:08:01:00:10", "firmware version request"},
+            new String[]{"35:09:08:00:8a:07:04:08:00:10:00", "initialisation request","initRequest"},
+            new String[]{"35:07:08:00:b2:06:02:08:01:00:10", "firmware version request","fwverRequest"},
         };
+        int startupCommandIndex=0;
         for (String[] sc : startupCommands) {
+            startupCommandIndex++;
+            setLogTransactionName(String.format(
+                "txn%02d-%s",startupCommandIndex,sc[2]
+            ));
             int scStatus = sendCommand(sc[0], sc[1],true);
             if (scStatus != STATUS_OK) {
+                setLogTransactionName(null);
                 return scStatus;
             }
+            setLogTransactionName(null);
         }
+
         firmwareVersionEtc[0] = m_firmwareVersion;
+        assert startupCommandIndex == 2: "Unexpected number of startup commands";
+        setLogTransactionName("txn03-firmwareVersionEtc");
+        appendToLog(
+            "Firmware version etc: " +
+            String.join(",",firmwareVersionEtc),
+            null
+        );
+        setLogTransactionName(null);
+
         return STATUS_OK;
     }
 
@@ -56,7 +76,9 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         assert m_deviceTransport!=null;
         for (int i = firstPreset; i <= lastPreset; ++i) {
             StringBuilder presetJsonSB = new StringBuilder();
+            setLogTransactionName(String.format("txn05-getPreset%03d",i));
             int psJsonStatus = getPresetJson(i, presetJsonSB);
+            setLogTransactionName(null);
             if (psJsonStatus != STATUS_OK) {
                 return psJsonStatus;
             }

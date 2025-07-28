@@ -66,11 +66,9 @@ public abstract class AbstractMessageProtocolBase {
     // log files with empty bytes (e.g. for the report descriptor).
     // This variant is also suitable for use with both sent
     // and received data, and is controlled by an enablement variable
-    public static boolean enable_printAsHex2=true;
+    public static boolean enable_printAsHex2=false;
     public static void logAsHex2(byte[] dataSentOrReceived, String directionChar) {
-        if(enable_printAsHex2==false) {
-            return;
-        } else if(s_loggingAgent==null) {
+        if(s_loggingAgent==null) {
             return;
         }
         StringBuffer sb = new StringBuffer();
@@ -88,9 +86,6 @@ public abstract class AbstractMessageProtocolBase {
                 sb.append(" ...");
                 break;
             }
-        }
-        if(s_loggingAgent!=null) {
-
         }
         sb.append("\n");
         s_loggingAgent.appendToLog(sb.toString());
@@ -118,6 +113,17 @@ public abstract class AbstractMessageProtocolBase {
             name = "_name_not_found_";
         }
         return name;
+    }
+
+    void appendToLog(String message, Object o) {
+        if(s_loggingAgent!=null) {
+            s_loggingAgent.appendToLog(message,o);
+        }
+    }
+    void setLogTransactionName(String transactionName) {
+        if(s_loggingAgent!=null) {
+            s_loggingAgent.setTransactionName(transactionName);
+        }
     }
 
     public abstract int switchPreset(int slotIndex);
