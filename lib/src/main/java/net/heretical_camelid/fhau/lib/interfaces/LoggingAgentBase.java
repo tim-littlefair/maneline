@@ -11,6 +11,10 @@ public abstract class LoggingAgentBase implements ILoggingAgent {
         appendToLog(String.format("Session name is %s",sessionName));
     }
 
+    public String getSessionName() {
+        return m_sessionName;
+    }
+
     @Override
     public void setTransactionName(String transactionName) {
         assert m_sessionName != null: "Transaction name should not be set before session name";
@@ -23,6 +27,9 @@ public abstract class LoggingAgentBase implements ILoggingAgent {
         }
     }
 
+    public String getTransactionName() {
+        return m_transactionName;
+    }
     @Override
     public void clearLog() {
         // This implementation does nothing but

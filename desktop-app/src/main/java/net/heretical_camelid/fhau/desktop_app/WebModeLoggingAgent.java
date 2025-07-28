@@ -21,24 +21,21 @@ import java.io.PrintStream;
 public class WebModeLoggingAgent extends LoggingAgentBase {
     private static final Logger m_logger = LoggerFactory.getLogger(WebModeLoggingAgent.class.getName());
 
-    private static String m_sessionName = null;
-    private static String m_transactionName = null;
-
     private static PrintStream m_sessionLog;
 
     static WebModeLoggingAgent s_instance = null;
 
+    static void setSessionNameStatic(String sessionName) {
+        assert s_instance != null;
+        s_instance.setSessionName(sessionName);
+    }
+
     public WebModeLoggingAgent() {
-        m_sessionName = null;
-        m_transactionName = null;
+        super();
 
         // Hopefully this is only instantiated once
         assert s_instance == null;
         s_instance = this;
-    }
-    @Override
-    public void clearLog() {
-
     }
 
     @Override
@@ -54,9 +51,8 @@ public class WebModeLoggingAgent extends LoggingAgentBase {
         }
         if(m_sessionLog==null) {
             System.out.println(messageToAppendWithObject);
-        } else if(m_transactionName != null) {
+        } else if(getTransactionName() != null) {
             m_logger.info(messageToAppend, o);
-            m_sessionLog.println(messageToAppendWithObject);
         } else {
             m_sessionLog.println(messageToAppendWithObject);
         }
@@ -74,20 +70,19 @@ public class WebModeLoggingAgent extends LoggingAgentBase {
             throw new RuntimeException(e);
         }
     }
+
+    @Override
     public void setTransactionName(String transactionName) {
+        assert getSessionName() != null:
+            "Session name must be set before setting transaction name"
+        ;
         if(transactionName!=null) {
-            m_sessionLog.println(String.format(
-                "Logging for transaction %s begins", transactionName
-            ));
-            m_transactionName = transactionName;
+            super.setTransactionName(transactionName);
             LogbackRollingPolicy_SingleMessagePerFile.setFilenamePattern(
-                String.format("%s/%s-%%03d.%s",m_sessionName, m_transactionName,"json")
+                String.format("%s/%s-%%03d.%s",getSessionName(), transactionName,"json")
             );
         } else {
-            m_sessionLog.println(String.format(
-                "Logging for transaction %s has ended", transactionName
-            ));
-            m_transactionName = null;
+            super.setTransactionName(transactionName);
         }
     }
 }

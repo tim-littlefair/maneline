@@ -48,7 +48,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
             // Logging agent already exists, no need to recreate it
         } else if (s_webMode) {
             s_loggingAgent = new WebModeLoggingAgent();
-            s_loggingAgent.setSessionName(outputPath);
+            WebModeLoggingAgent.setSessionNameStatic(outputPath);
         } else {
             s_loggingAgent = new DefaultLoggingAgent();
         }

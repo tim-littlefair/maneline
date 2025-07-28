@@ -22,7 +22,7 @@ version: "2"
 
 services:
   balenalabs-browser:
-    image: bh.cr/gh_tim_littlefair/tl-browser-aarch64/624cbaae48b3d587486746d5505ba5ad2af7b967
+    image: bh.cr/gh_tim_littlefair/tl-browser-aarch64/fca86032af0984f74fffcce1d2f7a152
     privileged: true
     network_mode: host
     devices:
