@@ -24,14 +24,15 @@
 # - web UI presented using a kiosk-mode browser (in another container);
 # - start page for the web UI is served out of an HTTPS server running
 #   in the current container;
-# - the HTTPS server process running in this container also integrates
+# - the HTTP server process running in this container also integrates
 #   a USB HID client connected to the USB interface of a Fender LT40S 
 #   modelling guitar amplifier; and
-# - the HTTPS server responds to requiests from the web client by 
+# - the HTTP server responds to requiests from the web client by
 #   providing a proxy UI for the LT40S device.
 
-# The HTTPS server/USB HID client process running in the current container
-# is implemented as a Java .jar file.
+# The HTTP server/USB HID client process running in the current container
+# is implemented as a Lua script (providing HTTP glue) running a Java
+# application which performs the USB/HID operations.
 
 # Presently, the kiosk-mode browser container uses an example balena 'block'
 # published on GitHub by Balena.  This may be replaced by a more lightweight 
@@ -67,7 +68,7 @@ WORKDIR /opt/fhau
 #RUN wget https://github.com/tim-littlefair/feral-horse-amp-utils/releases/download/release-0.1.1/desktopFHAUcli-0.1.1-44f72ab-36.jar $WORKDIR
 
 # Also deploy any available builds from the development tree
-COPY /tmp/desktopFHAUcli-0.0.0.jar $WORKDIR
+COPY /jar/desktopFHAUcli-*.jar $WORKDIR
 
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update
@@ -78,8 +79,8 @@ RUN apt-get install -y --no-install-recommends --no-install-suggests gcc liblz-d
 
 RUN luarocks install pegasus
 
-COPY /lua $WORKDIR
-COPY /web_ui $WORKDIR
+COPY ./lua ./lua
+COPY ./web_ui ./web_ui
 
 # The present FHAU CLI program is not suitable for use as a Balena service
 # so the service just holds the session open for an hour so that the 

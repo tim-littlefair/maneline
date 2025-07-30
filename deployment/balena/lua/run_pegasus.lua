@@ -6,10 +6,16 @@ local pegasus = require 'pegasus'
 local fhau = require 'fhau'
 local lfs = require 'lfs'
 
--- scripts/run_web_cli.sh uses a symlink to access
--- the primary copy of lua scripts, so the base
--- directory of the install needs to be passed in
--- as a parameter.
+-- scripts/run_web_cli.sh is intended to provide
+-- a way to simulate the balena deploy environment
+-- on the Linux desktop development platform.end
+-- The simulated environment set up by this scripts
+-- accesses the directory containing lua scripts
+-- via a symlink, so the base directory of the install
+-- needs to be passed in as a parameter as, on the
+-- development environment Balena simulation,
+-- ".." points to the parent of the symlink target,
+-- not the base of the simulated Balena install.
 lfs.chdir(arg[1])
 
 local server = pegasus:new({

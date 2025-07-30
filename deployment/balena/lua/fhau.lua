@@ -23,9 +23,20 @@ local jar_file_name="desktopFHAUcli-0.0.0.jar"
 
 fhau_cli_input_fd = io.popen(
     "cd .. && " ..
-    "java -jar " .. jar_file_name .. " --no-disclaimer --web=" .. session_name .. " > fhau.log",
+    "java -jar " .. jar_file_name .. " --web=" .. session_name .. "> fhau.log",
     "w"
 )
+
+function check_for_cli_death()
+    -- Our only link to the CLI subprocess is the file descriptor
+    -- we use to send commands.
+    -- We check whether it is alive by sending a newline (which
+    -- will be ignored as a command), and seeing whether the
+    -- flush after writing to the FD fails
+    fhau_cli_input_fd:write("\n");
+    flush_status=fhau_cli_input_fd:flush();
+    return flush_status~=true
+end
 
 function Fhau:send_cli_command(command)
     response = nil
@@ -55,7 +66,6 @@ end
 
 function Fhau:get_cxn_and_dev_status()
     local retval
-    print(lfs.currentdir())
     fd = io.open(session_name.."/txn00-startProvider-001.json","rb")
     if fd
     then
@@ -63,7 +73,15 @@ function Fhau:get_cxn_and_dev_status()
     else
         retval="Connection not completed yet"
     end
+
+    if(check_for_cli_death())
+    then
+        print("USB/HID CLI process appears to have died")
+        os.exit(91)
+    end
+
     return retval
 end
+
 
 return Fhau

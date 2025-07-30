@@ -45,11 +45,12 @@ services:
   tl-fhau-web:
     build: .
     network_mode: host
+    privileged: true
     ports:
-      - '9090'
+      - 9090
     environment:
-      UDEV: '1'
-      LOCAL_BROWSER: '1'
+      - UDEV=1
+      - LOCAL_BROWSER=1
     devices:
       # On RPiZeroW2 this service only starts successfully if
       # all /dev/hidraw* devices defined here are plugged in

@@ -280,7 +280,9 @@ public class CommandLineInterface {
             } else if(arg.startsWith("--web=")) {
                 assert s_argParamOutputDir == null;
                 s_webMode = true;
+                s_argParamNoDisclaimer = true;
                 s_argParamOutputDir = arg.replace("--web=","");
+                s_argParamInteractive = true;
             } else if(arg.startsWith("--output=")) {
                 assert s_argParamOutputDir == null;
                 s_argParamOutputDir = arg.replace("--output=","");
