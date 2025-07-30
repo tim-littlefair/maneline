@@ -11,6 +11,8 @@
 
 lfs = require 'lfs'
 cjson = require 'cjson'
+web_ui = require 'web_ui'
+fhau_errors = require 'fhau_errors'
 
 local Fhau = {}
 
@@ -70,6 +72,7 @@ function Fhau:get_cxn_and_dev_status()
     if fd
     then
         retval=cjson.decode(fd:read("*all")).message
+        fd:close()
     else
         retval="Connection not completed yet"
     end
@@ -77,10 +80,10 @@ function Fhau:get_cxn_and_dev_status()
     if(check_for_cli_death())
     then
         print("USB/HID CLI process appears to have died")
-        os.exit(91)
+        os.exit(fhau_errors.FATAL_CLI_HAS_EXITED)
     end
 
-    return retval
+    return build_cds_html(retval)
 end
 
 

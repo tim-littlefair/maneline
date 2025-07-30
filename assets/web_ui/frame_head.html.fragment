@@ -16,20 +16,16 @@
   <link rel="stylesheet" href="https://heretical-camelid.net/_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="https://heretical-camelid.net/_static/pygments.css" type="text/css" />
   <link rel="stylesheet" href="https://heretical-camelid.net/_static/style-font.css" type="text/css" />
-
-  <script>
-    function setTitle() {
-        const title = new URL(window.location).searchParams.get("title");
-        document.querySelector("span").textContent = title;
-    }
-    window.onload = setTitle
-  </script>
-
 </head>
 
 <body class="wy-body-for-nav" id="content_body" name="content_body">
-    <h3><span>&nbsp;</span></h3>
-    <p>Content of this iframe are currently under construction</p>
+    <h1><span>&nbsp;</span></h1>
+    <p>WIP on the web user interface for
+        <a href="https://github.com/tim-littlefair/feral-horse-amp-utils">
+            https://github.com/tim-littlefair/feral-horse-amp-utils
+        </a>.
+    </p>
+    <p>Content of this iframe currently under construction</p>
 </body>
 
 </html>
