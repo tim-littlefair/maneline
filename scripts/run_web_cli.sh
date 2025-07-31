@@ -40,11 +40,14 @@ check_webhome() {
     set -e
 }
 
-
 check_webhome
 
-
 rundir=$(pwd)/_work/webhome
-cd _work/webhome/lua
-sh ../run.sh $rundir
+cd $rundir
+tail -F fhau.log &
+tail_pid=$!
+sh ./run.sh $rundir
+kill $tail_pid
+
+
 

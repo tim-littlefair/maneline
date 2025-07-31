@@ -10,7 +10,7 @@
     // https://tobydevlin.com/blog/structured-logging-in-java-with-slf4j-and-logback
     -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>null</file>
+        <file>fhau.log</file>
 
         <!-- rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <file>null</file>

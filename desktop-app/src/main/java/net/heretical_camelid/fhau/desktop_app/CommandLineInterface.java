@@ -12,6 +12,7 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Scanner;
 
 public class CommandLineInterface {
     // Integer constants with names prefixed FHAU_STATUS_ are
@@ -29,13 +30,15 @@ public class CommandLineInterface {
     private static boolean s_webMode = false;
 
     static void doInteractive(DesktopUsbAmpProvider provider) {
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         boolean continueAcceptingCommands=true;
-        String line=null;
-        while(continueAcceptingCommands) {
+        Scanner commandScanner = new Scanner(System.in);
+        System.out.println("Command? ");
+        while(continueAcceptingCommands && commandScanner.hasNextLine()) {
+            final String line = commandScanner.nextLine();;
             try {
-                System.out.println("Command? ");
-                line = br.readLine();
+                if(line.length()==0) {
+                    continue;
+                }
                 String[] lineWords = line.split(" ");
                 if(lineWords[0].equals("exit") || lineWords[0].equals("quit")) {
                     System.out.println("Exit requested");
@@ -46,17 +49,13 @@ public class CommandLineInterface {
                 } else if(lineWords[0].equals("help")) {
                     showInteractiveHelp();
                 } else {
-
                     System.out.println("Failed to parse line: "+line);
                 }
-            }
-            catch (IOException e) {
-                System.out.println("Attempt to read input line failed");
-                System.exit(FHAU_STATUS_INTERACTIVE_INPUT_FAILURE);
             }
             catch (NumberFormatException e) {
                 System.out.println("Failed to parse expected integer in command line: " + line);
             }
+            System.out.println("Command? ");
         }
     }
 

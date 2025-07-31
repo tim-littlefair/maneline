@@ -1,6 +1,6 @@
 name: balena-fhau
 type: sw.application
-version: 0.2.0-bf.250719a
+version: 0.0.0
 description: >-
   Application to present a control UI for Fender Mustang LT40S
   modelling guitar amplifier.

@@ -5,7 +5,7 @@
 
 <script>
 function setMessages() {
-    document.querySelector("span").textContent = "%MESSAGES_STRING%";
+    document.querySelector("p").textContent = "%MESSAGES_STRING%";
 }
 window.onload = setMessages
 </script>

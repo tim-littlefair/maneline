@@ -105,9 +105,15 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
             boolean requestReport = false;
             int productId = fmicDevice.getProductId();
             s_loggingAgent.appendToLog( String.format(
-                "Using FMIC device with VID/PID=%04x:%04x product='%s' serial#=%s release=%d path=%s",
-                fmicDevice.getVendorId(), productId, fmicDevice.getProduct(),
-                fmicDevice.getSerialNumber(), fmicDevice.getReleaseNumber(), fmicDevice.getPath()
+                "Using FMIC device with VID/PID=%04x:%04x product='%s' path=%s",
+                fmicDevice.getVendorId(), productId, fmicDevice.getProduct(), fmicDevice.getPath()
+            ));
+            // The serial number and release are less interesting than the items
+            // above so we log them in a separate message, which will not be
+            // displayed on the web UI.
+            s_loggingAgent.appendToLog( String.format(
+                "serial#=%s release=%d",
+                fmicDevice.getSerialNumber(), fmicDevice.getReleaseNumber()
             ));
             if (productId==0x0046) {
                 // Mustang LT40S - tested with firmware 1.0.7

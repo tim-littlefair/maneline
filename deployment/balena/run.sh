@@ -1,16 +1,15 @@
 #!/bin/bash
 
-pwd
-ls -lR .
-
 # This script is the glue which starts a web server
 # and the FHAU CLI program, and passes messages between
 # these two processes.
 # It will be brought back to the foreground after
 # the browser container has started up and is displaying
 # the UI provided by the web server.
-echo Starting
+
 start_dir=$(pwd)
+echo Starting $0 in directory $start_dir
+
 cd lua
 
 lua ./run_pegasus.lua $start_dir &
@@ -19,8 +18,8 @@ echo Pegasus started with process id $pegasus_pid
 
 # Give the Lua web server time to get its port open before
 # telling the browser to display it
-browser_api_url=http://localhost:5011/url
-fhau_url=http://localhost:9090/web_ui/index.html
+browser_api_url=http://127.0.0.1:5011/url
+fhau_url=http://127.0.0.1:9090/web_ui/index.html
 sleep_length=2
 while true
 do
@@ -61,7 +60,7 @@ done
 
 if [ ! "$LOCAL_BROWSER" = "0" ]
 then
-    curl -X POST --data "url=$fhau_url" http://localhost:5011/url
+    curl -X POST --data "url=$fhau_url" $browser_api_url
 fi
 
 # Bring the Lua script which integrates FHAU CLI with the
@@ -73,7 +72,7 @@ do
       # If something goes wrong, we don't want the container to loop
       # tightly, so we have a delay between detection and exit
       echo "Pegasus has exited, Balena container will exit shortly"
-      sleep 20
+      sleep 30
       echo "Balena container will exit now"
       break
   fi

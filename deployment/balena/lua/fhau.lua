@@ -25,7 +25,7 @@ local jar_file_name="desktopFHAUcli-0.0.0.jar"
 
 fhau_cli_input_fd = io.popen(
     "cd .. && " ..
-    "java -jar " .. jar_file_name .. " --web=" .. session_name .. "> fhau.log",
+    "java -jar " .. jar_file_name .. " --web=" .. session_name,
     "w"
 )
 
@@ -85,6 +85,5 @@ function Fhau:get_cxn_and_dev_status()
 
     return build_cds_html(retval)
 end
-
 
 return Fhau
