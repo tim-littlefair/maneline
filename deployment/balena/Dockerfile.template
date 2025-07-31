@@ -74,9 +74,15 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends --no-install-suggests apt-utils
 RUN apt-get install -y --no-install-recommends --no-install-suggests readline-common git
-RUN apt-get install -y --no-install-recommends --no-install-suggests lua5.1 luarocks lua-socket lua-filesystem lua-sec lua-zlib lua-cjson
-RUN apt-get install -y --no-install-recommends --no-install-suggests gcc liblz-dev zlib1g-dev
 
+# The web server glue which binds the web-ui to the CLI FHAU application is implemented in Lua
+RUN apt-get install -y --no-install-recommends --no-install-suggests lua5.1 \
+    lua-socket lua-filesystem lua-sec lua-zlib lua-cjson lua-cqueues
+# I'd prefer the supply chain depended only on apt, but for
+# the moment the pegasus web server is used so we need luarocks
+# and the build-time apt dependencies for pegasus
+RUN apt-get install -y --no-install-recommends --no-install-suggests luarocks
+RUN apt-get install -y --no-install-recommends --no-install-suggests gcc liblz-dev zlib1g-dev
 RUN luarocks install pegasus
 
 COPY ./lua ./lua

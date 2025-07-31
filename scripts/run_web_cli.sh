@@ -32,7 +32,9 @@ check_webhome() {
     if [ ! "$?" = "0" ]
     then
         echo Run the following commands to install Lua requirements:
-        echo sudo apt-get install lua5.1 luarocks lua-socket lua-filesystem lua-sec lua-zlib lua-cjson
+        echo sudo apt-get install lua5.1 lua-socket lua-filesystem lua-sec lua-zlib lua-cjson lua-cqueues
+        echo sudo apt-get install luarocks
+        echo sudo apt-get install gcc liblz-dev zlib1g-dev
         echo sudo luarocks install pegasus
         exit 1
     fi

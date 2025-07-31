@@ -12,6 +12,7 @@
 lfs = require 'lfs'
 cjson = require 'cjson'
 web_ui = require 'web_ui'
+cqueues = require 'cqueues'
 fhau_errors = require 'fhau_errors'
 
 local Fhau = {}
@@ -22,12 +23,38 @@ lfs.mkdir("../"..session_name)
 
 -- On the Balena node, the jar is presently in the top directory
 local jar_file_name="desktopFHAUcli-0.0.0.jar"
-
 fhau_cli_input_fd = io.popen(
     "cd .. && " ..
     "java -jar " .. jar_file_name .. " --web=" .. session_name,
     "w"
 )
+
+-- Use the Lua cqueues library to create a loop checking
+-- for commands on standard input
+-- NB There is a cqueues manual at
+-- https://25thandclement.com/~william/projects/cqueues.pdf.
+-- On the sixth page of the PDF (numbered page 1) there is
+-- a statement that the library is not compatible with Lua 5.1,
+-- but for the moment it seems to be working.
+local stdin_relay_queue = cqueues.new()
+stdin_relay_queue:wrap(function()
+    -- TODO: Poll and yield until startup has finished
+    -- TODO: Remove print commands
+    line = io.read("*l")
+    if(line)
+    then
+        print("Relaying line "..line)
+        fhau_cli_input_fd:write(line.."\n")
+        fhau_cli_input_fd:flush()
+    else
+        print("Nothing to relay")
+    end
+    cqueues.sleep(10)
+end)
+assert(stdin_relay_queue:loop())
+
+
+
 
 function check_for_cli_death()
     -- Our only link to the CLI subprocess is the file descriptor
@@ -85,5 +112,6 @@ function Fhau:get_cxn_and_dev_status()
 
     return build_cds_html(retval)
 end
+
 
 return Fhau
