@@ -38,14 +38,12 @@ services:
       #- LAUNCH_URL=http://127.0.0.1:9090/start-fhau.html
     #volumes:
     #  - 'settings:/data'
-    depends_on:
-      - tl-fhau-web
 
 # x-services:
   tl-fhau-web:
     build: .
     network_mode: host
-    privileged: true
+    #privileged: true
     ports:
       - 9090
     environment:
