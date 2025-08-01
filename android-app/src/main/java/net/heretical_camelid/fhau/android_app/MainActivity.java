@@ -56,6 +56,10 @@ public class MainActivity
         extends AppCompatActivity
         implements AdapterView.OnItemSelectedListener {
 
+    // An empty public constructor is required to avoid
+    // lint raising an issue of type "Instantiatable"
+    public MainActivity() { }
+
     // The following constants are used as keys when messages are sent to m_providerHandler
     public static final String MESSAGE_LOG_APPEND_STRING = "MESSAGE_LOG_APPEND_STRING";
     public static final String MESSAGE_SLOT_INDEX = "MESSAGE_SLOT_INDEX";

@@ -123,8 +123,8 @@ echo Unpacking $jdk_file
 tar xzvf $cache_absdir/$jdk_file
 
 echo Unpacking $android_cltools_file
-mkdir android-sdk
-cd android-sdk
+mkdir $fhau_sdk_absdir/Android
+cd $fhau_sdk_absdir/Android
 unzip $cache_absdir/$android_cltools_file
 mv cmdline-tools latest
 mkdir cmdline-tools
@@ -134,21 +134,23 @@ cd $fhau_sdk_absdir
 
 if [ -d $fhau_sdk_absdir/jdk-21.0.2 ]
 then
+  # Linux location
   export JAVA_HOME=$fhau_sdk_absdir/jdk-21.0.2
 elif [ -d $fhau_sdk_absdir/jdk-21.0.2.jdk/Contents/Home ]
 then
+  # macOS location
   export JAVA_HOME=$fhau_sdk_absdir/jdk-21.0.2.jdk/Contents/Home
 else
   echo Could not find appropriate JAVA_HOME
   exit 5
 fi
-ANDROID_HOME=$fhau_sdk_absdir/android-sdk
+ANDROID_USER_HOME=$fhau_sdk_absdir/Android
 
 cat > $fhau_sdk_absdir/fhau_sdk_vars.sh <<+
 
 JAVA_HOME=$JAVA_HOME
-ANDROID_HOME=$ANDROID_HOME
-ANDROID_USER_HOME=$ANDROID_HOME
+ANDROID_USER_HOME=$ANDROID_USER_HOME
+ANDROID_HOME=$ANDROID_USER_HOME
 GRADLE_USER_HOME=$fhau_sdk_absdir/gradle-user-home
 GRADLE_LOCAL_JAVA_HOME=$JAVA_HOME
 PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$JAVA_HOME/bin:$PATH
@@ -157,35 +159,32 @@ export JAVA_HOME ANDROID_HOME ANDROID_USER_HOME GRADLE_USER_HOME GRADLE_LOCAL_JA
 
 +
 
+. $fhau_sdk_absdir/fhau_sdk_vars.sh
+
 # We need to overwrite a non-version-controlled file in the root
 # directory of the repository to ensure the SDK is found by Gradle
 cat > $repo_dir/local.properties <<+
-
 # local.properties file overwritten by $0 on $(date --iso-8601)
-sdk.dir=$fhau_sdk_absdir
-
+sdk.dir=$fhau_sdk_absdir/Android
 +
 
-. $fhau_sdk_absdir/fhau_sdk_vars.sh
+sdkmanager=$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager
 
 # I haven't yet found a way of caching the Android SDK download packages
 # Also, Gradle seems to need more than one version of build-tools
 # to complete the first build
-yes | sdkmanager --install \
-  "build-tools;34.0.0" \
+yes | $sdkmanager --install \
   "build-tools;35.0.0" \
-  "build-tools;35.0.1" \
+  "build-tools;36.0.0" \
   "platform-tools" \
   "emulator" \
-  "sources;android-35" \
-  "platforms;android-35" \
+  "sources;android-36" \
+  "platforms;android-36" \
   "system-images;android-35;aosp_atd;x86_64"
 
-yes | sdkmanager --update
-
-yes | sdkmanager --licenses
-
-sdkmanager --list_installed
+yes | $sdkmanager --update
+yes | $sdkmanager --licenses > licenses.txt
+$sdkmanager --list_installed
 
 exit 0
 
