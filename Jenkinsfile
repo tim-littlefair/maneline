@@ -28,7 +28,7 @@ pipeline {
                     } else {
                         echo 'Not a release'
                         sh """
-                            . ../$SDK_NAME/fhau_sdk_vars.sh
+                            . $SDK_PATH/fhau_sdk_vars.sh
                             ./gradlew clean build
                         """
                     }
