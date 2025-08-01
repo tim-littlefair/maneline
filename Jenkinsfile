@@ -12,8 +12,8 @@ pipeline {
                 }
             }
             steps {
-                echo "Rebuilding FHAU SDK in ../$SDK_NAME"
-                sh "sh ./scripts/rebuild_sdk.sh $SDK_NAME"
+                echo "Rebuilding FHAU SDK in $SDK_PATH"
+                sh "sh ./scripts/rebuild_sdk.sh $SDK_PATH"
             }
         }
         stage('FHAU CI Build') {
@@ -22,7 +22,7 @@ pipeline {
                     if( params.RELEASE_VERSION_MAJOR != "" ) {
                         sh """
                             echo 'Release!'
-                            . ../$SDK_NAME/fhau_sdk_vars.sh
+                            . $SDK_PATH/fhau_sdk_vars.sh
                             . ./scripts/build_fhau_release.sh --build-signed-bundle
                         """
                     } else {
