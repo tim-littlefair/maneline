@@ -175,11 +175,12 @@ yes | sdkmanager --install \
   "build-tools;34.0.0" \
   "build-tools;35.0.0" \
   "build-tools;35.0.1" \
+  "build-tools;36.0.0" \
   "platform-tools" \
   "emulator" \
-  "sources;android-35" \
-  "platforms;android-35" \
-  "system-images;android-35;aosp_atd;x86_64"
+  "sources;android-36" \
+  "platforms;android-36" \
+  "system-images;android-36;aosp_atd;x86_64"
 
 yes | sdkmanager --update
 
