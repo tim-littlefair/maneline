@@ -42,6 +42,8 @@ server:start(
         else
             response:write("Unsupported request method")
         end
+        response:close()
+        return true
     end
 )
 
