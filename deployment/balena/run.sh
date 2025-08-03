@@ -58,7 +58,7 @@ do
     fi
 done
 
-if [ ! "$LOCAL_BROWSER" = "0" ]
+if [ "$LOCAL_BROWSER" = "1" ]
 then
     curl -X POST --data "url=$fhau_url" $browser_api_url
 fi
@@ -77,10 +77,8 @@ do
       break
   fi
   # echo Sleeping
-  sleep 60
+  sleep 10
 done
 
 # wait
-
-
 

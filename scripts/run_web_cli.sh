@@ -32,23 +32,28 @@ check_webhome() {
     if [ ! "$?" = "0" ]
     then
         echo Run the following commands to install Lua requirements:
-        echo sudo apt-get install lua5.1 lua-socket lua-filesystem lua-sec lua-zlib lua-cjson lua-cqueues
-        echo sudo apt-get install luarocks
+        # Base version of Lua and luarocks
+        echo sudo apt-get install lua5.1 luarocks
+        # apt-packaged lua dependencies
+        echo sudo apt-get install lua-socket lua-filesystem lua-sec lua-zlib lua-cjson lua-cqueues
+        # We would prefer an apt package lua-pegasus if one existed,
+        # but it doesn't so we need to do a build install via luarocks;
+        # gcc, liblz-dev and zlib1g-dev are required before luarocks
+        # can build pegasus.
         echo sudo apt-get install gcc liblz-dev zlib1g-dev
         echo sudo luarocks install pegasus
         exit 1
     fi
-    cd ../../..
     set -e
 }
 
+rundir=$(pwd)/_work/webhome
 check_webhome
 
-rundir=$(pwd)/_work/webhome
 cd $rundir
 tail -F fhau.log &
 tail_pid=$!
-sh ./run.sh $rundir
+LOCAL_BROWSER=0 sh ./run.sh $rundir
 kill $tail_pid
 
 

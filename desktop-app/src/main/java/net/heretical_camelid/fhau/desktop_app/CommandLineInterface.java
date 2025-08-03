@@ -36,6 +36,12 @@ public class CommandLineInterface {
         while(continueAcceptingCommands && commandScanner.hasNextLine()) {
             final String line = commandScanner.nextLine();;
             try {
+                if(line==null) {
+                    Thread.sleep(1000);
+                    System.out.println(".");
+                    System.out.flush();
+                    continue;
+                }
                 if(line.length()==0) {
                     continue;
                 }
@@ -54,6 +60,9 @@ public class CommandLineInterface {
             }
             catch (NumberFormatException e) {
                 System.out.println("Failed to parse expected integer in command line: " + line);
+            }
+            catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
             System.out.println("Command? ");
         }

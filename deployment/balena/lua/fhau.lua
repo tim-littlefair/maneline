@@ -53,9 +53,6 @@ stdin_relay_queue:wrap(function()
 end)
 assert(stdin_relay_queue:loop())
 
-
-
-
 function check_for_cli_death()
     -- Our only link to the CLI subprocess is the file descriptor
     -- we use to send commands.
@@ -112,6 +109,5 @@ function Fhau:get_cxn_and_dev_status()
 
     return build_cds_html(retval)
 end
-
 
 return Fhau
