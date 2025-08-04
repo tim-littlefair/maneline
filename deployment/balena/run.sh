@@ -12,16 +12,17 @@ echo Starting $0 in directory $start_dir
 
 cd lua
 
-lua ./run_pegasus.lua $start_dir &
+lua ./run_pegasus.lua $start_dir
 pegasus_pid=$!
 echo Pegasus started with process id $pegasus_pid
+sleep 10
 
 # Give the Lua web server time to get its port open before
 # telling the browser to display it
 browser_api_url=http://127.0.0.1:5011/url
 fhau_url=http://127.0.0.1:9090/web_ui/index.html
 sleep_length=2
-while true
+while false
 do
     if [ ! -d /proc/$pegasus_pid ]
     then
@@ -30,7 +31,7 @@ do
     fi
 
     fhau_web_response=$( curl --silent -X GET $fhau_url 2>&1 )
-    echo $fhau_web_response | grep --silent "<!DOCTYPE html>"
+    echo $fhau_web_response | grep --silent "html"
     if [ ! "$?" = "0" ]
     then
         echo $fhau_web_response
@@ -53,15 +54,11 @@ do
             sleep $sleep_length
         else
             echo Browser API is ready
+            curl -X POST --data "url=$fhau_url" $browser_api_url
             break
         fi
     fi
 done
-
-if [ "$LOCAL_BROWSER" = "1" ]
-then
-    curl -X POST --data "url=$fhau_url" $browser_api_url
-fi
 
 # Bring the Lua script which integrates FHAU CLI with the
 # Pegasus web server back to the foreground

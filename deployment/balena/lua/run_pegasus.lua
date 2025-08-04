@@ -3,7 +3,7 @@
 
 local cjson = require 'cjson'
 local pegasus = require 'pegasus'
-local fhau = require 'fhau'
+local fhau = require 'fhau_thread'
 local lfs = require 'lfs'
 
 -- scripts/run_web_cli.sh is intended to provide
@@ -26,12 +26,20 @@ local server = pegasus:new({
 server:start(
     function (request, response)
         print("Request:", request:path())
+        cli_ok = fhau:check_cli_subprocess()
+        print("CLI status:",cli_ok)
         -- print("Headers:", cjson.encode(request:headers()))
         if request:path()=="/cds"
         then
-            local status = fhau.get_cxn_and_dev_status()
-            print(status)
-            response:write("<html>"..status.."</html>")
+            if(cli_ok)
+            then
+                status = fhau.get_cxn_and_dev_status()
+                -- print(status)
+                response:write("<html>"..status.."</html>")
+            else
+                print("CLI subprocess not OK")
+                response:write("<html>CLI subprocess not OK</html>")
+            end
         elseif request:method() == 'GET'
         then
             response:writeFile(request:path())
@@ -46,4 +54,3 @@ server:start(
         return true
     end
 )
-

@@ -9,29 +9,115 @@
 -- For copying rules see
 -- https://github.com/tim-littlefair/feral-horse-amp-utils/blob/main/LICENSE
 
+fhau_errors = require 'fhau_errors'
+
+local Fhau = {}
+
+function _debug_mark(c)
+    io.stdout:write(c)
+    io.stdout:flush()
+end
+
+local fhau_cli_input_fd = nil
+local flush_status = true
+local subprocess_read_thread = nil
+
+local session_start_time_t = os.time()
+local session_name = "session_"..os.date("%Y%m%d%H%M%S")
+-- lfs.mkdir(session_name)
+
+function Fhau:check_cli_subprocess()
+    -- Our only link to the CLI subprocess is the file descriptor
+    -- we use to send commands.
+    _debug_mark("c")
+    if(fhau_cli_input_fd==nil)
+    then
+        start_fhau_subprocess_and_thread()
+    end
+
+    -- We check whether it is alive by sending a newline (which
+    -- will be ignored as a command), and seeing whether the
+    -- flush after writing to the FD fails
+    fhau_cli_input_fd:write("\n");
+    flush_status=fhau_cli_input_fd:flush();
+    if(flush_status==nil)
+    then
+        print("Waiting to join")
+        subprocess_read_thread.join()
+        print("Joined")
+    end
+    return flush_status
+end
+
 -- START OF LOGIC COPIED FROM p.43 OF
 -- https://sources.debian.org/data/main/l/lua-cqueues/20200726-2/doc/cqueues.pdf
 
-local cqueues = require"cqueues"
-local thread = require"cqueues.thread"
+local cqueues = require 'cqueues'
+local thread = require 'cqueues.thread'
 
--- we start a thread and pass two parameters --`0' and '9'
-local thr , con = thread.start(function(con , i, j)
-    -- the `cqueues ' upvalue defined above is gone
-    local cqueues = require"cqueues"
-    local cq = cqueues.new ()
+function start_fhau_subprocess_and_thread()
+    print("Starting FHAU subprocess")
+    jar_file_name="desktopFHAUcli-0.0.0.jar"
+    fhau_cli_input_fd = io.popen(
+        "java -jar " .. jar_file_name .. " --web=" .. session_name,
+        "w"
+    )
+    print("FHAU subprocess started")
 
-    cq:wrap(function()
-        for n = tonumber (i), tonumber(j) do
-            io.stdout:write("sent ", n, "\n")
-            con:write(n, "\n")
-            -- sleep so our stdout writes don 't mix
-            cqueues.sleep (0.1)
-        end
+    subprocess_read_thread,con  = thread:start(function(fhau_flush_status, fhau_fd)
+        _debug_mark("x")
+        local cqueues = require "cqueues"
+        local cq = cqueues.new ()
+        _debug_mark("y")
+
+        cq:wrap(function()
+            _debug_mark("s")
+            while(fhau_flush_status)
+            do
+                while(fhau_flush_status)
+                do
+                    line = io.read("*l")
+                    if(line)
+                    then
+                        _debug_mark("l")
+                        fhau_fd:write(line.."\n")
+                        fhau_fd:flush()
+                    else
+                        _debug_mark("_")
+                        cqueues.sleep (0.1)
+                    end
+                    _debug_mark("w")
+                end
+            end
+            _debug_mark("x")
+        end,flush_status, fhau_cli_input_fd)
+
+        Fhau.cq = cq
     end)
-    assert(cq:loop ())
-end, 0, 9)
+    assert(Fhau.cq.loop())
+end
 
+function Fhau:get_cxn_and_dev_status()
+    local retval
+    fd = io.open(session_name.."/txn00-startProvider-001.json","rb")
+    if fd
+    then
+        retval=cjson.decode(fd:read("*all")).message
+        fd:close()
+    else
+        retval="Connection not completed yet"
+    end
+
+    if(Fhau:check_cli_subprocess()==nil)
+    then
+        print("USB/HID CLI process appears to have died")
+        os.exit(fhau_errors.FATAL_CLI_HAS_EXITED)
+    end
+
+    return build_cds_html(retval)
+end
+
+--[[
 local cq = cqueues.new ()
 cq:wrap(function()
     while(1)
@@ -54,6 +140,7 @@ cq:wrap(function()
 end)
 
 assert(cq:loop ())
+]]
 
 -- END OF LOGIC ADAPTED FROM p.43 OF
 -- https://sources.debian.org/data/main/l/lua-cqueues/20200726-2/doc/cqueues.pdf
@@ -65,16 +152,10 @@ web_ui = require 'web_ui'
 cqueues = require 'cqueues'
 socket = require 'socket'
 
-fhau_errors = require 'fhau_errors'
 
-local Fhau = {}
 
-local session_start_time_t = os.time()
-local session_name = "session_"..os.date("%Y%m%d%H%M%S")
-lfs.mkdir("../"..session_name)
 
 -- On the Balena node, the jar is presently in the top directory
-local fhau_cli_input_fd = nil
 
 -- Use the Lua cqueues library to create a loop checking
 -- for commands on standard input
@@ -128,34 +209,6 @@ function read_queued_input_bytes()
 end
 stdin_relay_queue:wrap()
 
-function Fhau:check_cli_subprocess()
-    -- Our only link to the CLI subprocess is the file descriptor
-    -- we use to send commands.
-
-    -- We don't open the file descriptor until this function is
-    -- called for the first time
-    if(fhau_cli_input_fd==null)
-    then
-        print("Starting FHAU subprocess")
-        jar_file_name="desktopFHAUcli-0.0.0.jar"
-        fhau_cli_input_fd = io.popen(
-            "java -jar " .. jar_file_name .. " --web=" .. session_name,
-            "w"
-        )
-        print("FHAU subprocess started")
-        print("stdin relay loop started")
-    end
-
-    -- Read and relay any output from the subprocess
-    assert(stdin_relay_queue:loop())
-
-    -- We check whether it is alive by sending a newline (which
-    -- will be ignored as a command), and seeing whether the
-    -- flush after writing to the FD fails
-    fhau_cli_input_fd:write("\n");
-    flush_status=fhau_cli_input_fd:flush();
-    return flush_status
-end
 
 function Fhau:send_cli_command(command)
     response = nil
@@ -183,25 +236,9 @@ function Fhau:send_cli_command(command)
     )
 end
 
-function Fhau:get_cxn_and_dev_status()
-    local retval
-    fd = io.open(session_name.."/txn00-startProvider-001.json","rb")
-    if fd
-    then
-        retval=cjson.decode(fd:read("*all")).message
-        fd:close()
-    else
-        retval="Connection not completed yet"
-    end
 
-    if(Fhau:check_cli_subprocess()==nil)
-    then
-        print("USB/HID CLI process appears to have died")
-        os.exit(fhau_errors.FATAL_CLI_HAS_EXITED)
-    end
-
-    return build_cds_html(retval)
-end
-
-return Fhau
 ]]
+
+print("Fhau initialized")
+os.execute("sleep 5")
+return Fhau

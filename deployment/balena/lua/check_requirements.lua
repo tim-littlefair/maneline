@@ -7,6 +7,8 @@
 local lfs = require 'lfs'
 local cjson = require 'cjson'
 local pegasus = require 'pegasus'
-local fhau = require 'fhau'
 local cqueues = require 'cqueues'
+
+os.exit(0)
+
 

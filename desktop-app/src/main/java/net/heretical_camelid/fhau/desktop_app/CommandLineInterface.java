@@ -30,6 +30,10 @@ public class CommandLineInterface {
     private static boolean s_webMode = false;
 
     static void doInteractive(DesktopUsbAmpProvider provider) {
+        if(s_webMode==true) {
+            System.out.println("CLI started in web mode, provider has not been started");
+            System.out.println("Suggested first command is 'start'");
+        }
         boolean continueAcceptingCommands=true;
         Scanner commandScanner = new Scanner(System.in);
         System.out.println("Command? ");
@@ -37,17 +41,29 @@ public class CommandLineInterface {
             final String line = commandScanner.nextLine();;
             try {
                 if(line==null) {
-                    Thread.sleep(1000);
-                    System.out.println(".");
+                    System.out.write('n'); // for null
                     System.out.flush();
+                    Thread.sleep(1000);
                     continue;
-                }
-                if(line.length()==0) {
+                } else if(line.length()==0) {
+                    //System.out.write('e'); // for empty
+                    //System.out.flush();
+                    //Thread.sleep(1000);
                     continue;
                 }
                 String[] lineWords = line.split(" ");
-                if(lineWords[0].equals("exit") || lineWords[0].equals("quit")) {
+                if(lineWords.length==0) {
+                    System.out.write('w'); // for words
+                    System.out.flush();
+                    Thread.sleep(1000);
+                    continue;
+                }
+
+                if(lineWords[0].equals("start")) {
+                    provider.startProvider();
+                } else if(lineWords[0].equals("exit") || lineWords[0].equals("quit")) {
                     System.out.println("Exit requested");
+                    provider.stopProvider();
                     continueAcceptingCommands=false;
                 } else if(lineWords[0].equals("preset")) {
                     int slotIndex = Integer.parseInt(lineWords[1]);
@@ -62,7 +78,7 @@ public class CommandLineInterface {
                 System.out.println("Failed to parse expected integer in command line: " + line);
             }
             catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                System.out.println("\nInterrupted sleep");
             }
             System.out.println("Command? ");
         }
@@ -96,12 +112,10 @@ public class CommandLineInterface {
             }
 
             DesktopUsbAmpProvider provider = new DesktopUsbAmpProvider(s_webMode, s_argParamOutputDir);
-            provider.startProvider();
             CommandLineInterface cli = new CommandLineInterface();
             if (s_argParamInteractive) {
                 cli.doInteractive(provider);
             }
-            provider.stopProvider();
         }
         catch(FhauLibException e) {
             e.printStackTrace();

@@ -88,7 +88,7 @@ public abstract class AbstractMessageProtocolBase {
             }
         }
         sb.append("\n");
-        s_loggingAgent.appendToLog(sb.toString());
+        // s_loggingAgent.appendToLog(sb.toString());
     }
 
     public static String getStringAttribute(

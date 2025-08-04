@@ -51,10 +51,7 @@ rundir=$(pwd)/_work/webhome
 check_webhome
 
 cd $rundir
-tail -F fhau.log &
-tail_pid=$!
 LOCAL_BROWSER=0 sh ./run.sh $rundir
-kill $tail_pid
 
 
 
