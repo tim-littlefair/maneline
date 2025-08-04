@@ -3,7 +3,7 @@
 
 local cjson = require 'cjson'
 local pegasus = require 'pegasus'
-local fhau = require 'fhau_thread'
+local fhau = require 'fhau_thread2'
 local lfs = require 'lfs'
 
 -- scripts/run_web_cli.sh is intended to provide
@@ -22,6 +22,11 @@ local server = pegasus:new({
   port='9090',
   location="."
 })
+
+-- The very first subprocess check will start
+-- the thread which relays commands from the parent
+-- process stdin to the subprocess's stdin
+fhau:check_cli_subprocess()
 
 server:start(
     function (request, response)
@@ -54,3 +59,4 @@ server:start(
         return true
     end
 )
+
