@@ -34,7 +34,13 @@ end, 0, 9)
 
 local cq = cqueues.new ()
 cq:wrap(function()
-    for ln in con:lines () do
+    while(1)
+    do
+        ln=con:read("*l")
+        if(ln=="" or ln==nil)
+        then
+            break
+        end
         io.stdout:write(ln , " rcvd", "\n")
     end
 
