@@ -67,7 +67,7 @@ end
 
 
 function start_fhau_relay_thread()
-    --[[
+    -- --[[
     function fhau_relay_cycle(fhau_flush_status, fhau_fd)
         while(fhau_flush_status)
         do
@@ -94,15 +94,24 @@ function start_fhau_relay_thread()
         _debug_mark("x")
     end
     print("Functions defined")
-    ]]
+    -- ]]
     subprocess_read_thread,_thread_input = thread.start(
-        function(_thread_output)
+        function(_thread_output, fhau_replay_loop_fn, fhau_flush_status, fhau_fd)
             io.stdout:write("X")
             io.stdout:flush()
-            os.execute("sleep 5")
+            fhau_relay_loop_fn(fhau_flush_status, fhau_fd)
             io.stdout:write("Y")
             io.stdout:flush()
-        end
+        end,
+        function(_thread_output, fhau_replay_loop_fn2, fhau_flush_status, fhau_fd)
+            io.stdout:write("Q")
+            io.stdout:flush()
+            fhau_relay_loop_fn2(fhau_flush_status, fhau_fd)
+            -- os.execute("sleep 5")
+            io.stdout:write("R")
+            io.stdout:flush()
+        end,
+        fhau_flush_status, fhau_fd
     )
 
     print("FHAU ready to accept commands")
