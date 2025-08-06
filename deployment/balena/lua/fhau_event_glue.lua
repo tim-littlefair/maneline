@@ -5,24 +5,21 @@ function _debug_mark(c)
     io.stdout:flush()
 end
 
-pegasus_handler = require 'pegasus.handler'
 local pegasus_sock = nil
 function get_pegasus_event_client(port)
-    socket = require 'socket'
-    local pegasus_sock = socket.bind('*', port)
-    assert(pegasus_sock)
+    local socket = require 'socket'
+    pegasus_handler = require 'pegasus.handler'
+
+    retval = {}
+    retval._port = port
+    retval._socket = socket.bind('*', port)
+    assert(retval._socket)
     function callback(req,res)
         _debug_mark("|gps_cb|")
         res:write("HW!")
         return res:close()
     end
-    local hdlr = pegasus_handler:new(callback, ".")
-    function pegasus_hdlr_fn()
-        first_line = client:read("*line")
-        return hdlr:processRequest(port, client)
-    end
-    retval = {}
-    retval._socket = pegasus_sock
+    retval._phdlr = pegasus_handler:new(callback, ".")
     retval._client = nil
     function retval:fd()
         if(self._client)
@@ -31,12 +28,13 @@ function get_pegasus_event_client(port)
             -- but not yet handled
             return self._client
         end
-        self._socket:settimeout(1.0)
+        self._socket:settimeout(0.1)
         self._client = self._socket:accept()
         return self._client
     end
     function retval:handler()
         assert(self._client~=nil)
+        self._phdlr:processRequest(self._port,self._client)
         first_line = "XXX" -- self._socket.read("*line")
         self._client:close()
         self._client=nil
@@ -71,7 +69,9 @@ do
         pegasus_client_fd:settimeout(timeout)
         fd_array[#fd_array+1] = pegasus_client_fd
     end
+
     _debug_mark(#fd_array)
+
     select_rv = socket.select(fd_array,nil, timeout)
     if(#select_rv==0)
     then
@@ -83,8 +83,7 @@ do
         timeout=_ACTIVE_TIMEOUT
         print("pegasus",pegasus_evclt:handler())
         _debug_mark(">")
-    elseif(select_rv[#select_rv]:getfd()==0)
-    then
+    else
         stdin_bytes = io.stdin:read("*line")
         if(stdin_bytes)
         then
@@ -94,9 +93,6 @@ do
             timeout=_PASSIVE_TIMEOUT
             _debug_mark("#")
         end
-    else
-            timeout=_PASSIVE_TIMEOUT
-            _debug_mark("!")
     end
 end
 
