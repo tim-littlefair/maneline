@@ -7,7 +7,7 @@ end
 
 pegasus_handler = require 'pegasus.handler'
 local pegasus_sock = nil
-function get_pegasus_fd(port)
+function get_pegasus_event_client(port)
     socket = require 'socket'
     local pegasus_sock = socket.bind('*', port)
     assert(pegasus_sock)
@@ -25,14 +25,19 @@ function get_pegasus_fd(port)
     retval._socket = pegasus_sock
     retval._client = nil
     function retval:fd()
-        -- assert(self._client==nil)
-        self._socket:settimeout(0.1)
+        if(self._client)
+        then
+            -- A connection has already been accepted 
+            -- but not yet handled
+            return self._client
+        end
+        self._socket:settimeout(1.0)
         self._client = self._socket:accept()
         return self._client
     end
     function retval:handler()
         assert(self._client~=nil)
-        first_line = self._client:read("*line")
+        first_line = "XXX" -- self._socket.read("*line")
         self._client:close()
         self._client=nil
         return first_line
@@ -52,7 +57,7 @@ end
 socket = require 'socket'
 
 fd_stdin = get_stdin_fd()
-fd_pegasus = get_pegasus_fd(9090)
+pegasus_evclt = get_pegasus_event_client(9090)
 _ACTIVE_TIMEOUT = 0.1
 _PASSIVE_TIMEOUT = 1.0
 timeout=_ACTIVE_TIMEOUT
@@ -60,7 +65,7 @@ while(1)
 do
     fd_stdin:settimeout(timeout)
     fd_array = { fd_stdin }
-    pegasus_client_fd = fd_pegasus:fd()
+    pegasus_client_fd = pegasus_evclt:fd()
     if(pegasus_client_fd)
     then
         pegasus_client_fd:settimeout(timeout)
@@ -74,10 +79,10 @@ do
         _debug_mark(".")
     elseif(select_rv[#select_rv]==pegasus_client_fd)
     then
-        _debug_mark(">")
-        timeout=_ACTIVE_TIMEOUT
-        print("pegasus",pegasus_client_fd)
         _debug_mark("<")
+        timeout=_ACTIVE_TIMEOUT
+        print("pegasus",pegasus_evclt:handler())
+        _debug_mark(">")
     elseif(select_rv[#select_rv]:getfd()==0)
     then
         stdin_bytes = io.stdin:read("*line")
