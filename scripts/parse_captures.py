@@ -29,7 +29,7 @@ import time
 import traceback
 import zipfile
 
-from fhau_pylib import pb_utils, tshark_utils, hexdump, lz4_json
+from fhau_pylib import pb_utils, tshark_utils, hexdump, lz4_json, presets_csv
 
 def log(message,is_error=False):
     global _log_stream
@@ -102,7 +102,9 @@ def dump_requests_and_responses(capture_bytes, capture_type, time_range):
     global req_seq, rsp_seq, message, message_id
     time_range_dir = outpath + "/" + time_range
     os.makedirs(time_range_dir, exist_ok=True)
+    presets_csv.open_csv_file(time_range_dir)
     lb_lines = tshark_utils.extract_messages_from_capture(capture_bytes, capture_type)
+    preset_slot=0
     for lb_line in lb_lines:
         fields = lb_line.split(",")
         if len(fields)<2:
@@ -189,13 +191,31 @@ def dump_requests_and_responses(capture_bytes, capture_type, time_range):
                     open(msg_path_prefix + ".bin","wb").write(msg_bytes)
                     open(msg_path_prefix + ".hexdump","wt").write(hexdump.hexdump(msg_bytes))
                     print(msg_raw_pb_parse,file=open(msg_path_prefix + ".raw_pb_parse.txt","wt"))
+                    if msg_bytes[0:5] == b'\x08\x01\x2a\x04\x08':
+                        # The message is the first report responding to a preset request
+                        # and contains the preset slot number at byte 5
+                        # !!!!!!!!!!!!
+                        # ... BUT ...
+                        # The preset slot number in this message is zero-based and does
+                        # not reflect the one-based slot number displayed on the MMP 
+                        # and in FenderTone
+                        # !!!!!!!!!!!!
+                        preset_slot=msg_bytes[5]+1 # because ^!!!!!!!!!!!!^
                     if msg_bytes[0:3] == b'\x08\x02\x22':
-                        lz4_json.process_preset_response(msg_path_prefix + ".bin")
+                        preset_dict = lz4_json.process_preset_response(
+                            msg_path_prefix + ".bin",preset_slot
+                        )
+                        presets_csv.add_preset_line(preset_slot, preset_dict)
+                        # preset_slot was inherited from the preceding report,
+                        # clear it now, a new value will be seen before the next
+                        # JSON report
+                        preset_slot=0
                 message=None
                 message_id = None
                 if rsp_seq is not None:
                     rsp_seq+=1
             break
+    presets_csv.close_csv_stream()    
 
 if __name__ == "__main__":
     # TODO:

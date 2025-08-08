@@ -18,17 +18,14 @@ import binascii
 
 import lz4.block
 
-def process_preset_response(fn_in):
+def process_preset_response(fn_in,preset_slot):
     try:
-        print(".")
         if "command" in fn_in:
             return
-        print(".")
         _PB_PREFIX_LENGTH = 8
+        outdir = os.path.dirname(fn_in)+"/"
         input_stream = open(fn_in,"rb")
-        print(".")
         pb_prefix = input_stream.read(_PB_PREFIX_LENGTH)
-        print(".")
         print(str(binascii.b2a_hex(pb_prefix),"utf-8"))
         if len(pb_prefix)<_PB_PREFIX_LENGTH:
             return
@@ -38,22 +35,16 @@ def process_preset_response(fn_in):
         compact_json = str(lz4.block.decompress(lz4_json,uncompressed_size=10240),"utf-8")
         preset_dict = json.loads(compact_json)
         preset_name = preset_dict["info"]["displayName"].replace(" ","_")
-        fn_raw_json = fn_in.replace(".bin","-"+preset_name+".raw_preset.json")
-        assert fn_raw_json != fn_in
-        print("Dumping raw JSON to",fn_raw_json)
-        with open(fn_raw_json,"wt") as output_stream:
-            output_stream.write(compact_json)
+        fn_prefix = "preset_%03d-%s" % (preset_slot, preset_name)
+        print("Dumping JSON from",fn_in,"with prefix",fn_prefix)
+        open(outdir+fn_prefix+".raw_preset.json","wt").write(compact_json)
         pretty_json = json.dumps(preset_dict,indent=4)
-        fn_pretty_json = fn_in.replace(".bin","-"+preset_name+".pretty_preset.json")
-        assert fn_pretty_json != fn_in
-        print("Dumping pretty JSON to",fn_pretty_json)
-        with open(fn_pretty_json,"wt") as output_stream:
-            output_stream.write(pretty_json)
+        open(outdir+fn_prefix+".pretty_preset.json","wt").write(pretty_json)
+        return preset_dict
     except:
         print(fn_in)
         print(sys.exc_info()[1])
         pass
-
 
 if __name__ == "__main__":
     for fn in sys.argv[1:]:
