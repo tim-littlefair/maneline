@@ -29,7 +29,7 @@ import time
 import traceback
 import zipfile
 
-from fhau_pylib import pb_utils, tshark_utils, hexdump
+from fhau_pylib import pb_utils, tshark_utils, hexdump, lz4_json
 
 def log(message,is_error=False):
     global _log_stream
@@ -189,7 +189,8 @@ def dump_requests_and_responses(capture_bytes, capture_type, time_range):
                     open(msg_path_prefix + ".bin","wb").write(msg_bytes)
                     open(msg_path_prefix + ".hexdump","wt").write(hexdump.hexdump(msg_bytes))
                     print(msg_raw_pb_parse,file=open(msg_path_prefix + ".raw_pb_parse.txt","wt"))
-
+                    if msg_bytes[0:3] == b'\x08\x02\x22':
+                        lz4_json.process_preset_response(msg_path_prefix + ".bin")
                 message=None
                 message_id = None
                 if rsp_seq is not None:
