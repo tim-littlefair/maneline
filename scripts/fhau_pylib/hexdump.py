@@ -1,6 +1,6 @@
 #! python3
 
-# parse_captures.py
+# hexdump.py
 # Author: Tim Littlefair (https://github.com/tim-littlefair)
 # COPYRIGHT: 
 # To the extent possible, the intent of the author Tim Littlefair 
