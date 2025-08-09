@@ -191,16 +191,27 @@ def dump_requests_and_responses(capture_bytes, capture_type, time_range):
                     open(msg_path_prefix + ".bin","wb").write(msg_bytes)
                     open(msg_path_prefix + ".hexdump","wt").write(hexdump.hexdump(msg_bytes))
                     print(msg_raw_pb_parse,file=open(msg_path_prefix + ".raw_pb_parse.txt","wt"))
-                    if msg_bytes[0:5] == b'\x08\x01\x2a\x04\x08':
-                        # The message is the first report responding to a preset request
-                        # and contains the preset slot number at byte 5
-                        # !!!!!!!!!!!!
-                        # ... BUT ...
-                        # The preset slot number in this message is zero-based and does
-                        # not reflect the one-based slot number displayed on the MMP 
-                        # and in FenderTone
-                        # !!!!!!!!!!!!
-                        preset_slot=msg_bytes[5]+1 # because ^!!!!!!!!!!!!^
+                    if msg_bytes[0:3] == b'\x08\x01\x2a':
+                        assert msg_bytes[-2:] == b'\x20\x01'
+                        # The message is the first report responding to a preset request ...
+                        if len(msg_bytes)==8:
+                            # ... and contains the preset slot number at msg_bytes[5]
+                            # !!!!!!!!!!!!
+                            # ... BUT ...
+                            # The preset slot number in this message is zero-based and does
+                            # not reflect the one-based slot number displayed on the MMP 
+                            # and in FenderTone
+                            # !!!!!!!!!!!!
+                            preset_slot=msg_bytes[5]+1 # because ^!!!!!!!!!!!!^
+                        else:
+                            # !!!!!!!!!!!!
+                            # ... AND ALSO ...
+                            # If the (still zero-based) slot number is zero, it corresponds 
+                            # with the protobuf declaration default value and is supressed to 
+                            # save two bytes of output
+                            # !!!!!!!!!!!!
+                            assert len(msg_bytes)==6
+                            preset_slot=0+1
                     if msg_bytes[0:3] == b'\x08\x02\x22':
                         preset_dict = lz4_json.process_preset_response(
                             msg_path_prefix + ".bin",preset_slot
