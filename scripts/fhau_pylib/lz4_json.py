@@ -35,7 +35,7 @@ def process_preset_response(fn_in,preset_slot):
         compact_json = str(lz4.block.decompress(lz4_json,uncompressed_size=10240),"utf-8")
         preset_dict = json.loads(compact_json)
         preset_name = preset_dict["info"]["displayName"].replace(" ","_")
-        fn_prefix = "preset_%03d-%s" % (preset_slot, preset_name)
+        fn_prefix = "../../presets/preset_%03d-%s" % (preset_slot, preset_name)
         print("Dumping JSON from",fn_in,"with prefix",fn_prefix)
         open(outdir+fn_prefix+".raw_preset.json","wt").write(compact_json)
         pretty_json = json.dumps(preset_dict,indent=4)

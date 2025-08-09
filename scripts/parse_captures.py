@@ -40,7 +40,8 @@ def log(message,is_error=False):
     else:
         print(message)
     print(prefix + message, file=_log_stream)
-def extract_logstreams_from_adb_bugreport(bugreport_path):
+
+def extract_hci_logs_from_adb_bugreport(bugreport_path):
     retval=[]
     with zipfile.ZipFile(bugreport_path, "r") as brzip:
         brzip_btlog_dirpath = "FS/data/misc/bluetooth/logs"
@@ -58,7 +59,15 @@ def extract_logstreams_from_adb_bugreport(bugreport_path):
         # running Android 8.1.0 - the option may be differently named
         # or perhaps not available at all on phones from other vendors
         # or running other Android versions.
-        for fn in ( 'btsnoop_hci.log.last', 'btsnoop_hci.log'):
+        for fn in ( 
+            # Every bug report contains the current snoop log 
+            # and the preceding one
+            # Usually the current one will be the only one we want
+            # change code at this point if we want both or only the preceding
+            # one
+            # 'btsnoop_hci.log.last', 
+            'btsnoop_hci.log',
+        ):
             try:
                 capture_bytes = brzip.read(f"{brzip_btlog_dirpath}/{fn}")
                 retval += [ [ capture_bytes, fn ], ]
@@ -70,12 +79,12 @@ def extract_logstreams_from_adb_bugreport(bugreport_path):
         log(f"Was Bluetooth snooping turned on in Developer options?", is_error=True)
     return retval
 
-def extract_logstreams_from_capture(capture_path):
+def extract_hci_logs_from_capture(capture_path):
     retval = []
     if capture_path.endswith(".zip"):
         retval += [
             [capture_bytes, tshark_utils.ADB_BLUETOOTH_CAPTURE, f"{capture_path}:{zip_item_path}"]
-            for capture_bytes, zip_item_path in extract_logstreams_from_adb_bugreport(capture_path)
+            for capture_bytes, zip_item_path in extract_hci_logs_from_adb_bugreport(capture_path)
         ]
     elif capture_path.endswith(".pcapng"):
         capture_bytes = open(capture_path,mode="rb").read()
@@ -100,9 +109,7 @@ def extract_logstreams_from_capture(capture_path):
 
 def dump_requests_and_responses(capture_bytes, capture_type, time_range):
     global req_seq, rsp_seq, message, message_id
-    time_range_dir = outpath + "/" + time_range
-    os.makedirs(time_range_dir, exist_ok=True)
-    presets_csv.open_csv_file(time_range_dir)
+    presets_csv.open_csv_file(outpath)
     lb_lines = tshark_utils.extract_messages_from_capture(capture_bytes, capture_type)
     preset_slot=0
     for lb_line in lb_lines:
@@ -175,19 +182,42 @@ def dump_requests_and_responses(capture_bytes, capture_type, time_range):
             if last_packet is False:
                 pass
             else:
-                if(len(message)>2):
+                # At this point message_id is an array of integers which identifies
+                # the message within the session.
+                # Messages from the application to the device are classified as 
+                # 'commands' and are identified by a single-element array, with the 
+                # element being the sequence number of the command within the session.
+                # Messages from the device to the application are classified as 
+                # 'reports' and are identified by a two element array, of which the 
+                # first element is the sequence number of the most recent command, 
+                # and the second is a sequence number for the report which resets
+                # to 1 every time a new command is received.
+                # Note that although this scheme associates reports with their 
+                # most recent command, we can't assume that every report is triggered
+                # by the command which most recently precedes if - for example, some
+                # reports may be triggered by inputs to the controls on the FMIC device
+                # and be unrelated to the most recent command issued.
+                if(len(message)<=2):
+                    log(f"Short message {message_id}: {message}")
+                else:
                     msg_type = None
-                    msg_basename="-report-".join(["%02d"%(i,) for i in message_id])
+                    cmd_seq = message_id[0]
+                    cmd_rpt_dir = outpath + "/messages/" + "%03d"%(cmd_seq,)
+                    os.makedirs(cmd_rpt_dir, exist_ok=True)
+                    msg_basename="report-" + ".".join(["%03d"%(i,) for i in message_id])
                     if len(message_id)==1:
-                        msg_basename += '-command-' + str(binascii.b2a_hex(message_prefix),"utf-8")
-                    log(f"Saving {msg_basename} ({len(message)} bytes)")
+                        msg_basename = "command-%03d-%s"%(
+                            cmd_seq, 
+                            str(binascii.b2a_hex(message_prefix),"utf-8")
+                        )
+                    msg_path_prefix = f"{cmd_rpt_dir}/{msg_basename}"
+                    log(f"Saving {msg_path_prefix} ({len(message)} bytes)")
                     msg_raw_pb_parse, msg_bytes = None, None
                     try:
                         msg_raw_pb_parse, msg_bytes = pb_utils.parse_message_frame(message)
                     except pb_utils.IncompleteFrameException as e:
                         msg_raw_pb_parse = "Incomplete frame - no protobuf parse attempted"
                         msg_bytes = e.incomplete_frame_bytes
-                    msg_path_prefix = f"{time_range_dir}/{msg_basename}"
                     open(msg_path_prefix + ".bin","wb").write(msg_bytes)
                     open(msg_path_prefix + ".hexdump","wt").write(hexdump.hexdump(msg_bytes))
                     print(msg_raw_pb_parse,file=open(msg_path_prefix + ".raw_pb_parse.txt","wt"))
@@ -216,6 +246,7 @@ def dump_requests_and_responses(capture_bytes, capture_type, time_range):
                         preset_dict = lz4_json.process_preset_response(
                             msg_path_prefix + ".bin",preset_slot
                         )
+                        #print(preset_dict.keys())
                         presets_csv.add_preset_line(preset_slot, preset_dict)
                         # preset_slot was inherited from the preceding report,
                         # clear it now, a new value will be seen before the next
@@ -240,14 +271,14 @@ if __name__ == "__main__":
     message = None
     message_id = None
 
-    os.makedirs(outpath)
+    os.makedirs(outpath+"/presets")
     print(f"Dumped data will be in {outpath}")
     global _log_stream
     _log_stream = open(outpath+"/log.txt","wt")
 
     for snoop_path in sys.argv[1:]:
         req_seq=0
-        logbyte_list = extract_logstreams_from_capture(snoop_path)
+        logbyte_list = extract_hci_logs_from_capture(snoop_path)
         try:
             for lb in logbyte_list:
                 req_num = 0, 0
@@ -256,7 +287,7 @@ if __name__ == "__main__":
                     continue
                 dump_requests_and_responses(lb[0],lb[1],lb[3])
                 open(
-                    outpath + f"/{lb[3]}/requests_{start_reqseq}-{req_seq}.csv","wt"
+                    f"{outpath}/requests_{start_reqseq}-{req_seq}.csv","wt"
                 ).write(tshark_utils.extract_csv(lb[0],lb[1]))
                 start_reqseq=req_seq
         except AssertionError as e:
