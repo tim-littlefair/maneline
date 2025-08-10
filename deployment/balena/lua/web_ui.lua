@@ -26,7 +26,7 @@ function file_text(file_path)
     end
 end
 
-function build_cds_html(startup_messages)
+function Web_UI:build_cds_html(startup_messages)
     header_text = file_text("web_ui/frame_head.html.fragment")
     body_text = file_text("web_ui/cds_body.html.fragment")
     if(header_text and body_text)

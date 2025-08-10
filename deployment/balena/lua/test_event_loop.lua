@@ -9,7 +9,12 @@ function get_pegasus_event_client(port)
     retval._socket, err = socket.bind('*', port)
     assert(retval._socket, err)
     function callback(req,res)
-        res:write("HW")
+        response_string = "<html>"..
+            "<p>method="..req:method().."</p>"..
+            "<p>path="..req:path().."</p>"..
+        "</html>"    
+        io.stdout:write(response_string)
+        res:write(response_string)
         return res:close()
     end
     retval._phdlr = pegasus_handler:new(callback, ".")
@@ -56,6 +61,7 @@ local event_loop = require('event_loop')
 
 local _stdin_evtclt = get_stdin_event_client()
 local _pegasus_evtclt = get_pegasus_event_client(9090)
+
 
 event_loop.run_event_loop(
     _stdin_evtclt, 
