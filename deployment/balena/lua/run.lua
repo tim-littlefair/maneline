@@ -1,5 +1,10 @@
 #! lua
 
+local lfs = require 'lfs'
+local socket = require 'socket'
+local pegasus_evtclt = require("pegasus_event_client")
+local event_loop = require('event_loop')
+
 -- scripts/run_web_cli.sh is intended to provide
 -- a way to simulate the balena deploy environment
 -- on the Linux desktop development platform.end
@@ -10,15 +15,17 @@
 -- development environment Balena simulation,
 -- ".." points to the parent of the symlink target,
 -- not the base of the simulated Balena install.
-local lfs = require 'lfs'
-local socket = require 'socket'
-local pegasus_evtclt = require("pegasus_event_client")
-local event_loop = require('event_loop')
-
 if #arg>0
 then
     lfs.chdir(arg[1])
+else
+    lfs.chdir("..")
 end
+
+-- The pegasus handler must be created after
+-- current directory is set
+pegasus_evtclt:create_handler(lfs.currentdir())
+print(pegasus_evtclt._phdlr)
 
 function get_stdin_event_client()
     local retval = {}
