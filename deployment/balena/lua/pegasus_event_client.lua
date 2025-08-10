@@ -74,8 +74,13 @@ retval._socket, err = socket.bind('*', port)
 assert(retval._socket, err)
 
 function callback(request,response)
-    io.stdout:write("Request:", request:path())
-    if request:path()=="/cds"
+    io.stdout:write("Request: ", request:method()," ",request:path())
+    if request:method()~="GET"
+    then
+        print("POST params: ", cjson.encode(request.post()))
+        response:write(cjson.encode(request.post()))
+        io.stdout:write("Non-get methods TBD")
+    elseif request:path()=="/cds"
     then
         if(true)
         then
@@ -86,20 +91,13 @@ function callback(request,response)
             print("CLI subprocess not OK")
             response:write("<html>CLI subprocess not OK</html>")
         end
-    elseif request:method() == 'GET'
-    then
+    else 
         response:writeFile(request:path())
-    elseif request:method() == 'POST'
-    then
-        print("POST params: ", cjson.encode(request.post()))
-        response:write(cjson.encode(request.post()))
-    else
-        response:write("Unsupported request method")
     end
     retval = response:close()
     return retval
 end
-retval._phdlr = pegasus_handler:new(callback, ".")
+retval._phdlr = pegasus_handler:new(callback, "..")
 retval._client = nil
 function retval:settimeout(timeout)
     self._socket:settimeout(timeout)
