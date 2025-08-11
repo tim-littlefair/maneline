@@ -2,14 +2,6 @@
 <h3><span>All Presets</span></h3>
 <table>
     <tbody>
-        <tr>
-            <td><button id="preset001"/></td>
-            <td><button id="preset002"/></td>
-            <td><button id="preset003"/></td>
-            <td><button id="preset004"/></td>
-            <td><button id="preset005"/></td>
-            <td><button id="preset006"/></td>
-        </tr>
     </tbody>
 </table>
 </body>
