@@ -1,6 +1,5 @@
 #!/bin/bash
 
-cli_jar=desktopFHAUcli-0.0.0.jar
 
 check_webhome() {
     if [ ! -d _work/webhome ]
@@ -21,9 +20,11 @@ check_webhome() {
         ln -s ../../deployment/balena/run.sh _work/webhome
     fi
 
-    if [ ! -L _work/webhome/$cli_jar ]
+    cli_jar=desktopFHAUcli-0.0.0.jar
+    if [ ! -L _work/webhome/jar/$cli_jar ]
     then
-        ln -s ../../desktop-app/build/libs/$cli_jar _work/webhome
+        mkdir -p _work/webhome/jar
+        ln -s ../../../desktop-app/build/libs/$cli_jar _work/webhome/jar
     fi
 
     set +e

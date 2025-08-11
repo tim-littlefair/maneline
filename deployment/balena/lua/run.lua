@@ -23,10 +23,10 @@ else
     lfs.chdir("..")
 end
 
--- The pegasus handler must be created after
--- current directory is set
+-- The pegasus handler and the FHAU CLI subprocess must 
+-- both be created after the current directory is set
 pegasus_evtclt:create_handler(lfs.currentdir())
-print(pegasus_evtclt._phdlr)
+fhau_cli:start_fhau_cli()
 
 function get_stdin_event_client()
     local retval = {}

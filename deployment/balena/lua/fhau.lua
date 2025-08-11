@@ -19,14 +19,15 @@ local Fhau = {}
 
 local session_start_time_t = os.time()
 local session_name = "session_"..os.date("%Y%m%d%H%M%S")
-lfs.mkdir("../"..session_name)
+local fhau_cli_input_fd = nil
 
--- On the Balena node, the jar is presently in the top directory
-local jar_file_name="../jar/desktopFHAUcli-0.0.0.jar"
-fhau_cli_input_fd = io.popen(
-    "java -jar " .. jar_file_name .. " --web=../" .. session_name,
-    "w"
-)
+function Fhau:start_fhau_cli()
+    local jar_file_name="jar/desktopFHAUcli-0.0.0.jar"
+    fhau_cli_input_fd = io.popen(
+        "java -jar " .. jar_file_name .. " --web=" .. session_name,
+        "w"
+    )
+end
 
 function Fhau:relay_stdin_line(line)
     if(line)
