@@ -52,7 +52,7 @@ event_loop.run_event_loop(
     stdin_evtclt,
     pegasus_evtclt,
     true, -- enable debug
-    5.0, -- active timeout
-    10.0 -- passive timeout
+    0.2, -- active timeout
+    1.0 -- passive timeout
 )
 

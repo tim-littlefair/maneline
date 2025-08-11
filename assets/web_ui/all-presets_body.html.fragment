@@ -15,15 +15,28 @@
 </body>
 
 <script>
+function td_inner_html(i) {
+    idStr=`00${i}`
+    idStr=idStr.substring(idStr.length-3,idStr.length)
+    btnId = "preset"+idStr
+    btnText = "preset "+idStr+"\nNO NAME YET"
+    return `<td><button id="${btnId}"/>${btnText}</td>\n`    
+}
+
 function setMessages() {
-    for(let j=1; j<=60; ++j)
+    max_rows=5
+    max_cols=6
+    tbody_inner_html = ""
+    for(let row=1; row<=max_rows; ++row)
     {
-        idStr=`00${j}`
-        idStr=idStr.substring(idStr.length-3,3)
-        btnId = "preset"+idStr
-        btnText = "preset "+idStr+"\nNO NAME YET"
-        document.getElementById(btnId).textContent = btnText;
+        tbody_inner_html += "<tr>\n"
+        for(let col=1; col<=max_cols; ++col) {
+            psid = max_cols*(row-1)+col
+            tbody_inner_html += td_inner_html(psid)
+        }
+        tbody_inner_html += "</tr>\n"
     }
+    document.querySelector("tbody").innerHTML = tbody_inner_html
 }
 window.onload = setMessages
 </script>
