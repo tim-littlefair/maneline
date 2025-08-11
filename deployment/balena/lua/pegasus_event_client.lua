@@ -32,9 +32,9 @@ function callback(request,response)
     if request:method()=="POST"
     then
         local post_params = request:post()
-        print(post_params)
         io.stdout:write("POST params: ",cjson.encode(post_params))
         response:write(cjson.encode(post_params))
+        fhau_cli:relay_stdin_line(post_params.command.." "..post_params.slot.."\n")
     elseif request:method()~="GET"
     then
         io.stdout:write("Unexpected method: ", request:method())
