@@ -12,7 +12,11 @@ echo Starting $0 in directory $start_dir
 
 cd lua
 
-lua ./run_pegasus.lua $start_dir
+lua ./run.lua $start_dir
+exit
+
+
+
 pegasus_pid=$!
 echo Pegasus started with process id $pegasus_pid
 sleep 10
