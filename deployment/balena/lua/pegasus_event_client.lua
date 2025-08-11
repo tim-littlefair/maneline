@@ -3,6 +3,8 @@
 local socket = require('socket')
 local pegasus_handler = require('pegasus.handler')
 local lfs = require('lfs')
+local fhau_cli = require('fhau')
+
 
 local port = 9090
 
