@@ -94,7 +94,7 @@ function Fhau:get_cxn_and_dev_status()
         os.exit(fhau_errors.FATAL_CLI_HAS_EXITED)
     end
 
-    return build_cds_html(retval)
+    return web_ui:build_cds_html(retval)
 end
 
 return Fhau

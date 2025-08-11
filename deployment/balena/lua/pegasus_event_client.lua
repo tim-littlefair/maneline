@@ -5,7 +5,6 @@ local pegasus_handler = require('pegasus.handler')
 local lfs = require('lfs')
 local fhau_cli = require('fhau_cli')
 
-
 local port = 9090
 
 local retval = {}
@@ -27,7 +26,7 @@ function callback(request,response)
         response:addHeader("Cache-Control","no-cache")
         if req_path=="/cds"
         then
-            status = "FHAU OK" -- fhau.get_cxn_and_dev_status()
+            status = fhau_cli:get_cxn_and_dev_status()
             response:write("<html>"..status.."</html>")
         elseif req_path=="/favicon.ico"
         then
