@@ -22,10 +22,9 @@ local session_name = "session_"..os.date("%Y%m%d%H%M%S")
 lfs.mkdir("../"..session_name)
 
 -- On the Balena node, the jar is presently in the top directory
-local jar_file_name="desktopFHAUcli-0.0.0.jar"
+local jar_file_name="../jar/desktopFHAUcli-0.0.0.jar"
 fhau_cli_input_fd = io.popen(
-    "cd .. && " ..
-    "java -jar " .. jar_file_name .. " --web=" .. session_name,
+    "java -jar " .. jar_file_name .. " --web=../" .. session_name,
     "w"
 )
 

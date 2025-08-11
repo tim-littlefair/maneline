@@ -4,6 +4,7 @@ local lfs = require 'lfs'
 local socket = require 'socket'
 local pegasus_evtclt = require("pegasus_event_client")
 local event_loop = require('event_loop')
+local fhau_cli = require('fhau')
 
 -- scripts/run_web_cli.sh is intended to provide
 -- a way to simulate the balena deploy environment
