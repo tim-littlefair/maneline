@@ -28,18 +28,7 @@ fhau_cli_input_fd = io.popen(
     "w"
 )
 
--- Use the Lua cqueues library to create a loop checking
--- for commands on standard input
--- NB There is a cqueues manual at
--- https://25thandclement.com/~william/projects/cqueues.pdf.
--- On the sixth page of the PDF (numbered page 1) there is
--- a statement that the library is not compatible with Lua 5.1,
--- but for the moment it seems to be working.
-local stdin_relay_queue = cqueues.new()
-stdin_relay_queue:wrap(function()
-    -- TODO: Poll and yield until startup has finished
-    -- TODO: Remove print commands
-    line = io.read("*l")
+function Fhau:relay_stdin_line(line)
     if(line)
     then
         print("Relaying line "..line)
@@ -48,9 +37,7 @@ stdin_relay_queue:wrap(function()
     else
         print("Nothing to relay")
     end
-    cqueues.sleep(10)
-end)
-assert(stdin_relay_queue:loop())
+end
 
 function check_for_cli_death()
     -- Our only link to the CLI subprocess is the file descriptor

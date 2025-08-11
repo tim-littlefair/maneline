@@ -41,6 +41,7 @@ function get_stdin_event_client()
     end
     function retval:handler(stdin_bytes)
         io.stdout:write(stdin_bytes)
+        fhau_cli:relay_stdin_line(stdin_bytes)
     end    
     return retval
 end
