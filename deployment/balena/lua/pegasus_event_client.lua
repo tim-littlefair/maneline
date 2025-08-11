@@ -1,9 +1,21 @@
 #! lua
 
+local logging = require('logging')
 local socket = require('socket')
+local pegasus = require('pegasus')
 local pegasus_handler = require('pegasus.handler')
 local lfs = require('lfs')
 local fhau_cli = require('fhau_cli')
+local cjson = require('cjson.safe')
+
+local logger = logging.new(
+    function(self,level,message)
+        print(level, message)
+        return true
+    end
+)
+logger:setLevel(logging.WARN)
+logger:info("Pegasus logging enabled")
 
 local port = 9090
 
@@ -17,10 +29,15 @@ function callback(request,response)
     -- io.stdout:write(retval._phdlr==nil)
     io.stdout:write("Request: ", request:method()," ",request:path())
     local req_path = request:path()
-    if request:method()~="GET"
+    if request:method()=="POST"
     then
-        io.stdout:write("POST params: ", cjson.encode(request.post()))
-        response:write(cjson.encode(request.post()))
+        local post_params = request:post()
+        print(post_params)
+        io.stdout:write("POST params: ",cjson.encode(post_params))
+        response:write(cjson.encode(post_params))
+    elseif request:method()~="GET"
+    then
+        io.stdout:write("Unexpected method: ", request:method())
         io.stdout:write("Non-get methods TBD")
     else
         response:addHeader("Cache-Control","no-cache")
@@ -54,6 +71,7 @@ retval._client = nil
 function retval:create_handler(rundir)
     assert(self._phdlr==nil)
     self._phdlr = pegasus_handler:new(callback, rundir)
+    self._phdlr.log = logger
 end
 
 function retval:settimeout(timeout)
@@ -68,7 +86,7 @@ function retval:fd()
     return self._client
 end
 
-function retval:handler()        
+function retval:handler()
     assert(self._client~=nil)
     assert(self._phdlr~=nil)
     self._phdlr:processRequest(self._port,self._client)

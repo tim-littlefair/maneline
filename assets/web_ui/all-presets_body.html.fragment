@@ -15,17 +15,28 @@
 </body>
 
 <script>
-function td_inner_html(i) {
-    idStr=`00${i}`
-    idStr=idStr.substring(idStr.length-3,idStr.length)
-    btnId = "preset"+idStr
-    btnText = "preset "+idStr+"\nNO NAME YET"
-    return `<td><button id="${btnId}"/>${btnText}</td>\n`    
+function select_preset(i) {
+    fetch(
+        window.location.origin, 
+        {
+            method: "POST",
+            body: `command=preset&slot=${i}`,
+            headers: { "Content-type": "application/json; charset=UTF-8" }
+        }
+    )
 }
 
-function setMessages() {
-    max_rows=5
+function td_inner_html(i) {
+    idStr=`0${i}`
+    idStr=idStr.substring(idStr.length-2,idStr.length)
+    btnId = "preset"+idStr
+    btnText = "preset "+idStr+"<br/>NO NAME<br/>YET"
+    return `<td><button id="${btnId}" onclick="select_preset(${i})" />${btnText}</td>\n`    
+}
+
+function populate_table() {
     max_cols=6
+    max_rows=5
     tbody_inner_html = ""
     for(let row=1; row<=max_rows; ++row)
     {
@@ -38,7 +49,8 @@ function setMessages() {
     }
     document.querySelector("tbody").innerHTML = tbody_inner_html
 }
-window.onload = setMessages
+window.onload = populate_table
+
 </script>
 
 </html>
