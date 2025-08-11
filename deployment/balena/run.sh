@@ -1,24 +1,23 @@
 #!/bin/bash
 
-# This script is the glue which starts a web server
-# and the FHAU CLI program, and passes messages between
-# these two processes.
-# It will be brought back to the foreground after
-# the browser container has started up and is displaying
-# the UI provided by the web server.
-
 start_dir=$(pwd)
 echo Starting $0 in directory $start_dir
 
 cd lua
 
 lua ./run.lua $start_dir
-exit
-
-
-
 pegasus_pid=$!
 echo Pegasus started with process id $pegasus_pid
+exit
+
+# TBD: Work out how to get the browser started
+# and send the message to it to display the 
+# FHAU web UI without closing standard input to 
+# the FHAU/web wrapper
+
+# Maybe the browser has to start first
+# Maybe the wrapper needs to read from a pipe
+
 sleep 10
 
 # Give the Lua web server time to get its port open before
