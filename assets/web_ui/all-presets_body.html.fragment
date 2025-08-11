@@ -1,0 +1,33 @@
+<body class="wy-body-for-nav" id="content_body" name="content_body">
+<h3><span>All Presets</span></h3>
+<table>
+    <tbody>
+        <tr>
+            <td><button id="preset001"/></td>
+            <td><button id="preset002"/></td>
+            <td><button id="preset003"/></td>
+            <td><button id="preset004"/></td>
+            <td><button id="preset005"/></td>
+            <td><button id="preset006"/></td>
+        </tr>
+    </tbody>
+</table>
+</body>
+
+<script>
+function setMessages() {
+    for(let j=1; j<=60; ++j)
+    {
+        idStr=`00${j}`
+        idStr=idStr.substring(idStr.length-3,3)
+        btnId = "preset"+idStr
+        btnText = "preset "+idStr+"\nNO NAME YET"
+        document.getElementById(btnId).textContent = btnText;
+    }
+}
+window.onload = setMessages
+</script>
+
+</html>
+
+

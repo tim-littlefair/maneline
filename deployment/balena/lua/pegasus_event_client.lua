@@ -28,6 +28,10 @@ function callback(request,response)
         then
             status = fhau_cli:get_cxn_and_dev_status()
             response:write("<html>"..status.."</html>")
+        elseif req_path=="/all-presets"
+        then
+            all_presets = fhau_cli:get_all_presets()
+            response:write(all_presets)
         elseif req_path=="/favicon.ico"
         then
             response:writeFile("./web_ui/_static/app-icon-512x512.png")

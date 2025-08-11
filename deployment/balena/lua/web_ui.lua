@@ -40,5 +40,16 @@ function Web_UI:build_cds_html(startup_messages)
     end
 end
 
+function Web_UI:build_all_presets_html()
+    header_text = file_text("web_ui/frame_head.html.fragment")
+    body_text = file_text("web_ui/all-presets_body.html.fragment")
+    if(header_text and body_text)
+    then
+        return header_text .. body_text
+    else
+        return "problems?"
+    end
+end
+
 return Web_UI
 

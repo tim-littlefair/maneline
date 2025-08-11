@@ -97,4 +97,12 @@ function Fhau:get_cxn_and_dev_status()
     return web_ui:build_cds_html(retval)
 end
 
+function Fhau:get_all_presets()
+    -- TBD: At some time in the future this class needs 
+    -- to compile a JSON object describing the presets 
+    -- which will be passed in the following function 
+    -- call and will affect the HTML output
+    return web_ui:build_all_presets_html()
+end
+
 return Fhau
