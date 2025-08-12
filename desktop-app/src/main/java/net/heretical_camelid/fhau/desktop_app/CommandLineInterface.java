@@ -30,10 +30,7 @@ public class CommandLineInterface {
     private static boolean s_webMode = false;
 
     static void doInteractive(DesktopUsbAmpProvider provider) {
-        if(s_webMode==true) {
-            System.out.println("CLI started in web mode, provider has not been started");
-            System.out.println("Suggested first command is 'start'");
-        }
+        provider.startProvider();
         boolean continueAcceptingCommands=true;
         Scanner commandScanner = new Scanner(System.in);
         System.out.println("Command? ");
