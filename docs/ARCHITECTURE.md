@@ -71,6 +71,9 @@ the GitHub repository layout, with the following being the major modules:
   top of lib, which includes a concreate implementation of the LT-series USB Amp Provider 
   capable of running on an Android mobile phone.
 
+  The provider implemented in this application presently requires the Android mobile device 
+  to be directly connected to the LT- series amplifier via a USB cable.
+
 * deployment/balena
   
   This module is a bundle of software deployable to various variants of Raspberry Pi
@@ -170,8 +173,8 @@ called 'assets' which contains a variety of supporting information including:
     on any of these will depend on recruitment of project contributors with access to 
     the target hardware.
 
-  * adding support for uploading preset amplifier definition JSON files from an FHAU 
-    application into LT- series, Mustang Micro Plus or other supported devices
+  * The project may add support for uploading preset amplifier definition JSON files 
+    from an FHAU application into LT- series, Mustang Micro Plus or other supported devices
     (including possibly adding support for translating preset definitions 
     between the similar-but-not-identical JSON schemas used by LT- series and 
     Mustang Micro Plus). 
@@ -196,5 +199,9 @@ called 'assets' which contains a variety of supporting information including:
 
     + other IOT deployment infrastructure (e.g. https://mender.io) might be showcased 
       alongside the present implementation for https://balena.io.
+
+  * The 'android-app' module may be updated to allow commands to the Fender product 
+    to be relayed wirelessly over HTTP via the future 'web-proxy-app' rather than 
+    requiring a hard-wired direct USB connection to LT- series Fender products.
 
 
