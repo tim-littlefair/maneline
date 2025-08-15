@@ -49,7 +49,10 @@ public class SlotBasedPresetSuiteExporter implements PresetRegistry.Visitor {
     public void visitRecord(int slotIndex, Object record) {
         PresetRecord fjpr = (PresetRecord) record;
         assert fjpr != null;
-        if (m_desiredSlotIndexes.contains(slotIndex)) {
+        if (
+            m_desiredSlotIndexes.contains(slotIndex) || 
+            m_desiredSlotIndexes.size()==0
+        ) {
             JsonObject presetObject = new JsonObject();
             presetObject.addProperty("presetName", fjpr.m_name);
             presetObject.addProperty("audioHash", fjpr.audioHash());

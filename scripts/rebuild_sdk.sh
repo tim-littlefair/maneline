@@ -78,10 +78,27 @@ fi
 cd $cache_reldir
 cache_absdir=$(pwd)
 
-# For the moment we only support Linux/x64
-# but we use variables which could be varied
-# at some time in the future for macOS, Windows
-# Linux/ARM etc
+# Linux/x64 is the primary build platform for FHAU
+
+# This script may also be able to create a viable
+# command line build environment on macOS but testing  
+# on this platform will be infrequent and will be 
+# limited to hardware available to the FHAU 
+# developer(s), which presently consists of:
+# one MBP-mid2012 running macOS 10.15 Catalina and 
+# one MBP-late2011 running whatever macOS version is 
+# currently supported by OpenCore Legacy Patcher
+# (macOS 15.5 as at August 2025)
+
+# It may be possible to create a viable command line
+# build environment on Windows (either in the native 
+# command line or in WSL), but this script does not
+# and will not attempt to do this.
+# Note that the deployment/balena module build scripts
+# depend on symbolic links stored in git - as Git on 
+# Windows filesystems cannot create symbolic links 
+# this part of the project will definitely not 
+# be buildable.
 
 # Development presently standardises on JDK 21, using 
 # Oracle's openjdk archive at
