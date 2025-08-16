@@ -26,6 +26,7 @@
         width: 100%;
         height: auto;
     }
+
   </style>
 
 </head>
@@ -46,10 +47,21 @@
             <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
             
                 <ul class="current">
-<li class="toctree-l1"><a class="current reference internal" href="#">Connection/Device State</a></li>
-<li class="toctree-l1"><a class="current reference internal" href="#">All Presets</a></li>
-<li class="toctree-l1"><a class="current reference internal" href="#">Preset Suites</a></li>
-<li class="toctree-l1"><a class="current reference internal" href="#">Help</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#">Connection/Device State</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#">All Presets</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="#">Curated Preset Suites</a>
+    <ul>
+    <li class="toctree-l2"><a href="#" fgcolor="red">Pick'N'Mix</a></li>
+    <li class="toctree-l2"><a class="reference internal" href="#">Folk</a></li>
+    <li class="toctree-l2"><a class="reference internal" href="#">Blues</a></li>
+    <li class="toctree-l2"><a class="reference internal" href="#">Rock</a></li>
+    <li class="toctree-l2"><a class="reference internal" href="#">Jazz</a></li>
+    <li class="toctree-l2"><a class="reference internal" href="#">Country</a></li>
+    <li class="toctree-l2"><a class="reference internal" href="#">Heavy</a></li>
+    <li class="toctree-l2"><a class="reference internal" href="#">Trippy</a></li>
+    </ul>
+</li>
+<li class="toctree-l1"><a class="current reference internal" href="#">Credits</a></li>
                 </ul>
             </div>
         </div>
@@ -71,22 +83,30 @@
                   <iframe src="/all-presets"  style="height:500px;"></iframe>
                 </div>
 
-                <div style="height:80px;">
-                  <iframe src="content_frame.html?title=Preset+Suites"></iframe>
+                <div style="height:auto;">
+                    <h3><span>Curated Preset Suites</span></h3>
+                    <iframe src="/preset?num=01&name=PickNMix"></iframe>
+                    <iframe src="/preset?num=02&name=Folk"></iframe>
+                    <iframe src="/preset?num=03&name=Blues"></iframe>
+                    <iframe src="/preset?num=04&name=Rock"></iframe>
+                    <iframe src="/preset?num=05&name=Jazz"></iframe>
+                    <iframe src="/preset?num=06&name=Country"></iframe>
+                    <iframe src="/preset?num=07&name=Heavy"></iframe>
+                    <iframe src="/preset?num=08&name=Trippy"></iframe>
                 </div>
 
                 <div style="height:80px;">
-                  <iframe src="content_frame.html?title=Help"></iframe>
-                  <p>
-                      Source code for this project is available at:
-                      <a href="https://github.com/tim-littlefair/feral-horse-amp-utils">
-                          https://github.com/tim-littlefair/feral-horse-amp-utils
-                      </a>.
-                  </p>
-                  <p>
-                      This project is built on the
-                      <a href="https://balena.io">Balena</a> platform.
-                  </p>
+                    <h3><span>Credits</span></h3>
+                        <p>
+                            Source code for this project is available at:
+                            <a href="https://github.com/tim-littlefair/feral-horse-amp-utils">
+                              https://github.com/tim-littlefair/feral-horse-amp-utils
+                            </a>.
+                        </p>
+                        <p>
+                            This project is built on the
+                            <a href="https://balena.io">Balena</a> platform.
+                        </p>
                 </div>
               </div>
             </div>
