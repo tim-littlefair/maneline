@@ -16,5 +16,12 @@
   <link rel="stylesheet" href="https://heretical-camelid.net/_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="https://heretical-camelid.net/_static/pygments.css" type="text/css" />
   <link rel="stylesheet" href="https://heretical-camelid.net/_static/style-font.css" type="text/css" />
+
+  <style>
+    button {
+      width: 100px;
+      height: auto;
+    }
+  </style>
 </head>
 
