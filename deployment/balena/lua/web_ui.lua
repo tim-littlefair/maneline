@@ -51,5 +51,35 @@ function Web_UI:build_all_presets_html()
     end
 end
 
+function Web_UI:build_preset_suite_html(suite_name, suite_file_path)
+    header_text = file_text("web_ui/frame_head.html.fragment")
+    body_start = string.gsub(
+        file_text("web_ui/preset_suite_body_start.html.fragment"),
+        "#SUITE_NAME#", suite_name
+    )
+    suite_json = file_text(suite_file_path)
+    body_end = string.gsub(
+        file_text("web_ui/preset_suite_body_end.html.fragment"),
+        "#SUITE_JSON#", suite_json
+    )
+    if(header_text and body_start and suite_json and body_end)
+    then
+        return header_text .. body_start .. body_end
+    else
+        return "problems?"
+    end
+end
+
+function Web_UI:preset_suite(suite_from_json)
+    header_text = file_text("web_ui/frame_head.html.fragment")
+    body_text = file_text("web_ui/all-presets_body.html.fragment")
+    if(header_text and body_text)
+    then
+        return header_text .. body_text
+    else
+        return "problems?"
+    end
+end
+
 return Web_UI
 

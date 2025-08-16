@@ -46,7 +46,9 @@ function populate_table() {
         {
             preset_from_json = suite_from_json.presets[index_into_suite]
             tbody_inner_html += td_inner_html(
-                preset_from_json.originSlotIndex, "AAAAAAAA", "BBBBBBBB"
+                preset_from_json.originSlotIndex, 
+                preset_from_json.presetName.substring(0,8).replace(" ","&nbsp;"),
+                preset_from_json.presetName.substring(8,16).replace(" ","&nbsp;")
             )
         }
         if(col==max_cols-1)

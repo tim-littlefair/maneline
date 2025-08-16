@@ -54,6 +54,7 @@ public class SlotBasedPresetSuiteExporter implements PresetRegistry.Visitor {
             m_desiredSlotIndexes.size()==0
         ) {
             JsonObject presetObject = new JsonObject();
+            presetObject.addProperty("originSlotIndex", slotIndex);
             presetObject.addProperty("presetName", fjpr.m_name);
             presetObject.addProperty("audioHash", fjpr.audioHash());
             presetObject.addProperty("effectsSummary", fjpr.effects(
@@ -65,10 +66,7 @@ public class SlotBasedPresetSuiteExporter implements PresetRegistry.Visitor {
             presetObject.addProperty("shortInfo", fjpr.shortInfo());
             if (s_sourceDeviceDetails != null) {
                 presetObject.addProperty(
-                    "sourceDevice",
-                    String.format("%s slot %d",
-                        s_sourceDeviceDetails, slotIndex
-                    )
+                    "originDevice",s_sourceDeviceDetails
                 );
             }
             m_suite.getAsJsonArray("presets").add(presetObject);

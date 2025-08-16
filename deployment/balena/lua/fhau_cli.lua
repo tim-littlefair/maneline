@@ -102,7 +102,11 @@ function Fhau:get_all_presets()
     -- to compile a JSON object describing the presets 
     -- which will be passed in the following function 
     -- call and will affect the HTML output
-    return web_ui:build_all_presets_html()
+    -- return web_ui:build_all_presets_html()
+    return web_ui:build_preset_suite_html(
+        "All Presets", 
+        session_name .. "/all-presets.preset_suite.json"
+    )
 end
 
 return Fhau
