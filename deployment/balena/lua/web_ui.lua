@@ -51,12 +51,12 @@ function Web_UI:build_all_presets_html()
     end
 end
 
-function Web_UI:build_preset_suite_html(suite_name, suite_file_path)
+function Web_UI:build_preset_suite_html(suite_name, suite_file_path, header_level)
     header_text = file_text("web_ui/frame_head.html.fragment")
-    body_start = string.gsub(
+    body_start = string.gsub(string.gsub(
         file_text("web_ui/preset_suite_body_start.html.fragment"),
         "#SUITE_NAME#", suite_name
-    )
+    ),"#HEADER_LEVEL#", header_level)
     suite_json = file_text(suite_file_path)
     body_end = string.gsub(
         file_text("web_ui/preset_suite_body_end.html.fragment"),

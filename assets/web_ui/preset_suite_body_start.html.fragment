@@ -1,4 +1,4 @@
 <body class="wy-body-for-nav" id="content_body" name="content_body">
-<h3><span>Curated preset suite: #SUITE_NAME#</span></h3>
+<h#HEADER_LEVEL#></h><span>#SUITE_NAME#</span></h#HEADER_LEVEL#>
 <table>
     <tbody>

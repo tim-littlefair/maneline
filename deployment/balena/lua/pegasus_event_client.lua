@@ -49,6 +49,12 @@ function callback(request,response)
         then
             all_presets = fhau_cli:get_all_presets()
             response:write(all_presets)
+        elseif req_path=="/suite"
+        then
+            suite_num = request.querystring.num
+            suite_name = request.querystring.name
+            preset_suite = fhau_cli:get_preset_suite(suite_num,suite_name)
+            response:write(preset_suite)
         elseif req_path=="/favicon.ico"
         then
             response:writeFile("./web_ui/_static/app-icon-512x512.png")
