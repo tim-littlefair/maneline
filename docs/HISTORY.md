@@ -50,8 +50,8 @@ comparable capabilities to the 'Fender FUSE' for Windows or macOS.
 
 This application was originally written by a developer working under the 
 handle @piorefk, who no longer appears to be active anywhere under the Internet 
-(at least under that name), but a source code repository based on the original is 
-now maintained [by GitHub user @offa](https://github.com/offa/plug)
+(at least under that name), but a source code repository forked from the Debian 
+package source is now maintained [by GitHub user @offa](https://github.com/offa/plug).
 
 The 'plug' application is a C++/Qt application which can exchange USB messages with 
 FMIC devices from the 2012-2015 generation of amplifiers which were compatible 
@@ -71,17 +71,36 @@ Mustang V generation devices I had no way of testing to determine whether
 my changes had broken the capabilities of plug in relation to those older devices.
 
 At this point I decided to set up an independent project, with the following aims:
-* to support USB connectivity to LT-series devices
-* to support Bluetooth Low Energy connectivity to Mustang Micro Plus
+* to support USB connectivity to LT-series devices;
+* to support Bluetooth Low Energy connectivity to Mustang Micro Plus;
 * support for GT-/GTX- series devices may be achieved if the protocol required
-  for these is sufficiently similar to Mustang Micro Plus
+  for these is sufficiently similar to Mustang Micro Plus;
 * for all supported devices provide capabilities to import and export preset 
   definitions in human readable/writeable format and if possible migrate 
-  preset definitions between device types
+  preset definitions between device types; and
+* to attempt to provide a range of applications based on a single common library 
+  capable of running as a native application on Linux and Android, and also as a 
+  web application served from a small, low-powered device like a Raspberry Pi.
 
-I have, for the time being, decided that scope will not include any capability 
-to edit presets using a GUI - as the preset export/import format will be human 
-readable, users would be able to use any preferred text editor to make changes 
-(or other developers might choose to take on this challenge as a separate editor
-tool).
+I have decided, for the time being, that scope of the project will not include 
+any capability to edit presets using a GUI - as the preset export/import format 
+will be human readable, users would be able to use any preferred text editor to 
+make changes (or other developers might choose to take on this challenge as a 
+separate editor tool).
+
+## Current status
+
+The current status is that a common library, Android application and desktop
+Linux command line application have been implemented and interoperate with 
+the LT40S device over USB.  
+
+The library and applications do not yet contain any support for interoperability
+with Mustang Micro Plus over Bluetooth Low Energy, but work has been started
+on reverse engineering the MMP's protocol and JSON preset format (which is not 
+identical to that used by the LT40S, but appears to be broadly similar and 
+with translation between the two dialects appearing very feasible).
+
+A prototype web application exists.
+
+
 
