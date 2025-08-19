@@ -135,18 +135,29 @@ respectively:
 * https://github.com/benlypan/UsbHid
 * https://github.com/gary-rowe/hid4java
 
-After some exploratory work, I've established 
+After some exploratory work, I've established that the on-the-wire/on-the-air 
+protocols used by both LT-series and MMP devices replay preset definitions as
+payloads in JSON-based formats.  As the GT-/GTX- series interoperate with 
+the same mobile companion app as the MMP, I think I can assume that the format 
+used by these will be very similar. Although the LT-series and MMP JSON formats
+aren't identical, the structures of the formats are very similar (with 
+some differences in JSON key naming), and I believe that it will almost 
+certainly be possible to cross-translate the majority of presets between the 
+two JSON dialects, providing that the source preset does not use any 
+audio model modules which are not present in the target device type.
+
+I've now arrived at 
 [a rough architecture](ARCHITECTURE.md) 
 for the project, and identified the following items as the short-to-medium 
 term project goals:
 * to support USB connectivity to LT-series devices;
 * to support Bluetooth Low Energy connectivity to Mustang Micro Plus;
-* support for GT-/GTX- series devices may be achieved if the protocol required
-  for these is sufficiently similar to Mustang Micro Plus;
+* some level of support for GT-/GTX- series devices may be achieved if the 
+  protocol required for these is sufficiently similar to Mustang Micro Plus;
 * for all supported devices provide capabilities to import and export preset 
   definitions in human readable/writeable format and if possible enable 
-  translation of JSON presets exported from the LT- series into migrate 
-  preset definitions from the LT- series to the ; and
+  translation of JSON presets exported from the LT- series into MMP dialect
+  and vice versa; and
 * to attempt to provide a range of applications based on a single common 
   library, implemented in Java, capable of being deployed in multiple types 
   of target hardware including:
@@ -161,6 +172,19 @@ term project goals:
     via a browser client on the same hardware as the server, or on a remote device
     on the same wireless network.
 
+In all of this, my objective will be to 'scratch my own itches', practice
+curiousity and minimalism and deliver open source software which is 'just 
+barely good enough' to be useful to myself. 
+
+In the event that all or most of the goals above are achieved I may consider
+working to translate some or all of 
+[the Fender FUSE preset collection mentioned 
+above](https://guitarpedaldemos.com/wp-content/uploads/2020/04/entire-archive.zip)
+to the JSON dialects for the LT- series and MMP device (if I take this on I will
+need to be careful to ensure that I don't fall into the trap of re-publishing
+presets covered by FMIC copyright or other IP restrictions).  I'd also 
+be interested in extending the common library to load and save 
+
 I have decided, for the time being, that scope of the project will not attempt 
 to include any of the following capabilities:
 * deployment as a native iOS application (as this would require porting of the 
@@ -168,7 +192,13 @@ to include any of the following capabilities:
   to maintain parallel versions); or
 * capability to edit presets using a GUI (as the preset export/import 
   JSON format for preset will be human readable).
-  
+
+My own work is released on GitHub under GPL-v2.0 licensing conditions.  
+I welcome others to use and comment on the software, fork the source code and 
+raise pull requests (on the understanding that a pull request will be interpreted
+as perpetual permission for me to use the contributed code under 
+GPL-v2.0 or any other licensing conditions I choose).
+
 ## Current status
 
 The current status is that a common library, Android application and desktop
