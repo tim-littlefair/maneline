@@ -181,9 +181,11 @@ working to translate some or all of
 [the Fender FUSE preset collection mentioned 
 above](https://guitarpedaldemos.com/wp-content/uploads/2020/04/entire-archive.zip)
 to the JSON dialects for the LT- series and MMP device (if I take this on I will
-need to be careful to ensure that I don't fall into the trap of re-publishing
-presets covered by FMIC copyright or other IP restrictions).  I'd also 
-be interested in extending the common library to load and save 
+need to be careful to ensure that I don't fall into the trap of violating 
+FMIC IP restrictions by re-publishing presets they own copyright on without 
+explicit permission from FMIC).  I'd also be interested in extending the common 
+library to interoperate with the older generation of devices if I came to have access 
+(either personally or via a project contributor) to device(s) of that generation 
 
 I have decided, for the time being, that scope of the project will not attempt 
 to include any of the following capabilities:
