@@ -58,11 +58,17 @@ function Web_UI:build_preset_suite_html(suite_name, suite_file_path, header_leve
         "#SUITE_NAME#", suite_name
     ),"#HEADER_LEVEL#", header_level)
     suite_json = file_text(suite_file_path)
-    body_end = string.gsub(
-        file_text("web_ui/preset_suite_body_end.html.fragment"),
-        "#SUITE_JSON#", suite_json
-    )
-    if(header_text and body_start and suite_json and body_end)
+    body_end = nil
+    if(suite_json~=nil)
+    then
+        body_end = string.gsub(
+            file_text("web_ui/preset_suite_body_end.html.fragment"),
+            "#SUITE_JSON#", suite_json
+        )
+    else
+        body_end = file_text("web_ui/not_connected_body_end.html.fragment")
+    end
+    if(header_text and body_start and body_end)
     then
         return header_text .. body_start .. body_end
     else
