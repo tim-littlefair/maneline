@@ -9,7 +9,7 @@ java {
 
 jar {
     manifest {
-        attributes "Main-Class" : 'net.heretical_camelid.fhau.desktop_app.CommandLineInterface'
+        attributes "Main-Class" : 'net.heretical_camelid.maneline.desktop_app.CommandLineInterface'
         attributes "Implementation-Version" : "$rootProject.ext.versionName"
     }
     from {
@@ -25,15 +25,15 @@ jar {
     }
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    dependsOn(':lib:jar')
+    dependsOn(':maneline-lib:jar')
 }
 
 base {
-    archivesName = "desktopFHAUcli-$rootProject.ext.versionName"
+    archivesName = "maneline-cli-$rootProject.ext.versionName"
 }
 
 dependencies {
-    implementation project(':lib')
+    implementation project(':maneline-lib')
     implementation 'net.java.dev.jna:jna:5.17.0'
     implementation 'org.hid4java:hid4java:0.8.0'
     implementation 'org.slf4j:slf4j-api:2.0.17'

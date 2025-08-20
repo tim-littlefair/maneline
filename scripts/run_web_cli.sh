@@ -20,7 +20,7 @@ check_webhome() {
         ln -s ../../deployment/balena/run.sh _work/webhome
     fi
 
-    cli_jar=desktopFHAUcli-0.0.0.jar
+    cli_jar=maneline-cli-0.0.0.jar
     if [ ! -L _work/webhome/jar/$cli_jar ]
     then
         mkdir -p _work/webhome/jar

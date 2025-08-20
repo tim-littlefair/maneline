@@ -18,7 +18,7 @@
             <maxFileSize>1</maxFileSize>
         </rollingPolicy -->
 
-        <rollingPolicy class="net.heretical_camelid.fhau.desktop_app.LogbackRollingPolicy_SingleMessagePerFile"/>
+        <rollingPolicy class="net.heretical_camelid.maneline.desktop_app.LogbackRollingPolicy_SingleMessagePerFile"/>
 
         <!-- triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
             <maxFileSize>1</maxFileSize>

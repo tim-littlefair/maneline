@@ -19,7 +19,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    namespace = "net.heretical_camelid.fhau.android_app"
+    namespace = "net.heretical_camelid.maneline.android_app"
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
@@ -47,6 +47,6 @@ dependencies {
     implementation "androidx.constraintlayout:constraintlayout:2.2.1"
     implementation "androidx.constraintlayout:constraintlayout-compose:1.1.1"
     testImplementation 'androidx.test.espresso:espresso-core:3.6.1'
-    implementation project(':lib')
+    implementation project(':maneline-lib')
     implementation project(':usb-hid')
 }

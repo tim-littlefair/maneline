@@ -1,4 +1,4 @@
-include ':lib'
+include ':maneline-lib'
 include ':usb-hid'
 include ':desktop-app'
 include ':android-app'

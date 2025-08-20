@@ -22,7 +22,7 @@ local session_name = "session_"..os.date("%Y%m%d%H%M%S")
 local fhau_cli_input_fd = nil
 
 function Fhau:start_fhau_cli()
-    local jar_file_name="jar/desktopFHAUcli-0.0.0.jar"
+    local jar_file_name="jar/maneline-cli-0.0.0.jar"
     fhau_cli_input_fd = io.popen(
         "java -jar " .. jar_file_name .. " --web=" .. session_name,
         "w"
