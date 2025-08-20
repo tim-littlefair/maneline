@@ -35,7 +35,7 @@ services:
       - SHOW_CURSOR=1
       - KIOSK=1
       #- PERSISTENT=1
-      #- LAUNCH_URL=http://127.0.0.1:9090/start-fhau.html
+      #- LAUNCH_URL=data:text/html;charset=utf-8,%3Chtml%3E%3Ch1%3EPreparing%20to%20run%20FHAU%20web%20UI%3C%2Fh1%3E%3C%2Fhtml%3E
     #volumes:
     #  - 'settings:/data'
 

@@ -1,0 +1,69 @@
+    </tbody>
+</table>
+</body>
+
+<script>
+function select_preset(i) {
+    fetch(
+        window.location.origin, 
+        {
+            method: "POST",
+            body: `command=preset&slot=${i}`,
+            headers: { "Content-type": "application/json; charset=UTF-8" }
+        }
+    )
+}
+
+function td_inner_html(i, nameLine1, nameLine2) {
+    idStr=`0${i}`
+    idStr=idStr.substring(idStr.length-2,idStr.length)
+    btnId = "preset"+idStr
+    btnText = "preset&nbsp;"+idStr+"<br/>"+nameLine1+"<br/>"+nameLine2
+    return `<td><button id="${btnId}" onclick="select_preset(${i})" />${btnText}</td>\n`    
+}
+
+suite_from_json = #SUITE_JSON#
+
+function populate_table() {
+    max_cols=6
+    tbody_inner_html = ""
+    index_into_suite=0
+    while(index_into_suite<suite_from_json.presets.length)
+    {
+        col = index_into_suite % max_cols
+        row = (index_into_suite - col)/max_cols
+        if(col==0)
+        {
+            tbody_inner_html += "<tr>\n"
+        }
+        if(index_into_suite>=suite_from_json.length)
+        {
+            tbody_inner_html += td_inner_html(
+                0, "NOT IN", "USE"
+            )
+        } 
+        else
+        {
+            preset_from_json = suite_from_json.presets[index_into_suite]
+            tbody_inner_html += td_inner_html(
+                preset_from_json.originSlotIndex, 
+                preset_from_json.presetName.substring(0,8).replace(" ","&nbsp;"),
+                preset_from_json.presetName.substring(8,16).replace(" ","&nbsp;")
+            )
+        }
+        if(col==max_cols-1)
+        {
+            tbody_inner_html += "</tr>\n"
+        }
+        ++index_into_suite
+    }
+    document.querySelector("tbody").innerHTML = tbody_inner_html
+}
+
+window.onload = populate_table
+
+</script>
+
+</html>
+
+

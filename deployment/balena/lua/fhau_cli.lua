@@ -98,11 +98,26 @@ function Fhau:get_cxn_and_dev_status()
 end
 
 function Fhau:get_all_presets()
-    -- TBD: At some time in the future this class needs 
-    -- to compile a JSON object describing the presets 
-    -- which will be passed in the following function 
-    -- call and will affect the HTML output
-    return web_ui:build_all_presets_html()
+    return web_ui:build_preset_suite_html(
+        "All Presets", 
+        session_name .. "/all-presets.preset_suite.json",
+        "2"
+    )
 end
 
+function Fhau:get_preset_suite(num,name)
+    -- TBD: At some time in the future this class needs
+    -- to compile a JSON object describing the presets
+    -- which will be passed in the following function
+    -- call and will affect the HTML output
+    -- return web_ui:build_all_presets_html()
+    return web_ui:build_preset_suite_html(
+        name,
+        string.format(
+            "%s/suites/%s-%s.preset_suite.json",
+            session_name, num, name
+        ),
+        "3"
+    )
+end
 return Fhau

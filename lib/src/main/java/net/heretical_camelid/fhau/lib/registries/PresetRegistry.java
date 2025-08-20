@@ -223,15 +223,16 @@ public class PresetRegistry {
                 Arrays.asList(new SlotBasedPresetSuiteExporter[]{
                     createSuite(
                         // TL: really this is just my favourites
-                        suitePathPrefix, "General",
-                        31, 1, 30, 2, 7, 8, 15, 29
+                        suitePathPrefix, "PickNMix",
+                        1, 2, 7, 8, 14, 15, 29, 30, 31
                     ),
-                    createSuite(suitePathPrefix, "Folk", 6, 30),
-                    createSuite(suitePathPrefix, "Jazz", 9, 12, 13, 23),
-                    createSuite(suitePathPrefix, "Blues", 3, 26, 1, 2, 3),
-                    createSuite(suitePathPrefix, "Rock", 4, 8, 10, 17, 18, 19, 22, 27),
-                    createSuite(suitePathPrefix, "Heavy", 11, 14, 16, 20, 28),
-                    createSuite(suitePathPrefix, "Trippy", 5, 18, 24, 29),
+                    createSuite(suitePathPrefix, "Folk", 1, 10, 30),
+                    createSuite(suitePathPrefix, "Blues", 3, 8, 17, 26),
+                    createSuite(suitePathPrefix, "Rock", 4, 19, 20, 22),
+                    createSuite(suitePathPrefix, "Jazz", 9, 12, 13),
+                    createSuite(suitePathPrefix, "Country", 5, 6, 23, 25, 27),
+                    createSuite(suitePathPrefix, "Heavy", 2, 7, 11, 14, 16, 28),
+                    createSuite(suitePathPrefix, "Trippy", 15, 18, 21, 24, 29),
 
                     // We also create a JSON file in the suite format 
                     // containing all presets.

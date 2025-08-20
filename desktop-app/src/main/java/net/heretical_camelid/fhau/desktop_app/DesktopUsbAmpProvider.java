@@ -100,7 +100,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
 
         if (fmicDevice == null) {
             // Shut down and rely on auto-shutdown hook to clear HidApi resources
-            s_loggingAgent.appendToLog( "No relevant devices attached");
+            s_loggingAgent.appendToLog( "No FMIC device found");
         } else {
             boolean requestReport = false;
             int productId = fmicDevice.getProductId();

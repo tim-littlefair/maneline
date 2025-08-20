@@ -26,6 +26,7 @@
         width: 100%;
         height: auto;
     }
+
   </style>
 
 </head>
@@ -46,10 +47,21 @@
             <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
             
                 <ul class="current">
-<li class="toctree-l1"><a class="current reference internal" href="#">Connection/Device State</a></li>
-<li class="toctree-l1"><a class="current reference internal" href="#">All Presets</a></li>
-<li class="toctree-l1"><a class="current reference internal" href="#">Preset Suites</a></li>
-<li class="toctree-l1"><a class="current reference internal" href="#">Help</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#cds">Connection/Device State</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#all_presets">All Presets</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="#">Curated Preset Suites</a>
+    <ul>
+    <li class="toctree-l2"><a href="#picknmix">Pick'N'Mix</a></li>
+    <li class="toctree-l2"><a href="#folk">Folk</a></li>
+    <li class="toctree-l2"><a href="#blues">Blues</a></li>
+    <li class="toctree-l2"><a href="#rock">Rock</a></li>
+    <li class="toctree-l2"><a href="#jazz">Jazz</a></li>
+    <li class="toctree-l2"><a href="#country">Country</a></li>
+    <li class="toctree-l2"><a href="#heavy">Heavy</a></li>
+    <li class="toctree-l2"><a href="#trippy">Trippy</a></li>
+    </ul>
+</li>
+<li class="toctree-l1"><a class="current reference internal" href="#credits">Credits</a></li>
                 </ul>
             </div>
         </div>
@@ -64,29 +76,90 @@
             <div itemprop="articleBody">      
               <div class="section">
                 <div>
-                  <iframe src="/cds" style="height:90px;"></iframe>
+                  <iframe id="cds" src="/cds" style="height:100px;"></iframe>
                 </div>
 
                 <div>
-                  <iframe src="/all-presets"  style="height:380px;"></iframe>
+                  <iframe id="all_presets" src="/all-presets" style="height:510px;"></iframe>
                 </div>
 
-                <div style="height:80px;">
-                  <iframe src="content_frame.html?title=Preset+Suites"></iframe>
+                <div style="height:auto;">
+                    <h2><span>Curated Preset Suites</span></h2>
+                    <iframe id="picknmix" src="/suite?num=01&name=PickNMix" style="height:200px;"></iframe>
+                    <iframe id="folk" src="/suite?num=02&name=Folk" style="height:130px;"></iframe>
+                    <iframe id="blues" src="/suite?num=03&name=Blues" style="height:130px;"></iframe>
+                    <iframe id="rock" src="/suite?num=04&name=Rock" style="height:130px;"></iframe>
+                    <iframe id="jazz" src="/suite?num=05&name=Jazz" style="height:130px;"></iframe>
+                    <iframe id="country" src="/suite?num=06&name=Country" style="height:130px;"></iframe>
+                    <iframe id="heavy" src="/suite?num=07&name=Heavy" style="height:130px;"></iframe>
+                    <iframe id="trippy" src="/suite?num=08&name=Trippy" style="height:130px;"></iframe>
                 </div>
 
-                <div style="height:80px;">
-                  <iframe src="content_frame.html?title=Help"></iframe>
-                  <p>
-                      Source code for this project is available at:
-                      <a href="https://github.com/tim-littlefair/feral-horse-amp-utils">
+                <div style="height:600px;">
+                    <h2 id="credits"><span>Credits</span></h2>
+                    <p>
+                        Source code for this project is available at:
+                        <a href="https://github.com/tim-littlefair/feral-horse-amp-utils">
                           https://github.com/tim-littlefair/feral-horse-amp-utils
-                      </a>.
-                  </p>
-                  <p>
-                      This project is built on the
-                      <a href="https://balena.io">Balena</a> platform.
-                  </p>
+                        </a>.
+                    </p>
+
+                    <p>
+                        This project depends on a large number of open source packages, 
+                        developed and maintained by different people and groups,
+                        but the following dependencies underwrite particularly important
+                        capabilities:
+                    </p>
+                    <ul>
+                      <li>
+                        <a href="https://github.com/gary-rowe/hid4java">
+                          the 'hid4java' Maven package published on Maven Central, 
+                        </a>
+                        published by 
+                        <a href="https://github.com/gary-rowe">Gary Rowe</a>.
+                        which provides USB-HID
+                        services for the project's Linux/macOS command line 
+                        application.
+                      </li>
+                      <li>
+                        <a href="https://github.com/benlypan/UsbHid">
+                          the 'UsbHid' Android Java library
+                        </a>
+                        published by 
+                        <a href="https://github.com/benlypan">GitHub user @benlypan</a>
+                        which provides USB-HID services for the project's Android application.
+                      </li>
+                      <li>
+                        <a href="https://github.com/EvandroLG/pegasus.lua">
+                          the 'pegasus.lua' web server
+                        </a>
+                        published by 
+                        <a href="https://github.com/EvandroLG">Evandro Leopoldino Gonçalves</a>
+                        which provides the web framework which serves a UI wrapping the 
+                        capabilities of the Linux/macOS command line application.
+                      </li>
+                    </ul>
+                    <p>
+                      In addition to the build-time dependencies listed above, this project
+                      was inspired and informed by the following precursor project:                      
+                    </p>
+                    <ul>
+                      <li>
+                        <a href="https://packages.debian.org/sid/mustang-plug">
+                          the 'mustang-plug' application
+                        </a>
+                        originally published by a developer named @piorekf 
+                        (who no longer seems to be active on Internet under that name)
+                        now 
+                        <a href="https://github.com/offa/plug">
+                          forked and under active maintenance
+                        </a>
+                        by
+                        <a href="https://github.com/offa">
+                          GitHub user @offa
+                        </a>
+                      </li>
+                    </ul>
                 </div>
               </div>
             </div>
