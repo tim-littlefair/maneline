@@ -1,5 +1,6 @@
 package net.heretical_camelid.maneline.lib;
 
+import net.heretical_camelid.maneline.lib.interfaces.IPresetResponseReader;
 import net.heretical_camelid.maneline.lib.registries.PresetRegistry;
 
 import java.nio.charset.StandardCharsets;
@@ -9,16 +10,13 @@ import java.util.Arrays;
 // https://github.com/brentmaxwell/LtAmp/blob/main/Schema/protobuf/FenderMessageLT.proto
 
 public class LTSeriesProtocol extends AbstractMessageProtocolBase {
+    static IPresetResponseReader s_presetResponseReader = null;
     String m_firmwareVersion;
-    PresetRegistry m_presetRegistry;
     final Thread m_heartbeatThread;
     boolean m_heartbeatStopped = false;
 
-    public LTSeriesProtocol(
-        PresetRegistry presetRegistry, boolean startHeartbeat
-    ) {
+    public LTSeriesProtocol(boolean startHeartbeat) {
         m_firmwareVersion = null;
-        m_presetRegistry = presetRegistry;
         m_heartbeatStopped = !startHeartbeat;
         m_heartbeatThread = new HeartbeatThread();
     }
@@ -71,8 +69,11 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
 
 
     @Override
-    public int getPresetNamesList(int firstPreset, int lastPreset) {
+    public int getPresetNamesList(
+        int firstPreset, int lastPreset, PresetRegistry presetRegistry
+    ) {
         assert m_deviceTransport!=null;
+        s_presetResponseReader = presetRegistry;
         for (int i = firstPreset; i <= lastPreset; ++i) {
             StringBuilder presetJsonSB = new StringBuilder();
             setLogTransactionName(String.format("txn05-getPreset%03d",i));
@@ -82,7 +83,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
                 return psJsonStatus;
             }
         }
-        //startHeartbeatThread();
+        s_presetResponseReader = null;
         return STATUS_OK;
     }
 
@@ -96,6 +97,11 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             //log("Starting heartbeat thread");
             m_heartbeatThread.start();
         }
+    }
+
+    @Override
+    public String getStatus() {
+        return "";
     }
 
     @Override
@@ -220,8 +226,11 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             );
             int presetIndex = assembledResponseMessage[assembledResponseMessage.length - 1];
             // System.out.println(jsonDefinition);
-            String presetExtendedName = AbstractMessageProtocolBase.displayName(jsonDefinition);
-            m_presetRegistry.register(presetIndex, presetExtendedName, jsonDefinition.getBytes(StandardCharsets.UTF_8));
+            if(s_presetResponseReader!=null) {
+                s_presetResponseReader.notifyPresetResponse(
+                    presetIndex, jsonDefinition
+                );
+            }
         } else {
             /*
             log(String.format(
@@ -302,7 +311,6 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         // Sending null instead of a command description suppresses
         // 60 lines of logging for the 60 preset requests sent out
         // during startup.
-        // String commandDescription = "request for JSON for preset " + i;
         return sendCommand(commandHexBytes, null,true);
     }
 

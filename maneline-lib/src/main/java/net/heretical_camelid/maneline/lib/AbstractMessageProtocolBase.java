@@ -2,6 +2,7 @@ package net.heretical_camelid.maneline.lib;
 
 import net.heretical_camelid.maneline.lib.interfaces.IDeviceTransport;
 import net.heretical_camelid.maneline.lib.interfaces.ILoggingAgent;
+import net.heretical_camelid.maneline.lib.registries.PresetRegistry;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -20,7 +21,9 @@ public abstract class AbstractMessageProtocolBase {
 
     // Abstract interface begins
     public abstract int doStartup(String[] firmwareVersionEtc);
-    public abstract int getPresetNamesList(int firstPreset, int lastPreset);
+    public abstract int getPresetNamesList(
+        int firstPreset, int lastPreset, PresetRegistry presetRegistry
+    );
     // future
     // public abstract String getPresetDefinition(int slotIndex);
     // public abstract int switchToPreset(int slotIndex);
@@ -107,7 +110,7 @@ public abstract class AbstractMessageProtocolBase {
         }
     }
 
-    protected static String displayName(String jsonDefinitionText) {
+    public static String displayName(String jsonDefinitionText) {
         String name = getStringAttribute(jsonDefinitionText,"displayName");
         if(name==null) {
             name = "_name_not_found_";
@@ -131,5 +134,7 @@ public abstract class AbstractMessageProtocolBase {
     public abstract void doShutdown();
 
     public abstract void startHeartbeatThread();
+
+    public abstract String getStatus();
 }
 

@@ -5,7 +5,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import net.heretical_camelid.maneline.lib.AbstractMessageProtocolBase;
 import net.heretical_camelid.maneline.lib.FhauLibException;
+import net.heretical_camelid.maneline.lib.interfaces.IPresetResponseReader;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -13,6 +15,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -23,7 +26,7 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-public class PresetRegistry {
+public class PresetRegistry implements IPresetResponseReader {
     final static Gson s_gsonCompact = new Gson();
     final static Gson s_gsonPretty = new GsonBuilder().setPrettyPrinting().create();
     static ZipOutputStream s_outputZipStream = null;
@@ -368,6 +371,12 @@ public class PresetRegistry {
 
     public Set<Integer> getUniquePresetIndices() {
         return m_records.keySet();
+    }
+
+    @Override
+    public void notifyPresetResponse(int slotIndex, String presetJson) {
+        String presetExtendedName = AbstractMessageProtocolBase.displayName(presetJson);
+        register(slotIndex, presetExtendedName, presetJson.getBytes(StandardCharsets.UTF_8));
     }
 
     public static interface Visitor {

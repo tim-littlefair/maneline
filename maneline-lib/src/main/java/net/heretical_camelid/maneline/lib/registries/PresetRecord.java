@@ -154,6 +154,10 @@ public class PresetRecord {
                 if(levelOfDetails!=EffectsLevelOfDetails.MODULES_ONLY) {
                     String paramString = s_dspParamGson.toJson(node.dspUnitParameters);
                     paramString = paramString.replaceAll("[{}\"]","");
+                    // Parameter 'bypass' seems to be always 'false' so we
+                    // prefer not to waste real estate displaying it
+                    // unless it takes on the 'true' value.
+                    paramString = paramString.replaceAll("bypass:false,","");
                     sb.append("(");
                     sb.append(paramString);
                     sb.append(")");

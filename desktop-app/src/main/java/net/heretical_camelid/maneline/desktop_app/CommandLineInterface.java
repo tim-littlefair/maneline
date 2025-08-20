@@ -63,6 +63,9 @@ public class CommandLineInterface {
                 } else if(lineWords[0].equals("preset")) {
                     int slotIndex = Integer.parseInt(lineWords[1]);
                     provider.switchPreset(slotIndex);
+                } else if(lineWords[0].equals("status")) {
+                    int slotIndex = Integer.parseInt(lineWords[1]);
+                    String statusLines = provider.getStatus();
                 } else if(lineWords[0].equals("help")) {
                     showInteractiveHelp();
                 } else {

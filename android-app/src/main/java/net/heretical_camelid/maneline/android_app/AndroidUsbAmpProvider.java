@@ -40,7 +40,7 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
         m_mainActivity = mainActivity;
         m_deviceTransportUsbHid = new DeviceTransportUsbHid(m_mainActivity, this);
         m_presetRegistry = new PresetRegistry(null);
-        m_protocol = new LTSeriesProtocol(m_presetRegistry,true);
+        m_protocol = new LTSeriesProtocol(true);
         m_suiteRegistry = new SuiteRegistry(m_presetRegistry);
     }
 
@@ -62,7 +62,9 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
         // of the amp.
         int firstPreset = 1;
         int lastPreset = 60;
-        int presetNamesStatus = m_protocol.getPresetNamesList(firstPreset, lastPreset);
+        int presetNamesStatus = m_protocol.getPresetNamesList(
+            firstPreset, lastPreset, m_presetRegistry
+        );
 
         m_mainActivity.appendToLog(String.format(
             Locale.getDefault(),
@@ -149,7 +151,7 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
             // of the amp.
             int firstPreset = 1;
             int lastPreset = 60;
-            m_protocol.getPresetNamesList(firstPreset, lastPreset);
+            m_protocol.getPresetNamesList(firstPreset, lastPreset, m_presetRegistry);
 
             m_protocol.startHeartbeatThread();
         }

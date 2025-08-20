@@ -50,7 +50,7 @@ public class PresetRecordTest {
             "Audio hash for preset '%s' is '%s'",
             testPR2.displayName(), testPR2.audioHash()
         ));
-        Assert.assertEquals("adbd-ead9",testPR2.audioHash());
+        Assert.assertEquals("adbd-4f60",testPR2.audioHash());
     }
 
     @Test
@@ -79,9 +79,9 @@ public class PresetRecordTest {
         ));
         Assert.assertEquals(
             String.join("\n",
-                "stomp:SimpleCompressor(type:medium,bypass:false,bypassType:Post)",
+                "stomp:SimpleCompressor(type:medium,bypassType:Post)",
                 "amp:Twin65(bass:0.555556,bias:0.5,bright:true,cabsimType:65twn,gain:0.337255,gateDetectorPosition:jack,gatePreset:off,mid:0.5,sag:match,treb:0.342816,volume:-11.12674)",
-                "reverb:Spring65(decay:0.388889,diffuse:1.0,dwell:0.28889,wetLvl:0.5,bypass:false,bypassType:Pre,tone:1)"
+                "reverb:Spring65(decay:0.388889,diffuse:1.0,dwell:0.28889,wetLvl:0.5,bypassType:Pre,tone:1)"
             ),
             testPR2.effects(PresetRecord.EffectsLevelOfDetails.MODULES_AND_PARAMETERS)
         );

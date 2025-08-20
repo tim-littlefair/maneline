@@ -53,7 +53,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
         }
         m_presetRegistry = new PresetRegistry(outputPath);
         m_suiteRegistry = new SuiteRegistry(m_presetRegistry);
-        m_protocol = new LTSeriesProtocol(m_presetRegistry,true);
+        m_protocol = new LTSeriesProtocol(true);
     }
 
     void startProvider() {
@@ -304,7 +304,9 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
             "Requesting presets %d-%d - should take about 5 seconds",
             firstPreset, lastPreset
         ));
-        int presetNamesStatus = m_protocol.getPresetNamesList(firstPreset,lastPreset);
+        int presetNamesStatus = m_protocol.getPresetNamesList(
+            firstPreset,lastPreset, m_presetRegistry
+        );
         if(startupStatus!=0 || presetNamesStatus!=0) {
             System.out.println("doStartup returned " + startupStatus);
             System.out.println("getPresetNamesList returned " + presetNamesStatus);
@@ -377,5 +379,9 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
         // Desktop/USB doesn't need to do this so we
         // don't expect it to be called.
         return null;
+    }
+
+    public String getStatus() {
+        return m_protocol.getStatus();
     }
 }
