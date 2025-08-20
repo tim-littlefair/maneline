@@ -46,7 +46,7 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.7.1'
     implementation "androidx.constraintlayout:constraintlayout:2.2.1"
     implementation "androidx.constraintlayout:constraintlayout-compose:1.1.1"
-    testImplementation 'androidx.test.espresso:espresso-core:3.6.1'
+    testImplementation 'androidx.test.espresso:espresso-core:3.7.0'
     implementation project(':maneline-lib')
     implementation project(':usb-hid')
 }
