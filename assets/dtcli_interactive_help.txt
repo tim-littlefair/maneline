@@ -1,7 +1,7 @@
 
-==============================
-FHAU interactive mode commands
-------------------------------
+==================================
+maneline interactive mode commands
+----------------------------------
 
 help:
     Display this text

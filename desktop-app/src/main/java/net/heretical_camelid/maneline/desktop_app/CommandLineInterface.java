@@ -83,7 +83,7 @@ public class CommandLineInterface {
     static boolean s_argParamNoDisclaimer = false;
     static boolean s_argParamInteractive = false;
     static String s_argParamOutputDir = null;
-    static final String DISCLAIMER_ACCEPTANCE_RECORD_FILENAME = ".fhau_disclaimer_accepted_until";
+    static final String DISCLAIMER_ACCEPTANCE_RECORD_FILENAME = ".maneline_disclaimer_accepted_until";
     static final int DISCLAIMER_ACCEPTANCE_DURATION_DAYS = 30;
 
     static public void main(String[] args)  {
@@ -135,7 +135,7 @@ public class CommandLineInterface {
 
         if(cmdLine==null) {
             // Exact command line not available - take a stab at it.
-            cmdLine = "java -jar fhauDesktopCLI.jar";
+            cmdLine = "java -jar maneline-cli-XX.YY.ZZ.jar";
         }
         HashMap<String,String> substitutions = new HashMap<>();
         substitutions.put("%PROG%",cmdLine);

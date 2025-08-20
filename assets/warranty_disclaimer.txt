@@ -1,9 +1,9 @@
 NO WARRANTY - DISCLAIMER
 
-The developer of FHAU software is not affiliated in
+The developer of the maneline software is not affiliated in
 any way to Fender Musical Instrument Company (FMIC).
 
-The FHAU software is experimental and is not intended
+The maneline software is experimental and is not intended
 for use in a public performance setting.
 
 This software has been tested with a small number of
@@ -16,8 +16,8 @@ variations, the state of the user-modifiable presets
 stored in the device, ambient temperature, electrical
 supply quality etc... .
 
-It is not possible for the FHAU developer to guarantee
-that operation of the FHAU software will not leave
+It is not possible for the maneline developer to guarantee
+that operation of the maneline software will not leave
 the attached FMIC-manufactured device in bad state,
 requiring a power-cycle, factory reset or, in the worst
 case, leave the FMIC device permanently 'bricked'.
@@ -26,7 +26,7 @@ The user of the software must acknowledge that they
 have read this disclaimer, that they choose to
 accept the risks which come with running this experimental
 software, and that they agree that the developer
-of FHAU accepts no liability for adverse consequences
+of maneline accepts no liability for adverse consequences
 caused by running the software.
 
 %HOW_TO_DISABLE_DISCLAIMER%

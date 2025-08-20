@@ -1,4 +1,4 @@
-# Architecture of the FHAU Codebase
+# Architecture of the maneline Codebase
 
 Notes below are believed correct as at August 2025.
 
@@ -106,11 +106,11 @@ the GitHub repository layout, with the following being the major modules:
 
   The android-app module depends on a library supplied by a third-party Java package 
   cloned from https://github.com/benlypan/UsbHid, which required (very minor) code changes 
-  to build and integrate under the Android SDK version I am using for FHAU.  The upstream 
-  package is released under the MIT license, and does not appear to have been modified
-  since the initial two commits were uploaded in 2017.  
+  to build and integrate under the Android SDK version I am using for maneline.  
+  The upstream package is released under the MIT license, and does not appear to have been 
+  modified since the initial two commits were uploaded in 2017.  
   
-  For the moment, the FHAU Git repository contains a copy of the usb-hid subdirectory 
+  For the moment, the maneline Git repository contains a copy of the usb-hid subdirectory 
   of the upstream GitHub repository with the necessary changes cut in.  I have not yet 
   raised a pull request on the upstream repository with these changes, as I am not 
   sure how to do this without potentially breaking the build of the package under 
@@ -131,15 +131,15 @@ the GitHub repository layout, with the following being the major modules:
   
 ## Supporting artifacts
 
-The FHAU repository also contains a directory called 'docs' which includes the current 
+The maneline repository also contains a directory called 'docs' which includes the current 
 document and various other documents related to the project.  There is also a directory
 called 'assets' which contains a variety of supporting information including:
 *  the web resources used by the Balena-hosted Pegasus web server,
 
 ## Future possibilities
 
-  A future versions of the FHAU codebase may add the following capabilities
-  to the FHAU project framework:
+  A future versions of the maneline codebase may add the following capabilities
+  to the project framework:
 
   * adding additional provider and message protocol classes implementing support 
     for the transport and protocols required to interoperate with other 
@@ -161,7 +161,7 @@ called 'assets' which contains a variety of supporting information including:
       These were and are supported by the Debian mustang-plug apt package and its more 
       recently updated fork published at https://github.com/offa/plug. 
 
-      An FHAU implementation for these models can possibly reuse most of the USB transport
+      A maneline implementation for these models can possibly reuse most of the USB transport
       logic which presently supports LT- series devices, the preset definition payloads 
       for these devices are binary-based rather than the JSON variants used by LT- series
       and Mustang Micro Plus, but should be possible to infer from the original and 
@@ -174,7 +174,7 @@ called 'assets' which contains a variety of supporting information including:
     the target hardware.
 
   * The project may add support for uploading preset amplifier definition JSON files 
-    from an FHAU application into LT- series, Mustang Micro Plus or other supported devices
+    from a maneline application into LT- series, Mustang Micro Plus or other supported devices
     (including possibly adding support for translating preset definitions 
     between the similar-but-not-identical JSON schemas used by LT- series and 
     Mustang Micro Plus). 

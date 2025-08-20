@@ -5,7 +5,7 @@
 # server and its FHAU command line subprocess.
 browser_api_url=http://127.0.0.1:5011/url
 sleep_length=2
-while 1
+while true
 do
     if [ ! "$LOCAL_BROWSER" = "1" ]
     then

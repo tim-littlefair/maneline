@@ -29,6 +29,13 @@ Fender Musical Instrument Corporation's Mustang® modelling guitar amplifiers.
   firmware 1.0.7), and can be selected using hardware controls on the amplifier 
   control panel.
 
++ FHAU, feral-horse-amp-utils
+ 
+  Former name of this software project - a bit of a mouthful so it is now
+  called 'maneline'.   These terms are progressively being removed from
+  the codebase.
+
+
 # Project Vision
 
 The vision of this project is that it contribute to the community of 

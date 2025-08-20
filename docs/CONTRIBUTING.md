@@ -1,6 +1,6 @@
 # How to contribute
 
-FHAU is at present a personal passion project founded and controlled by 
+maneline is at present a personal passion project founded and controlled by 
 myself [Tim Littlefair](https://linkedin.com/tim-littlefair).
 
 I live in Perth, Western Australia, and I am now semi-retired 

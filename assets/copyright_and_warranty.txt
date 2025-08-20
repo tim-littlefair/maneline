@@ -1,9 +1,9 @@
-Feral Horse Amp Utils (FHAU) version %VERSION%
+maneline version %VERSION%
 %APP_FORMAT%
 Copyright (C) 2025 Tim Littlefair
 
-FHAU comes with ABSOLUTELY NO WARRANTY;
+maneline comes with ABSOLUTELY NO WARRANTY;
 %NO_WARRANTY_DETAILS%
 
-FHAU is free software, and you are welcome to redistribute it under certain conditions;
+maneline is free software, and you are welcome to redistribute it under certain conditions;
 %COPYING_DETAILS%
