@@ -101,7 +101,20 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
 
     @Override
     public String getStatus() {
-        return "";
+        final String[] retval = new String[1];
+        s_presetResponseReader = new IPresetResponseReader() {
+            @Override
+            public void notifyPresetResponse(int slotIndex, String presetJson) {
+                retval[0] = "currentPresetIndex="+slotIndex;
+            }
+        };
+        StringBuilder currentPresetJsonSB = new StringBuilder();
+        int psJsonStatus = getPresetJson(0, currentPresetJsonSB);
+        setLogTransactionName("currentPresetIndex");
+        log(retval[0]);
+        setLogTransactionName(null);
+        s_presetResponseReader = null;
+        return retval[0];
     }
 
     @Override
@@ -200,8 +213,8 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             m_firmwareVersion = new String(assembledResponseMessage, 7, firmwareVersionLength);
             log("Firmware version: " + m_firmwareVersion);
         } else if (
-                   (0xfa == (0xff & assembledResponseMessage[2])) &&
-                       (0x01 == (0xff & assembledResponseMessage[3]))
+            (0xfa == (0xff & assembledResponseMessage[2])) &&
+            (0x01 == (0xff & assembledResponseMessage[3]))
         ) {
             // This is a response to a request for the JSON definition
             // of the preset with a specific index.  The preset index supplied
@@ -232,12 +245,14 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
                 );
             }
         } else {
-            /*
             log(String.format(
-                "Response payload starts %02x:%02x:%02x",
-                assembledResponseMessage[2],assembledResponseMessage[3],assembledResponseMessage[4]
+                "Response payload length=%d starts %02x:%02x:%02x ends %02x:%02x:%02x",
+                assembledResponseMessage.length,
+                assembledResponseMessage[2],assembledResponseMessage[3],assembledResponseMessage[4],
+                assembledResponseMessage[assembledResponseMessage.length - 3],
+                assembledResponseMessage[assembledResponseMessage.length - 2],
+                assembledResponseMessage[assembledResponseMessage.length - 1]
             ));
-             */
         }
 
         return STATUS_OK;
@@ -268,18 +283,18 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             int contentLength = packetBuffer[2];
             boolean messageComplete;
             switch (packetBuffer[1]) {
-                case 0x33: // first packet
+                case 0x33: // first packet of multi-packet message
                     assert assemblyBufferOffset == 0;
                     assert contentLength == 0x3d;
                     messageComplete = false;
                     break;
 
-                case 0x34: // middle packet
+                case 0x34: // middle packet of multi-packet message
                     assert contentLength == 0x3d;
                     messageComplete = false;
                     break;
 
-                case 0x35:
+                case 0x35: // sole packet of single-packet message
                     assert contentLength <= 0x3d;
                     messageComplete = true;
                     break;
@@ -303,11 +318,16 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
     }
 
     private int getPresetJson(int i, StringBuilder presetJsonSB) {
-        String presetIndexHex = String.format("%02x", i);
-        String commandHexBytes = "35:07:08:00:ca:06:02:08:%1".replace(
+        final String commandHexBytes;
+        if(i!=0) {
+            String presetIndexHex = String.format("%02x", i);
+            commandHexBytes = "35:07:08:00:ca:06:02:08:%1".replace(
                 "%1",
                 presetIndexHex
-        );
+            );
+        } else {
+            commandHexBytes = "35:07:08:00:aa:02:02:08:01";
+        }
         // Sending null instead of a command description suppresses
         // 60 lines of logging for the 60 preset requests sent out
         // during startup.
