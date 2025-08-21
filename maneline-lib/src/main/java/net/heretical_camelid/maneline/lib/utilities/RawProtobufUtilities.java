@@ -20,7 +20,48 @@ public class RawProtobufUtilities {
         return retval;
     };
 
+    public static final int pbGetElementId(
+        byte[] pbMessage,
+        int pbTagOffset,
+        int[] pbValueBounds
+    ) {
+        int elementTag = 0xff & pbMessage[pbTagOffset];
+        final int valueStartOffset;
+        if(elementTag>0x7f)
+        {
+            assert(pbMessage[pbTagOffset]<=0x7f);
+            elementTag &= 0x7f;
+            elementTag += (0xff&pbMessage[3])<<8;
+            valueStartOffset = pbTagOffset+2;
+        } else {
+            valueStartOffset = pbTagOffset+1;
+        }
+        final int elementId = (elementTag & 0xff80) >> 3;
+        final int elementPbType = elementTag & 0x07;
+        if(pbValueBounds!=null) {
+            assert pbValueBounds.length == 2;
+            // ref: definition of on-the-wire protobuf datatypes
+            // in the 'Message Structure' section of this page:
+            // https://protobuf.dev/programming-guides/encoding/#varints
+            if(elementPbType != 2) {
+                pbValueBounds[0]=valueStartOffset;
+                // populating the value end offset into pbValueBounds[1]
+                // is only supported for elements encoded using the ID 2 'LEN'
+                // encoding.
+                // Values in ID 0 'VARINT' encoding can be decoded using the
+                // valueStartOffset only.
+                // Values in other on-the-wire types are either fixed in size
+                // or deprecated.
+            } else {
+                // TBD
+                pbValueBounds[0]=valueStartOffset+2;
+            }
+        }
+        return elementId;
+    }
+
     public static byte[] hexToBytes(String hexString) {
+        /*
         hexString = hexString.replace("+",""); // '+' can be used at end as a continuation signal
         assert hexString.length()%2==0;
         byte[] retval = new byte[hexString.length()/2];
@@ -29,18 +70,23 @@ public class RawProtobufUtilities {
             retval[i] = (byte) ( (0xFF) & (Integer.parseInt(hexString.substring(2*i,2*i+2),16)) );
         }
         return retval;
+         */
+        return ByteArrayTranslator.hexToBytes(hexString);
     }
-    private static int extractVarint(byte[] pbuf_array, int viBounds[]) {
-        assert viBounds[0] < pbuf_array.length;
+    public static int extractVarint(byte[] pbuf_array, int viBounds[]) {
+        assert viBounds.length==2;
+        viBounds[1]=viBounds[0];
         int viValue = 0;
         int itemMultiplier = 1;
-        while( ( ((byte)0x80)&pbuf_array[viBounds[0]] ) != (byte)0x00 ) {
-            viValue += itemMultiplier * (0x7F&pbuf_array[viBounds[0]]);
-            viBounds[0]+=1;
+        while( ( ((byte)0x80)&pbuf_array[viBounds[1]] ) != (byte)0x00 ) {
+            assert viBounds[1] < pbuf_array.length;
+            viValue += itemMultiplier * (0x7F&pbuf_array[viBounds[1]]);
+            viBounds[1]+=1;
             itemMultiplier <<=7;
         }
-        viValue += itemMultiplier*pbuf_array[viBounds[0]];
-        viBounds[0]+=1;
+        viValue += itemMultiplier*pbuf_array[viBounds[1]];
+        // Advance the upper bound one byte past the last value consumed
+        ++viBounds[1];
         return viValue;
     }
 
@@ -67,19 +113,17 @@ public class RawProtobufUtilities {
             System.out.println("Checking extractVarint");
             // Attempting to interpret the varint 8a 07 starting at
             // offset 2 into the message
-            int viBounds[] = { 2 };
+            int viBounds[] = { 2, 0 };
             int evResult = extractVarint(h2bExpected, viBounds);
             int evExpected = 906;
+            int viUpperBoundExpected = 4;
             assert evResult == evExpected: String.format(
                 "extractVarint returned unexpected value (actual:%d, expected:%d)",
                 evResult,evExpected
             );
-            // We expect that viBounds[0] has been updated as a side effect to reflect the
-            // number of bytes consumed to decode the varint
-            int viBounds0Expected = 4;
-            assert viBounds[0] == viBounds0Expected: String.format(
-                "extractVarint viBounds[0] unexpected value (actual:%d, expected:%d)",
-                viBounds[0],viBounds0Expected
+            assert viBounds[1] == viUpperBoundExpected: String.format(
+                "extractVarint updated viBounds[1] to unexpected value (actual:%d, expected:%d)",
+                viBounds[1],viUpperBoundExpected
             );
             System.out.println("extractVarint ok");
 

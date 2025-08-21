@@ -19,11 +19,32 @@ public class ByteArrayTranslator {
     }
 
     public static String bytesToHex(byte[] byteBuffer) {
-        assert byteBuffer.length == 64;
-        String[] hexByteStrings = new String[64];
-        for (int i = 0; i < 64; ++i) {
-            hexByteStrings[i] = String.format("%02x", (0xFF & (int) byteBuffer[i]));
+        StringBuilder hexSB = new StringBuilder();
+        for (int i = 0; i < byteBuffer.length; ++i) {
+            hexSB.append(String.format("%02x", (0xFF & (int) byteBuffer[i])));
+            if(i<byteBuffer.length-1) {
+                hexSB.append(":");
+            }
         }
-        return String.join(":", hexByteStrings);
+        return hexSB.toString();
+    }
+
+    public static String shortenedBytesToHex(
+        byte[] byteBuffer, int minInitialBytes, int minFinalBytes
+    ) {
+        String fullBufferHex = bytesToHex(byteBuffer);
+        // The 'shortening' will insert a 5 characters ellipsis,
+        // which occupies the same space which would be occupied
+        // rendering by two more bytes of hex, so we only shorten
+        // if there are more than 2 bytes to remove.
+        if( byteBuffer.length <= (minInitialBytes+minFinalBytes+2) ) {
+            return fullBufferHex;
+        } else {
+            return (
+                fullBufferHex.substring(0,minInitialBytes*3) +
+                " ... " +
+                fullBufferHex.substring(3*byteBuffer.length -1 - minFinalBytes*3)
+            );
+        }
     }
 }
