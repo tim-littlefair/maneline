@@ -21,6 +21,31 @@ local session_start_time_t = os.time()
 local session_name = "session_"..os.date("%Y%m%d%H%M%S")
 local fhau_cli_input_fd = nil
 
+function Fhau:purge_stale_session_dirs(number_to_retain)
+    session_dirs = io.popen("ls -1d session_* | sort --reverse","r")
+    for i=0,number_to_retain
+    do
+        dir=session_dirs:read("*line")
+        if(dir==nil)
+        then
+            break
+        else
+            print("Retaining "..dir)
+        end
+    end
+    while(session_dirs)
+    do
+        dir=session_dirs:read("*line")
+        if(dir==nil)
+        then
+            break
+        else
+            print("Deleting "..dir)
+            os.execute("rm -rf "..dir)
+        end
+    end
+end
+
 function Fhau:start_fhau_cli()
     local jar_file_name="jar/maneline-cli-0.0.0.jar"
     fhau_cli_input_fd = io.popen(

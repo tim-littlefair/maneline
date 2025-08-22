@@ -36,7 +36,7 @@ echo Starting Pegasus and FHAU CLI in directory $start_dir
 # TBD: Would it be better to use LUAPATH?
 cd lua
 
-lua ./run.lua $start_dir
+lua ./run.lua "$start_dir"
 
 echo Lua has executed with status $?
 
