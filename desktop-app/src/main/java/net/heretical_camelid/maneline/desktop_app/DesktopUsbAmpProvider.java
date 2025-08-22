@@ -51,6 +51,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
         } else {
             s_loggingAgent = new DefaultLoggingAgent();
         }
+        AbstractMessageProtocolBase.setLoggingAgent(s_loggingAgent);
         m_presetRegistry = new PresetRegistry(outputPath);
         m_suiteRegistry = new SuiteRegistry(m_presetRegistry);
         m_protocol = new LTSeriesProtocol(true);
@@ -183,7 +184,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
 
             if (fmicDevice == null) {
                 // Shut down and rely on auto-shutdown hook to clear HidApi resources
-                System.out.println("No relevant devices attached.");
+                System.out.println("No FMIC device found");
             } else {
                 // Open the device
                 if (fmicDevice.isClosed()) {

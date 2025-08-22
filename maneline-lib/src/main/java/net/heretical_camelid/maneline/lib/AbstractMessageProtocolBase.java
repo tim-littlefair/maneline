@@ -49,7 +49,11 @@ public abstract class AbstractMessageProtocolBase {
         m_deviceTransport = deviceTransport;
     }
     protected static void log(String message) {
-        System.out.println(message);
+        if(s_loggingAgent!=null) {
+            s_loggingAgent.appendToLog(message);
+        } else {
+            System.out.println(message);
+        }
     }
 
     public static void colonSeparatedHexToByteArray(String colonSeparatedHex, byte[] byteArray) {

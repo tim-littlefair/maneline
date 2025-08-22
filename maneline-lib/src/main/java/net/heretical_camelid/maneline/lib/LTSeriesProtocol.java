@@ -30,6 +30,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         "PARAM_OUT_OF_BOUNDS", "FACTORY_RESTORE_IN_PROGRESS"
     };
     static IPresetResponseReader s_presetResponseReader = null;
+
     int m_modalContext;
     int m_modalState;
     String m_firmwareVersion;
@@ -54,7 +55,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
 
     public int doStartup(String[] firmwareVersionEtc) {
         assert m_deviceTransport!=null;
-
+        setLogTransactionName("txn01-startup");
         String[][] startupCommands = new String[][]{
             // First message has messageId 113, which LtAmp calls 'ModalStatusMessage'
             // I plan to raise a PR on LtAmp suggesting that this be renamed 'ModalStatusRequest'
@@ -67,22 +68,15 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         int startupCommandIndex=0;
         for (String[] sc : startupCommands) {
             startupCommandIndex++;
-            setLogTransactionName(String.format(
-                "txn%02d-%s",startupCommandIndex,sc[2]
-            ));
             int scStatus = sendCommand(sc[0], sc[1],true);
             if (scStatus != STATUS_OK) {
-                setLogTransactionName(null);
                 return scStatus;
             }
-            setLogTransactionName(null);
         }
 
-        firmwareVersionEtc[0] = m_firmwareVersion;
         assert startupCommandIndex == 2: "Unexpected number of startup commands";
-        setLogTransactionName("txn03-firmwareVersionEtc");
         sendProductIdentificationRequest();
-        sendBadCommand();
+        // sendBadCommand();
         setLogTransactionName(null);
 
         return STATUS_OK;
@@ -107,7 +101,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         assert m_deviceTransport!=null;
         s_presetResponseReader = presetRegistry;
         for (int i = firstPreset; i <= lastPreset; ++i) {
-            setLogTransactionName(String.format("txn05-getPreset%03d",i));
+            setLogTransactionName(String.format("txn02-getPreset%03d",i));
             int psJsonStatus = sendPresetJsonRequest(i);
             setLogTransactionName(null);
             if (psJsonStatus != STATUS_OK) {
@@ -115,11 +109,19 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             }
         }
         s_presetResponseReader = null;
+
         // once the presets have been retrieved,
         // send a message to the amp asking it to
         // switch to the SYNC_END context
         final int TARGET_CONTEXT_SYNC_END = 1;
         sendModalStatusRequest(TARGET_CONTEXT_SYNC_END);
+
+        // finally request the current preset index
+        setLogTransactionName("currentPresetIndexAndDetails");
+        sendCurrentPresetIndexRequest();
+        getStatus();
+        setLogTransactionName(null);
+
         return STATUS_OK;
     }
 
@@ -145,7 +147,10 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             }
         };
         setLogTransactionName("currentPresetIndex");
-
+        appendToLog(
+            "preset=" + m_currentPresetIndex,
+            m_currentPresetDetails
+        );
         setLogTransactionName(null);
         s_presetResponseReader = null;
         return retval[0];
@@ -526,11 +531,8 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             ;
         return sendCommand(commandHexBytes, null,true);
     }
-    private int getCurrentPresetDetails(StringBuilder currentPresetSB) {
-        final String commandHexBytes = "35:07:08:00:aa:02:02:08:01";
-        // Sending null instead of a command description suppresses
-        // 60 lines of logging for the 60 preset requests sent out
-        // during startup.
+    private int sendCurrentPresetIndexRequest() {
+        final String commandHexBytes = "35:07:08:00:c2:06:02:08:01";
         return sendCommand(commandHexBytes, null,true);
     }
 
