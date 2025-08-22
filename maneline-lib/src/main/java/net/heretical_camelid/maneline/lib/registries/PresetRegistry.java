@@ -51,7 +51,18 @@ public class PresetRegistry implements IPresetResponseReader {
     // created in the code
     private int m_suiteNumber=0;
 
+    // We need to enable public lookups into the registry via
+    // a static accessor.  This is OK, so long as we ensure that
+    // only one registry can exist at any given time.
+    static private PresetRegistry s_instance=null;
+
+    static public PresetRecord getPresetRecord(int i) {
+        assert s_instance!=null;
+        return s_instance.m_records.get(i);
+    }
+
     public PresetRegistry(String outputPath) {
+        assert(s_instance==null);
         m_records = new HashMap<>();
         m_outputPath = outputPath;
         m_slotsToRecords = new HashMap<>();
@@ -59,6 +70,7 @@ public class PresetRegistry implements IPresetResponseReader {
         m_duplicateSlots = new HashMap<>();
 
         initialiseOutput();
+        s_instance=this;
     }
 
     static String duplicateSlotKey(PresetRecord newRecord) {

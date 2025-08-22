@@ -2,6 +2,7 @@ package net.heretical_camelid.maneline.lib;
 
 import net.heretical_camelid.maneline.lib.interfaces.IPresetResponseReader;
 import net.heretical_camelid.maneline.lib.registries.PresetRegistry;
+import net.heretical_camelid.maneline.lib.registries.PresetRecord;
 import net.heretical_camelid.maneline.lib.utilities.ByteArrayTranslator;
 import net.heretical_camelid.maneline.lib.utilities.RawProtobufUtilities;
 
@@ -33,11 +34,20 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
     int m_modalState;
     String m_firmwareVersion;
     String m_productIdentifier;
+
+    int m_currentPresetIndex;
+    String m_currentPresetDetails;
+
     final Thread m_heartbeatThread;
     boolean m_heartbeatStopped = false;
 
     public LTSeriesProtocol(boolean startHeartbeat) {
+        m_modalContext = -1;
+        m_modalState = -1;
         m_firmwareVersion = null;
+        m_currentPresetIndex = -1;
+        m_currentPresetDetails = null;
+
         m_heartbeatStopped = !startHeartbeat;
         m_heartbeatThread = new HeartbeatThread();
     }
@@ -134,10 +144,8 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
                 retval[0] = "currentPresetIndex="+slotIndex;
             }
         };
-        StringBuilder currentPresetJsonSB = new StringBuilder();
-        int psJsonStatus = getPresetJson(0, currentPresetJsonSB);
         setLogTransactionName("currentPresetIndex");
-        log(retval[0]);
+
         setLogTransactionName(null);
         s_presetResponseReader = null;
         return retval[0];
@@ -229,12 +237,6 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         final int messagePbType = messageTag & 0x07;
         int contentStartOffset = messageTagBounds[1];
         final int contentLength;
-        String responseDescription = String.format(
-            "Response messageId=%d messagePbType=%d contentStartOffset=%d raw=%s",
-            messageId,messagePbType,contentStartOffset,
-            ByteArrayTranslator.shortenedBytesToHex(
-                assembledResponseMessage, 10,10)
-        );
         if(messagePbType==2) {
             int[] contentLengthBounds = new int[2];
             contentLengthBounds[0]=contentStartOffset;
@@ -248,12 +250,19 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             contentLength = assembledResponseMessage.length-contentStartOffset;
         }
 
-        // Build a description of the response here
-        // The description only needs to be logged for messages
-        // which don't generate their own logging,
-        // but it can be logged here by uncommenting the
-        // next line during debugging
-        log(responseDescription);
+        // Build a description of the structure of the response here
+        String responseDescription = String.format(
+            "Response messageId=%d messagePbType=%d contentStartOffset=%d contentLength=%d raw=%s",
+            messageId,messagePbType,contentStartOffset,contentLength,
+            ByteArrayTranslator.shortenedBytesToHex(
+                assembledResponseMessage, 8,8)
+        );
+
+        // In normal running the description only needs to be logged for
+        // messages which don't generate their own logging,
+        // but it can be logged here during development by uncommenting the
+        // next line
+        // log(responseDescription);
 
         if (messageId==113) {
             // This is a response to the ModalStatusRequest message
@@ -332,13 +341,13 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             // This response is received up to 60 times so we don't log it
         } else if (messageId==200) {
             // This is a response of type UnsupportedMessageStatus
-            assert messagePbType==2;
-            assert contentLength==2;
-            assert contentStartOffset==5;
+            assert messagePbType == 2;
+            assert contentLength == 2;
+            assert contentStartOffset == 5;
 
-            assert assembledResponseMessage[5]==0x08; // param 1 of pbtype 0
-            final int errorType = 0xff&assembledResponseMessage[6];
-            if(errorType>=0 && errorType<Message200_ErrorTypes.length) {
+            assert assembledResponseMessage[5] == 0x08; // param 1 of pbtype 0
+            final int errorType = 0xff & assembledResponseMessage[6];
+            if (errorType >= 0 && errorType < Message200_ErrorTypes.length) {
                 log(String.format(
                     "Unsupported message status received with status=%d (%s)",
                     errorType, Message200_ErrorTypes[errorType]
@@ -349,13 +358,31 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
                     errorType
                 ));
             }
+        } else if (messageId==37) {
+            // This is a response of type currentLoadedPresetIndexStatus
+            // which may be received as a response to a request of the same
+            // type
+            assert messagePbType==2;
+            assert contentLength==2;
+            assert contentStartOffset==5;
+
+            assert assembledResponseMessage[5]==0x08; // param 1 of pbtype 0
+            m_currentPresetIndex = 0xff&assembledResponseMessage[6];
+            PresetRecord currentPresetRecord = PresetRegistry.getPresetRecord(m_currentPresetIndex);
+            if(currentPresetRecord!=null) {
+                String displayName = currentPresetRecord.displayName().strip().replaceAll("\\w+"," ");
+                String effectDetails = currentPresetRecord.effects(
+                    PresetRecord.EffectsLevelOfDetails.MODULES_AND_PARAMETERS
+                );
+                m_currentPresetDetails = String.format(
+                    "index:%02d\nname:%s\neffects:\n%s",
+                    m_currentPresetIndex,displayName,effectDetails
+                );
+            } else {
+                m_currentPresetDetails = "No preset record found for index " + m_currentPresetIndex;
+            }
+            log(m_currentPresetDetails);
         } else {
-            responseDescription = String.format(
-                "Response messageId=%d messagePbType=%d contentStartOffset=%d contentLength=%d raw=%s",
-                messageId,messagePbType,contentStartOffset,contentLength,
-                ByteArrayTranslator.shortenedBytesToHex(
-                    assembledResponseMessage, 8,8)
-            );
             log(responseDescription);
         }
 
@@ -499,7 +526,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             ;
         return sendCommand(commandHexBytes, null,true);
     }
-    private int getPresetJson(int i, StringBuilder presetJsonSB) {
+    private int getCurrentPresetDetails(StringBuilder currentPresetSB) {
         final String commandHexBytes = "35:07:08:00:aa:02:02:08:01";
         // Sending null instead of a command description suppresses
         // 60 lines of logging for the 60 preset requests sent out
