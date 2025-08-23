@@ -391,7 +391,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
     }
 
     private void logCurrentPresetDetails() {
-        setLogTransactionName("currentPresetDetails");
+        setLogTransactionName("current-preset-details");
         PresetRecord currentPresetRecord = PresetRegistry.getPresetRecord(m_currentPresetIndex);
         if(currentPresetRecord!=null) {
             String displayName = currentPresetRecord.displayName().strip().replaceAll("\\s+"," ");
@@ -399,7 +399,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
                 PresetRecord.EffectsLevelOfDetails.MODULES_AND_PARAMETERS
             );
             m_currentPresetDetails = String.format(
-                "index:%02d\nname:%s\neffects:\n%s",
+                "Preset details: slot=%02d name=%s\neffects:\n%s",
                 m_currentPresetIndex,displayName,effectDetails
             );
             log(m_currentPresetDetails);

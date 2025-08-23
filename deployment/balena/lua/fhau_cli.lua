@@ -117,7 +117,7 @@ function Fhau:get_cxn_and_dev_status()
         fd1:close()
     end
     local preset_status
-    fd2 = io.open(session_name.."/currentPresetDetails-001.json","rb")
+    fd2 = io.open(session_name.."/current-preset-details-001.json","rb")
     if fd2
     then
         preset_status=cjson.decode(fd2:read("*all")).message
@@ -130,14 +130,14 @@ function Fhau:get_cxn_and_dev_status()
         retval = cxn_status .. "\n" .. preset_status
     elseif cxn_status
     then
-        retval = cxn_status .. "\\nPreset status not known"
+        retval = cxn_status .. "\nPreset status not known"
     else
         retval = "FMIC device not connected yet"
     end
     print(cxn_status, preset_status)
     retval = retval:gsub("\n","\\n")
     print(retval)
-    retval = web_ui:build_cds_html(retval)
+    retval = web_ui:build_cds_html("<p>"..retval.."</p>")
     print(retval)
     return retval
 end

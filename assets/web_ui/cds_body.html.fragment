@@ -1,11 +1,11 @@
 <body class="wy-body-for-nav" id="content_body" name="content_body">
 <h2><span>Connection/Device State</span></h2>
-<p name="cds_messages">&nbsp;</p>
+<div name="cds_messages">&nbsp;</div>
 </body>
 
 <script>
 function setMessages() {
-    document.querySelector("p").textContent = "%MESSAGES_STRING%";
+    document.querySelector("div").innerHTML = "%MESSAGES_STRING%";
 }
 window.onload = setMessages
 </script>
