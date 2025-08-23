@@ -103,23 +103,43 @@ function Fhau:send_cli_command(command)
 end
 
 function Fhau:get_cxn_and_dev_status()
-    local retval
-    fd = io.open(session_name.."/txn00-startProvider-001.json","rb")
-    if fd
-    then
-        retval=cjson.decode(fd:read("*all")).message
-        fd:close()
-    else
-        retval="Connection not completed yet"
-    end
-
     if(check_for_cli_death())
     then
         print("USB/HID CLI process appears to have died")
         os.exit(fhau_errors.FATAL_CLI_HAS_EXITED)
     end
 
-    return web_ui:build_cds_html(retval)
+    local cxn_status
+    fd1 = io.open(session_name.."/txn00-startProvider-001.json","rb")
+    if fd1
+    then
+        cxn_status=cjson.decode(fd1:read("*all")).message
+        fd1:close()
+    end
+    local preset_status
+    fd2 = io.open(session_name.."/currentPresetDetails-001.json","rb")
+    if fd2
+    then
+        preset_status=cjson.decode(fd2:read("*all")).message
+        fd2:close()
+    end
+
+    local retval
+    if cxn_status and preset_status
+    then
+        retval = cxn_status .. "\n" .. preset_status
+    elseif cxn_status
+    then
+        retval = cxn_status .. "\\nPreset status not known"
+    else
+        retval = "FMIC device not connected yet"
+    end
+    print(cxn_status, preset_status)
+    retval = retval:gsub("\n","\\n")
+    print(retval)
+    retval = web_ui:build_cds_html(retval)
+    print(retval)
+    return retval
 end
 
 function Fhau:get_all_presets()

@@ -117,11 +117,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         sendModalStatusRequest(TARGET_CONTEXT_SYNC_END);
 
         // finally request the current preset index
-        setLogTransactionName("currentPresetIndexAndDetails");
         sendCurrentPresetIndexRequest();
-        getStatus();
-        setLogTransactionName(null);
-
         return STATUS_OK;
     }
 
@@ -304,13 +300,18 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
                 m_productIdentifier = new String(assembledResponseMessage, 7, payloadStringLength);
                 log("Product identifier: " + m_productIdentifier);
             }
-        } else if (messageId==31) {
-            // This is a response to a request for the JSON definition
-            // of the preset with a specific index.  The preset index supplied
-            // is returned as the last byte of the message.
-            // If an out-of-range preset is requested the amp replies with
-            // the definition of preset 1.
-
+        } else if (messageId==31 || messageId==32) {
+            // This is either of
+            // - messageId 31: a response to a request for the JSON definition
+            //   of the preset with a specific index; or
+            // - messageId 32: a response to a request for the details of the
+            //   currently selected preset.
+            // In either case, the first two fields in the response
+            // are the JSON description of the preset and its index.
+            // In the messageId 31 case these are the only fields
+            // In messageId 32 there is an additional field which tells
+            // whether the current prefix is 'dirty' (i.e. being edited
+            // on the LT device and not yet saved)
             assert messagePbType == 2;
             // contentLength varies, is typically around 1900-2500 bytes
             // we don't attempt to handle cases where it is less than
@@ -337,12 +338,20 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             assert assembledResponseMessage[9 + jsonLength] == 0x10; // param 2 of pbtype 0
             // For LT series we expect a maximum of 60 presets so the varint
             // for the preset index will be a single byte.
-            int presetIndex = assembledResponseMessage[9 + jsonLength + 1];
-            if (s_presetResponseReader != null) {
-                s_presetResponseReader.notifyPresetResponse(
-                    presetIndex, jsonDefinition
-                );
+            m_currentPresetIndex = 0xff&assembledResponseMessage[9 + jsonLength + 1];
+            // For the moment, we ignore the dirty bit under messageId 32
+
+            if(messageId==31) {
+                if (s_presetResponseReader != null) {
+                    s_presetResponseReader.notifyPresetResponse(
+                        m_currentPresetIndex, jsonDefinition
+                    );
+                }
+            } else {
+                assert messageId==32;
+                logCurrentPresetDetails();
             }
+
             // This response is received up to 60 times so we don't log it
         } else if (messageId==200) {
             // This is a response of type UnsupportedMessageStatus
@@ -373,25 +382,31 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
 
             assert assembledResponseMessage[5]==0x08; // param 1 of pbtype 0
             m_currentPresetIndex = 0xff&assembledResponseMessage[6];
-            PresetRecord currentPresetRecord = PresetRegistry.getPresetRecord(m_currentPresetIndex);
-            if(currentPresetRecord!=null) {
-                String displayName = currentPresetRecord.displayName().strip().replaceAll("\\w+"," ");
-                String effectDetails = currentPresetRecord.effects(
-                    PresetRecord.EffectsLevelOfDetails.MODULES_AND_PARAMETERS
-                );
-                m_currentPresetDetails = String.format(
-                    "index:%02d\nname:%s\neffects:\n%s",
-                    m_currentPresetIndex,displayName,effectDetails
-                );
-            } else {
-                m_currentPresetDetails = "No preset record found for index " + m_currentPresetIndex;
-            }
-            log(m_currentPresetDetails);
+            logCurrentPresetDetails();
         } else {
             log(responseDescription);
         }
 
         return STATUS_OK;
+    }
+
+    private void logCurrentPresetDetails() {
+        setLogTransactionName("currentPresetDetails");
+        PresetRecord currentPresetRecord = PresetRegistry.getPresetRecord(m_currentPresetIndex);
+        if(currentPresetRecord!=null) {
+            String displayName = currentPresetRecord.displayName().strip().replaceAll("\\s+"," ");
+            String effectDetails = currentPresetRecord.effects(
+                PresetRecord.EffectsLevelOfDetails.MODULES_AND_PARAMETERS
+            );
+            m_currentPresetDetails = String.format(
+                "index:%02d\nname:%s\neffects:\n%s",
+                m_currentPresetIndex,displayName,effectDetails
+            );
+            log(m_currentPresetDetails);
+        } else {
+            m_currentPresetDetails = "No preset record found for index " + m_currentPresetIndex;
+        }
+        setLogTransactionName(null);
     }
 
     private int readAndAssembleResponsePackets() {
