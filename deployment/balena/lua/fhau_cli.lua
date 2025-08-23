@@ -118,10 +118,16 @@ function Fhau:get_cxn_and_dev_status()
     end
     local preset_status
     fd2 = io.open(session_name.."/current-preset-details-001.json","rb")
-    if fd2
-    then
-        preset_status=cjson.decode(fd2:read("*all")).message
-        fd2:close()
+    while fd2
+    do
+        preset_json=fd2:read("*line")
+        if preset_json
+        then
+            preset_status = cjson.decode(preset_json).message
+        else
+            fd2:close()
+            break
+        end
     end
 
     local retval
