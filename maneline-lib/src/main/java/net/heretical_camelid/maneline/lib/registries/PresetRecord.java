@@ -152,13 +152,17 @@ public class PresetRecord {
                     );
                 }
                 if(levelOfDetails!=EffectsLevelOfDetails.MODULES_ONLY) {
-                    String paramString = s_dspParamGson.toJson(node.dspUnitParameters);
-                    paramString = paramString.replaceAll("[{}\"]","");
-                    // Parameter 'bypass' seems to be always 'false' so we
-                    // prefer not to waste real estate displaying it
-                    // unless it takes on the 'true' value.
-                    paramString = paramString.replaceAll("bypass:false,","");
                     sb.append("(");
+                    String paramString = s_dspParamGson.toJson(node.dspUnitParameters);
+
+                    // Convert the JSON to a simple comma-separated list
+                    paramString = paramString.replaceAll("[{}\"]","");
+
+                    // the 'bypass' and 'bypassType' parameters don't affect the sound
+                    // so we fiter these out if present
+                    paramString = paramString.replaceAll(",bypass:\\w+","");
+                    paramString = paramString.replaceAll(",bypassType:\\w+","");
+
                     sb.append(paramString);
                     sb.append(")");
                 }

@@ -399,7 +399,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
                 PresetRecord.EffectsLevelOfDetails.MODULES_AND_PARAMETERS
             );
             m_currentPresetDetails = String.format(
-                "Preset details: slot=%02d name=%s\neffects:\n%s",
+                "Preset details: slot=%02d name=%s\nAudio graph:\n%s",
                 m_currentPresetIndex,displayName,effectDetails
             );
             log(m_currentPresetDetails);

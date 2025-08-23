@@ -186,13 +186,24 @@ public class PresetCanonicalSerializer {
         Double rotor;
         String sag;
         Double sensitivity;
-        // shape: at end of list
+
+        // shape switches between 'sine' and (numeric) 0
+        // we declare it as a string, but might need to fix up numeric
+        // values in the JSON before uploading will work
+        String shape;
+
         Double stereoSpread;
         Double tapTimeBPM;
         Double thresh;
         Double threshold;
         Double time;
         // tone: at end of list
+
+        // tone switches between 'normal' and (numeric) 0.5, and 0.500000
+        // we declare it as a string, but might need to fix up numeric
+        // values in the JSON before uploading will work
+        String tone;
+
         Double treb;
         Double treble;
         String type;
@@ -200,24 +211,14 @@ public class PresetCanonicalSerializer {
         Double wetLvl;
         Double wowLevel;
 
-        // The remaining attributes have been identified
-        // as taking on inconsistent values and/or types when a preset
-        // is copied, or edited or imported using Fender Tone
-        // This results in a copy returning a different value
-        // in the second part of the audio hash (last 4 nybbles).
-
         // bypass switches between False and absent
         Boolean bypass;
 
         // bypassType switches between 'Post', 'Pre' and absent
         String bypassType;
 
-        // tone switches between 'normal' and (numeric) 0.5,
-        // and 0.500000
-        String tone;
 
-        // shape switches between 'sine' and (numeric) 0
-        String shape;
+
 
         PCS_DspUnitParameters() { }
     }
