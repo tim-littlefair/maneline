@@ -1,6 +1,6 @@
-<body class="wy-body-for-nav" id="content_body" name="content_body">
+<body class="wy-body-for-nav" id="content_body" >
 <h2><span>Connection/Device State</span></h2>
-<div name="cds_messages">&nbsp;</div>
+<div id="cds_messages" style="text-wrap:pretty;overflow-wrap:break-word;">&nbsp;</div>
 </body>
 
 <script>
