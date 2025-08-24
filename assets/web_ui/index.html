@@ -48,8 +48,7 @@
             
                 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="#cds">Connection/Device State</a></li>
-<li class="toctree-l1"><a class="reference internal" href="#all_presets">All Presets</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="#">Curated Preset Suites</a>
+<li class="toctree-l1 current"><a class="reference internal" href="#">Preset Suites</a>
     <ul>
     <li class="toctree-l2"><a href="#picknmix">Pick'N'Mix</a></li>
     <li class="toctree-l2"><a href="#folk">Folk</a></li>
@@ -61,6 +60,7 @@
     <li class="toctree-l2"><a href="#trippy">Trippy</a></li>
     </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="#all_presets">All Presets</a></li>
 <li class="toctree-l1"><a class="current reference internal" href="#credits">Credits</a></li>
                 </ul>
             </div>
@@ -79,12 +79,8 @@
                   <iframe id="cds" src="/cds" style="height:360px;"></iframe>
                 </div>
 
-                <div>
-                  <iframe id="all_presets" src="/all-presets" style="height:510px;"></iframe>
-                </div>
-
                 <div style="height:auto;">
-                    <h2><span>Curated Preset Suites</span></h2>
+                    <h2><span>Preset Suites</span></h2>
                     <iframe id="picknmix" src="/suite?num=01&name=PickNMix" style="height:200px;"></iframe>
                     <iframe id="folk" src="/suite?num=02&name=Folk" style="height:130px;"></iframe>
                     <iframe id="blues" src="/suite?num=03&name=Blues" style="height:130px;"></iframe>
@@ -95,12 +91,16 @@
                     <iframe id="trippy" src="/suite?num=08&name=Trippy" style="height:130px;"></iframe>
                 </div>
 
-                <div style="height:600px;">
+                  <div>
+                      <iframe id="all_presets" src="/all-presets" style="height:510px;"></iframe>
+                  </div>
+
+                  <div style="height:600px;">
                     <h2 id="credits"><span>Credits</span></h2>
                     <p>
                         Source code for this project is available at:
                         <a href="https://github.com/tim-littlefair/maneline">
-                          https://github.com/tim-littlefair/feral-horse-amp-utils
+                          https://github.com/tim-littlefair/maneline
                         </a>.
                     </p>
 
@@ -141,14 +141,14 @@
                     </ul>
                     <p>
                       In addition to the build-time dependencies listed above, this project
-                      was inspired and informed by the following precursor project:                      
+                      was inspired and informed by the following precursor projects:
                     </p>
                     <ul>
                       <li>
                         <a href="https://packages.debian.org/sid/mustang-plug">
                           the 'mustang-plug' application
                         </a>
-                        originally published by a developer named @piorekf 
+                        originally published by a developer named @piorekf
                         (who no longer seems to be active on Internet under that name)
                         now 
                         <a href="https://github.com/offa/plug">
@@ -159,7 +159,17 @@
                           GitHub user @offa
                         </a>
                       </li>
+                      <li>
+                        <a href="https://github.com/brentmaxwell/LtAmp">
+                            the 'LtAmp' project
+                        </a>
+                        published by
+                        <a href="https://github.com/brentmaxwell">
+                            Brent Maxwell
+                        </a>
+                      </li>
                     </ul>
+                  </div>
                 </div>
               </div>
             </div>
