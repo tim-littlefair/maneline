@@ -140,12 +140,9 @@ function Fhau:get_cxn_and_dev_status()
     else
         retval = "FMIC device not connected yet"
     end
-    print(cxn_status, preset_status)
     retval = retval:gsub("\n","<br/>")
     retval = retval:gsub(",",", &nbsp;")
-    print(retval)
     retval = web_ui:build_cds_html("<p>"..retval.."</p>")
-    print(retval)
     return retval
 end
 

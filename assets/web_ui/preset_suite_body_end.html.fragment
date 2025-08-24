@@ -12,6 +12,9 @@ function select_preset(i) {
             headers: { "Content-type": "application/json; charset=UTF-8" }
         }
     )
+    setTimeout(() => {
+        window.parent.location.reload()
+    }, 1000)
 }
 
 function td_inner_html(i, nameLine1, nameLine2) {
