@@ -33,29 +33,31 @@ function EventLoop.run_event_loop(stdin_evtclt, pegasus_evtclt, enable_debug, ac
         select_rv = socket.select(fd_array, nil, timeout)
         if(#select_rv==0)
         then
-            _debug_mark("!")
+            -- _debug_mark("!")
             timeout=_passive_timeout
         elseif(select_rv[#select_rv]==pegasus_client_fd)
         then
-            _debug_mark("p<")
+            _debug_mark("web input<\n")
             pegasus_evtclt:handler()
             timeout=_active_timeout
-            _debug_mark(">\n")
+            _debug_mark("\n>\n")
         else
             stdin_bytes = io.stdin:read("*line")
             if(stdin_bytes)
             then
-                _debug_mark("s<")
+                _debug_mark("stdin input<\n")
+                _debug_mark(stdin_bytes)
+                _debug_mark("\n>\n")
                 stdin_evtclt:handler(stdin_bytes)
-                _debug_mark(">\n")
                 timeout=_active_timeout
-            elseif(io.stdin:read(0)==nil)
-            then
-                _debug_mark("stdin closed\n")
-                break
-                
             else
-                timeout=_passive_timeout
+                if(io.stdin:read(0)==nil)
+                then
+                    _debug_mark("\nstdin closed\n")
+                    break
+                else
+                    timeout=_passive_timeout
+                end
             end
         end
         io.stdout:flush()

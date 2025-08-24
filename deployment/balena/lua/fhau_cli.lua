@@ -57,7 +57,6 @@ end
 function Fhau:relay_stdin_line(line)
     if(line)
     then
-        print("Relaying line "..line)
         fhau_cli_input_fd:write(line.."\n")
         fhau_cli_input_fd:flush()
     else
