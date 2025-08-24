@@ -13,7 +13,7 @@ function select_preset(i) {
         }
     )
     setTimeout(() => {
-        window.parent.location.reload()
+        parent.window.location.reload(true)
     }, 1000)
 }
 
@@ -22,7 +22,7 @@ function td_inner_html(i, nameLine1, nameLine2) {
     idStr=idStr.substring(idStr.length-2,idStr.length)
     btnId = "preset"+idStr
     btnText = "preset&nbsp;"+idStr+"<br/>"+nameLine1+"<br/>"+nameLine2
-    return `<td><button id="${btnId}" onclick="select_preset(${i})" />${btnText}</td>\n`    
+    return `<td><button id="${btnId}" onclick="select_preset(${i})" />${btnText}</td>\n`
 }
 
 suite_from_json = #SUITE_JSON#
@@ -44,12 +44,12 @@ function populate_table() {
             tbody_inner_html += td_inner_html(
                 0, "NOT IN", "USE"
             )
-        } 
+        }
         else
         {
             preset_from_json = suite_from_json.presets[index_into_suite]
             tbody_inner_html += td_inner_html(
-                preset_from_json.originSlotIndex, 
+                preset_from_json.originSlotIndex,
                 preset_from_json.presetName.substring(0,8).replace(" ","&nbsp;"),
                 preset_from_json.presetName.substring(8,16).replace(" ","&nbsp;")
             )

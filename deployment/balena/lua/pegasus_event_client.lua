@@ -40,17 +40,22 @@ function callback(request,response)
         io.stdout:write("Unexpected method: ", request:method())
         io.stdout:write("Non-get methods TBD")
     else
-        response:addHeader("Cache-Control","no-cache")
         if req_path=="/cds"
         then
+            response:addHeader("Cache-Control","no-cache")
             status = fhau_cli:get_cxn_and_dev_status()
             response:write("<html>"..status.."</html>")
         elseif req_path=="/all-presets"
         then
+            response:addHeader("Cache-Control","no-cache")
             all_presets = fhau_cli:get_all_presets()
             response:write(all_presets)
         elseif req_path=="/suite"
         then
+            -- response:addHeader("Cache-Control","no-cache")
+            -- For the moment, the suites are not editable so it is
+            -- OK for them to be cached
+            response:addHeader("Cache-Control","max-age=3600, stale-while-revalidate=10")
             suite_num = request.querystring.num
             suite_name = request.querystring.name
             preset_suite = fhau_cli:get_preset_suite(suite_num,suite_name)
@@ -61,8 +66,13 @@ function callback(request,response)
         else
             if lfs.attributes("."..req_path)
             then
+                if req_path:find("web_ui")
+                then
+                    response:addHeader("Cache-Control","max-age=3600, stale-while-revalidate=10")
+                end
                 response:writeFile("."..req_path)
             else
+                response:addHeader("Cache-Control","no-cache")
                 io.stdout:write(" !!!not found!!!")
                 response:write("<html>Not found: "..req_path.."</html>")
             end
