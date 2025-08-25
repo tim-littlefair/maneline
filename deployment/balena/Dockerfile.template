@@ -60,7 +60,7 @@ FROM eclipse-temurin:17
 # "fhau-cli: no matching manifest for linux/arm64/v8 in the manifest list entries"
 # FROM eclipse-temurin:17-jdk-alpine-3.21
 
-WORKDIR /opt/fhau
+WORKDIR /opt/maneline
 
 # Uncomment these lines and update as required to get a specific release of d-F-cli from GitHub
 #RUN apt update
@@ -68,7 +68,7 @@ WORKDIR /opt/fhau
 #RUN wget https://github.com/tim-littlefair/feral-horse-amp-utils/releases/download/release-0.1.1/desktopFHAUcli-0.1.1-44f72ab-36.jar $WORKDIR
 
 # Also deploy any available builds from the development tree
-COPY /jar/desktopFHAUcli-*.jar $WORKDIR
+COPY /jar/maneline-cli-*.jar $WORKDIR
 
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update
