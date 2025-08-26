@@ -277,15 +277,15 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
         m_protocol.setDeviceTransport(new DeviceTransportHid4Java(hidDevice));
         String[] firmwareVersionEtc = new String[] { null };
         int startupStatus = m_protocol.doStartup(firmwareVersionEtc);
-        m_firmwareVersion = firmwareVersionEtc[0];
+        m_firmwareVersion = m_protocol.getFirmwareVersion();
 
         // The desktop app is used to generate curated suites of presets.
         // notify the relevant class in the library of the product name,
         // serial number and firmware version so that the source can
         // be documented.
         SlotBasedPresetSuiteExporter.setSourceDeviceDetails(String.format(
-            "%s serial number %s running firmware %s",
-            hidDevice.getProduct(), hidDevice.getSerialNumber(), m_firmwareVersion
+            "%s running firmware %s",
+            hidDevice.getProduct(), m_firmwareVersion
         ));
 
         // The Mustang LT40S with firmware 1.0.7 has 60 presets

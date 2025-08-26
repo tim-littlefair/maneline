@@ -3,7 +3,7 @@ apply plugin: 'com.android.application'
 android {
     compileSdk = 36
     defaultConfig {
-        applicationId "net.heretical_camelid.fhau.android_app"
+        applicationId "net.heretical_camelid.maneline.android_app"
         minSdkVersion 25
         versionCode rootProject.ext.versionCode
         versionName rootProject.ext.versionName
@@ -36,17 +36,17 @@ android {
 }
 
 base {
-    archivesName = "androidFHAU-$android.defaultConfig.versionName"
+    archivesName = "android-maneline-$android.defaultConfig.versionName"
 }
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.google.android.material:material:1.12.0'
-    implementation 'androidx.compose.material:material:1.8.3'
+    implementation 'androidx.compose.material:material:1.9.0'
     implementation 'androidx.appcompat:appcompat:1.7.1'
     implementation "androidx.constraintlayout:constraintlayout:2.2.1"
     implementation "androidx.constraintlayout:constraintlayout-compose:1.1.1"
-    testImplementation 'androidx.test.espresso:espresso-core:3.6.1'
+    testImplementation 'androidx.test.espresso:espresso-core:3.7.0'
     implementation project(':maneline-lib')
     implementation project(':usb-hid')
 }

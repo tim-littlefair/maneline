@@ -37,16 +37,10 @@ dependencies {
     implementation 'net.java.dev.jna:jna:5.17.0'
     implementation 'org.hid4java:hid4java:0.8.0'
     implementation 'org.slf4j:slf4j-api:2.0.17'
-    // implementation 'org.slf4j:slf4j-reload4j:2.0.17'
 
     implementation 'ch.qos.logback:logback-core:1.5.18'
     implementation 'ch.qos.logback:logback-classic:1.5.18'
     implementation 'net.logstash.logback:logstash-logback-encoder:8.1'
 
     implementation group: 'org.apache.logging.log4j', name: 'log4j-layout-template-json', version: '2.25.1'
-
-/*
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.25.1'
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.25.1'
- */
 }
