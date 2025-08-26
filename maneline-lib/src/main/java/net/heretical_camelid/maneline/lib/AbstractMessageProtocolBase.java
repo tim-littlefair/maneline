@@ -140,5 +140,7 @@ public abstract class AbstractMessageProtocolBase {
     public abstract void startHeartbeatThread();
 
     public abstract String getStatus();
+
+    public abstract String getFirmwareVersion();
 }
 

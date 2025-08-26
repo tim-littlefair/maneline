@@ -162,6 +162,11 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
     }
 
     @Override
+    public String getFirmwareVersion() {
+        return m_firmwareVersion;
+    }
+
+    @Override
     public int switchPreset(int slotIndex) {
         assert m_deviceTransport!=null;
         assert slotIndex>=1;
@@ -272,7 +277,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         // messages which don't generate their own logging,
         // but it can be logged here during development by uncommenting the
         // next line
-        log(responseDescription);
+        // log(responseDescription);
 
         if (messageId==113) {
             // This is a response to the ModalStatusRequest message

@@ -15,7 +15,7 @@ public class LTSeriesProtocolTest {
 
     @org.junit.Before
     public void setUp() throws Exception {
-        m_protocol = new LTSeriesProtocol(false);
+        m_protocol = new LTSeriesProtocol(false, false);
         m_protocol.m_modalContext = -1;
         m_protocol.m_modalState = -1;
         m_h2bResult = null;

@@ -54,6 +54,11 @@ public class SlotBasedPresetSuiteExporter implements PresetRegistry.Visitor {
             m_desiredSlotIndexes.size()==0
         ) {
             JsonObject presetObject = new JsonObject();
+            // TODO: get rid of originSlotIndex when Lua has a
+            // lookup based on hash and name
+            // Until then, this only works if the slot index on
+            // the target is the same as the slot index when the
+            // suite was created
             presetObject.addProperty("originSlotIndex", slotIndex);
             presetObject.addProperty("presetName", fjpr.m_name);
             presetObject.addProperty("audioHash", fjpr.audioHash());
@@ -66,7 +71,7 @@ public class SlotBasedPresetSuiteExporter implements PresetRegistry.Visitor {
             presetObject.addProperty("shortInfo", fjpr.shortInfo());
             if (s_sourceDeviceDetails != null) {
                 presetObject.addProperty(
-                    "originDevice",s_sourceDeviceDetails
+                    "originDevice",s_sourceDeviceDetails+" slot "+ slotIndex
                 );
             }
             m_suite.getAsJsonArray("presets").add(presetObject);
