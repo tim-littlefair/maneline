@@ -1,8 +1,6 @@
 package net.heretical_camelid.maneline.lib.delegates;
 
 import net.heretical_camelid.maneline.lib.DefaultLoggingAgent;
-import net.heretical_camelid.maneline.lib.PresetInfo;
-import net.heretical_camelid.maneline.lib.registries.PresetRecord;
 import net.heretical_camelid.maneline.lib.interfaces.IAmpProvider;
 import net.heretical_camelid.maneline.lib.interfaces.ILoggingAgent;
 import net.heretical_camelid.maneline.lib.registries.SuiteRecord;
@@ -14,15 +12,14 @@ import java.util.Set;
 
 public class SimulatorAmpProvider implements IAmpProvider {
     private final ILoggingAgent m_loggingAgent;
-    PresetInfo m_presetInfo;
 
     String m_deviceDescription = null;
 
     String m_firmwareVersion = null;
 /*
     interface IVisitor {
-        static PresetInfo piMixedBag() {
-            PresetInfo piMixedBag = new PresetInfo();
+        static XPresetInfo piMixedBag() {
+            XPresetInfo piMixedBag = new XPresetInfo();
 
             PresetRecord pr1 = new PresetRecord("COOL SOUND",1);
             pr1.m_state = PresetRecord.XPresetState.ACCEPTED;
@@ -32,7 +29,7 @@ public class SimulatorAmpProvider implements IAmpProvider {
             pr2.m_state = PresetRecord.XPresetState.ACCEPTED;
             piMixedBag.add(pr2);
 
-            // We want to support sparse instances of PresetInfo, so
+            // We want to support sparse instances of XPresetInfo, so
             // this one is an example
             PresetRecord pr5 = new PresetRecord("SPARSE SOUND",5);
             pr5.m_state = PresetRecord.XPresetState.ACCEPTED;
@@ -52,7 +49,7 @@ public class SimulatorAmpProvider implements IAmpProvider {
         void setAmpState(
             String deviceDescription,
             String firmwareVersion,
-            PresetInfo presetInfo
+            XPresetInfo presetInfo
         );
     }
     public void acceptVisitor(IVisitor visitor) {
@@ -97,17 +94,14 @@ public class SimulatorAmpProvider implements IAmpProvider {
         } else {
             m_loggingAgent = new DefaultLoggingAgent();
         }
-        PresetInfo pi = new PresetInfo();
         switch(requiredMode)
         {
             case NO_DEVICE:
                 m_transportDelegate = new SimulatorTransportDelegate();
                 m_protocolDelegate = null;
                 m_deviceDelegate = null;
-                m_presetInfo = new PresetInfo();
                 m_deviceDescription = "SimulatedAmplifier SN 123456";
                 m_firmwareVersion = "99.00.13";
-                // m_presetInfo = IVisitor.piMixedBag();
                 break;
 
             case LT40S:
@@ -128,7 +122,6 @@ public class SimulatorAmpProvider implements IAmpProvider {
         if(m_deviceDelegate != null) {
             m_deviceDescription = m_deviceDelegate.m_deviceDescription;
             m_firmwareVersion = m_deviceDelegate.m_firmwareVersion;
-            m_presetInfo = m_deviceDelegate.m_presetInfo;
         }
     }
     public boolean connect() {
@@ -169,11 +162,11 @@ public class SimulatorAmpProvider implements IAmpProvider {
         SimulatorAmpProvider.IVisitor testVisitor = new IVisitor() {
 
             @Override
-            public void setAmpState(String deviceDescription, String firmwareVersion, PresetInfo presetInfo) {
+            public void setAmpState(String deviceDescription, String firmwareVersion, XPresetInfo presetInfo) {
                 System.out.println("deviceDescription: " + deviceDescription);
                 System.out.println("firmwareVersion: " + firmwareVersion);
                 System.out.println("Presets:");
-                PresetInfo.IVisitor presetVisitor = new PresetInfo.IVisitor() {
+                XPresetInfo.IVisitor presetVisitor = new XPresetInfo.IVisitor() {
                     @Override
                     public void visit(PresetRecord pr) {
                         System.out.println(String.format("index:%03d state:%-10s name:%s",

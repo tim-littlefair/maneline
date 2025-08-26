@@ -1,7 +1,5 @@
 package net.heretical_camelid.maneline.lib.delegates;
 
-import net.heretical_camelid.maneline.lib.PresetInfo;
-
 /**
  * TODO:
  * Implementations of this abstract base class will be defined at
@@ -11,7 +9,5 @@ import net.heretical_camelid.maneline.lib.PresetInfo;
 abstract class DeviceDelegateBase {
     public String m_deviceDescription;
     public String m_firmwareVersion;
-    public PresetInfo m_presetInfo;
-
     abstract void startup();
 }
