@@ -273,10 +273,13 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             assert contentStartOffset==5;
 
             assert assembledResponseMessage[5]==0x08; // param 1 of pbtype 0
-            final int context = 0xff&assembledResponseMessage[6];
+            m_modalContext = 0xff&assembledResponseMessage[6];
             assert assembledResponseMessage[7]==0x10; // param 1 of pbtype 0
-            final int state = 0xff&assembledResponseMessage[8];
-            log(String.format("Modal Status: context:%d state:%d",context,state));
+            m_modalState = 0xff&assembledResponseMessage[8];
+            log(String.format(
+                "Modal Status: context:%d state:%d",
+                m_modalContext,m_modalState
+            ));
         } else if (messageId==103 || messageId==100) {
             // This is a response to the either the firmware version request
             // or the product identifier request.

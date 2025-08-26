@@ -2,7 +2,7 @@ package net.heretical_camelid.maneline.lib;
 
 public class PresetRecord {
 
-    public enum PresetState {
+    public enum XPresetState {
         /**
          * The application interested in the preset has requested it
          * from the provider.
@@ -35,13 +35,13 @@ public class PresetRecord {
         NOT_AVAILABLE
     };
 
-    public PresetState m_state = null;
+    public XPresetState m_state = null;
     public String m_name = null;
     public int m_slotNumber = 0;
     public String m_hash = null;
 
     public PresetRecord(String name, int slotNumber) {
-        m_state = PresetState.REQUESTED;
+        m_state = XPresetState.REQUESTED;
         m_name = name;
         m_slotNumber = slotNumber;
     }

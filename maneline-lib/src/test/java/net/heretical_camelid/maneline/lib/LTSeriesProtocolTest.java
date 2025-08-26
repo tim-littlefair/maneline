@@ -39,7 +39,7 @@ public class LTSeriesProtocolTest {
         // of the same type, in which the 'context'
         // and 'state' elements both take on the value 0.
         m_h2bResult = RawProtobufUtilities.hexToBytes(
-            "08:00:8a:07:04:08:00:10:00:00"
+            "08:00:8a:07:04:08:00:10:00"
         );
         m_protocol.parseResponse(m_h2bResult);
         Assert.assertEquals(0, m_protocol.m_modalContext);

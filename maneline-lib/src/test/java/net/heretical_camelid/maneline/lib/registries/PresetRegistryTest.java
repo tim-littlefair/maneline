@@ -10,6 +10,8 @@ public class PresetRegistryTest {
 
     @org.junit.After
     public void tearDown() throws Exception {
+        m_presetRegistry.dispose();
+        m_presetRegistry = null;
     }
 
     @org.junit.Test

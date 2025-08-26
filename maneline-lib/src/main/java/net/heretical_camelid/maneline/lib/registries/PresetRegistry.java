@@ -30,7 +30,7 @@ public class PresetRegistry implements IPresetResponseReader {
     final static Gson s_gsonCompact = new Gson();
     final static Gson s_gsonPretty = new GsonBuilder().setPrettyPrinting().create();
     static ZipOutputStream s_outputZipStream = null;
-    final String m_outputPath;
+    String m_outputPath;
     HashMap<Integer, PresetRecord> m_records;
     HashMap<Integer, PresetRecord> m_slotsToRecords;
     HashMap<String, Integer> m_audioHashesToSlots;
@@ -71,6 +71,25 @@ public class PresetRegistry implements IPresetResponseReader {
 
         initialiseOutput();
         s_instance=this;
+    }
+
+    public void dispose() {
+        s_instance = null;
+        if(s_outputZipStream!=null) {
+            try {
+                s_outputZipStream.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            s_outputZipStream = null;
+        }
+        m_records = null;
+        m_outputPath = null;
+        m_slotsToRecords = null;
+        m_audioHashesToSlots = null;
+        m_duplicateSlots = null;
+        m_slotsNotExportedYet = null;
+        m_suiteNumber=0;
     }
 
     static String duplicateSlotKey(PresetRecord newRecord) {
