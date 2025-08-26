@@ -40,7 +40,7 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
         m_mainActivity = mainActivity;
         m_deviceTransportUsbHid = new DeviceTransportUsbHid(m_mainActivity, this);
         m_presetRegistry = new PresetRegistry(null);
-        m_protocol = new LTSeriesProtocol(true);
+        m_protocol = new LTSeriesProtocol(true, false);
         m_suiteRegistry = new SuiteRegistry(m_presetRegistry);
     }
 

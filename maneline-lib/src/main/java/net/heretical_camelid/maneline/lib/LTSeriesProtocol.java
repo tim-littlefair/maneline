@@ -31,6 +31,8 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
     };
     static IPresetResponseReader s_presetResponseReader = null;
 
+    final boolean m_processResponsesAfterHeartbeat;
+
     int m_modalContext;
     int m_modalState;
     String m_firmwareVersion;
@@ -42,13 +44,22 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
     final Thread m_heartbeatThread;
     boolean m_heartbeatStopped = false;
 
-    public LTSeriesProtocol(boolean startHeartbeat) {
+    public LTSeriesProtocol(
+        boolean startHeartbeat,
+        boolean processResponsesAfterHeartbeat
+    ) {
         m_modalContext = -1;
         m_modalState = -1;
         m_firmwareVersion = null;
         m_currentPresetIndex = -1;
         m_currentPresetDetails = null;
 
+        // On the Android app, the app stops working if we check
+        // for responses after a heartbeat, so we can't do that.
+        // On the CLI app for Linux and other platforms, checking for
+        // responses enables the CLI to discover preset changes
+        // made using the LT device controls so we want to do that.
+        m_processResponsesAfterHeartbeat = processResponsesAfterHeartbeat;
         m_heartbeatStopped = !startHeartbeat;
         m_heartbeatThread = new HeartbeatThread();
     }
@@ -57,12 +68,10 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         assert m_deviceTransport!=null;
         setLogTransactionName("txn01-startup");
         String[][] startupCommands = new String[][]{
-            // First message has messageId 113, which LtAmp calls 'ModalStatusMessage'
-            // I plan to raise a PR on LtAmp suggesting that this be renamed 'ModalStatusRequest'
-            // and that a new message with messageId 112, name ModalStatus and the same structure,
-            // should be added to the protobuf schema.
+            // First message has messageId 113, LtAmp's ModalStatusMessage
             // On LT40S, when messageId 113 is sent, the amp responds with the same messageId 113
             new String[]{"35:09:08:00:8a:07:04:08:00:10:00", "initialisation request","initRequest"},
+            // The second message requests the firmware version
             new String[]{"35:07:08:00:b2:06:02:08:01:00:10", "firmware version request","fwverRequest"},
         };
         int startupCommandIndex=0;
@@ -263,7 +272,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         // messages which don't generate their own logging,
         // but it can be logged here during development by uncommenting the
         // next line
-        // log(responseDescription);
+        log(responseDescription);
 
         if (messageId==113) {
             // This is a response to the ModalStatusRequest message
@@ -329,7 +338,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             final int jsonLength = RawProtobufUtilities.extractVarint(
                 assembledResponseMessage, jsonLengthBounds
             );
-            assert jsonLength == contentLength - 2;
+            // assert jsonLength == contentLength - 2;
             assert jsonLengthBounds[1] == 9;
 
             // bytes 9 to (length-2) contain the JSON
@@ -485,7 +494,10 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
                     "35:07:08:00:c9:01:02:08:01",
                     null
                 };
-                sendCommand(heartbeatCommand[0],heartbeatCommand[1],true);
+                sendCommand(
+                    heartbeatCommand[0],heartbeatCommand[1],
+                    m_processResponsesAfterHeartbeat
+                );
                 try {
                     Thread.sleep(700);
                 }

@@ -54,7 +54,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
         AbstractMessageProtocolBase.setLoggingAgent(s_loggingAgent);
         m_presetRegistry = new PresetRegistry(outputPath);
         m_suiteRegistry = new SuiteRegistry(m_presetRegistry);
-        m_protocol = new LTSeriesProtocol(true);
+        m_protocol = new LTSeriesProtocol(true,true);
     }
 
     void startProvider() {

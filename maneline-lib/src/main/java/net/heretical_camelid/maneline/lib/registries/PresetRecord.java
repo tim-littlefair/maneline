@@ -21,8 +21,6 @@ public class PresetRecord {
     // + CONNECTION_ITEM_REGEX is used to build s_cxnItemPattern which
     //   matches the multiline array items and enables them to be compacted.
     private static final Gson s_jsonSerializer = new GsonBuilder().setPrettyPrinting().create();
-    public static final String CONNECTION_ITEM_REGEX = "\\{\\s+\"input\":\\s+\\{[^}]+\\},\\s+\"output\":\\s+\\{[^}]+\\}\\s+}";
-    private final Pattern s_cxnItemPattern = Pattern.compile(CONNECTION_ITEM_REGEX);
 
     // function effects(...) uses the serializer below to render a single-line list of effect
     // names and values.  As well as being used to report preset parameters back to the user,
@@ -201,20 +199,6 @@ public class PresetRecord {
         String retval = s_jsonSerializer.toJson(
             m_presetCanonicalSerializer
         );
-        // The Gson pretty output makes the info and audioGraph nodes readable,
-        // but wastes a lot of lines on the connections node which varies a bit
-        // in order but not at all in meaning.
-
-        // The rest of this function is dedicated to compacting that part of the
-        // output
-
-        // The following regex was built here: https://regex101.com/
-        Matcher cxnItemMatcher = s_cxnItemPattern.matcher(retval);
-        while(cxnItemMatcher.find()) {
-            String matchedString = cxnItemMatcher.group(0);
-            String compactedString = matchedString.replaceAll("\\s+", "");
-            retval = retval.replace(matchedString, compactedString);
-        }
         return retval;
     }
 }
