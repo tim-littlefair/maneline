@@ -1,0 +1,86 @@
+{
+  "suiteName": "01-PickNMix",
+  "presets": [
+    {
+      "originSlotIndex": 1,
+      "presetName": "FENDER  CLEAN   ",
+      "audioHash": "adbd-15be",
+      "effectsSummary": "stomp:SimpleCompressor amp:Twin65 reverb:Spring65",
+      "effectsDetails": "stomp:SimpleCompressor(type:medium)\namp:Twin65(bass:0.555556,bias:0.5,bright:true,cabsimType:65twn,gain:0.337255,gateDetectorPosition:jack,gatePreset:off,mid:0.5,sag:match,treb:0.342816,volume:-11.12674)\nreverb:Spring65(decay:0.388889,diffuse:1.0,dwell:0.28889,tone:1,wetLvl:0.5)",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "originDevice": "Mustang LT 40S running firmware 1.0.7 slot 1"
+    },
+    {
+      "originSlotIndex": 2,
+      "presetName": "SILKY   SOLO    ",
+      "audioHash": "2ba9-5f7d",
+      "effectsSummary": "stomp:Overdrive amp:SuperSonic delay:TapeDelayLite reverb:Spring65",
+      "effectsDetails": "stomp:Overdrive(gain:0.653935,high:0.5,level:0.444444,low:0.5,mid:0.5)\namp:SuperSonic(bass:0.666667,bias:0.5,cabsimType:1x12ss,gain:0.333333,gain2:0.5,gateDetectorPosition:jack,gatePreset:mid,master:0.360784,mid:0.722222,sag:match,treb:0.722222,volume:-14.849238)\ndelay:TapeDelayLite(dlyTime:0.18,feedback:0.044444,noteDivision:off,stereoSpread:0.0,tapTimeBPM:120.0,wetLvl:0.223,wowLevel:1.0)\nreverb:Spring65(decay:0.133333,diffuse:1.0,dwell:0.28889,tone:1,wetLvl:0.277778)",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "originDevice": "Mustang LT 40S running firmware 1.0.7 slot 2"
+    },
+    {
+      "originSlotIndex": 7,
+      "presetName": "SKATE   PUNK    ",
+      "audioHash": "4f20-5f99",
+      "effectsSummary": "amp:Rect2",
+      "effectsDetails": "amp:Rect2(bass:0.644444,bias:0.5,cabsimType:4x12v2,gain:0.6,gateDetectorPosition:jack,gatePreset:high,master:0.380392,mid:0.2,presence:0.392157,sag:match,treb:0.533333,volume:-12.769779)",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "originDevice": "Mustang LT 40S running firmware 1.0.7 slot 7"
+    },
+    {
+      "originSlotIndex": 8,
+      "presetName": "SOLO    MIDBOOST",
+      "audioHash": "751c-b241",
+      "effectsSummary": "stomp:MustangFiveBandEq1 amp:Silvertone delay:TapeDelayLite reverb:SmallRoomReverb",
+      "effectsDetails": "stomp:MustangFiveBandEq1(gain:0.0,high:0.0,highmid:1.5,low:0.0,lowmid:2.5,mid:11.000001)\namp:Silvertone(bass:0.662745,bias:0.5,cabsimType:57dlx,gain:1.0,gateDetectorPosition:jack,gatePreset:off,mid:0.898039,sag:match,treb:0.67,volume:-18.225922)\ndelay:TapeDelayLite(dlyTime:0.06,feedback:0.25,noteDivision:off,stereoSpread:0.0,tapTimeBPM:999.999939,wetLvl:0.5,wowLevel:0.5)\nreverb:SmallRoomReverb(decay:0.5,diffuse:0.5,dwell:0.5,level:0.4006,tone:0.5)",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "originDevice": "Mustang LT 40S running firmware 1.0.7 slot 8"
+    },
+    {
+      "originSlotIndex": 14,
+      "presetName": "THRASH  OVERKILL",
+      "audioHash": "1af2-e073",
+      "effectsSummary": "stomp:ChromeGate amp:MetalEvh3",
+      "effectsDetails": "stomp:ChromeGate(attenuation:-120.0,gateDetectorPosition:jack,hysteresis:2.5,threshold:-65.555557)\namp:MetalEvh3(bass:0.078254,bias:0.5,cabsimType:4x12frd,gain:0.77273,gateDetectorPosition:jack,gatePreset:super,master:0.5,mid:0.188889,presence:0.5,sag:match,treb:0.785082,volume:-13.988875)",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "originDevice": "Mustang LT 40S running firmware 1.0.7 slot 14"
+    },
+    {
+      "originSlotIndex": 15,
+      "presetName": "CLEAN   DELAY   ",
+      "audioHash": "9a72-f968",
+      "effectsSummary": "stomp:SimpleCompressor mod:ChorusTriangle amp:DR103 delay:TapeDelayLite reverb:SmallRoomReverb",
+      "effectsDetails": "stomp:SimpleCompressor(type:super)\nmod:ChorusTriangle(avgDelay:0.22,depth:0.278,level:0.833,lrPhase:0.5,noteDivision:off,rateHz:0.68,tapTimeBPM:120.0)\namp:DR103(bass:0.698039,bias:0.5,cabsimType:4x12v,gain:0.3,gateDetectorPosition:jack,gatePreset:off,master:1.0,mid:0.643137,presence:0.5,sag:match,treb:0.721569,volume:-2.06803)\ndelay:TapeDelayLite(dlyTime:0.398236,feedback:0.111111,noteDivision:off,stereoSpread:0.0,tapTimeBPM:120.0,wetLvl:0.5005,wowLevel:0.033333)\nreverb:SmallRoomReverb(decay:0.5,diffuse:0.5,dwell:0.5,level:0.2008,tone:0.5)",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "originDevice": "Mustang LT 40S running firmware 1.0.7 slot 15"
+    },
+    {
+      "originSlotIndex": 29,
+      "presetName": "SPACE   TRAVEL  ",
+      "audioHash": "6f2b-9858",
+      "effectsSummary": "stomp:Octobot mod:StepFilter amp:Deluxe65 delay:MonoDelay reverb:ArenaReverb",
+      "effectsDetails": "stomp:Octobot(level:0.5,octdown:1,octup:1)\nmod:StepFilter(hiFrq:0.5,level:0.733333,loFrq:0.5,noteDivision:off,rate:5.07,reson:0.5,tapTimeBPM:120.0)\namp:Deluxe65(bass:0.227451,bias:0.5,cabsimType:65dlx,gain:0.447059,gateDetectorPosition:jack,gatePreset:off,mid:0.913726,sag:match,treb:0.560784,volume:-25.243275)\ndelay:MonoDelay(attenuate:0.5,brite:0.5,feedback:0.177778,level:1.0,noteDivision:off,tapTimeBPM:120.0,time:0.404128)\nreverb:ArenaReverb(decay:0.5,diffuse:0.5,dwell:0.5,level:0.4,tone:0.5)",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "originDevice": "Mustang LT 40S running firmware 1.0.7 slot 29"
+    },
+    {
+      "originSlotIndex": 30,
+      "presetName": "ACOUSTICSIM     ",
+      "audioHash": "509c-7c18",
+      "effectsSummary": "stomp:MustangFiveBandEq1 amp:LinearGain reverb:LargeHallReverb",
+      "effectsDetails": "stomp:MustangFiveBandEq1(gain:0.0,high:12.0,highmid:0.0,low:12.0,lowmid:2.5,mid:-12.0)\namp:LinearGain(bass:0.322222,cabsimType:none,gain:0.5,gateDetectorPosition:jack,gatePreset:off,mid:0.0,treb:0.611111,volume:-2.06803)\nreverb:LargeHallReverb(decay:0.2,diffuse:0.0222,dwell:0.5,level:0.3562,tone:0.722222)",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "originDevice": "Mustang LT 40S running firmware 1.0.7 slot 30"
+    },
+    {
+      "originSlotIndex": 31,
+      "presetName": "EMPTY           ",
+      "audioHash": "b4ed-d311",
+      "effectsSummary": "amp:LinearGain",
+      "effectsDetails": "amp:LinearGain(bass:0.5,cabsimType:none,gain:0.5,gateDetectorPosition:jack,gatePreset:off,mid:0.5,treb:0.5,volume:0.0)",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "originDevice": "Mustang LT 40S running firmware 1.0.7 slot 31"
+    }
+  ]
+}

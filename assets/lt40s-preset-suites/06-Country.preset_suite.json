@@ -1,0 +1,50 @@
+{
+  "suiteName": "06-Country",
+  "presets": [
+    {
+      "originSlotIndex": 5,
+      "presetName": "DREAMY          ",
+      "audioHash": "f641-6cf7",
+      "effectsSummary": "stomp:SimpleCompressor mod:Vibratone amp:Twin65 delay:TapeDelayLite reverb:LargePlate",
+      "effectsDetails": "stomp:SimpleCompressor(type:high)\nmod:Vibratone(depth:0.18,feedback:0.68,level:0.96,noteDivision:off,phase:0.52,rotor:1.07,tapTimeBPM:120.0)\namp:Twin65(bass:0.662745,bias:0.5,bright:true,cabsimType:65twn,gain:0.337255,gateDetectorPosition:jack,gatePreset:off,mid:0.780392,sag:match,treb:0.717647,volume:-14.413998)\ndelay:TapeDelayLite(dlyTime:0.253888,feedback:0.211111,noteDivision:off,stereoSpread:0.0,tapTimeBPM:120.0,wetLvl:0.4672,wowLevel:0.5)\nreverb:LargePlate(decay:0.5,diffuse:0.5,dwell:0.5,level:0.433333,tone:0.833333)",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "originDevice": "Mustang LT 40S running firmware 1.0.7 slot 5"
+    },
+    {
+      "originSlotIndex": 6,
+      "presetName": "COUNTRY PICKING ",
+      "audioHash": "b30b-5e04",
+      "effectsSummary": "stomp:SimpleCompressor amp:Deluxe65 delay:TapeDelayLite",
+      "effectsDetails": "stomp:SimpleCompressor(type:medium)\namp:Deluxe65(bass:0.344444,bias:0.5,cabsimType:65dlx,gain:0.254883,gateDetectorPosition:jack,gatePreset:off,mid:0.744444,sag:match,treb:0.560784,volume:-15.752095)\ndelay:TapeDelayLite(dlyTime:0.138998,feedback:0.211111,noteDivision:off,stereoSpread:0.0,tapTimeBPM:120.0,wetLvl:0.1675,wowLevel:0.5)",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "originDevice": "Mustang LT 40S running firmware 1.0.7 slot 6"
+    },
+    {
+      "originSlotIndex": 23,
+      "presetName": "NICE    FLANGER ",
+      "audioHash": "e5b6-4bcd",
+      "effectsSummary": "stomp:SimpleCompressor mod:TriangleFlanger amp:Princeton65 delay:MonoDelay",
+      "effectsDetails": "stomp:SimpleCompressor(type:low)\nmod:TriangleFlanger(depth:0.666667,feedback:0.777778,level:1.0,noteDivision:off,phase:0.25,rate:0.106745,tapTimeBPM:120.0)\namp:Princeton65(bass:0.337255,bias:0.5,cabsimType:65prince,gain:0.233333,gateDetectorPosition:jack,gatePreset:off,mid:0.839216,sag:match,treb:1.0,volume:-13.167182)\ndelay:MonoDelay(attenuate:0.5,brite:1.0,feedback:0.133333,level:0.555556,noteDivision:off,tapTimeBPM:120.0,time:0.28)",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "originDevice": "Mustang LT 40S running firmware 1.0.7 slot 23"
+    },
+    {
+      "originSlotIndex": 25,
+      "presetName": "SURF    MUSIC   ",
+      "audioHash": "3db6-13d6",
+      "effectsSummary": "amp:Bassman59 delay:MonoDelay reverb:Spring65",
+      "effectsDetails": "amp:Bassman59(bass:0.62,bias:0.5,blend:0.62,cabsimType:59bman,gain:0.4,gateDetectorPosition:jack,gatePreset:off,mid:0.49,presence:0.62,sag:match,treb:0.566667,volume:-11.261283)\ndelay:MonoDelay(attenuate:0.5,brite:0.977778,feedback:0.144444,level:0.455556,noteDivision:off,tapTimeBPM:120.0,time:0.103647)\nreverb:Spring65(decay:1.0,diffuse:1.0,dwell:0.28889,tone:0.844444,wetLvl:0.8)",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "originDevice": "Mustang LT 40S running firmware 1.0.7 slot 25"
+    },
+    {
+      "originSlotIndex": 27,
+      "presetName": "ROCK A  BILLY   ",
+      "audioHash": "24b9-b0ea",
+      "effectsSummary": "amp:Twin57 delay:TapeDelayLite reverb:SmallRoomReverb",
+      "effectsDetails": "amp:Twin57(bass:0.62,bias:0.5,cabsimType:65twn,gain:0.322222,gateDetectorPosition:jack,gatePreset:off,mid:0.544444,presence:0.5,sag:match,treb:0.7,volume:-12.769779)\ndelay:TapeDelayLite(dlyTime:0.14489,feedback:0.111111,noteDivision:off,stereoSpread:0.0,tapTimeBPM:120.0,wetLvl:0.2341,wowLevel:0.0)\nreverb:SmallRoomReverb(decay:0.5,diffuse:0.5,dwell:0.5,level:0.5,tone:0.5)",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "originDevice": "Mustang LT 40S running firmware 1.0.7 slot 27"
+    }
+  ]
+}

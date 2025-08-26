@@ -1,0 +1,32 @@
+{
+  "suiteName": "05-Jazz",
+  "presets": [
+    {
+      "originSlotIndex": 9,
+      "presetName": "JAZZ       AMP  ",
+      "audioHash": "bf47-38ab",
+      "effectsSummary": "stomp:SimpleCompressor amp:LinearGain reverb:SmallRoomReverb",
+      "effectsDetails": "stomp:SimpleCompressor(type:medium)\namp:LinearGain(bass:0.5,cabsimType:none,gain:0.5,gateDetectorPosition:jack,gatePreset:off,mid:0.5,treb:0.5,volume:-2.06803)\nreverb:SmallRoomReverb(decay:0.5,diffuse:0.5,dwell:0.5,level:0.2896,tone:0.5)",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "originDevice": "Mustang LT 40S running firmware 1.0.7 slot 9"
+    },
+    {
+      "originSlotIndex": 12,
+      "presetName": "VINTAGE TREMOLO ",
+      "audioHash": "7b19-1369",
+      "effectsSummary": "mod:SineTremolo amp:Deluxe65",
+      "effectsDetails": "mod:SineTremolo(dist:0.0,duty:0.5,level:0.78976,noteDivision:off,rate:5.07,shape:0,tapTimeBPM:120.0)\namp:Deluxe65(bass:0.227451,bias:0.5,cabsimType:65dlx,gain:0.447059,gateDetectorPosition:jack,gatePreset:off,mid:0.913726,sag:match,treb:0.560784,volume:-15.295096)",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "originDevice": "Mustang LT 40S running firmware 1.0.7 slot 12"
+    },
+    {
+      "originSlotIndex": 13,
+      "presetName": "SUPER   DRYCLEAN",
+      "audioHash": "fc81-cdb8",
+      "effectsSummary": "stomp:Sustain amp:LinearGain",
+      "effectsDetails": "stomp:Sustain(outputLevel:0.577778,sensitivity:0.5)\namp:LinearGain(bass:0.5,cabsimType:none,gain:0.588889,gateDetectorPosition:jack,gatePreset:off,mid:0.644444,treb:1.0,volume:-3.196921)",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "originDevice": "Mustang LT 40S running firmware 1.0.7 slot 13"
+    }
+  ]
+}
