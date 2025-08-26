@@ -485,7 +485,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
                     "35:07:08:00:c9:01:02:08:01",
                     null
                 };
-                sendCommand(heartbeatCommand[0],heartbeatCommand[1],false);
+                sendCommand(heartbeatCommand[0],heartbeatCommand[1],true);
                 try {
                     Thread.sleep(700);
                 }
