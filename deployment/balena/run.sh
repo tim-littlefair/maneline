@@ -42,8 +42,8 @@ echo Lua has executed with status $?
 
 # If something goes wrong, we don't want the container to loop
 # tightly, so we have a delay between detection and exit
-echo "Pegasus/CLI has exited, Balena container will exit shortly"
+echo "Pegasus/CLI has exited, USB/HID CLI will exit shortly"
 sleep 20
-echo "Balena container will exit now"
+echo "USB/HID CLI will exit now"
 break
 
