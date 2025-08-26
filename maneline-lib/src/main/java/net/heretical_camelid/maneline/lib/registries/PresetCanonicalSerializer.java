@@ -135,7 +135,14 @@ public class PresetCanonicalSerializer {
         // This list is in alphabetical order with
         // a small number of exceptions which require
         // comments and/or annotations, these appear
-        // at the end
+        // at the end.
+
+        // The order of these items controls the
+        // order of the JSON generated for effects.
+        // Alphabetical order may not be the most
+        // logical order from an audio point of view,
+        // but has the benefit of making items easy
+        // to find for non-experts.
         Double attenuate;
         Double attenuation;
         Double avgDelay;
@@ -197,7 +204,6 @@ public class PresetCanonicalSerializer {
         Double thresh;
         Double threshold;
         Double time;
-        // tone: at end of list
 
         // tone switches between 'normal' and (numeric) 0.5, and 0.500000
         // we declare it as a string, but might need to fix up numeric
@@ -211,14 +217,16 @@ public class PresetCanonicalSerializer {
         Double wetLvl;
         Double wowLevel;
 
+        // The 'bypass' and 'bypassType' parameters seem to
+        // be more related to the FenderTone GUI than the actual
+        // sound - for the moment we will be filtering them
+        // out of the effect description string.
+
         // bypass switches between False and absent
         Boolean bypass;
 
         // bypassType switches between 'Post', 'Pre' and absent
         String bypassType;
-
-
-
 
         PCS_DspUnitParameters() { }
     }
