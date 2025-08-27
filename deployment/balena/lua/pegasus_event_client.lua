@@ -17,7 +17,11 @@ local logger = logging.new(
 logger:setLevel(logging.WARN)
 logger:info("Pegasus logging enabled")
 
-local port = 9090
+-- Running the service on port 8080
+-- means that, for balena deploys alongside
+-- balenalabs' "browser" block, the browser
+-- should find the service automatcally
+local port = 8080
 
 local retval = {}
 
@@ -55,20 +59,20 @@ function callback(request,response)
             -- response:addHeader("Cache-Control","no-cache")
             -- For the moment, the suites are not editable so it is
             -- OK for them to be cached
-            response:addHeader("Cache-Control","max-age=3600, stale-while-revalidate=10")
+            response:addHeader("Cache-Control","max-age=360, stale-while-revalidate=3600")
             suite_num = request.querystring.num
             suite_name = request.querystring.name
             preset_suite = fhau_cli:get_preset_suite(suite_num,suite_name)
             response:write(preset_suite)
         elseif req_path=="/favicon.ico"
         then
-            response:writeFile("./web_ui/_static/app-icon-512x512.png")
+            response:writeFile("./web_ui/_static/maneline-logo-512x512.png")
         else
             if lfs.attributes("."..req_path)
             then
                 if req_path:find("web_ui")
                 then
-                    response:addHeader("Cache-Control","max-age=3600, stale-while-revalidate=10")
+                    response:addHeader("Cache-Control","max-age=360, stale-while-revalidate=3600")
                 end
                 response:writeFile("."..req_path)
             else

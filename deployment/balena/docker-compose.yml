@@ -2,26 +2,26 @@
 
 # The design for the Balena image this file will render
 # is that it should contain the following two service containers:
-# + tl-fhau-web
-#   This container will contain the FHAU CLI binary, and also a
+# + tl-maneline-web
+#   This container will contain the maneline CLI binary, and also a
 #   minimal web server which will serve a GUI reflecting the 
-#   FHAU application state and servicing requests to send messages
+#   CLI application state and servicing requests to send messages
 #   to the attached Mustang amp (which will be relayed to CLI 
 #   commands to the application)
 # + balenalabs-browser
 #   This is a kiosk browser provided as an example by balena.io.
-#   The intent of this service is that that the FHAU web GUI
+#   The intent of this service is that that the web GUI
 #   will be presented on the HDMI screen of the balena device.
-
-# Version notes:
-# This version of the dockerfile disables running of the the 
-# tl-fhau-web service container to enable the balenalabs-browser to
-# start up without interference.
 
 version: "2"
 
+volumes:
+  opt-maneline:
+
 services:
   balenalabs-browser:
+    volumes:
+      - opt-maneline:/opt/maneline
     image: bh.cr/gh_tim_littlefair/tl-browser-aarch64/fca86032af0984f74fffcce1d2f7a152
     privileged: true
     network_mode: host
@@ -34,30 +34,23 @@ services:
       - UDEV=1
       - SHOW_CURSOR=1
       - KIOSK=1
-      #- PERSISTENT=1
-      #- LAUNCH_URL=data:text/html;charset=utf-8,%3Chtml%3E%3Ch1%3EPreparing%20to%20run%20FHAU%20web%20UI%3C%2Fh1%3E%3C%2Fhtml%3E
-    #volumes:
-    #  - 'settings:/data'
+      - PERSISTENT=1
+      - LAUNCH_URL=http://127.0.0.1:8080/web_ui/index.html
+      #- LAUNCH_URL=http://127.0.0.1:8080/web_ui/_static/maneline-logo-512x512.png
 
-# x-services:
-  tl-fhau-web:
+  maneline-web:
+    volumes:
+      - opt-maneline:/opt/maneline
     build: .
     network_mode: host
-    #privileged: true
+    privileged: true
     ports:
-      - 9090
+      - 8080
     environment:
       - UDEV=1
       - LOCAL_BROWSER=1
+      - PERSISTENT=1
     devices:
-      # On RPiZeroW2 this service only starts successfully if
-      # all /dev/hidraw* devices defined here are plugged in
-      # when it starts.  RPi3-64bit seems to be more tolerant
-      # and can cope with nodes being mentioned here but not
-      # found at startup.
-      - /dev/hidraw0
-      - /dev/hidraw1
+      - /dev:/dev
     cap_add:
       - SYS_RAWIO
-    #volumes:
-      #- 'settings:/data'

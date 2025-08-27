@@ -33,6 +33,11 @@ echo Starting Pegasus and FHAU CLI in directory $start_dir
 # ... actually we don't, but we pass $start_dir to the 
 # lua process and it does an lfs.chdir() to that directory
 # after all of the local lua files are loaded.
+# The reason we need to do this is related to the
+# way the app runs in the development environment -
+# the CWD at start time is a symlink, we need to
+# chdir to the symlink target so that relative
+# links in the Lua work as they need to.
 # TBD: Would it be better to use LUAPATH?
 cd lua
 
