@@ -1,14 +1,19 @@
--- /usr/bin/lua
--- web_ui.lua
--- The purpose of this library is to contain all logic related to
--- building up the HTML pages of the web UI.
+#!/usr/bin/lua
 
--- Part of the feral_horse_amp_utils project
+-- web_ui.lua
+-- The purpose of this package is to contain all logic related to
+-- building up the HTML pages of the web UI.
+-- Generation and retrieval of file paths for dynamic content
+-- in the session directory is delegated to fhau_cli.
+
+-- Part of the maneline project released under GPL 2.0
 -- Copyright: Tim Littlefair 2025
 -- For copying rules see
--- https://github.com/tim-littlefair/feral-horse-amp-utils/blob/main/LICENSE
+-- https://github.com/tim-littlefair/maneline/blob/main/LICENSE
 
 local lfs = require('lfs')
+local fhau_cli = require('fhau_cli')
+local cjson = require('cjson.safe')
 
 local Web_UI = {}
 
@@ -26,7 +31,7 @@ function file_text(file_path)
     end
 end
 
-function Web_UI:build_cds_html(startup_messages)
+function build_cds_html(startup_messages)
     header_text = file_text("web_ui/frame_head.html.fragment")
     body_text = file_text("web_ui/cds_body.html.fragment")
     if(header_text and body_text)
@@ -84,6 +89,62 @@ function Web_UI:preset_suite(suite_from_json)
         return header_text .. body_text
     else
         return "problems?"
+    end
+end
+
+function Web_UI:handle(request, response)
+    local req_path = request:path()
+    if request:method()=="POST"
+    then
+        local post_params = request:post()
+        io.stdout:write("POST params: ",cjson.encode(post_params))
+        response:write(cjson.encode(post_params))
+        fhau_cli:relay_stdin_line(post_params.command.." "..post_params.slot.."\n")
+    elseif request:method()~="GET"
+    then
+        io.stdout:write("Unexpected method: ", request:method())
+        io.stdout:write("Non-get methods TBD")
+    else
+        if req_path=="/cds"
+        then
+            response:addHeader("Cache-Control","no-cache")
+            status = fhau_cli:get_cxn_and_dev_status()
+            status = build_cds_html("<p>"..status.."</p>")
+            response:write("<html>"..status.."</html>")
+        elseif req_path=="/all-presets"
+        then
+            response:addHeader("Cache-Control","no-cache")
+            all_presets_path = fhau_cli:get_all_presets_path()
+            all_presets_html = Web_UI:build_preset_suite_html("All Presets", all_presets_path, "2")
+            response:write(all_presets_html)
+        elseif req_path=="/suite"
+        then
+            -- response:addHeader("Cache-Control","no-cache")
+            -- For the moment, the suites are not editable so it is
+            -- OK for them to be cached
+            response:addHeader("Cache-Control","max-age=360, stale-while-revalidate=3600")
+            suite_num = request.querystring.num
+            suite_name = request.querystring.name
+            suite_path = fhau_cli:get_preset_suite_path(suite_num, suite_name)
+            suite_html = Web_UI:build_preset_suite_html(suite_name, suite_path, "3")
+            response:write(suite_html)
+        elseif req_path=="/favicon.ico"
+        then
+            response:writeFile("./web_ui/_static/maneline-logo-512x512.png")
+        else
+            if lfs.attributes("."..req_path)
+            then
+                if req_path:find("web_ui")
+                then
+                    response:addHeader("Cache-Control","max-age=360, stale-while-revalidate=3600")
+                end
+                response:writeFile("."..req_path)
+            else
+                response:addHeader("Cache-Control","no-cache")
+                io.stdout:write(" !!!not found!!!")
+                response:write("<html>Not found: "..req_path.."</html>")
+            end
+        end
     end
 end
 

@@ -1,12 +1,20 @@
-#! lua
+#!/usr/bin/lua
+
+-- pegasus_event_client.lua
+-- The purpose of this package is to implement a client
+-- object wrapping the execution of the pegasus.lua
+-- web server.
+
+-- Part of the maneline project released under GPL 2.0
+-- Copyright: Tim Littlefair 2025
+-- For copying rules see
+-- https://github.com/tim-littlefair/maneline/blob/main/LICENSE
 
 local logging = require('logging')
 local socket = require('socket')
 local pegasus = require('pegasus')
 local pegasus_handler = require('pegasus.handler')
-local lfs = require('lfs')
-local fhau_cli = require('fhau_cli')
-local cjson = require('cjson.safe')
+local web_ui = require('web_ui')
 
 local logger = logging.new(
     function(self,level,message)
@@ -32,56 +40,7 @@ assert(retval._socket, err)
 function callback(request,response)
     -- io.stdout:write(retval._phdlr==nil)
     io.stdout:write("Request: ", request:method()," ",request:path())
-    local req_path = request:path()
-    if request:method()=="POST"
-    then
-        local post_params = request:post()
-        io.stdout:write("POST params: ",cjson.encode(post_params))
-        response:write(cjson.encode(post_params))
-        fhau_cli:relay_stdin_line(post_params.command.." "..post_params.slot.."\n")
-    elseif request:method()~="GET"
-    then
-        io.stdout:write("Unexpected method: ", request:method())
-        io.stdout:write("Non-get methods TBD")
-    else
-        if req_path=="/cds"
-        then
-            response:addHeader("Cache-Control","no-cache")
-            status = fhau_cli:get_cxn_and_dev_status()
-            response:write("<html>"..status.."</html>")
-        elseif req_path=="/all-presets"
-        then
-            response:addHeader("Cache-Control","no-cache")
-            all_presets = fhau_cli:get_all_presets()
-            response:write(all_presets)
-        elseif req_path=="/suite"
-        then
-            -- response:addHeader("Cache-Control","no-cache")
-            -- For the moment, the suites are not editable so it is
-            -- OK for them to be cached
-            response:addHeader("Cache-Control","max-age=360, stale-while-revalidate=3600")
-            suite_num = request.querystring.num
-            suite_name = request.querystring.name
-            preset_suite = fhau_cli:get_preset_suite(suite_num,suite_name)
-            response:write(preset_suite)
-        elseif req_path=="/favicon.ico"
-        then
-            response:writeFile("./web_ui/_static/maneline-logo-512x512.png")
-        else
-            if lfs.attributes("."..req_path)
-            then
-                if req_path:find("web_ui")
-                then
-                    response:addHeader("Cache-Control","max-age=360, stale-while-revalidate=3600")
-                end
-                response:writeFile("."..req_path)
-            else
-                response:addHeader("Cache-Control","no-cache")
-                io.stdout:write(" !!!not found!!!")
-                response:write("<html>Not found: "..req_path.."</html>")
-            end
-        end
-    end
+    web_ui:handle(request,response)
     retval = response:close()
     return retval
 end

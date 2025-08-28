@@ -1,4 +1,16 @@
-#! lua
+#! /usr/bin/lua
+
+-- run.lua
+-- The purpose of this package is to define the startup
+-- structure of the web/CLI application, in which
+-- client objects wrapping the stdin CLI and the pegasus.lua
+-- web server are instantiated and handed to the event_loop
+-- package for single-threaded multiplexing.
+
+-- Part of the maneline project released under GPL 2.0
+-- Copyright: Tim Littlefair 2025
+-- For copying rules see
+-- https://github.com/tim-littlefair/maneline/blob/main/LICENSE
 
 local lfs = require 'lfs'
 local socket = require 'socket'
@@ -11,11 +23,12 @@ local fhau_cli = require('fhau_cli')
 -- on the Linux desktop development platform.end
 -- The simulated environment set up by this scripts
 -- accesses the directory containing lua scripts
--- via a symlink, so the base directory of the install
--- needs to be passed in as a parameter as, on the
--- development environment Balena simulation,
--- ".." points to the parent of the symlink target,
--- not the base of the simulated Balena install.
+-- via a symlink, so the actual base directory of
+-- the install (i.e. symlink target) needs to be
+-- passed in as a parameter as, on the development
+-- environment Balena simulation, ".." points to the
+-- parent of the symlink not the base of the simulated
+-- Balena install.
 if #arg>0
 then
     lfs.chdir(arg[1])

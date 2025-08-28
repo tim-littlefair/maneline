@@ -1,18 +1,17 @@
--- /usr/bin/lua
--- fhau.lua
--- The purpose of this script is to start the fhau command line process
--- and enable sibling script run_pegasys.lua to send commands to the
--- running subprocess.
+#! /usr/bin/lua
 
--- Part of the feral_horse_amp_utils project
+-- fhau_cli.lua
+-- The purpose of this package is to start the fhau command line process
+-- and relay commands to it from the web app.
+
+-- Part of the maneline project released under GPL 2.0
 -- Copyright: Tim Littlefair 2025
 -- For copying rules see
--- https://github.com/tim-littlefair/feral-horse-amp-utils/blob/main/LICENSE
+-- https://github.com/tim-littlefair/maneline/blob/main/LICENSE
+
 
 lfs = require 'lfs'
 cjson = require 'cjson'
-web_ui = require 'web_ui'
-cqueues = require 'cqueues'
 fhau_errors = require 'fhau_errors'
 
 local Fhau = {}
@@ -141,31 +140,19 @@ function Fhau:get_cxn_and_dev_status()
     end
     retval = retval:gsub("\n","<br/>")
     retval = retval:gsub(",",", &nbsp;")
-    retval = web_ui:build_cds_html("<p>"..retval.."</p>")
     return retval
 end
 
-function Fhau:get_all_presets()
-    return web_ui:build_preset_suite_html(
-        "All Presets", 
-        session_name .. "/all-presets.preset_suite.json",
-        "2"
+function Fhau:get_all_presets_path()
+    return session_name .. "/all-presets.preset_suite.json"
+end
+
+function Fhau:get_preset_suite_path(num,name)
+    return string.format(
+       "%s/suites/%s-%s.preset_suite.json",
+       session_name, num, name
     )
 end
 
-function Fhau:get_preset_suite(num,name)
-    -- TBD: At some time in the future this class needs
-    -- to compile a JSON object describing the presets
-    -- which will be passed in the following function
-    -- call and will affect the HTML output
-    -- return web_ui:build_all_presets_html()
-    return web_ui:build_preset_suite_html(
-        name,
-        string.format(
-            "%s/suites/%s-%s.preset_suite.json",
-            session_name, num, name
-        ),
-        "3"
-    )
-end
+
 return Fhau

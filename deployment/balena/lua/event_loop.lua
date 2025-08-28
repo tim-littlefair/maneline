@@ -1,4 +1,15 @@
-#! lua
+#! /usr/bin/lua
+
+-- event_loop.lua
+-- The purpose of this package is to define a single-threaded
+-- event loop which multiplexes processing of command line
+-- input over stdin and web client input over the socket
+-- managed by the pegasus.lua webserver.
+
+-- Part of the maneline project released under GPL 2.0
+-- Copyright: Tim Littlefair 2025
+-- For copying rules see
+-- https://github.com/tim-littlefair/maneline/blob/main/LICENSE
 
 local EventLoop = {}
 
