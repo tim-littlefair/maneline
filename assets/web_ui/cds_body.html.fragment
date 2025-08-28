@@ -1,5 +1,9 @@
 <body class="wy-body-for-nav" id="content_body" >
-<h2><span>Connection/Device State</span></h2>
+<h2>
+    <span>Connection/Device State</span>
+    <button onclick="window.parent.location.reload()" style="font-size:16px; float:right;">Refresh</button>
+</h2>
+
 <div id="cds_messages" style="text-wrap:pretty;overflow-wrap:break-word;">&nbsp;</div>
 </body>
 

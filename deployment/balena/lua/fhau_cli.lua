@@ -131,7 +131,7 @@ function Fhau:get_cxn_and_dev_status()
     local retval
     if cxn_status and preset_status
     then
-        retval = cxn_status .. "\n" .. preset_status
+        retval = cxn_status .. "\n\n" .. preset_status
     elseif cxn_status
     then
         retval = cxn_status .. "\nPreset status not known"
