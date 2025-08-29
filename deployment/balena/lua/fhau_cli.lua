@@ -46,9 +46,9 @@ function Fhau:purge_stale_session_dirs(number_to_retain)
 end
 
 function Fhau:start_fhau_cli()
-    local jar_file_name="jar/maneline-cli-0.0.0.jar"
+    local jar_file_path=os.getenv("cli_jar")
     fhau_cli_input_fd = io.popen(
-        "java -jar " .. jar_file_name .. " --web=" .. session_name,
+        "java -jar " .. jar_file_path .. " --web=" .. session_name,
         "w"
     )
 end

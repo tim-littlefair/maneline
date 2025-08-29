@@ -20,11 +20,11 @@ check_webhome() {
         ln -s ../../deployment/balena/run.sh _work/webhome
     fi
 
-    cli_jar=maneline-cli-0.0.0.jar
-    if [ ! -L _work/webhome/jar/$cli_jar ]
+    if [ ! -L _work/webhome/jar ]
     then
-        mkdir -p _work/webhome/jar
-        ln -s ../../../desktop-app/build/libs/$cli_jar _work/webhome/jar
+        ln -s ../../desktop-app/build/libs _work/webhome/jar
+    else
+        echo No!
     fi
 
     set +e

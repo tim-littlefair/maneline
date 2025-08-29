@@ -62,7 +62,7 @@ then
   sed -e "s/0.0.0/$buildString/" -i deployment/balena/balena.yml
   sed -e "s/%GITREF%/$buildGitRef/" -i deployment/balena/balena.yml
   shift
-  if [ "$1" = "--debug"]
+  if [ "$1" = "--debug" ]
   then
     balena push --debug --draft --source deployment/balena fhau-staging
     shift

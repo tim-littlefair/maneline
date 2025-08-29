@@ -4,7 +4,7 @@
 # to come up before starting the Pegasus web
 # server and its FHAU command line subprocess.
 browser_api_url=http://127.0.0.1:5011/url
-maneline_url=http://127.0.0.8080/web_ui/index.html
+maneline_url=http://127.0.0.1:8080/web_ui/index.html
 sleep_length=2
 while true
 do
@@ -31,6 +31,9 @@ done
 start_dir=$(pwd)
 echo Starting Pegasus and FHAU CLI in directory $start_dir
 
+export cli_jar=$(ls -1 jar/*.jar | sort -r | head -1)
+echo cli jar path=$(pwd)/$cli_jar
+
 # ... actually we don't, but we pass $start_dir to the 
 # lua process and it does an lfs.chdir() to that directory
 # after all of the local lua files are loaded.
@@ -42,8 +45,6 @@ echo Starting Pegasus and FHAU CLI in directory $start_dir
 # TBD: Would it be better to use LUAPATH?
 cd lua
 
-cli_jar=$(ls -1 *.jar | sort -r | head -1)
-echo cli jar path=cli_jar
 lua ./run.lua "$start_dir" "$cli_jar"
 
 echo Lua has executed with status $?
