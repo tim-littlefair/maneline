@@ -37,9 +37,11 @@ services:
       - PERSISTENT=1
       - LAUNCH_URL=http://127.0.0.1:8080/web_ui/index.html
       - ENABLE_GPU=1
-      #- LAUNCH_URL=http://127.0.0.1:8080/web_ui/_static/maneline-logo-512x512.png
+      - LAUNCH_URL=file:///opt/maneline/web_ui/_static/maneline-logo-512x512.png
 
   maneline-web:
+    depends_on:
+      - balenalabs-browser
     volumes:
       - opt-maneline:/opt/maneline
     build: .

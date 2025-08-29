@@ -23,8 +23,6 @@ do
         sleep $sleep_length
     else
         echo Browser API is ready
-        curl -X POST --data "url=$maneline_url" $browser_api_url
-        break
     fi
 done
 
@@ -45,7 +43,10 @@ echo cli jar path=$(pwd)/$cli_jar
 # TBD: Would it be better to use LUAPATH?
 cd lua
 
-lua ./run.lua "$start_dir" "$cli_jar"
+lua ./run.lua "$start_dir" &
+sleep 15
+curl -X POST --data "url=$maneline_url" $browser_api_url
+wait
 
 echo Lua has executed with status $?
 

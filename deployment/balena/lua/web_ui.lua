@@ -119,10 +119,7 @@ function Web_UI:handle(request, response)
             response:write(all_presets_html)
         elseif req_path=="/suite"
         then
-            -- response:addHeader("Cache-Control","no-cache")
-            -- For the moment, the suites are not editable so it is
-            -- OK for them to be cached
-            response:addHeader("Cache-Control","max-age=360, stale-while-revalidate=3600")
+            response:addHeader("Cache-Control","no-cache")
             suite_num = request.querystring.num
             suite_name = request.querystring.name
             suite_path = fhau_cli:get_preset_suite_path(suite_num, suite_name)
