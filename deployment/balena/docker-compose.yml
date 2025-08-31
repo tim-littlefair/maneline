@@ -35,10 +35,7 @@ services:
       - SHOW_CURSOR=1
       - KIOSK=1
       - PERSISTENT=1
-      - LAUNCH_URL=http://127.0.0.1:8080/web_ui/index.html
       - ENABLE_GPU=1
-      - LAUNCH_URL=file:///opt/maneline/web_ui/_static/maneline-logo-512x512.png
-
   maneline-web:
     depends_on:
       - balenalabs-browser

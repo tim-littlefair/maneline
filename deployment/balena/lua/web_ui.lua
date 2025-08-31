@@ -105,7 +105,11 @@ function Web_UI:handle(request, response)
         io.stdout:write("Unexpected method: ", request:method())
         io.stdout:write("Non-get methods TBD")
     else
-        if req_path=="/cds"
+        if req_path=="/index.html"
+        then
+            response:addHeader("Cache-Control","no-cache")
+            response:writeFile("./web_ui/index.html")
+        elseif req_path=="/cds"
         then
             response:addHeader("Cache-Control","no-cache")
             status = fhau_cli:get_cxn_and_dev_status()

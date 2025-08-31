@@ -43,10 +43,7 @@ echo cli jar path=$(pwd)/$cli_jar
 # TBD: Would it be better to use LUAPATH?
 cd lua
 
-lua ./run.lua "$start_dir" &
-sleep 15
-curl -X POST --data "url=$maneline_url" $browser_api_url
-wait
+lua ./run.lua "$start_dir"
 
 echo Lua has executed with status $?
 
