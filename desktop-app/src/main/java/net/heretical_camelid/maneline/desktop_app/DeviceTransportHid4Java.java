@@ -23,6 +23,16 @@ class DeviceTransportHid4Java implements IDeviceTransport {
 
     @Override
     public String getLastErrorMessage() {
-        return m_hidDevice.getLastErrorMessage();
+        try {
+            assert m_hidDevice!=null: "m_hidDevice==null";
+            String lastErrorMessage = m_hidDevice.getLastErrorMessage();
+            assert lastErrorMessage !=null: "m_hidDevice.getLastErrorMessage()==null";
+            return lastErrorMessage;
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+            System.out.print(e.toString());
+            return "Last error message not available";
+        }
     }
 }

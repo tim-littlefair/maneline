@@ -18,7 +18,7 @@ version: "2"
 volumes:
   opt-maneline:
 
-services:
+x-services:
   balenalabs-browser:
     volumes:
       - opt-maneline:/opt/maneline
@@ -36,9 +36,10 @@ services:
       - KIOSK=1
       - PERSISTENT=1
       - ENABLE_GPU=1
+services:
   maneline-web:
-    depends_on:
-      - balenalabs-browser
+    #depends_on:
+    #  - balenalabs-browser
     volumes:
       - opt-maneline:/opt/maneline
     build: .
@@ -48,7 +49,7 @@ services:
       - 8080
     environment:
       - UDEV=1
-      - LOCAL_BROWSER=1
+      - LOCAL_BROWSER=0
       - PERSISTENT=1
     devices:
       - /dev:/dev

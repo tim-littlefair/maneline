@@ -202,7 +202,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         }
         int bytesRead = readAndAssembleResponsePackets();
         if (bytesRead < 0) {
-            log(m_deviceTransport.getLastErrorMessage());
+            //log(m_deviceTransport.getLastErrorMessage());
             return STATUS_REASSEMBLY_FAIL;
         }
         return STATUS_OK;

@@ -64,10 +64,10 @@ then
   shift
   if [ "$1" = "--debug" ]
   then
-    balena push --debug --draft --source deployment/balena maneline-staging
+    balena push --debug --draft --source deployment/balena fhau-ci-32bit
     shift
   else
-    balena push --draft --source deployment/balena maneline-staging
+    balena push --draft --source deployment/balena fhau-ci-32bit
   fi
 fi
 
