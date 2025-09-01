@@ -18,28 +18,8 @@ version: "2"
 volumes:
   opt-maneline:
 
-x-services:
-  balenalabs-browser:
-    volumes:
-      - opt-maneline:/opt/maneline
-    image: bh.cr/gh_tim_littlefair/tl-browser-aarch64/fca86032af0984f74fffcce1d2f7a152
-    privileged: true
-    network_mode: host
-    devices:
-      - /dev/fb0
-    ports:
-      - '5011' # management API (optional)
-      - '35173' # Chromium debugging port (optional)
-    environment: 
-      - UDEV=1
-      - SHOW_CURSOR=1
-      - KIOSK=1
-      - PERSISTENT=1
-      - ENABLE_GPU=1
 services:
   maneline-web:
-    #depends_on:
-    #  - balenalabs-browser
     volumes:
       - opt-maneline:/opt/maneline
     build: .
@@ -49,9 +29,30 @@ services:
       - 8080
     environment:
       - UDEV=1
-      - LOCAL_BROWSER=0
+      - LOCAL_BROWSER=1
       - PERSISTENT=1
     devices:
       - /dev:/dev
     cap_add:
       - SYS_RAWIO
+
+  balenalabs-browser:
+    depends_on:
+      - maneline-web
+    volumes:
+      - opt-maneline:/opt/maneline
+    image: bh.cr/gh_tim_littlefair/tl-browser-aarch64/fca86032af0984f74fffcce1d2f7a152
+    privileged: true
+    network_mode: host
+    devices:
+      - /dev/fb0
+    ports:
+      - '5011' # management API (optional)
+      # - '35173' # Chromium debugging port (optional)
+    environment: 
+      - UDEV=1
+      - SHOW_CURSOR=1
+      - KIOSK=1
+      - PERSISTENT=1
+      - LAUNCH_URL=http://127.0.0.1:8080
+

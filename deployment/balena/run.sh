@@ -9,28 +9,32 @@ browser_wait_sleep_length=5
 cli_wait_sleep_length=10
 exit_wait_sleep_length=10
 
-while true
-do
-    if [ ! "$LOCAL_BROWSER" = "1" ]
-    then
-        echo Local browser disabled
-        break
-    fi
+if [ false ]
+then
+  while true
+  do
+      if [ ! "$LOCAL_BROWSER" = "1" ]
+      then
+          echo Local browser disabled
+          break
+      fi
 
-    browser_api_response=$(curl --silent -X GET $browser_api_url/url 2>&1)
-    echo $browser_api_response | grep --silent -e "file:///" -e "http://" -e "data:"
-    if [ ! "$?" = "0" ]
-    then
-        echo $browser_api_response
-        echo Local browser API not ready
-        sleep $browser_wait_sleep_length
-    else
-        echo Local browser API is ready
-        sleep $cli_wait_sleep_length
-        echo Starting CLI
-        break
-    fi
-done
+      browser_api_response=$(curl --silent -X GET $browser_api_url/url 2>&1)
+      echo $browser_api_response | grep --silent -e "file:///" -e "http://" -e "data:"
+      if [ ! "$?" = "0" ]
+      then
+          echo $browser_api_response
+          echo Local browser API not ready
+          sleep $browser_wait_sleep_length
+      else
+          echo Local browser API is ready
+          sleep $cli_wait_sleep_length
+          curl --silent -X POST -data http://127.0.0.1:8080 $browser_api_url/url
+          echo Starting CLI
+          break
+      fi
+  done
+fi
 
 start_dir=$(pwd)
 echo Starting Pegasus and maneline CLI in directory $start_dir
