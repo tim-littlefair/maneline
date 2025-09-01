@@ -40,6 +40,19 @@ export buildCode=$(echo "
 
 env | grep -e "^build"
 
+# Which fleet should be the deploy target
+if [ "$1" = "--fhau-ci-32bit" ]
+then
+  deploy_fleet=fhau-ci-32bit
+  shift
+elif [ "$1" = "--fhau-staging" ]
+then
+  deploy_fleet=fhau-staging
+  shift
+else
+  deploy_fleet=fhau-staging
+fi
+
 # Interactive mode to support development
 if [ "$1" = "--do-gradle-build" ]
 then
@@ -64,10 +77,10 @@ then
   shift
   if [ "$1" = "--debug" ]
   then
-    balena push --debug --draft --source deployment/balena fhau-ci-32bit
+    balena push --debug --draft --source deployment/balena $deploy_fleet
     shift
   else
-    balena push --draft --source deployment/balena fhau-ci-32bit
+    balena push --draft --source deployment/balena $deploy_fleet
   fi
 fi
 
