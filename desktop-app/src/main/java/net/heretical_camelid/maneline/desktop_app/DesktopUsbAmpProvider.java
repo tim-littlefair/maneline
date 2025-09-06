@@ -35,11 +35,19 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
 
     public DesktopUsbAmpProvider(boolean s_webMode, String outputPath) {
 
-        File outputDir = new File(outputPath);
-        if(!outputDir.exists()) {
-            outputDir.mkdirs();
+        if(outputPath==null) {
+            // Web mode requires an output directory
+            assert s_webMode == false;
+        } else if(outputPath.endsWith(".zip")) {
+            // Web mode is not compatible with zip output
+            assert s_webMode == false;
+        } else {
+            File outputDir = new File(outputPath);
+            if(!outputDir.exists()) {
+                outputDir.mkdirs();
+            }
+            assert outputDir.exists() : "Failed to create output directory";
         }
-        assert outputDir.exists() : "Failed to create output directory";
 
         if(s_loggingAgent!=null) {
             // Logging agent already exists, no need to recreate it
@@ -131,7 +139,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
                     "Mustang Micro Plus - not expected to be detected via USB HID"
                 );
                 s_loggingAgent.appendToLog(
-                    "A future version of FHAU may be able to connect to this device over BLE"
+                    "A future version of Maneline may be able to connect to this device over BLE"
                 );
             } else if(
                 fmicDevice.getProduct().contains(" LT")
@@ -147,7 +155,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
                     "Probable GT/GTX series device - not expected to be detected via USB HID"
                 );
                 s_loggingAgent.appendToLog(
-                    "A future version of FHAU may be able to connect to this device over BLE"
+                    "A future version of Maneline may be able to connect to this device over BLE"
                 );
                 requestReport = true;
                 // TODO?: Consider implementing a CLI switch for 'have a go anyway'?
@@ -168,7 +176,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
             }
             if (requestReport) {
                 System.out.println();
-                System.out.println("The USB device you have connected to is not yet confirmed to work with FHAU.");
+                System.out.println("The USB device you have connected to is not yet confirmed to work with Maneline.");
                 System.out.println("Please consider adding a report on this device as a comment here:");
                 System.out.println("https://github.com/tim-littlefair/feral-horse-amp-utils/issues/2");
                 System.out.println("Contents of the report should be:");
@@ -199,22 +207,22 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
                             String osName = System.getProperty("os.name");
                             File udevRulesDir = new File("/usr/lib/udev/rules.d");
                             if(udevRulesDir.exists()) {
-                                File fhauUdevRules = new File("/usr/lib/udev/rules.d/50-fhau.rules");
-                                if (!fhauUdevRules.exists()) {
+                                File manelineUdevRules = new File("/usr/lib/udev/rules.d/50-maneline.rules");
+                                if (!manelineUdevRules.exists()) {
                                     System.out.println("You may need to modify udev rules to allow a non-root user logged in");
-                                    System.out.println("on the console to access USB devices");
-                                    System.out.println("FHAU will drop a file called '50-fhau.rules' in the working directory");
-                                    System.out.println("Use 'sudo' to copy or move this file to /usr/lib/udev/rules.d");
+                                    System.out.println("on the console to access USB devices.");
+                                    System.out.println("Maneline will drop a file called '50-maneline.rules' in the working directory.");
+                                    System.out.println("Use 'sudo' to copy or move this file to /usr/lib/udev/rules.d.");
                                     System.out.println("Once installed, this file will permit non-root access to devices which");
-                                    System.out.println("have FMIC's USB vendor id");
-                                    System.out.println("A reboot may be required to activate the new rules");
+                                    System.out.println("have FMIC's USB vendor id.");
+                                    System.out.println("A reboot may be required to activate the new rules.");
                                     try {
-                                        byte[] fhauRulesBytes = DesktopUsbAmpProvider.class.getResourceAsStream(
-                                            "/assets/50-fhau.rules"
+                                        byte[] manelineRulesBytes = DesktopUsbAmpProvider.class.getResourceAsStream(
+                                            "/assets/50-maneline.rules"
                                         ).readAllBytes();
-                                        FileOutputStream fhauRulesFOS = new FileOutputStream("50-fhau.rules");
-                                        fhauRulesFOS.write(fhauRulesBytes);
-                                        fhauRulesFOS.close();
+                                        FileOutputStream manelineRulesFOS = new FileOutputStream("50-maneline.rules");
+                                        manelineRulesFOS.write(manelineRulesBytes);
+                                        manelineRulesFOS.close();
                                     } catch (FileNotFoundException e) {
                                         throw new RuntimeException(e);
                                     } catch (IOException e) {

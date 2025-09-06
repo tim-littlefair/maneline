@@ -171,16 +171,16 @@ public class MainActivity
         super.onCreate(savedInstanceState);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
         setContentView(R.layout.activity_main);
-        setSupportActionBar(findViewById(R.id.toolbar_fhau));
+        setSupportActionBar(findViewById(R.id.toolbar_maneline));
 
         m_tvLog = (TextView) findViewById(R.id.tv_log);
         m_loggingAgent = new LoggingAgent(m_tvLog);
         m_tvLog.setText("");
 
         if(BuildConfig.DEBUG == true) {
-            appendToLog("FHAU debug variant built at " + BuildConfig.BUILD_TIME);
+            appendToLog("maneline debug variant built at " + BuildConfig.BUILD_TIME);
         } else {
-            appendToLog("FHAU version " + BuildConfig.VERSION_NAME);
+            appendToLog("maneline version " + BuildConfig.VERSION_NAME);
         }
 
         m_provider = new AndroidUsbAmpProvider(this);
@@ -288,7 +288,7 @@ public class MainActivity
             presetButton.setClickable(false);
             presetButton.setOnClickListener(null);
             presetButton.setEnabled(false);
-            buttonColor = R.color.fhauGrey;
+            buttonColor = R.color.manelineGrey;
             buttonAlpha = 0.5F;
         } else {
             if(presetName==null) {
@@ -305,7 +305,7 @@ public class MainActivity
                 }
             }));
             presetButton.setEnabled(true);
-            buttonColor = R.color.fhauGreen;
+            buttonColor = R.color.manelineGreen;
             buttonAlpha = 1.0F;
         }
         presetButton.setText(presetName);
@@ -325,12 +325,12 @@ public class MainActivity
                 continue;
             } else if(i==buttonIndex) {
                 textColor = getResources().getColor(
-                    R.color.fhauBlack,null
+                    R.color.manelineBlack,null
                 );
                 textWeight = Typeface.BOLD;
             } else {
                 textColor = getResources().getColor(
-                    R.color.fhauWhite, null
+                    R.color.manelineWhite, null
                 );
                 textWeight = Typeface.NORMAL;
             }

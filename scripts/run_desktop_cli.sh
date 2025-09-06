@@ -9,9 +9,9 @@ if [ ! -z "$1" ]
 then
   args="$*"
 else
-  args="--output=fhau-$(date +%F_%H%M).zip"
+  args="--output=maneline-$(date +%F_%H%M).zip"
 fi
 
-java -jar ../desktop-app/build/libs/desktopFHAUcli-0.0.0.jar $args
-echo desktopFHAUcli exited with status $?
+java -jar ../desktop-app/build/libs/maneline-cli-0.0.0.jar $args
+echo maneline-cli exited with status $?
 

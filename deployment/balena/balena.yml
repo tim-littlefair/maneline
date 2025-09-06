@@ -1,11 +1,11 @@
-name: balena-fhau
+name: balena-maneline
 type: sw.application
 version: 0.0.0
 description: >-
   Application to present a control UI for Fender Mustang LT40S
   modelling guitar amplifier.
   See comment near start of docker-compose.yml for design summary.
-  
-  Git reference: %GITREF%
+  Git reference: 
+  %GITREF%
 
 

@@ -7,14 +7,14 @@
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
 
-    <color name="fhauRed">#CC0000</color>
-    <color name="fhauAmber">#FF9900</color>
-    <color name="fhauGreen">#00CC00</color>
-    <color name="fhauCyan">#44FFFF</color>
-    <color name="fhauCream">#FFFFAA</color>
-    <color name="fhauBlue">#4444FF</color>
-    <color name="fhauGrey">#AAAAAA</color>
-    <color name="fhauBlack">#000000</color>
-    <color name="fhauWhite">#FFFFFF</color>
+    <color name="manelineRed">#CC0000</color>
+    <color name="manelineAmber">#FF9900</color>
+    <color name="manelineGreen">#00CC00</color>
+    <color name="manelineCyan">#44FFFF</color>
+    <color name="manelineCream">#FFFFAA</color>
+    <color name="manelineBlue">#4444FF</color>
+    <color name="manelineGrey">#AAAAAA</color>
+    <color name="manelineBlack">#000000</color>
+    <color name="manelineWhite">#FFFFFF</color>
 
 </resources>

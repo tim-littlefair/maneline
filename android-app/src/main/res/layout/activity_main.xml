@@ -7,7 +7,7 @@
     tools:context="net.heretical_camelid.maneline.android_app.MainActivity">
 
     <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar_fhau"
+        android:id="@+id/toolbar_maneline"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
@@ -22,7 +22,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:minHeight="60dp"
-            app:layout_constraintTop_toBottomOf="@id/toolbar_fhau"
+            app:layout_constraintTop_toBottomOf="@id/toolbar_maneline"
             app:layout_constraintBottom_toTopOf="@id/tbl_presets"
     />
 
@@ -131,7 +131,7 @@
             android:layout_height="0dp"
             android:layout_weight="1"
             android:gravity="fill"
-            android:background="@color/fhauCream"
+            android:background="@color/manelineCream"
             android:scrollbarSize="30dp"
             android:scrollbars="vertical"
             android:scrollbarAlwaysDrawVerticalTrack="true"
@@ -146,7 +146,7 @@
                 android:layout_height="wrap_content"
                 android:gravity="bottom"
                 android:textSize="20sp"
-                android:background="@color/fhauCream"
+                android:background="@color/manelineCream"
         />
     </ScrollView>
     <TableLayout
@@ -178,7 +178,7 @@
                     android:layout_weight="1"
                     android:gravity="center"
                     android:layout_margin="2sp"
-                    android:backgroundTint="@color/fhauBlue"
+                    android:backgroundTint="@color/manelineBlue"
                     android:text="@string/press_to_connect"
                     android:textSize="20sp"
                     app:layout_constraintBottom_toTopOf="parent"
