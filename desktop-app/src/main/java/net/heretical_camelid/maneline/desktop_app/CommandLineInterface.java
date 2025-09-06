@@ -33,7 +33,7 @@ public class CommandLineInterface {
         Scanner commandScanner = new Scanner(System.in);
         System.out.println("Command? ");
         while(continueAcceptingCommands && commandScanner.hasNextLine()) {
-            final String line = commandScanner.nextLine();;
+            final String line = commandScanner.nextLine();
             try {
                 if(line==null) {
                     System.out.write('n'); // for null
@@ -57,7 +57,6 @@ public class CommandLineInterface {
                 if(lineWords[0].equals("start")) {
                     provider.startProvider();
                 } else if(lineWords[0].equals("exit") || lineWords[0].equals("quit")) {
-                    System.out.println("Exit requested");
                     provider.stopProvider();
                     continueAcceptingCommands=false;
                 } else if(lineWords[0].equals("preset")) {
@@ -78,7 +77,7 @@ public class CommandLineInterface {
             catch (InterruptedException e) {
                 System.out.println("\nInterrupted sleep");
             }
-            System.out.println("Command? ");
+            System.out.println("\nCommand? ");
         }
     }
 
