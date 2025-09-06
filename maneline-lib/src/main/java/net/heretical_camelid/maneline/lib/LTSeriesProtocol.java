@@ -93,14 +93,14 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
 
     @Override
     public void doShutdown() {
-        //log("Shutting down");
+        log("Shutting down");
         synchronized(m_heartbeatThread) {
-            //log("Setting heartbeat stop flag");
+            log("Setting heartbeat stop flag");
             m_heartbeatStopped = true;
-            //log("Heartbeat stop flag set");
+            log("Heartbeat stop flag set");
         }
         m_heartbeatThread.interrupt();
-        //log("Heartbeat thread interrupted");
+        log("Heartbeat thread interrupted");
     }
 
     @Override
@@ -416,8 +416,8 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
                 PresetRecord.EffectsLevelOfDetails.MODULES_AND_PARAMETERS
             );
             m_currentPresetDetails = String.format(
-                "Preset details: slot=%02d name=%s\nAudio graph:\n%s",
-                m_currentPresetIndex,displayName,effectDetails
+                "Preset info: name=%s (slot=%02d)\nAudio graph:\n%s",
+                displayName,m_currentPresetIndex,effectDetails
             );
             log(m_currentPresetDetails);
         } else {
@@ -434,18 +434,26 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             int packetBytesRead;
             packetBytesRead = m_deviceTransport.read(packetBuffer);
             if (packetBytesRead < 0) {
-                log("read failed, error=" + m_deviceTransport.getLastErrorMessage());
+                log(String.format(
+                    "read failed, read_status=%d error=%s",
+                    packetBytesRead,  m_deviceTransport.getLastErrorMessage()
+                ));
                 return STATUS_READ_FAIL;
+            } else if (packetBytesRead == 0) {
+                // No response available, not an error
+                return STATUS_OK;
             } else if (packetBytesRead != 64) {
+                // USB HID packets are always exactly 64 bytes
                 log(String.format(
                     "read incomplete, bytes=%d error=%s",
                     packetBytesRead, m_deviceTransport.getLastErrorMessage()
                 ));
                 return STATUS_READ_FAIL;
-            } /* else */
-            {
-                logAsHex2(packetBuffer, ">");
-            }
+            } 
+            // All the cases above return from the function, so if we get 
+            // here we are certain that we have succeeded in receiving exactly
+            // one packet of 64 bytes
+            logAsHex2(packetBuffer, ">");
             assert packetBuffer[0] == 0x00;
             int packetContentStart = 3;
             int contentLength = packetBuffer[2];
