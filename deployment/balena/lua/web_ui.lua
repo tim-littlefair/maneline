@@ -113,8 +113,8 @@ function Web_UI:handle(request, response)
         then
             response:addHeader("Cache-Control","no-cache")
             status = fhau_cli:get_cxn_and_dev_status()
-            status = build_cds_html("<p>"..status.."</p>")
-            response:write("<html>"..status.."</html>")
+            cds_html = build_cds_html("<p>"..status.."</p>")
+            response:write(cds_html)
         elseif req_path=="/all-presets"
         then
             response:addHeader("Cache-Control","no-cache")
