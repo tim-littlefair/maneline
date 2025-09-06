@@ -5,8 +5,9 @@
 # server and its FHAU command line subprocess.
 browser_api_url=http://127.0.0.1:5011
 maneline_url=http://127.0.0.1:8080
-browser_wait_sleep_length=5
+browser_wait_sleep_length=10
 cli_wait_sleep_length=10
+cli_start_sleep_length=10
 exit_wait_sleep_length=10
 
 if [ false ]
@@ -29,8 +30,7 @@ then
       else
           echo Local browser API is ready
           sleep $cli_wait_sleep_length
-          curl --silent -X POST -data http://127.0.0.1:8080 $browser_api_url/url
-          echo Starting CLI
+          nohup sh -c "sleep $cli_start_sleep_length; curl --silent -X POST -data http://127.0.0.1:8080 $browser_api_url/url" &
           break
       fi
   done
@@ -58,8 +58,15 @@ lua ./run.lua "$start_dir"
 # If something goes wrong, we don't want the container to loop
 # tightly, so we have a delay between detection and exit
 cli_run_status=$?
-echo "Pegasus/CLI app has exited with status $cli_run_status, container will exit shortly"
+
+echo "Pegasus/CLI app has exited with status $cli_run_status"
+
+# Allow the background sleep/curl subprocess to return its status
+wait
+
+echo "The Pegasus/CLI container will exit in $exit_wait_sleep_length seconds"
 sleep $exit_wait_sleep_length
+
 
 echo "Pegasus/CLI container will exit now"
 exit $cli_run_status
