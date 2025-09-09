@@ -327,15 +327,12 @@ public class MainActivity
                 textColor = getResources().getColor(
                     R.color.manelineBlack,null
                 );
-                textWeight = Typeface.BOLD;
             } else {
                 textColor = getResources().getColor(
                     R.color.manelineWhite, null
                 );
-                textWeight = Typeface.NORMAL;
             }
             button.setTextColor(textColor);
-            button.setTypeface(button.getTypeface(),textWeight);
         }
     }
 
