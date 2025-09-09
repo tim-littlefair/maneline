@@ -38,8 +38,7 @@ retval._socket, err = socket.bind('*', port)
 assert(retval._socket, err)
 
 function callback(request,response)
-    -- io.stdout:write(retval._phdlr==nil)
-    io.stdout:write("Request: ", request:method()," ",request:path())
+    --io.stdout:write("Request: ", request:method()," ",request:path())
     web_ui:handle(request,response)
     retval = response:close()
     return retval
