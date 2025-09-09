@@ -7,10 +7,42 @@ buildscript {
         gradlePluginPortal()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.13.0'
-
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
+
+        // We need to include
+        // classpath 'com.android.tools.build:gradle:8.13.0'
+        // in this section so that the android library and application
+        // plugins become available to subproject build.gradle files.
+        // The other dependencies listed here are intended to reduce
+        // GitHub dependabot noise - they are all non-vulnerable
+        // explicit versions of dependencies for which transitive
+        // dependencies from c.a.t.b:g:8:13.0 would bring in versions
+        // with known vulnerabilities.
+
+        classpath 'org.jsoup:jsoup:1.21.2'
+        classpath 'io.netty:netty-common:4.1.125.Final'
+        classpath 'io.netty:netty-handler:4.1.125.Final'
+        classpath 'io.netty:netty-codec-http:4.1.124.Final'
+        classpath 'io.netty:netty-codec-http2:4.1.124.Final'
+        classpath 'org.apache.commons:commons-compress:1.28.0'
+        classpath "org.apache.commons:commons-lang3:3.18.0"
+        classpath "org.apache.commons:commons-collections4:4.5.0"
+        classpath "commons-io:commons-io:2.20.0"
+        classpath 'com.google.guava:guava:33.4.8-android'
+
+        // The next two dependencies are flagged by Android Studio
+        // as outdated, but the versions AS would auto-update to have
+        // undergone a major version bump to 4.X.Y.
+        // As at 25/09/09 3.25.8 is the latest version for both
+        // packages in the 3.X.Y series, these will need to be
+        // maintained manually until the transitive dependency
+        // which brings them in requires 4.X.Y.
+        classpath 'com.google.protobuf:protobuf-kotlin:3.25.8'
+        classpath 'com.google.protobuf:protobuf-java:3.25.8'
+
+        classpath 'com.android.tools.build:gradle:8.13.0'
+
     }
 }
 

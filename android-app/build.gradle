@@ -47,6 +47,7 @@ dependencies {
     // specific versions in order to address GitHub dependabot issues raised
     // against the outdated default versions of these libraries imported by
     // via the normal transitive dependency process.
+    /*
     androidTestImplementation 'org.jsoup:jsoup:1.21.2'
     androidTestImplementation 'io.netty:netty-common:4.1.125.Final'
     androidTestImplementation 'io.netty:netty-handler:4.1.125.Final'
@@ -59,6 +60,7 @@ dependencies {
     androidTestImplementation 'com.google.guava:guava:33.4.8-android'
     androidTestImplementation 'com.google.protobuf:protobuf-kotlin:4.32.0'
     androidTestImplementation 'com.google.protobuf:protobuf-java:4.32.0'
+     */
 
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.google.android.material:material:1.13.0'
