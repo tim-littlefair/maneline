@@ -132,7 +132,7 @@ function Web_UI:handle(request, response)
         elseif req_path=="/favicon.ico"
         then
             response:addHeader("Cache-Control","max-age=3600")
-            response:writeFile("./web_ui/_static/maneline-logo-512x512.png")
+            response:writeFile("./web_ui/_static/maneline-icon-512x512.png")
         else
             if lfs.attributes("."..req_path)
             then
