@@ -15,6 +15,8 @@ local EventLoop = {}
 
 local _enable_debug = false
 
+local cli = require('fhau_cli')
+
 function _debug_mark(c)
     if _enable_debug==true
     then
@@ -71,6 +73,7 @@ function EventLoop.run_event_loop(stdin_evtclt, pegasus_evtclt, enable_debug, ac
                 end
             end
         end
+        cli:check_for_cli_death()
         io.stdout:flush()
     end
 end

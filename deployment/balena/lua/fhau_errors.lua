@@ -17,7 +17,7 @@ FHAU_Errors.ERROR_HTML_FRAGMENT_NOT_FOUND=81
 
 -- Fatal error conditions are assigned numbers in the
 -- range 91-99
-FHAU_Errors.FATAL_CLI_HAS_EXITED=91
+FHAU_Errors.FATAL_CLI_EXITED_BADLY=91
 
 return FHAU_Errors
 

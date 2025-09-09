@@ -14,7 +14,7 @@ import net.heretical_camelid.maneline.lib.interfaces.IDeviceTransport;
 import java.util.HashMap;
 
 class DeviceTransportUsbHid implements IDeviceTransport, OnUsbHidDeviceListener {
-    final static String ACTION_USB_PERMISSION = "net.heretical_camelid.fhau.android_app.USB_PERMISSION";
+    final static String ACTION_USB_PERMISSION = "net.heretical_camelid.maneline.android_app.USB_PERMISSION";
 
     final MainActivity m_activity;
     final AndroidUsbAmpProvider m_provider;

@@ -54,7 +54,6 @@ function get_stdin_event_client()
         return self._socket:settimeout(t)
     end
     function retval:handler(stdin_bytes)
-        io.stdout:write(stdin_bytes)
         fhau_cli:relay_stdin_line(stdin_bytes)
     end    
     return retval
@@ -65,7 +64,7 @@ local stdin_evtclt = get_stdin_event_client()
 event_loop.run_event_loop(
     stdin_evtclt,
     pegasus_evtclt,
-    true, -- enable debug
+    false, -- disable debug
     0.2, -- active timeout
     1.0 -- passive timeout
 )

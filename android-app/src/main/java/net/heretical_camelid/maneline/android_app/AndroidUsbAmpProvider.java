@@ -172,7 +172,7 @@ public class AndroidUsbAmpProvider implements IAmpProvider {
             m_usbReceiver = new UsbBroadcastReceiver();
 
             Intent basePermissionIntent = new Intent(DeviceTransportUsbHid.ACTION_USB_PERMISSION);
-            basePermissionIntent.setPackage("net.heretical_camelid.fhau.android_app");
+            basePermissionIntent.setPackage("net.heretical_camelid.maneline.android_app");
             // should use setClass instead of setPackage but not sure which class is
             // the right target
             basePermissionIntent.putExtra(UsbManager.EXTRA_PERMISSION_GRANTED,false);

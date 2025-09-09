@@ -7,15 +7,11 @@
   <meta name="description" content="">
   <meta name="author" content="Tim Littlefair">
 
-  <title>Feral Horse Amp Utils Web UI</title>
+  <title>Maneline Web UI</title>
 
-  <!-- 
-    -- For now, style is piggybacked from the author's personal website
-    -- at heretical-camelid.net
-    -->
-  <link rel="stylesheet" href="https://heretical-camelid.net/_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="https://heretical-camelid.net/_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="https://heretical-camelid.net/_static/style-font.css" type="text/css" />
+  <link rel="stylesheet" href="web_ui/_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="web_ui/_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="web_ui/_static/style-font.css" type="text/css" />
 
   <style>
     button {

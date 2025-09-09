@@ -53,6 +53,30 @@ function Fhau:start_fhau_cli()
     )
 end
 
+function Fhau:check_for_cli_death()
+    -- Our only link to the CLI subprocess is the file descriptor
+    -- we use to send commands.
+    -- We check whether it is alive by sending a newline (which
+    -- will be ignored as a command), and seeing whether the
+    -- flush after writing to the FD fails
+    fhau_cli_input_fd:write("\n");
+    flush_status=fhau_cli_input_fd:flush();
+    if(flush_status~=true)
+    then
+        local close_status=fhau_cli_input_fd:close()
+        if(close_status)
+        then
+            print("CLI process has completed OK")
+            os.exit(0)
+        else
+            print("CLI process has completed with error")
+            os.exit(fhau_errors.FATAL_CLI_EXITED_BADLY)
+        end
+    end
+end
+
+
+
 function Fhau:relay_stdin_line(line)
     if(line)
     then
@@ -61,17 +85,6 @@ function Fhau:relay_stdin_line(line)
     else
         print("Nothing to relay")
     end
-end
-
-function check_for_cli_death()
-    -- Our only link to the CLI subprocess is the file descriptor
-    -- we use to send commands.
-    -- We check whether it is alive by sending a newline (which
-    -- will be ignored as a command), and seeing whether the
-    -- flush after writing to the FD fails
-    fhau_cli_input_fd:write("\n");
-    flush_status=fhau_cli_input_fd:flush();
-    return flush_status~=true
 end
 
 function Fhau:send_cli_command(command)
@@ -101,12 +114,6 @@ function Fhau:send_cli_command(command)
 end
 
 function Fhau:get_cxn_and_dev_status()
-    if(check_for_cli_death())
-    then
-        print("USB/HID CLI process appears to have died")
-        os.exit(fhau_errors.FATAL_CLI_HAS_EXITED)
-    end
-
     local cxn_status
     fd1 = io.open(session_name.."/txn00-startProvider-001.json","rb")
     if fd1
@@ -153,6 +160,5 @@ function Fhau:get_preset_suite_path(num,name)
        session_name, num, name
     )
 end
-
 
 return Fhau

@@ -1,0 +1,13 @@
+# Enabling all relaxations described at:
+# https://github.com/dcoapp/app/blob/113757536857a840e6b607a35547d7c696dfd1dd/README.md
+# (i.e. the dcoapp README.md as it stood at 2/9/2025)
+
+allowRemediationCommits:
+  individual: true
+
+allowRemediationCommits:
+  individual: true
+  thirdParty: true  
+
+require:
+  members: false  

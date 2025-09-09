@@ -14,10 +14,10 @@ git restore deployment/balena/balena.yml
 
 export releaseString=$RELEASE_VERSION_MAJOR.$RELEASE_VERSION_MINOR.$RELEASE_VERSION_PATCH
 export gitHash=$(git rev-parse HEAD | cut -c 1-7)
-export gitUncleanFileCount=$(git diff --shortstat)
+export gitUncleanFileCount=$(git diff --name-only | wc -l)
 export gitUncleanFileList=$(git diff --name-status)
 export buildId=$(printf "%04d" "$BUILD_ID")
-export buildString="$releaseString-beta$buildId"
+export buildString="$releaseString-beta$buildId.$gitHash+$gitUncleanFileCount"
 export buildGitRef="#$gitHash + $gitUncleanFileCount"
 # Android release require a numeric version code, which must increase
 # monotonically over time.
@@ -39,6 +39,19 @@ export buildCode=$(echo "
   " | dc )
 
 env | grep -e "^build"
+
+# Which fleet should be the deploy target
+if [ "$1" = "--fhau-ci-32bit" ]
+then
+  deploy_fleet=fhau-ci-32bit
+  shift
+elif [ "$1" = "--fhau-staging" ]
+then
+  deploy_fleet=fhau-staging
+  shift
+else
+  deploy_fleet=fhau-staging
+fi
 
 # Interactive mode to support development
 if [ "$1" = "--do-gradle-build" ]
@@ -64,10 +77,10 @@ then
   shift
   if [ "$1" = "--debug" ]
   then
-    balena push --debug --draft --source deployment/balena fhau-staging
+    balena push --debug --draft --source deployment/balena $deploy_fleet
     shift
   else
-    balena push --draft --source deployment/balena fhau-staging
+    balena push --draft --source deployment/balena $deploy_fleet
   fi
 fi
 

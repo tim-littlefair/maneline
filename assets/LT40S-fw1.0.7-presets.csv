@@ -1,4 +1,4 @@
-slot,name            ,stomp             ,mod               ,amp               ,delay             ,reverb            ,fhau-hash
+slot,name            ,stomp             ,mod               ,amp               ,delay             ,reverb            ,hash
    1,FENDER  CLEAN   ,SimpleCompressor  ,                  ,Twin65            ,                  ,Spring65          ,adbd-ead9
    2,SILKY   SOLO    ,Overdrive         ,                  ,SuperSonic        ,TapeDelayLite     ,Spring65          ,2ba9-fe27
    3,CHICAGO BLUES   ,                  ,                  ,Bassman59         ,MonoDelay         ,SmallRoomReverb   ,46e1-8dc2

@@ -15,7 +15,7 @@
 
     <style name="PresetButtonStyle" parent="ThemeOverlay.Material3.Button">
         <item name="android:fontFamily">Lucida</item>
-        <item name="android:backgroundTint">@color/fhauGrey</item>
+        <item name="android:backgroundTint">@color/manelineGrey</item>
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">match_parent</item>
         <item name="android:minHeight">90dp</item>
@@ -27,7 +27,7 @@
     </style>
 
     <style name="SelectedPresetButtonStyle" parent="PresetButtonStyle">
-        <item name="android:backgroundTint">@color/fhauBlack</item>
+        <item name="android:backgroundTint">@color/manelineBlack</item>
     </style>
 
 </resources>

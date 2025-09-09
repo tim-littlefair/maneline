@@ -105,12 +105,16 @@ function Web_UI:handle(request, response)
         io.stdout:write("Unexpected method: ", request:method())
         io.stdout:write("Non-get methods TBD")
     else
-        if req_path=="/cds"
+        if req_path=="/index.html"
+        then
+            response:addHeader("Cache-Control","max-age=3600")
+            response:writeFile("./web_ui/index.html")
+        elseif req_path=="/cds"
         then
             response:addHeader("Cache-Control","no-cache")
             status = fhau_cli:get_cxn_and_dev_status()
-            status = build_cds_html("<p>"..status.."</p>")
-            response:write("<html>"..status.."</html>")
+            cds_html = build_cds_html("<p>"..status.."</p>")
+            response:write(cds_html)
         elseif req_path=="/all-presets"
         then
             response:addHeader("Cache-Control","no-cache")
@@ -127,6 +131,7 @@ function Web_UI:handle(request, response)
             response:write(suite_html)
         elseif req_path=="/favicon.ico"
         then
+            response:addHeader("Cache-Control","max-age=3600")
             response:writeFile("./web_ui/_static/maneline-logo-512x512.png")
         else
             if lfs.attributes("."..req_path)
