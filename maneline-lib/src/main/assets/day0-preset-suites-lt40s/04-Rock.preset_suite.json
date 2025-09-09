@@ -1,0 +1,41 @@
+{
+  "suiteName": "04-Rock",
+  "presets": [
+    {
+      "originSlotIndex": 4,
+      "presetName": "CLASSIC ROCK    ",
+      "audioHash": "f7d8-bbcc",
+      "effectsSummary": "amp:Plexi87 reverb:LargePlate",
+      "effectsDetails": "amp:Plexi87(bass:0.466667,bias:0.5,blend:0.5,cabsimType:4x12g,gain:0.766667,gateDetectorPosition:jack,gatePreset:low,mid:-4.400125,presence:0.5,sag:match,treb:1.0,volume:-6.506824)\nreverb:LargePlate(decay:0.677778,diffuse:0.5,dwell:0.5,level:0.166667,tone:0.744444)",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "originDevice": "Mustang LT 40S running firmware 1.0.7 slot 4"
+    },
+    {
+      "originSlotIndex": 19,
+      "presetName": "60S     FUZZ    ",
+      "audioHash": "0af8-3fbc",
+      "effectsSummary": "stomp:VariFuzz amp:Plexi87 delay:TapeDelayLite reverb:LargePlate",
+      "effectsDetails": "stomp:VariFuzz(gain:1.0,level:0.1,tone:normal)\namp:Plexi87(bass:0.983398,bias:0.5,blend:0.5,cabsimType:4x12g2,gain:0.407227,gateDetectorPosition:jack,gatePreset:low,mid:0.855556,presence:0.5,sag:match,treb:0.422222,volume:-8.539506)\ndelay:TapeDelayLite(dlyTime:0.315751,feedback:0.25,noteDivision:off,stereoSpread:0.0,tapTimeBPM:120.0,wetLvl:0.1564,wowLevel:0.722222)\nreverb:LargePlate(decay:0.5,diffuse:0.5,dwell:0.5,level:0.344444,tone:0.5)",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "originDevice": "Mustang LT 40S running firmware 1.0.7 slot 19"
+    },
+    {
+      "originSlotIndex": 20,
+      "presetName": "MYTHIC  CRUNCH  ",
+      "audioHash": "ee31-06a9",
+      "effectsSummary": "stomp:MythicDrive amp:Plexi87",
+      "effectsDetails": "stomp:MythicDrive(gain:0.5,outputLevel:0.5,treble:0.777778)\namp:Plexi87(bass:0.0,bias:0.5,blend:0.5,cabsimType:4x12g2,gain:1.0,gateDetectorPosition:jack,gatePreset:low,mid:1.0,presence:0.5,sag:match,treb:1.0,volume:-9.867807)",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "originDevice": "Mustang LT 40S running firmware 1.0.7 slot 20"
+    },
+    {
+      "originSlotIndex": 22,
+      "presetName": "SUPER   ROCK    ",
+      "audioHash": "0989-8372",
+      "effectsSummary": "stomp:SimpleCompressor amp:Jcm800 delay:MonoDelay",
+      "effectsDetails": "stomp:SimpleCompressor(type:medium)\namp:Jcm800(bass:0.75,bias:0.5,cabsimType:4x12m,gain:0.99,gateDetectorPosition:jack,gatePreset:low,master:0.5,mid:0.4,presence:0.5,sag:match,treb:0.633333,volume:-9.208964)\ndelay:MonoDelay(attenuate:0.5,brite:0.5,feedback:0.1,level:0.322222,noteDivision:off,tapTimeBPM:120.0,time:0.547)",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "originDevice": "Mustang LT 40S running firmware 1.0.7 slot 22"
+    }
+  ]
+}

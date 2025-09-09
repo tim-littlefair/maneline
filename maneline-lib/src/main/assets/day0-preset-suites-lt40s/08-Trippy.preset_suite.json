@@ -1,0 +1,50 @@
+{
+  "suiteName": "08-Trippy",
+  "presets": [
+    {
+      "originSlotIndex": 15,
+      "presetName": "CLEAN   DELAY   ",
+      "audioHash": "9a72-f968",
+      "effectsSummary": "stomp:SimpleCompressor mod:ChorusTriangle amp:DR103 delay:TapeDelayLite reverb:SmallRoomReverb",
+      "effectsDetails": "stomp:SimpleCompressor(type:super)\nmod:ChorusTriangle(avgDelay:0.22,depth:0.278,level:0.833,lrPhase:0.5,noteDivision:off,rateHz:0.68,tapTimeBPM:120.0)\namp:DR103(bass:0.698039,bias:0.5,cabsimType:4x12v,gain:0.3,gateDetectorPosition:jack,gatePreset:off,master:1.0,mid:0.643137,presence:0.5,sag:match,treb:0.721569,volume:-2.06803)\ndelay:TapeDelayLite(dlyTime:0.398236,feedback:0.111111,noteDivision:off,stereoSpread:0.0,tapTimeBPM:120.0,wetLvl:0.5005,wowLevel:0.033333)\nreverb:SmallRoomReverb(decay:0.5,diffuse:0.5,dwell:0.5,level:0.2008,tone:0.5)",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "originDevice": "Mustang LT 40S running firmware 1.0.7 slot 15"
+    },
+    {
+      "originSlotIndex": 18,
+      "presetName": "PHASER  SWIRL   ",
+      "audioHash": "fd02-3bf7",
+      "effectsSummary": "stomp:SimpleCompressor mod:Phaser amp:Twin65 reverb:Spring65",
+      "effectsDetails": "stomp:SimpleCompressor(type:medium)\nmod:Phaser(depth:0.99,feedback:0.72,level:0.99,noteDivision:off,rate:0.46695,shape:sine,tapTimeBPM:120.0)\namp:Twin65(bass:0.555556,bias:0.5,bright:true,cabsimType:65twn,gain:0.337255,gateDetectorPosition:jack,gatePreset:off,mid:0.5,sag:match,treb:0.555556,volume:-14.849238)\nreverb:Spring65(decay:0.388889,diffuse:1.0,dwell:0.28889,tone:1,wetLvl:0.5)",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "originDevice": "Mustang LT 40S running firmware 1.0.7 slot 18"
+    },
+    {
+      "originSlotIndex": 21,
+      "presetName": "TOUCH   WAH     ",
+      "audioHash": "feb9-d55d",
+      "effectsSummary": "mod:EcFilter amp:Deluxe57 reverb:SmallRoomReverb",
+      "effectsDetails": "mod:EcFilter(level:0.811111,mode:High Up,q:0.5,thresh:0.5,type:Band Pass)\namp:Deluxe57(bass:0.5,bias:0.5,cabsimType:57dlx,gain:0.722222,gateDetectorPosition:jack,gatePreset:off,mid:0.5,sag:match,treb:0.844444,volume:-9.208964)\nreverb:SmallRoomReverb(decay:0.5,diffuse:0.5,dwell:0.5,level:0.5,tone:0.5)",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "originDevice": "Mustang LT 40S running firmware 1.0.7 slot 21"
+    },
+    {
+      "originSlotIndex": 24,
+      "presetName": "VIBRA   DOOM    ",
+      "audioHash": "6f17-eca6",
+      "effectsSummary": "stomp:Greenbox mod:Vibratone amp:Or120 reverb:LargeHallReverb",
+      "effectsDetails": "stomp:Greenbox(blend:1.0,gain:0.288889,level:-6.0,tone:0.144444)\nmod:Vibratone(depth:0.277778,feedback:0.68,level:0.96,noteDivision:off,phase:0.52,rotor:5.048129,tapTimeBPM:302.887726)\namp:Or120(bass:0.666667,bias:0.5,cabsimType:4x12m2,gain:0.5,gateDetectorPosition:jack,gatePreset:off,master:0.498039,mid:0.611111,sag:match,treb:0.588889,volume:-7.07374)\nreverb:LargeHallReverb(decay:0.277778,diffuse:0.0222,dwell:0.5,level:0.1675,tone:0.633333)",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "originDevice": "Mustang LT 40S running firmware 1.0.7 slot 24"
+    },
+    {
+      "originSlotIndex": 29,
+      "presetName": "SPACE   TRAVEL  ",
+      "audioHash": "6f2b-9858",
+      "effectsSummary": "stomp:Octobot mod:StepFilter amp:Deluxe65 delay:MonoDelay reverb:ArenaReverb",
+      "effectsDetails": "stomp:Octobot(level:0.5,octdown:1,octup:1)\nmod:StepFilter(hiFrq:0.5,level:0.733333,loFrq:0.5,noteDivision:off,rate:5.07,reson:0.5,tapTimeBPM:120.0)\namp:Deluxe65(bass:0.227451,bias:0.5,cabsimType:65dlx,gain:0.447059,gateDetectorPosition:jack,gatePreset:off,mid:0.913726,sag:match,treb:0.560784,volume:-25.243275)\ndelay:MonoDelay(attenuate:0.5,brite:0.5,feedback:0.177778,level:1.0,noteDivision:off,tapTimeBPM:120.0,time:0.404128)\nreverb:ArenaReverb(decay:0.5,diffuse:0.5,dwell:0.5,level:0.4,tone:0.5)",
+      "shortInfo": "no author, no source_id, product_id:mustang-lt, is_factory_default:true",
+      "originDevice": "Mustang LT 40S running firmware 1.0.7 slot 29"
+    }
+  ]
+}
