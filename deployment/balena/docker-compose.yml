@@ -16,12 +16,40 @@
 version: "2"
 
 volumes:
-  opt-maneline:
+  var-run-maneline:
 
 services:
+  balenalabs-browser:
+    depends_on:
+      - maneline-web
+    volumes:
+      - var-run-maneline:/var/run/maneline
+    # The browser image we use is built from this tag:
+    # https://github.com/tim-littlefair/tl-balena-browser/releases/tag/2.12.0%2Bpatch.tl.250909
+    # This build consists of balena's first party 2.11.0 release from
+    # https://github.com/balena-io-experimental/browser/releases/tag/v2.11.0
+    # with two PR's by Tim Littlefair integrated.
+    # The PRs are:
+    # PR190: Add support for file: and data: URIs in parameter LAUNCH_URL
+    # PR191: Add --no-memcheck to chromium invocations to allow block to work on RPi0w2
+    image: bh.cr/gh_tim_littlefair/tl-browser-aarch64/ad82b88e50e713d303e29f72e8bdbc38
+    privileged: true
+    network_mode: host
+    devices:
+      - /dev/fb0
+    ports:
+      - '5011' # management API (optional)
+      # - '35173' # Chromium debugging port (optional)
+    environment: 
+      - UDEV=1
+      - SHOW_CURSOR=1
+      - KIOSK=1
+      - PERSISTENT=1
+      - LAUNCH_URL=file:///var/run/maneline/web_ui/_static/maneline-icon-512x512.png
+
   maneline-web:
     volumes:
-      - opt-maneline:/opt/maneline
+      - var-run-maneline:/var/run/maneline
     build: .
     network_mode: host
     privileged: true
@@ -36,23 +64,4 @@ services:
     cap_add:
       - SYS_RAWIO
 
-  balenalabs-browser:
-    depends_on:
-      - maneline-web
-    volumes:
-      - opt-maneline:/opt/maneline
-    image: bh.cr/gh_tim_littlefair/tl-browser-aarch64/fca86032af0984f74fffcce1d2f7a152
-    privileged: true
-    network_mode: host
-    devices:
-      - /dev/fb0
-    ports:
-      - '5011' # management API (optional)
-      # - '35173' # Chromium debugging port (optional)
-    environment: 
-      - UDEV=1
-      - SHOW_CURSOR=1
-      - KIOSK=1
-      - PERSISTENT=1
-      - LAUNCH_URL=http://127.0.0.1:8080
 

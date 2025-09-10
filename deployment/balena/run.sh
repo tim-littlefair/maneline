@@ -36,12 +36,6 @@ then
   done
 fi
 
-start_dir=$(pwd)
-echo Starting Pegasus and maneline CLI in directory $start_dir
-
-export cli_jar=$(ls -1 jar/*.jar | sort -r | head -1)
-echo cli jar path=$(pwd)/$cli_jar
-
 # ... actually we don't, but we pass $start_dir to the 
 # lua process and it does an lfs.chdir() to that directory
 # after all of the local lua files are loaded.
@@ -51,7 +45,22 @@ echo cli jar path=$(pwd)/$cli_jar
 # chdir to the symlink target so that relative
 # links in the Lua work as they need to.
 # TBD: Would it be better to use LUAPATH?
-cd lua
+
+ls -ald /home/maneline/*
+cd /var/run/maneline
+for d in lua web_ui jar
+do
+    rm -rf ./$d
+    cp -R /home/maneline/$d .
+done
+ls -alR . 
+
+start_dir=$(pwd)
+echo Starting Pegasus and maneline CLI in directory $start_dir
+
+export cli_jar=$(ls -1 jar/*.jar | sort -r | head -1)
+echo cli jar path=$(pwd)/$cli_jar
+cd ./lua
 
 lua ./run.lua "$start_dir"
 

@@ -60,9 +60,7 @@ FROM eclipse-temurin:17
 # "fhau-cli: no matching manifest for linux/arm64/v8 in the manifest list entries"
 # FROM eclipse-temurin:17-jdk-alpine-3.21
 
-WORKDIR /opt/maneline
-
-
+WORKDIR /home/maneline
 
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update
@@ -83,8 +81,6 @@ RUN luarocks install pegasus
 COPY ./lua ./lua
 COPY ./web_ui ./web_ui
 COPY ./jar ./jar
-# Also deploy any available builds from the development tree
-COPY /jar/maneline-cli-*.jar $WORKDIR
 
 # Uncomment the next line and update as required to get a specific release of maneline-cli from GitHub
 #RUN wget https://github.com/tim-littlefair/feral-horse-amp-utils/releases/download/release-0.1.1/desktopFHAUcli-X.Y.Z-abcdef.jar $WORKDIR

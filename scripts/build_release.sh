@@ -15,30 +15,41 @@ git restore deployment/balena/balena.yml
 export releaseString=$RELEASE_VERSION_MAJOR.$RELEASE_VERSION_MINOR.$RELEASE_VERSION_PATCH
 export gitHash=$(git rev-parse HEAD | cut -c 1-7)
 export gitUncleanFileCount=$(git diff --name-only | wc -l)
-export gitUncleanFileList=$(git diff --name-status)
+export gitUncleanFileList=$(basename -a $(git diff --name-only))
 export buildId=$(printf "%04d" "$BUILD_ID")
-export buildString="$releaseString-beta$buildId.$gitHash+$gitUncleanFileCount"
-export buildGitRef="#$gitHash + $gitUncleanFileCount"
-# Android release require a numeric version code, which must increase
+export buildString="$releaseString+beta$buildId.$gitHash.$gitUncleanFileCount"
+
+if [ -z "$gitUncleanFileList" ]  
+then
+  export buildGitRef="#$gitHash"
+else
+  # buildGitRef includes the basenames of the files which are 
+  # dirty relative to the commit identified by gitHash
+  # Wrapping the command with 'echo' collapses newlines in 
+  # $gitUncleanFileList to spaces
+  export buildGitRef=$(echo "#$gitHash" + changes to: $gitUncleanFileList)
+fi
+
+# Android releases require a numeric version code, which must increase
 # monotonically over time.
 #
 # The version code generated below is decimal integer consisting of
 # 2 digits each of major, minor and patch version numbers
 # followed by 4 digits of build number
-#
-# NB
-# dc consumes REVERSE POLISH - the operators in the expression below
-# are NOT INFIX, they pop two values from the stack, apply to those values
-# and push the result back onto the stack
-export buildCode=$(echo "
-  0
-  $RELEASE_VERSION_MAJOR +
-  100 * $RELEASE_VERSION_MINOR +
-  100 * $RELEASE_VERSION_PATCH +
-  10000 * $BUILD_ID + p
-  " | dc )
+# NB GLOBIGNORE is required so that the infix multiplication operator
+# isn't handled as a filename glob, also end-of-line characters within
+# the bc expression have to be escaped 
+GLOBIGNORE="*" export buildAndroidVersionCode=$(bc <<EOF 
+  ( $RELEASE_VERSION_MAJOR * 10^8 ) \
++ ( $RELEASE_VERSION_MINOR * 10^6 ) \
++ ( $RELEASE_VERSION_PATCH * 10^4 ) \
++  $BUILD_ID
+EOF
+)
 
-env | grep -e "^build"
+echo buildString=$buildString
+echo buildGitRef=$buildGitRef
+echo buildAndroidVersionCode=$buildAndroidVersionCode
 
 # Which fleet should be the deploy target
 if [ "$1" = "--fhau-ci-32bit" ]
@@ -57,7 +68,7 @@ fi
 if [ "$1" = "--do-gradle-build" ]
 then
   sed -e "s/0.0.0/$buildString/" -i build.gradle
-  sed -e "s/9999/$buildCode/" -i build.gradle
+  sed -e "s/9999/$buildAndroidVersionCode/" -i build.gradle
   ./gradlew clean build :android-app:bundleRelease
   echo Gradle products:
   ls -l desktop-app/build/libs
@@ -72,8 +83,11 @@ fi
 if [ "$1" = "--deploy-balena-beta" ]
 then
   balena login --token $BALENA_TOKEN
+  echo sed -e "s/0.0.0/$buildString/" -i deployment/balena/balena.yml
   sed -e "s/0.0.0/$buildString/" -i deployment/balena/balena.yml
+  echo sed -e "s/%GITREF%/$buildGitRef/" -i deployment/balena/balena.yml
   sed -e "s/%GITREF%/$buildGitRef/" -i deployment/balena/balena.yml
+  echo sed+done
   shift
   if [ "$1" = "--debug" ]
   then

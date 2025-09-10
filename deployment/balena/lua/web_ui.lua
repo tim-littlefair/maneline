@@ -97,9 +97,22 @@ function Web_UI:handle(request, response)
     if request:method()=="POST"
     then
         local post_params = request:post()
-        io.stdout:write("POST params: ",cjson.encode(post_params))
+        io.stdout:write("post_params: "..cjson.encode(post_params).."\n")
         response:write(cjson.encode(post_params))
-        fhau_cli:relay_stdin_line(post_params.command.." "..post_params.slot.."\n")
+        if not post_params
+        then
+            -- What is going on???
+            io.stderr:write("post_params evaluates false")            
+        elseif(post_params.slot)
+        then
+            fhau_cli:relay_stdin_line(post_params.command.." "..post_params.slot.."\n")
+        elseif(post_params.command)
+        then
+            fhau_cli:relay_stdin_line(post_params.command.."\n")
+        else
+            -- What is going on???
+            io.stderr:write("POST params: ",cjson.encode(post_params))
+        end
     elseif request:method()~="GET"
     then
         io.stdout:write("Unexpected method: ", request:method())
