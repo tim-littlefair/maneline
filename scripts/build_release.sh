@@ -82,7 +82,7 @@ fi
 
 if [ "$1" = "--deploy-balena-beta" ]
 then
-  balena login --token $BALENA_TOKEN
+  balena login --token $(cat ~/.balena/token)
   echo sed -e "s/0.0.0/$buildString/" -i deployment/balena/balena.yml
   sed -e "s/0.0.0/$buildString/" -i deployment/balena/balena.yml
   echo sed -e "s/%GITREF%/$buildGitRef/" -i deployment/balena/balena.yml
