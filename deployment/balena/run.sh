@@ -10,7 +10,7 @@ cli_wait_sleep_length=10
 cli_start_sleep_length=10
 exit_wait_sleep_length=10
 
-if [ false ]
+if [ true ]
 then
   while true
   do
@@ -19,6 +19,7 @@ then
           echo Local browser disabled
           break
       fi
+      sleep $browser_wait_sleep_length
 
       browser_api_response=$(curl --silent -X GET $browser_api_url/url 2>&1)
       echo $browser_api_response | grep --silent -e "file:///" -e "http://" -e "data:"
@@ -26,7 +27,6 @@ then
       then
           echo $browser_api_response
           echo Local browser API not ready
-          sleep $browser_wait_sleep_length
       else
           echo Local browser API is ready
           sleep $cli_wait_sleep_length
