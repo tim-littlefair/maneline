@@ -15,16 +15,16 @@ git restore deployment/balena/balena.yml
 export releaseString=$RELEASE_VERSION_MAJOR.$RELEASE_VERSION_MINOR.$RELEASE_VERSION_PATCH
 export gitHash=$(git rev-parse HEAD | cut -c 1-7)
 export gitUncleanFileCount=$(git diff --name-only | wc -l)
-export gitUncleanFileList=$(basename -a $(git diff --name-only))
 export buildId=$(printf "%04d" "$BUILD_ID")
 export buildString="$releaseString+beta$buildId.$gitHash.$gitUncleanFileCount"
 
-if [ -z "$gitUncleanFileList" ]  
+if [ "$gitUncleanFileCount" = "0" ]  
 then
   export buildGitRef="#$gitHash"
 else
-  # buildGitRef includes the basenames of the files which are 
+  # buildGitRef will include the basenames of the files which are 
   # dirty relative to the commit identified by gitHash
+  gitUncleanFileList=$(basename -a $(git diff --name-only))
   # Wrapping the command with 'echo' collapses newlines in 
   # $gitUncleanFileList to spaces
   export buildGitRef=$(echo "#$gitHash" + changes to: $gitUncleanFileList)
