@@ -8,9 +8,9 @@ installed by the very old version of mustang-plug which is available
 in the Ubuntu 24.04 LTS repository contains of multiple lines like
 this:
 
-```
+`
 SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTRS{idVendor}=="1ed8", ATTRS{idProduct}=="0015", GROUP="plugdev"
-```
+`
 
 The purpose of this rule is to allow user-space access to the device.
 Without it, it is necessary to run any given program with root
