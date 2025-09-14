@@ -108,5 +108,10 @@ if [ "$1" = "--restore-versioned-files" ]
 then
   git restore build.gradle
   git restore deployment/balena/balena.yml
+  shift
 fi
 
+if [ ! -z "$*" ]
+then
+    echo Unexpected command args: $*
+fi
