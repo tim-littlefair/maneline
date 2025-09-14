@@ -1,6 +1,6 @@
 #! /bin/bash
 
-# This is a quick and dirty script to build and run a FHAU release
+# This is a quick and dirty script to build and run a release of Maneline
 set -e
 
 git restore build.gradle
