@@ -79,7 +79,7 @@ RUN luarocks install pegasus
 
 # zint is used to generate a 2D barcode with the URL of the webserver
 # fbi can be used to display this on a GPIO-attached screen if one is present
-RUN apt-get install -y --no-install-recommends --no-install-suggests zint fbigit
+RUN apt-get install -y --no-install-recommends --no-install-suggests zint fbi
 
 COPY ./lua ./lua
 COPY ./web_ui ./web_ui
