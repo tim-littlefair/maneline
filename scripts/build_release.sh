@@ -82,13 +82,11 @@ fi
 
 if [ "$1" = "--deploy-balena-beta" ]
 then
-  balena login --token $(cat ~/.balena/token)
-  echo sed -e "s/0.0.0/$buildString/" -i deployment/balena/balena.yml
   sed -e "s/0.0.0/$buildString/" -i deployment/balena/balena.yml
-  echo sed -e "s/%GITREF%/$buildGitRef/" -i deployment/balena/balena.yml
   sed -e "s/%GITREF%/$buildGitRef/" -i deployment/balena/balena.yml
-  echo sed+done
-  shift
+  balena_token=$(cat ~/.balena/token)
+  echo Balena token: $balena_token``
+  balena login --token $balena_token
   if [ "$1" = "--debug" ]
   then
     balena push --debug --draft --source deployment/balena $deploy_fleet
@@ -96,6 +94,7 @@ then
   else
     balena push --draft --source deployment/balena $deploy_fleet
   fi
+  shift
 fi
 
 # By default we leave the files containing version numbers
