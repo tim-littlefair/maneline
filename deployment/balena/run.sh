@@ -30,7 +30,7 @@ then
       else
           echo Local browser API is ready
           sleep $cli_wait_sleep_length
-          nohup sh -c "sleep $cli_start_sleep_length; curl --silent -X POST -data http://127.0.0.1:8080 $browser_api_url/url" &
+          nohup sh -c "sleep $cli_start_sleep_length; curl --silent -X POST --data-urlencode url=http://127.0.0.1:8080 $browser_api_url/url" &
           break
       fi
   done

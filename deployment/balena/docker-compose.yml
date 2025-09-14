@@ -20,8 +20,6 @@ volumes:
 
 services:
   balenalabs-browser:
-    depends_on:
-      - maneline-web
     volumes:
       - var-run-maneline:/var/run/maneline
     # The browser image we use is built from this tag:
@@ -39,12 +37,12 @@ services:
       - /dev/fb0
     ports:
       - '5011' # management API (optional)
-      # - '35173' # Chromium debugging port (optional)
+      - '35173' # Chromium debugging port (optional)
     environment: 
+      - ENABLE_GPU=1
       - UDEV=1
       - SHOW_CURSOR=1
       - KIOSK=1
-      - PERSISTENT=1
       - LAUNCH_URL=file:///var/run/maneline/web_ui/_static/maneline-icon-512x512.png
 
   maneline-web:
@@ -58,7 +56,6 @@ services:
     environment:
       - UDEV=1
       - LOCAL_BROWSER=1
-      - PERSISTENT=1
     devices:
       - /dev:/dev
     cap_add:
