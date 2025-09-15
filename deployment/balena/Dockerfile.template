@@ -54,6 +54,7 @@
 # (built on top of Ubuntu 24.04.2 LTS)
 # has been tested and works - but is not lightweight
 FROM eclipse-temurin:17
+#FROM kyberpunk/openjdk-armv6:11.0.8-jdk
 
 # The Alpine variant is much lighter, which would be helpful as the browser 
 # container is quite heavy, but presently this fails with the message:

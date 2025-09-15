@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Generate a splash screen for a GPIO-attached screen if there is one
+# TODO: discover wifi ip address to feed into next line
+# zint -b QRCODE --data http://192.168.1.181:8080 -o addr.png
+# fbi addr.png -a -T 1 -d /dev/fb1
+
 # If the local browser is enabled, wait for it
 # to come up before starting the Pegasus web
 # server and its FHAU command line subprocess.

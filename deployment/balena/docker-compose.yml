@@ -18,7 +18,7 @@ version: "2"
 volumes:
   var-run-maneline:
 
-services:
+x-services:
   balenalabs-browser:
     volumes:
       - var-run-maneline:/var/run/maneline
@@ -45,6 +45,7 @@ services:
       - KIOSK=1
       - LAUNCH_URL=file:///var/run/maneline/web_ui/_static/maneline-icon-512x512.png
 
+services:
   maneline-web:
     volumes:
       - var-run-maneline:/var/run/maneline
@@ -55,7 +56,7 @@ services:
       - 8080
     environment:
       - UDEV=1
-      - LOCAL_BROWSER=1
+      - LOCAL_BROWSER=0
     devices:
       - /dev:/dev
     cap_add:

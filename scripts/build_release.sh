@@ -51,19 +51,6 @@ echo buildString=$buildString
 echo buildGitRef=$buildGitRef
 echo buildAndroidVersionCode=$buildAndroidVersionCode
 
-# Which fleet should be the deploy target
-if [ "$1" = "--fhau-ci-32bit" ]
-then
-  deploy_fleet=fhau-ci-32bit
-  shift
-elif [ "$1" = "--fhau-staging" ]
-then
-  deploy_fleet=fhau-staging
-  shift
-else
-  deploy_fleet=fhau-staging
-fi
-
 # Interactive mode to support development
 if [ "$1" = "--do-gradle-build" ]
 then
@@ -82,18 +69,48 @@ fi
 
 if [ "$1" = "--deploy-balena-beta" ]
 then
+  shift
+
+  if [ -f ~/.balena/token ]
+  then
+     echo Balena already logged in
+  elif [ ! -z "$BALENA_TOKEN" ]
+  then
+     balena login --token $BALENA_TOKEN
+  else
+     echo "No Balena token in filesystem or environment"
+     exit 1
+  fi
+
   sed -e "s/0.0.0/$buildString/" -i deployment/balena/balena.yml
   sed -e "s/%GITREF%/$buildGitRef/" -i deployment/balena/balena.yml
-  balena_token=$(cat ~/.balena/token)
-  echo Balena token: $balena_token``
-  balena login --token $balena_token
-  if [ "$1" = "--debug" ]
+
+  # Which fleet should be the deploy target
+  if [ "$1" = "--fhau-ci-32bit" ]
   then
-    balena push --debug --draft --source deployment/balena $deploy_fleet
+    deploy_fleet=fhau-ci-32bit
+    shift
+  elif [ "$1" = "--fhau-staging" ]
+  then
+    deploy_fleet=fhau-staging
+    shift
+  elif [ "$1" = "--maneline-rpi-any" ]
+  then
+    deploy_fleet=maneline-rpi-any
     shift
   else
-    balena push --draft --source deployment/balena $deploy_fleet
+    deploy_fleet=fhau-staging
   fi
+
+  if [ "$1" = "--debug" ]
+  then
+    push_cmd="balena push --debug --draft --source deployment/balena $deploy_fleet"
+    shift
+  else
+    push_cmd="balena push --draft --source deployment/balena $deploy_fleet"
+  fi
+  echo $push_cmd
+  $push_cmd
   shift
 fi
 
