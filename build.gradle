@@ -38,8 +38,8 @@ buildscript {
         // packages in the 3.X.Y series, these will need to be
         // maintained manually until the transitive dependency
         // which brings them in requires 4.X.Y.
-        classpath 'com.google.protobuf:protobuf-kotlin:3.25.8'
-        classpath 'com.google.protobuf:protobuf-java:3.25.8'
+        classpath 'com.google.protobuf:protobuf-kotlin:4.32.1'
+        classpath 'com.google.protobuf:protobuf-java:4.32.1'
 
         classpath 'com.android.tools.build:gradle:8.13.0'
 
