@@ -1,0 +1,86 @@
+#!/bin/bash
+
+# Generate a splash screen for a GPIO-attached screen if there is one
+# TODO: discover wifi ip address to feed into next line
+# zint -b QRCODE --data http://192.168.1.181:8080 -o addr.png
+# fbi addr.png -a -T 1 -d /dev/fb1
+
+# If the local browser is enabled, wait for it
+# to come up before starting the Pegasus web
+# server and its FHAU command line subprocess.
+browser_api_url=http://127.0.0.1:5011
+maneline_url=http://127.0.0.1:8080
+browser_wait_sleep_length=10
+cli_wait_sleep_length=10
+cli_start_sleep_length=10
+exit_wait_sleep_length=10
+
+if [ true ]
+then
+  while true
+  do
+      if [ ! "$LOCAL_BROWSER" = "1" ]
+      then
+          echo Local browser disabled
+          break
+      fi
+      sleep $browser_wait_sleep_length
+
+      browser_api_response=$(curl --silent -X GET $browser_api_url/url 2>&1)
+      echo $browser_api_response | grep --silent -e "file:///" -e "http://" -e "data:"
+      if [ ! "$?" = "0" ]
+      then
+          echo $browser_api_response
+          echo Local browser API not ready
+      else
+          echo Local browser API is ready
+          sleep $cli_wait_sleep_length
+          nohup sh -c "sleep $cli_start_sleep_length; curl --silent -X POST --data-urlencode url=http://127.0.0.1:8080 $browser_api_url/url" &
+          break
+      fi
+  done
+fi
+
+# ... actually we don't, but we pass $start_dir to the 
+# lua process and it does an lfs.chdir() to that directory
+# after all of the local lua files are loaded.
+# The reason we need to do this is related to the
+# way the app runs in the development environment -
+# the CWD at start time is a symlink, we need to
+# chdir to the symlink target so that relative
+# links in the Lua work as they need to.
+# TBD: Would it be better to use LUAPATH?
+
+ls -ald /home/maneline/*
+cd /var/run/maneline
+for d in lua web_ui jar
+do
+    rm -rf ./$d
+    cp -R /home/maneline/$d .
+done
+ls -alR . 
+
+start_dir=$(pwd)
+echo Starting Pegasus and maneline CLI in directory $start_dir
+
+export cli_jar=$(ls -1 jar/*.jar | sort -r | head -1)
+echo cli jar path=$(pwd)/$cli_jar
+cd ./lua
+
+lua ./run.lua "$start_dir"
+
+# If something goes wrong, we don't want the container to loop
+# tightly, so we have a delay between detection and exit
+cli_run_status=$?
+
+echo "Pegasus/CLI app has exited with status $cli_run_status"
+
+# Allow the background sleep/curl subprocess to return its status
+wait
+
+echo "The Pegasus/CLI container will exit in $exit_wait_sleep_length seconds"
+sleep $exit_wait_sleep_length
+
+
+echo "Pegasus/CLI container will exit now"
+exit $cli_run_status
