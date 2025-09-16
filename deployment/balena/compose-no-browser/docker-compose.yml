@@ -50,6 +50,13 @@ services:
     volumes:
       - var-run-maneline:/var/run/maneline
     build: .
+      # If Balena supported compose version 3 we would be able
+      # to use the build.additional_contexts parameter instead of having
+      # to build a tree from different parts of the repository
+      # context: ../.fake_compose_root
+      # additional_contexts:
+      #  - web_app=../web_app
+      #  - cli_jar_build=../desktop-cli/build/libs
     network_mode: host
     privileged: true
     ports:

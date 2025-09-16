@@ -82,8 +82,25 @@ then
      exit 1
   fi
 
-  sed -e "s/0.0.0/$buildString/" -i deployment/balena/balena.yml
-  sed -e "s/%GITREF%/$buildGitRef/" -i deployment/balena/balena.yml
+  balenaFakerootDir=_work/balena_fakeroot-$buildString
+  if [ -e  "$balenaFakerootDir" ]
+  then
+    echo $balenaFakerootDir already exists.
+    echo Please delete it manually if you want to repeat a prior build.
+    exit 1
+  fi
+
+  mkdir -p $balenaFakerootDir
+  ln -s ../compose-no-browser/* $balenaFakerootDir
+  ln -s ../platform-layer/* $balenaFakerootDir
+  ln -s ../platform-layer/* $balenaFakerootDir
+  ln -s ../../../web-app/web_ui $balenaFakerootDir
+  ln -s ../../../desktop-app/build/libs $balenaFakerootDir/jar
+  rm $balenaFakerootDir/balena.yml
+  cat ../compose-no-browser/balena.yml | \
+    sed -e "s/0.0.0/$buildString/" | \
+    sed -e "s/%GITREF%/$buildGitRef/" \
+    > $balenaFakerootDir/balena.yml
 
   # Which fleet should be the deploy target
   if [ "$1" = "--fhau-ci-32bit" ]
@@ -104,26 +121,23 @@ then
 
   if [ "$1" = "--debug" ]
   then
-    push_cmd="balena push --debug --draft --source deployment/balena $deploy_fleet"
+    push_cmd="balena push --debug --draft --source $balenaFakerootDir $deploy_fleet"
     shift
   else
-    push_cmd="balena push --draft --source deployment/balena $deploy_fleet"
+    push_cmd="balena push --draft --source $balenaFakerootDir $deploy_fleet"
   fi
   echo $push_cmd
   $push_cmd
   shift
 fi
 
-# By default we leave the files containing version numbers
-# modified.
-# Leaving them in this state allows us to manually finish off
-# builds which fail mid-run.
-# This script will reverted them to repository HEAD state before
-# version strings are generated next time the script runs.
-if [ "$1" = "--restore-versioned-files" ]
+# By default, in dev/interactive mode we leave $balenaFakerootDir
+# on the filesystem to allow tweaks and re-runs.
+# The following flag overrides this and deletes the
+# directory, and will be used in successful CI runs.
+if [ "$1" = "--rm-balena-fakeroot" ]
 then
-  git restore build.gradle
-  git restore deployment/balena/balena.yml
+  rm -rf $balendaFakerootDir
   shift
 fi
 
