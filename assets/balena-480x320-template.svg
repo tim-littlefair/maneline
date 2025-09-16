@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="480"
+   height="320"
+   viewBox="0 0 480 320"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
+   sodipodi:docname="balena-480x320-template.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="px"
+     showgrid="false"
+     inkscape:zoom="2.528125"
+     inkscape:cx="240.09889"
+     inkscape:cy="160"
+     inkscape:window-width="1920"
+     inkscape:window-height="1018"
+     inkscape:window-x="0"
+     inkscape:window-y="30"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2">
+    <rect
+       x="155.05562"
+       y="253.94314"
+       width="303.78245"
+       height="50.234858"
+       id="rect330" />
+    <rect
+       x="155.05562"
+       y="44.301607"
+       width="302.99135"
+       height="197.77503"
+       id="rect324" />
+    <rect
+       x="152.68232"
+       y="66.84796"
+       width="316.44005"
+       height="169.29543"
+       id="rect318" />
+    <rect
+       x="151.49567"
+       y="13.844252"
+       width="317.23115"
+       height="36.390606"
+       id="rect312" />
+    <rect
+       x="14.635352"
+       y="138.83807"
+       width="117.87392"
+       height="39.555006"
+       id="rect306" />
+    <rect
+       x="15.822002"
+       y="140.42027"
+       width="115.89617"
+       height="38.368356"
+       id="rect192" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:#a05a2c"
+       id="rect134"
+       width="117.47837"
+       height="116.68726"
+       x="15.030902"
+       y="13.448702" />
+    <rect
+       style="fill:#a05a2c"
+       id="rect136"
+       width="120.24722"
+       height="118.66501"
+       x="16.217552"
+       y="189.46848" />
+    <text
+       xml:space="preserve"
+       id="text190"
+       style="fill:#a05a2c;white-space:pre;shape-inside:url(#rect192)" />
+    <text
+       xml:space="preserve"
+       id="text304"
+       style="fill:#a05a2c;white-space:pre;shape-inside:url(#rect306)" />
+    <text
+       xml:space="preserve"
+       id="text310"
+       style="white-space:pre;shape-inside:url(#rect312);fill:#a05a2c"><tspan
+         x="151.49609"
+         y="24.762252"
+         id="tspan409">PRESET NAME AND SLOT</tspan></text>
+    <text
+       xml:space="preserve"
+       id="text316"
+       style="fill:#a05a2c;white-space:pre;shape-inside:url(#rect318)" />
+    <text
+       xml:space="preserve"
+       id="text322"
+       style="white-space:pre;shape-inside:url(#rect324);fill:#a05a2c"><tspan
+         x="155.05469"
+         y="55.219283"
+         id="tspan411">PRESET PARAMETERS
+</tspan></text>
+    <text
+       xml:space="preserve"
+       id="text328"
+       style="white-space:pre;shape-inside:url(#rect330);fill:#a05a2c"><tspan
+         x="155.05469"
+         y="264.86186"
+         id="tspan413">FOOTSWITCH PARAMETERS</tspan></text>
+  </g>
+  <metadata
+     id="metadata9">
+    <rdf:RDF>
+      <cc:License
+         rdf:about="http://creativecommons.org/licenses/by-nd/4.0/">
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Reproduction" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Distribution" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Notice" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Attribution" />
+      </cc:License>
+      <cc:Work
+         rdf:about="">
+        <cc:license
+           rdf:resource="http://creativecommons.org/licenses/by-nd/4.0/" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+</svg>
