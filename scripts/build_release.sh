@@ -4,7 +4,7 @@
 set -e
 
 git restore build.gradle
-git restore deployment/balena/balena.yml
+git restore deployment/balena/*/balena.yml
 
 # This script is run by Jenkins, which is expected to have set
 # the three string parameters RELEASE_VERSION_{MAJOR,MINOR,PATCH}
@@ -57,6 +57,7 @@ then
   sed -e "s/0.0.0/$buildString/" -i build.gradle
   sed -e "s/9999/$buildAndroidVersionCode/" -i build.gradle
   ./gradlew clean build :android-app:bundleRelease
+  git restore build.gradle
   echo Gradle products:
   ls -l desktop-app/build/libs
   ls -l android-app/build/outputs/apk/*/*.apk
@@ -83,7 +84,7 @@ then
   fi
 
   balenaFakerootDir=_work/balena_fakeroot-$buildString
-  if [ -e  "$balenaFakerootDir" ]
+  if [ -d  "$balenaFakerootDir" ]
   then
     echo $balenaFakerootDir already exists.
     echo Please delete it manually if you want to repeat a prior build.
@@ -91,19 +92,27 @@ then
   fi
 
   mkdir -p $balenaFakerootDir
-  ln -s ../compose-no-browser/* $balenaFakerootDir
-  ln -s ../platform-layer/* $balenaFakerootDir
-  ln -s ../platform-layer/* $balenaFakerootDir
-  ln -s ../../../web-app/web_ui $balenaFakerootDir
-  ln -s ../../../desktop-app/build/libs $balenaFakerootDir/jar
-  rm $balenaFakerootDir/balena.yml
-  cat ../compose-no-browser/balena.yml | \
+  cp deployment/balena/compose-no-browser/docker-compose.yml $balenaFakerootDir
+  cp deployment/balena/compose-no-browser/Dockerfile.template $balenaFakerootDir
+  cp -R web-app/lua $balenaFakerootDir
+  cp -R web-app/run.sh $balenaFakerootDir
+  cp -R web-app/web_ui $balenaFakerootDir
+  cp -R desktop-app/build/libs $balenaFakerootDir/jar
+  cat deployment/balena/compose-no-browser/balena.yml | \
     sed -e "s/0.0.0/$buildString/" | \
     sed -e "s/%GITREF%/$buildGitRef/" \
     > $balenaFakerootDir/balena.yml
 
-  # Which fleet should be the deploy target
-  if [ "$1" = "--fhau-ci-32bit" ]
+  # Which device/fleet should be the deploy target
+  draft_flag=--draft
+  echo "$1" | grep "192.168.1"
+  if [ "$?" = "0" ]
+  then
+    # IP address of a device, hopefully in local mode
+    deploy_fleet=$1
+    draft_flag=
+    shift
+  elif [ "$1" = "--fhau-ci-32bit" ]
   then
     deploy_fleet=fhau-ci-32bit
     shift
@@ -121,10 +130,10 @@ then
 
   if [ "$1" = "--debug" ]
   then
-    push_cmd="balena push --debug --draft --source $balenaFakerootDir $deploy_fleet"
+    push_cmd="balena push --debug $draft_flag --source $balenaFakerootDir $deploy_fleet"
     shift
   else
-    push_cmd="balena push --draft --source $balenaFakerootDir $deploy_fleet"
+    push_cmd="balena push $draft_flag --source $balenaFakerootDir $deploy_fleet"
   fi
   echo $push_cmd
   $push_cmd
