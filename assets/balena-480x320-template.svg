@@ -7,36 +7,19 @@
    viewBox="0 0 480 320"
    version="1.1"
    id="svg5"
-   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
-   sodipodi:docname="balena-480x320-template.svg"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg"
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
    xmlns:cc="http://creativecommons.org/ns#">
-  <sodipodi:namedview
-     id="namedview7"
-     pagecolor="#ffffff"
-     bordercolor="#000000"
-     borderopacity="0.25"
-     inkscape:showpageshadow="2"
-     inkscape:pageopacity="0.0"
-     inkscape:pagecheckerboard="0"
-     inkscape:deskcolor="#d1d1d1"
-     inkscape:document-units="px"
-     showgrid="false"
-     inkscape:zoom="2.528125"
-     inkscape:cx="240.09889"
-     inkscape:cy="160"
-     inkscape:window-width="1920"
-     inkscape:window-height="1018"
-     inkscape:window-x="0"
-     inkscape:window-y="30"
-     inkscape:window-maximized="1"
-     inkscape:current-layer="layer1" />
   <defs
      id="defs2">
+    <rect
+        x="280.0"
+        y="90.0"
+        width="10.0"
+        height="80.0"
+        id="preset_slot_box" />
+    <!--
     <rect
        x="155.05562"
        y="253.94314"
@@ -56,12 +39,6 @@
        height="169.29543"
        id="rect318" />
     <rect
-       x="151.49567"
-       y="13.844252"
-       width="317.23115"
-       height="36.390606"
-       id="rect312" />
-    <rect
        x="14.635352"
        y="138.83807"
        width="117.87392"
@@ -73,59 +50,63 @@
        width="115.89617"
        height="38.368356"
        id="rect192" />
+  -->
   </defs>
-  <g
-     inkscape:label="Layer 1"
-     inkscape:groupmode="layer"
-     id="layer1">
+  <g id="layer1" >
     <rect
-       style="fill:#a05a2c"
-       id="rect134"
-       width="117.47837"
-       height="116.68726"
-       x="15.030902"
-       y="13.448702" />
+       style="fill:#a22"
+       id="icon"
+       width="150.0"
+       height="150.0"
+       x="15.0"
+       y="15.0" />
     <rect
-       style="fill:#a05a2c"
+       style="fill:#2a2"
        id="rect136"
-       width="120.24722"
-       height="118.66501"
-       x="16.217552"
-       y="189.46848" />
+       width="150.0"
+       height="150.0"
+       x="15.0"
+       y="185.0" />
     <text
-       xml:space="preserve"
-       id="text190"
-       style="fill:#a05a2c;white-space:pre;shape-inside:url(#rect192)" />
+       style="font-size:120px;fill:#a1a">
+      <tspan
+         x="170.0"
+         y="110.0">%%</tspan>
+    </text>
     <text
-       xml:space="preserve"
-       id="text304"
-       style="fill:#a05a2c;white-space:pre;shape-inside:url(#rect306)" />
+        style="font-size:45px; fill:#a1a">
+      <tspan
+        x="170.0"
+        y="160.0">%PS_NAME1%</tspan>
+    </text>
     <text
-       xml:space="preserve"
-       id="text310"
-       style="white-space:pre;shape-inside:url(#rect312);fill:#a05a2c"><tspan
-         x="151.49609"
-         y="24.762252"
-         id="tspan409">PRESET NAME AND SLOT</tspan></text>
-    <text
-       xml:space="preserve"
-       id="text316"
-       style="fill:#a05a2c;white-space:pre;shape-inside:url(#rect318)" />
-    <text
-       xml:space="preserve"
-       id="text322"
-       style="white-space:pre;shape-inside:url(#rect324);fill:#a05a2c"><tspan
-         x="155.05469"
-         y="55.219283"
-         id="tspan411">PRESET PARAMETERS
-</tspan></text>
-    <text
-       xml:space="preserve"
-       id="text328"
-       style="white-space:pre;shape-inside:url(#rect330);fill:#a05a2c"><tspan
-         x="155.05469"
-         y="264.86186"
-         id="tspan413">FOOTSWITCH PARAMETERS</tspan></text>
+        style="font-size:45px; fill:#a1a">
+      <tspan
+        x="170.0"
+        y="220.0">%PS_NAME2%</tspan>
+    </text>
+    <text>
+      <tspan style="font-size:20px;fill:#1aa"
+          x="170.0"
+          y="250.0"
+      >%PS_MODULE1%</tspan>
+      <tspan style="font-size:20px;fill:#1aa"
+          x="170.0"
+          y="310.0"
+      >%PS_MODULE2%</tspan>
+      <tspan style="font-size:24px;fill:#1aa"
+          x="230.0"
+          y="280.0"
+      >%PS_MODULE3%</tspan>
+      <tspan style="font-size:20px;fill:#1aa"
+          x="340.0"
+          y="250.0"
+      >%PS_MODULE4%</tspan>
+      <tspan style="font-size:20px;fill:#1aa"
+          x="340.0"
+          y="310.0"
+      >%PS_MODULE5%</tspan>
+  </text>
   </g>
   <metadata
      id="metadata9">
