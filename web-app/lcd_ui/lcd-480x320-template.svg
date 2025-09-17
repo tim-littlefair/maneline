@@ -3,12 +3,25 @@
    width="480"
    height="320"
    viewBox="0 0 480 320"
-   version="1.1"
+   version="2.0"
    id="svg5"
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg"
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
    xmlns:cc="http://creativecommons.org/ns#">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css?family=Josefin+Sans');
+      @font-face {
+        font-family: "Josefin+Sans";
+      }
+
+      tspan {
+      font-family: "Josefin+Sans", sans-serif;
+      }
+    </style>
+  </defs>
+
   <g id="layer1">
     <rect
         style="fill:#eee"
@@ -17,74 +30,74 @@
         height="320.0"
         x="0.0"
         y="0.0" />
-    <rect
-       style="fill:#a22"
-       id="icon"
-       width="100.0"
-       height="100.0"
-       x="10.0"
-       y="10.0" />
+    <image
+        href="@icon_data_uri"
+        width="100px"
+        height="100px"
+        x="10.0px"
+        y="10.0px"
+    />
     <text
-        style="font-size:16px;fill:#a1a">
+        style="font-size:14px;fill:#a1a">
       <tspan
           x="10.0"
           y="130.0">Maneline</tspan>
     </text>
     <text
-        style="font-size:16px;fill:#a1a">
+        style="font-size:14px;fill:#a1a">
       <tspan
           x="10.0"
-          y="155.0">@swversion</tspan>
+          y="150.0">@swversion</tspan>
     </text>
     <text
-        style="font-size:16px;fill:#a1a">
+        style="font-size:14px;fill:#a1a">
       <tspan
           x="10.0"
-          y="180.0">@ampname</tspan>
+          y="170.0">@ampname</tspan>
     </text>
-    <rect
-       style="fill:#2a2"
-       id="qrcode"
-       width="100.0"
-       height="100.0"
-       x="370.0"
-       y="10.0" />
+    <image
+        href="@qrcode_data_uri"
+        width="100px"
+        height="100px"
+        x="370.0"
+        y="10.0"
+    />
     <text
-        style="font-size:16px;fill:#a1a">
+        style="font-size:14px;fill:#a1a">
       <tspan
           x="370.0"
           y="130.0">http://</tspan>
     </text>
     <text
-        style="font-size:16px;fill:#a1a">
+        style="font-size:14px;fill:#a1a">
       <tspan
           x="370.0"
-          y="155.0">@ipaddress</tspan>
+          y="150.0">@ipaddress</tspan>
     </text>
     <text
-        style="font-size:16px;fill:#a1a">
+        style="font-size:14px;fill:#a1a">
       <tspan
           x="370.0"
-          y="180.0">:8080</tspan>
+          y="170.0">:8080</tspan>
     </text>
     <text
-       style="font-size:120px;fill:#a1a">
-      <tspan
-         x="160.0"
-         y="100.0">##</tspan>
-    </text>
+      style="font-size:120px;fill:#a1a"
+      text-anchor="middle"
+      x="240.0"
+      y="100.0"
+    >##</text>
     <text
-        style="font-size:45px; fill:#a1a">
-      <tspan
-        x="120.0"
-        y="150.0">@psname1</tspan>
-    </text>
+        style="font-size:45px; fill:#a1a"
+        text-anchor="middle"
+        x="240.0"
+        y="150.0"
+    >@psname1</text>
     <text
-        style="font-size:45px; fill:#a1a">
-      <tspan
-        x="120.0"
-        y="210.0">@psname2</tspan>
-    </text>
+        style="font-size:45px; fill:#a1a"
+        text-anchor="middle"
+        x="240.0"
+        y="210.0"
+    >@psname2</text>
     <text>
       <tspan style="font-size:20px;fill:#1aa"
           x="10.0"
