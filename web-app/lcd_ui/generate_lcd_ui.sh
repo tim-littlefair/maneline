@@ -2,8 +2,8 @@
 
 template=$(dirname $0)/lcd-480x320-template.svg
 ipaddress=$(ip addr | grep -e wlan0 -e wlp3s0 | grep inet | grep -Eo "[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+" | head -1)
-swversion=0.2.0+beta99.fffffff.999
-ampname="Not detected yet"
+swversion=0.2.0+beta99
+ampname="Not connected"
 psslot=41
 psname1=EVENING
 psname2=RAGE
@@ -29,6 +29,12 @@ svg_text=$(
 )
 
 echo $svg_text | rsvg-convert - -o lcd.png
+if [ ! "$?" = 0 ]
+then
+  echo SVG Text:
+  echo $svg_text
+fi
+
 
 
 
