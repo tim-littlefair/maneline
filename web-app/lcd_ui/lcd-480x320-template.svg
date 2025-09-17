@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Created with Inkscape (http://www.inkscape.org/) -->
-
 <svg
    width="480"
    height="320"
@@ -26,70 +24,88 @@
        height="100.0"
        x="10.0"
        y="10.0" />
+    <text
+        style="font-size:16px;fill:#a1a">
+      <tspan
+          x="10.0"
+          y="130.0">Maneline</tspan>
+    </text>
+    <text
+        style="font-size:16px;fill:#a1a">
+      <tspan
+          x="10.0"
+          y="155.0">@swversion</tspan>
+    </text>
+    <text
+        style="font-size:16px;fill:#a1a">
+      <tspan
+          x="10.0"
+          y="180.0">@ampname</tspan>
+    </text>
     <rect
        style="fill:#2a2"
        id="qrcode"
-       width="125.0"
-       height="125.0"
-       x="10.0"
-       y="185.0" />
+       width="100.0"
+       height="100.0"
+       x="370.0"
+       y="10.0" />
     <text
-        style="font-size:20px;fill:#a1a">
+        style="font-size:16px;fill:#a1a">
       <tspan
-          x="10.0"
-          y="130.0">%swversion%</tspan>
+          x="370.0"
+          y="130.0">http://</tspan>
     </text>
     <text
-        style="font-size:20px;fill:#a1a">
+        style="font-size:16px;fill:#a1a">
       <tspan
-          x="10.0"
-          y="155.0">%ampname%</tspan>
+          x="370.0"
+          y="155.0">@ipaddress</tspan>
     </text>
     <text
-        style="font-size:12px;fill:#a1a">
+        style="font-size:16px;fill:#a1a">
       <tspan
-          x="10.0"
-          y="180.0">%ipaddress%</tspan>
+          x="370.0"
+          y="180.0">:8080</tspan>
     </text>
     <text
        style="font-size:120px;fill:#a1a">
       <tspan
-         x="200.0"
-         y="100.0">%%</tspan>
+         x="160.0"
+         y="100.0">##</tspan>
     </text>
     <text
         style="font-size:45px; fill:#a1a">
       <tspan
-        x="150.0"
-        y="150.0">%PS_NAME1%</tspan>
+        x="120.0"
+        y="150.0">@psname1</tspan>
     </text>
     <text
         style="font-size:45px; fill:#a1a">
       <tspan
-        x="150.0"
-        y="210.0">%PS_NAME2%</tspan>
+        x="120.0"
+        y="210.0">@psname2</tspan>
     </text>
     <text>
       <tspan style="font-size:20px;fill:#1aa"
-          x="150.0"
+          x="10.0"
           y="240.0"
-      >%PS_MODULE1%</tspan>
+      >@psmodule1</tspan>
       <tspan style="font-size:20px;fill:#1aa"
-          x="150.0"
+          x="10.0"
           y="305.0"
-      >%PS_MODULE2%</tspan>
+      >@psmodule2</tspan>
       <tspan style="font-size:24px;fill:#1aa"
-          x="210.0"
+          x="150.0"
           y="274.0"
-      >%PS_MODULE3%</tspan>
+      >@psmodule3</tspan>
       <tspan style="font-size:20px;fill:#1aa"
           x="320.0"
           y="240.0"
-      >%PS_MODULE4%</tspan>
+      >@psmodule4</tspan>
       <tspan style="font-size:20px;fill:#1aa"
           x="320.0"
           y="305.0"
-      >%PS_MODULE5%</tspan>
+      >@psmodule5</tspan>
   </text>
   </g>
   <metadata
