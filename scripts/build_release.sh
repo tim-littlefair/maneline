@@ -72,12 +72,15 @@ if [ "$1" = "--deploy-balena-beta" ]
 then
   shift
 
-  if [ -f ~/.balena/token ]
+  if [ "0" = "1" ] && [ -f ~/.balena/token ]
   then
      echo Balena already logged in
   elif [ ! -z "$BALENA_TOKEN" ]
   then
-     balena login --token $BALENA_TOKEN
+    set +e
+    balena login --token $BALENA_TOKEN
+    echo Balena login returned $?
+    set -e
   else
      echo "No Balena token in filesystem or environment"
      exit 1
@@ -86,12 +89,21 @@ then
   balenaFakerootDir=_work/balena_fakeroot-$buildString
   if [ -d  "$balenaFakerootDir" ]
   then
-    echo $balenaFakerootDir already exists.
-    echo Please delete it manually if you want to repeat a prior build.
-    exit 1
+    if [ "$1" = "--remove-stale-fakeroot" ]
+    then
+      echo Removing stale directory $balenaFakerootDir
+      rm -rf $balenaFakerootDir || true
+      echo Stale directory removed
+      shift
+    else
+      echo $balenaFakerootDir already exists.
+      echo Please delete it manually if you want to repeat a prior build.
+      exit 1
+    fi
   fi
 
-  mkdir -p $balenaFakerootDir
+  echo Building deployment root at $balenaFakerootDir
+  mkdir -p "$balenaFakerootDir"
   cp deployment/balena/compose-no-browser/docker-compose.yml $balenaFakerootDir
   cp deployment/balena/compose-no-browser/Dockerfile.template $balenaFakerootDir
   cp -R web-app/lua $balenaFakerootDir
@@ -102,31 +114,36 @@ then
     sed -e "s/0.0.0/$buildString/" | \
     sed -e "s/%GITREF%/$buildGitRef/" \
     > $balenaFakerootDir/balena.yml
+  echo Files copied to $balenaFakerootDir
+  echo Remaining arguments: $*
 
   # Which device/fleet should be the deploy target
   draft_flag=--draft
-  echo "$1" | grep "192.168.1"
-  if [ "$?" = "0" ]
+  if [ "$1" = "--fhau-staging" ]
   then
-    # IP address of a device, hopefully in local mode
-    deploy_fleet=$1
-    draft_flag=
+    deploy_fleet=fhau-staging
     shift
   elif [ "$1" = "--fhau-ci-32bit" ]
   then
     deploy_fleet=fhau-ci-32bit
-    shift
-  elif [ "$1" = "--fhau-staging" ]
-  then
-    deploy_fleet=fhau-staging
     shift
   elif [ "$1" = "--maneline-rpi-any" ]
   then
     deploy_fleet=maneline-rpi-any
     shift
   else
-    deploy_fleet=fhau-staging
+    echo "$1" | grep "192.168.1"
+    if [ "$?" = "0" ]
+    then
+      # IP address of a device, hopefully in local mode
+      deploy_fleet=$1
+      draft_flag=
+      shift
+    else
+      deploy_fleet=fhau-staging
+    fi
   fi
+  echo Will deploy to $deploy_fleet
 
   if [ "$1" = "--debug" ]
   then
