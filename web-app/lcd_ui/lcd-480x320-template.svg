@@ -38,19 +38,19 @@
         y="10.0px"
     />
     <text
-        style="font-size:14px;fill:#a1a">
+        style="font-size:14px;fill:#a11">
       <tspan
           x="10.0"
           y="130.0">Maneline</tspan>
     </text>
     <text
-        style="font-size:14px;fill:#a1a">
+        style="font-size:14px;fill:#a11">
       <tspan
           x="10.0"
           y="150.0">@swversion</tspan>
     </text>
     <text
-        style="font-size:14px;fill:#a1a">
+        style="font-size:14px;fill:#a11">
       <tspan
           x="10.0"
           y="170.0">@ampname</tspan>
@@ -63,63 +63,110 @@
         y="10.0"
     />
     <text
-        style="font-size:14px;fill:#a1a">
+        style="font-size:14px;fill:#11a">
       <tspan
           x="370.0"
           y="130.0">http://</tspan>
     </text>
     <text
-        style="font-size:14px;fill:#a1a">
+        style="font-size:14px;fill:#11a">
       <tspan
           x="370.0"
           y="150.0">@ipaddress</tspan>
     </text>
     <text
-        style="font-size:14px;fill:#a1a">
+        style="font-size:14px;fill:#11a">
       <tspan
           x="370.0"
           y="170.0">:8080</tspan>
     </text>
+    <rect
+        style="fill:#111"
+        x="120.0"
+        y="10.0"
+        width="240.0"
+        height="200.0"
+    />
     <text
-      style="font-size:120px;fill:#a1a"
+      style="font-size:120px;fill:#fff"
       text-anchor="middle"
       x="240.0"
       y="100.0"
     >##</text>
     <text
-        style="font-size:45px; fill:#a1a"
+        style="font-size:45px; fill:#fff"
         text-anchor="middle"
         x="240.0"
         y="150.0"
     >@psname1</text>
     <text
-        style="font-size:45px; fill:#a1a"
+        style="font-size:45px; fill:#fff"
         text-anchor="middle"
         x="240.0"
-        y="210.0"
+        y="200.0"
     >@psname2</text>
-    <text>
-      <tspan style="font-size:20px;fill:#1aa"
-          x="10.0"
-          y="240.0"
-      >@psmodule1</tspan>
-      <tspan style="font-size:20px;fill:#1aa"
-          x="10.0"
-          y="305.0"
-      >@psmodule2</tspan>
-      <tspan style="font-size:24px;fill:#1aa"
-          x="150.0"
-          y="274.0"
-      >@psmodule3</tspan>
-      <tspan style="font-size:20px;fill:#1aa"
-          x="320.0"
-          y="240.0"
-      >@psmodule4</tspan>
-      <tspan style="font-size:20px;fill:#1aa"
-          x="320.0"
-          y="305.0"
-      >@psmodule5</tspan>
-  </text>
+    <rect
+        style="fill:#ccc"
+      x="10.0"
+      y="220.0"
+      width="460.0"
+      height="90.0"
+      />
+    <text style="font-size:22px;fill:#333"
+        text-anchor="middle"
+        x="120.0"
+        y="240.0"
+    >@psmodule1</text>
+    <text style="font-size:22px;fill:#333"
+        text-anchor="middle"
+        x="120.0"
+        y="272.0"
+    >&#x21e9;</text>
+    <text style="font-size:22px;fill:#333"
+        text-anchor="middle"
+        x="120.0"
+        y="300.0"
+    >@psmodule2</text>
+    <text style="font-size:22px;fill:#333"
+        text-anchor="middle"
+        x="220.0"
+        y="305.0"
+    >&#x21e8;</text>
+    <text style="font-size:22px;fill:#333"
+        text-anchor="middle"
+        x="240.0"
+        y="295.0"
+    >&#x21e7;</text>
+    <text style="font-size:22px;fill:#333"
+        text-anchor="middle"
+        x="240.0"
+        y="270.0"
+    >@psmodule3</text>
+    <text style="font-size:22px;fill:#333"
+        text-anchor="middle"
+        x="240.0"
+        y="250.0"
+    >&#x21e7;</text>
+    <text style="font-size:22px;fill:#333"
+        text-anchor="middle"
+        x="265.0"
+        y="240.0"
+    >&#x21e8;</text>
+    <text style="font-size:22px;fill:#333"
+        text-anchor="middle"
+        x="360.0"
+        y="240.0"
+    >@psmodule4</text>
+    <text style="font-size:22px;fill:#333"
+        text-anchor="middle"
+        x="360.0"
+        y="272.0"
+    >&#x21e9;</text>
+    <text style="font-size:22px;fill:#333"
+        text-anchor="middle"
+        x="360.0"
+        y="300.0"
+    >@psmodule5</text>
   </g>
   <metadata
      id="metadata9">

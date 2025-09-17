@@ -2,16 +2,16 @@
 
 template=$(dirname $0)/lcd-480x320-template.svg
 ipaddress=$(ip addr | grep -e wlan0 -e wlp3s0 | grep inet | grep -Eo "[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+" | head -1)
-swversion=0.2.0+beta99
+swversion=v0.2.0+beta99
 ampname="Not connected"
 psslot=41
 psname1=EVENING
 psname2=RAGE
-psmodule1=SimpleCompressor
-psmodule2=TriangleFlanger
-psmodule3=Twin65
-psmodule4=MonoDelay
-psmodule5=LargeHallReverb
+psmodule1=s:SimpleCompressor
+psmodule2=m:TriangleFlanger
+psmodule3=a:Twin65
+psmodule4=d:MonoDelay
+psmodule5=r:LargeHallReverb
 
 icon_data_base64=$(base64 --wrap=0 < assets/maneline-icon.png)
 icon_data_uri="data:image/png;base64,$icon_data_base64"
