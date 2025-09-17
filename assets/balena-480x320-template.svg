@@ -11,100 +11,78 @@
    xmlns:svg="http://www.w3.org/2000/svg"
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
    xmlns:cc="http://creativecommons.org/ns#">
-  <defs
-     id="defs2">
+  <g id="layer1">
     <rect
-        x="280.0"
-        y="90.0"
-        width="10.0"
-        height="80.0"
-        id="preset_slot_box" />
-    <!--
-    <rect
-       x="155.05562"
-       y="253.94314"
-       width="303.78245"
-       height="50.234858"
-       id="rect330" />
-    <rect
-       x="155.05562"
-       y="44.301607"
-       width="302.99135"
-       height="197.77503"
-       id="rect324" />
-    <rect
-       x="152.68232"
-       y="66.84796"
-       width="316.44005"
-       height="169.29543"
-       id="rect318" />
-    <rect
-       x="14.635352"
-       y="138.83807"
-       width="117.87392"
-       height="39.555006"
-       id="rect306" />
-    <rect
-       x="15.822002"
-       y="140.42027"
-       width="115.89617"
-       height="38.368356"
-       id="rect192" />
-  -->
-  </defs>
-  <g id="layer1" >
+        style="fill:#eee"
+        id="icon"
+        width="480.0"
+        height="320.0"
+        x="0.0"
+        y="0.0" />
     <rect
        style="fill:#a22"
        id="icon"
-       width="150.0"
-       height="150.0"
-       x="15.0"
-       y="15.0" />
+       width="125.0"
+       height="125.0"
+       x="10.0"
+       y="10.0" />
     <rect
        style="fill:#2a2"
-       id="rect136"
-       width="150.0"
-       height="150.0"
-       x="15.0"
+       id="qrcode"
+       width="125.0"
+       height="125.0"
+       x="10.0"
        y="185.0" />
+    <text
+        style="font-size:20px;fill:#a1a">
+      <tspan
+          x="10.0"
+          y="155.0">%swversion%</tspan>
+    </text>
+    <text
+        style="font-size:20px;fill:#a1a">
+      <tspan
+          x="10.0"
+          y="180.0">%ampname%</tspan>
+    </text>
     <text
        style="font-size:120px;fill:#a1a">
       <tspan
-         x="170.0"
-         y="110.0">%%</tspan>
+         x="200.0"
+         y="100.0">%%</tspan>
     </text>
     <text
         style="font-size:45px; fill:#a1a">
       <tspan
-        x="170.0"
-        y="160.0">%PS_NAME1%</tspan>
+        x="150.0"
+        y="150.0">%PS_NAME1%</tspan>
     </text>
     <text
         style="font-size:45px; fill:#a1a">
       <tspan
-        x="170.0"
-        y="220.0">%PS_NAME2%</tspan>
+        x="150.0"
+        y="210.0">%PS_NAME2%</tspan>
     </text>
     <text>
       <tspan style="font-size:20px;fill:#1aa"
-          x="170.0"
-          y="250.0"
+          x="150.0"
+          y="240.0"
       >%PS_MODULE1%</tspan>
       <tspan style="font-size:20px;fill:#1aa"
-          x="170.0"
-          y="310.0"
+          x="150.0"
+          y="305.0"
       >%PS_MODULE2%</tspan>
       <tspan style="font-size:24px;fill:#1aa"
-          x="230.0"
-          y="280.0"
+          x="210.0"
+          y="274.0"
       >%PS_MODULE3%</tspan>
       <tspan style="font-size:20px;fill:#1aa"
-          x="340.0"
-          y="250.0"
+          x="320.0"
+          y="240.0"
       >%PS_MODULE4%</tspan>
       <tspan style="font-size:20px;fill:#1aa"
-          x="340.0"
-          y="310.0"
+          x="320.0"
+          y="305.0"
       >%PS_MODULE5%</tspan>
   </text>
   </g>
