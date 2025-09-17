@@ -22,8 +22,8 @@
     <rect
        style="fill:#a22"
        id="icon"
-       width="125.0"
-       height="125.0"
+       width="100.0"
+       height="100.0"
        x="10.0"
        y="10.0" />
     <rect
@@ -37,13 +37,19 @@
         style="font-size:20px;fill:#a1a">
       <tspan
           x="10.0"
-          y="155.0">%swversion%</tspan>
+          y="130.0">%swversion%</tspan>
     </text>
     <text
         style="font-size:20px;fill:#a1a">
       <tspan
           x="10.0"
-          y="180.0">%ampname%</tspan>
+          y="155.0">%ampname%</tspan>
+    </text>
+    <text
+        style="font-size:12px;fill:#a1a">
+      <tspan
+          x="10.0"
+          y="180.0">%ipaddress%</tspan>
     </text>
     <text
        style="font-size:120px;fill:#a1a">
