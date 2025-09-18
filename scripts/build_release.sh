@@ -72,7 +72,7 @@ if [ "$1" = "--deploy-balena-beta" ]
 then
   shift
 
-  if [ "0" = "1" ] && [ -f ~/.balena/token ]
+  if [ "0" = "0" ] && [ -f ~/.balena/token ]
   then
      echo Balena already logged in
   elif [ ! -z "$BALENA_TOKEN" ]

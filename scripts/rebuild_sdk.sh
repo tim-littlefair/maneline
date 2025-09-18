@@ -1,13 +1,17 @@
 #!/bin/sh
 
+start_dir=$(pwd)
+
 # The purpose of this script is to build a composite SDK for
-# FHAU development, which consists of the following components:
+# Maneline development, which consists of the following components:
 # + a vendor Java Development Kit
 # + a vendor Android SDK
 # + the user preferences directory where the Android SDK
 #   stores its settings
 # + a gradle user home directory where gradle packages
 #   are cached after first use.
+# An installation of the Balena command line interface (CLI)
+# An installation of Lua
 
 # The FHAU SDK could be anywhere but it is recommended
 # it should sit as a sibling directory alongside the
@@ -76,13 +80,14 @@ then
 fi
 cd $cache_reldir
 cache_absdir=$(pwd)
+cd $sdk_absdir
 
-# Linux/x64 is the primary build platform for FHAU
+# Linux/x64 is the primary build platform
 
 # This script may also be able to create a viable
 # command line build environment on macOS but testing  
 # on this platform will be infrequent and will be 
-# limited to hardware available to the FHAU 
+# limited to hardware available to the Maneline
 # developer(s), which presently consists of:
 # one MBP-mid2012 running macOS 10.15 Catalina and 
 # one MBP-late2011 running whatever macOS version is 
@@ -93,33 +98,88 @@ cache_absdir=$(pwd)
 # build environment on Windows (either in the native 
 # command line or in WSL), but this script does not
 # and will not attempt to do this.
-# Note that the deployment/balena module build scripts
-# depend on symbolic links stored in git - as Git on 
-# Windows filesystems cannot create symbolic links 
-# this part of the project will definitely not 
-# be buildable.
 
-# Development presently standardises on JDK 21, using 
+# Development presently standardises on JDK 21, using
 # Oracle's openjdk archive at
 # https://jdk.java.net/archive/
+# under the GPLv2+classpath exception license conditions.
+
 # It also uses Android command line tools,
 # URLs for these are available at
 # https://developer.android.com/studio#command-line-tools-only
+
+download_and_unpack () {
+  _url=$1
+  _unpack_cmd=$2
+
+  _file_bn=$(basename $(echo $_url | sed -e s^https:/^^))
+  if [ ! -e $cache_absdir/$_file_bn ]
+  then
+    echo Downloading $_url
+    curl -L $_url -o $cache_absdir/$_file_bn
+  fi
+  echo Unpacking $cache_absdir/$_file_bn
+  $_unpack_cmd $cache_absdir/$_file_bn
+}
+
+set_java_home () {
+  _jdkver=$1
+
+  if [ -d $sdk_absdir/$_jdkver ]
+  then
+    # Linux location
+    export JAVA_HOME=$sdk_absdir/$_jdkver
+  elif [ -d $sdk_absdir/$_jdkver.jdk/Contents/Home ]
+  then
+    # macOS location
+    export JAVA_HOME=$sdk_absdir/$_jdkver.jdk/Contents/Home
+  else
+    echo Could not find appropriate JAVA_HOME
+    exit 5
+  fi
+}
+
+build_lua () {
+  _dir=$1
+  _make_target=$2
+
+  cd $_dir
+  make $make_target
+  mkdir bin
+  mv src/lua src/luac bin
+  cd ..
+}
+
+build_luarocks () {
+  _dir=$1
+  _luadir=$sdk_absdir/$2
+
+  _oldpath=$PATH
+  PATH=$_luadir/bin:$PATH
+  cd $_dir
+  ./configure --local=$($_luadir)
+  make
+  make install
+  make clean
+  luarocks install pegasus
+  PATH=$_oldpath
+  cd ..
+}
 
 osname=$(uname -s)
 if [ "$osname" = "Linux" ]
 then
   jdk21_url=https://download.java.net/java/GA/jdk21.0.2/f2283984656d49d69e91c558476027ac/13/GPL/openjdk-21.0.2_linux-x64_bin.tar.gz
   jdk25_url=https://download.java.net/java/GA/jdk25/bd75d5f9689641da8e1daabeccb5528b/36/GPL/openjdk-25_linux-x64_bin.tar.gz
-  android_cltools_url=https://dl.google.com/android/repository/commandlinetools-linux-13114758_latest.zip
   balena_cli_url=https://github.com/balena-io/balena-cli/releases/download/v22.4.4/balena-cli-v22.4.4-linux-x64-standalone.tar.gz
+  android_cltools_url=https://dl.google.com/android/repository/commandlinetools-linux-13114758_latest.zip
 elif [ "$osname" = "Darwin" ]
 then
   # For now, Intel binaries are preferred to those for Apple Silicon
   jdk21_url=https://download.java.net/java/GA/jdk21.0.2/f2283984656d49d69e91c558476027ac/13/GPL/openjdk-21.0.2_macos-x64_bin.tar.gz
   jdk25_url=https://download.java.net/java/GA/jdk25/bd75d5f9689641da8e1daabeccb5528b/36/GPL/openjdk-25_macos-x64_bin.tar.gz
-  android_cltools_url=https://dl.google.com/android/repository/commandlinetools-mac-13114758_latest.zip
   balena_cli_url=https://github.com/balena-io/balena-cli/releases/download/v22.4.4/balena-cli-v22.4.4-macOS-x64-standalone.tar.gz
+  android_cltools_url=https://dl.google.com/android/repository/commandlinetools-mac-13114758_latest.zip
 fi
 
 # Lua is downloaded as source - same on both architectures
@@ -128,61 +188,37 @@ lua51_url=https://www.lua.org/ftp/lua-5.1.5.tar.gz
 lua54_url=https://www.lua.org/ftp/lua-5.4.8.tar.gz
 luarocks_url=https://luarocks.org/releases/luarocks-3.12.2.tar.gz
 
-android_cltools_file=$(basename $(echo $android_cltools_url | sed -e s^https:/^^))
-jdk21_file=$(basename $(echo $jdk21_url | sed -e s^https:/^^))
-balena_cli_file=$(basename $(echo $balena_cli_url | sed -e s^https:/^^))
+download_and_unpack $jdk21_url "tar xzvf"
+download_and_unpack $jdk25_url "tar xzvf"
+set_java_home jdk-21.0.2
 
-cd $sdk_absdir
+download_and_unpack $lua51_url "tar xzvf"
+download_and_unpack $lua54_url "tar xzvf"
+download_and_unpack $luarocks_url "tar xzvf"
+build_lua lua-5.1.5 linux
+build_lua lua-5.4.8 all
+build_luarocks luarocks-3.12.2 lua-5.1.5
+build_luarocks luarocks-3.12.2 lua-5.4.8
+export LUA_HOME=$sdk_absdir/lua-5.1.5
+pwd
+exit 1
 
-if [ ! -e $cache_absdir/$balena_cli_file ]
-then
-  echo Downloading $balena_cli_url
-  curl -L $balena_cli_url -o $cache_absdir/$balena_cli_file
-fi
-echo unpacking $balena_cli_file
-tar xzvf $cache_absdir/$balena_cli_file
-balena_version=$(
-  echo $balena_cli_file |
-  sed -e 's/balena-cli-//' |
-  sed -e 's/-x64-standalone.tar.gz//'
-)
-mv balena balena-$balena_version
-BALENA_HOME=$sdk_absdir/balena-$balena_version
 
-if [ ! -e $cache_absdir/$jdk21_file ]
-then
-  echo Downloading $jdk21_url
-  curl $jdk21_url -o $jdk21_file
-fi
-echo Unpacking $jdk21_file
-tar xzvf $cache_absdir/$jdk21_file
-if [ -d $sdk_absdir/jdk-21.0.2 ]
-then
-  # Linux location
-  export JAVA_HOME=$sdk_absdir/jdk-21.0.2
-elif [ -d $sdk_absdir/jdk-21.0.2.jdk/Contents/Home ]
-then
-  # macOS location
-  export JAVA_HOME=$sdk_absdir/jdk-21.0.2.jdk/Contents/Home
-else
-  echo Could not find appropriate JAVA_HOME
-  exit 5
-fi
+download_and_unpack $balena_cli_url "tar xzvf"
+#basename "$balena_cli_url"
+#balena_version=$(
+#  basename "$balena_cli_url" |
+#  sed -e 's/balena-cli-//' |
+#  sed -e 's/-x64-standalone.tar.gz//'
+#)
+#mv balena balena-$balena_version
+#BALENA_HOME=$sdk_absdir/balena-$balena_version
+BALENA_HOME=$sdk_absdir/balena
 
-if [ ! -e $cache_absdir/$android_cltools_file ]
-then
-  echo Downloading $android_cltools_url
-  curl $android_cltools_url -o $android_cltools_file
-fi
-echo Unpacking $android_cltools_file
-mkdir $sdk_absdir/Android
-cd $sdk_absdir/Android
-unzip $cache_absdir/$android_cltools_file
-mv cmdline-tools latest
-mkdir cmdline-tools
-mv latest cmdline-tools/latest
-cd $sdk_absdir
-ANDROID_USER_HOME=$sdk_absdir/Android
+mkdir -p Android/cmdline-tools
+download_and_unpack $android_cltools_url "unzip -d Android/cmdline-tools"
+mv Android/cmdline-tools/cmdline-tools Android/cmdline-tools/latest
+ANDROID_USER_HOME=$(pwd)/Android
 
 cat > $sdk_absdir/maneline-sdk-vars.sh <<+
 
@@ -192,11 +228,17 @@ ANDROID_HOME=$ANDROID_USER_HOME
 GRADLE_USER_HOME=$sdk_absdir/gradle-user-home
 GRADLE_LOCAL_JAVA_HOME=$JAVA_HOME
 BALENA_HOME=$BALENA_HOME
+LUA_HOME=$LUA_HOME
 
-PATH=\$JAVA_HOME/bin:\$ANDROID_HOME/cmdline-tools/latest/bin:\$BALENA_HOME/bin:\$PATH
-
+export JAVA_HOME LUA_HOME BALENA_HOME
 export ANDROID_HOME ANDROID_USER_HOME GRADLE_USER_HOME GRADLE_LOCAL_JAVA_HOME
-export JAVA_HOME BALENA_HOME PATH
+
+# Note that the custom entries are added to PATH in reverse order of priority
+PATH=\$BALENA_HOME/bin:\$PATH
+PATH=\$ANDROID_HOME/cmdline-tools/latest/bin:\$PATH
+PATH=\$LUA_HOME/bin:\$PATH
+PATH=\$JAVA_HOME/bin:\$PATH
+export PATH
 
 +
 
@@ -226,6 +268,14 @@ yes | $sdkmanager --install \
 yes | $sdkmanager --update
 yes | $sdkmanager --licenses > licenses.txt
 $sdkmanager --list_installed
+
+cd $start_dir
+if [ -x ./gradlew ]
+then
+  time ./gradlew clean build
+fi
+
+ls -l $sdk_absdir
 
 exit 0
 
