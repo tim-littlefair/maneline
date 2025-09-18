@@ -27,13 +27,12 @@ then
     echo SDK name from command line argument: $SDK_NAME
 elif [ ! -z "$SDK_NAME" ]
 then
-    SDK_NAME=$1/var/lib/jenkins/workspace/fhau
     echo SDK name from environment: $SDK_NAME
     # Environment variable is intended for use in a CI
     # job where a new SDK is built from scratch
     # before building the FHAU project itself
 else
-    echo No value found for SDK_NAME
+    echo No value found for SDK name
     exit 1
 fi
 
@@ -41,28 +40,28 @@ fi
 # of the Git repository
 repo_dir=$(pwd)
 
-fhau_sdk_reldir=../$SDK_NAME
+sdk_reldir=../$SDK_NAME
 
 # The script expects that when it runs, the 
 # development environment directory will not exist...
-if [ -e $fhau_sdk_reldir ]
+if [ -e $sdk_reldir ]
 then
-  echo There is either a file or a directory at $fhau_sdk_reldir.
+  echo There is either a file or a directory at $sdk_reldir.
   echo Please check the content of this location and remove
   echo it manually before running this script again.
   exit 2
 fi
 
 # ... but its parent will
-mkdir $fhau_sdk_reldir
+mkdir $sdk_reldir
 if [ ! "$?" = "0" ]
 then
-  echo Unable to create devenv at $fhau_sdk_reldir
+  echo Unable to create devenv at $sdk_reldir
   exit 3
 fi
-cd $fhau_sdk_reldir
-fhau_sdk_absdir=$(pwd)
-echo Absolute path to SDK is $fhau_sdk_absdir
+cd $sdk_reldir
+sdk_absdir=$(pwd)
+echo Absolute path to SDK is $sdk_absdir
 
 # ... and a download cache might or might not
 cache_reldir=../cache
@@ -110,79 +109,104 @@ cache_absdir=$(pwd)
 osname=$(uname -s)
 if [ "$osname" = "Linux" ]
 then
-  jdk_url=https://download.java.net/java/GA/jdk21.0.2/f2283984656d49d69e91c558476027ac/13/GPL/openjdk-21.0.2_linux-x64_bin.tar.gz
+  jdk21_url=https://download.java.net/java/GA/jdk21.0.2/f2283984656d49d69e91c558476027ac/13/GPL/openjdk-21.0.2_linux-x64_bin.tar.gz
+  jdk25_url=https://download.java.net/java/GA/jdk25/bd75d5f9689641da8e1daabeccb5528b/36/GPL/openjdk-25_linux-x64_bin.tar.gz
   android_cltools_url=https://dl.google.com/android/repository/commandlinetools-linux-13114758_latest.zip
+  balena_cli_url=https://github.com/balena-io/balena-cli/releases/download/v22.4.4/balena-cli-v22.4.4-linux-x64-standalone.tar.gz
 elif [ "$osname" = "Darwin" ]
 then
-  jdk_url=https://download.java.net/java/GA/jdk21.0.2/f2283984656d49d69e91c558476027ac/13/GPL/openjdk-21.0.2_macos-x64_bin.tar.gz
+  # For now, Intel binaries are preferred to those for Apple Silicon
+  jdk21_url=https://download.java.net/java/GA/jdk21.0.2/f2283984656d49d69e91c558476027ac/13/GPL/openjdk-21.0.2_macos-x64_bin.tar.gz
+  jdk25_url=https://download.java.net/java/GA/jdk25/bd75d5f9689641da8e1daabeccb5528b/36/GPL/openjdk-25_macos-x64_bin.tar.gz
   android_cltools_url=https://dl.google.com/android/repository/commandlinetools-mac-13114758_latest.zip
+  balena_cli_url=https://github.com/balena-io/balena-cli/releases/download/v22.4.4/balena-cli-v22.4.4-macOS-x64-standalone.tar.gz
 fi
+
+# Lua is downloaded as source - same on both architectures
+# (but in either case C/C++/autoconf build tools will be required)
+lua51_url=https://www.lua.org/ftp/lua-5.1.5.tar.gz
+lua54_url=https://www.lua.org/ftp/lua-5.4.8.tar.gz
+luarocks_url=https://luarocks.org/releases/luarocks-3.12.2.tar.gz
 
 android_cltools_file=$(basename $(echo $android_cltools_url | sed -e s^https:/^^))
-jdk_file=$(basename $(echo $jdk_url | sed -e s^https:/^^))
+jdk21_file=$(basename $(echo $jdk21_url | sed -e s^https:/^^))
+balena_cli_file=$(basename $(echo $balena_cli_url | sed -e s^https:/^^))
 
-if [ ! -e $jdk_file ]
+cd $sdk_absdir
+
+if [ ! -e $cache_absdir/$balena_cli_file ]
 then
-  echo Downloading $jdk_url
-  curl $jdk_url -o $jdk_file
+  echo Downloading $balena_cli_url
+  curl -L $balena_cli_url -o $cache_absdir/$balena_cli_file
 fi
+echo unpacking $balena_cli_file
+tar xzvf $cache_absdir/$balena_cli_file
+balena_version=$(
+  echo $balena_cli_file |
+  sed -e 's/balena-cli-//' |
+  sed -e 's/-x64-standalone.tar.gz//'
+)
+mv balena balena-$balena_version
+BALENA_HOME=$sdk_absdir/balena-$balena_version
 
-if [ ! -e $android_cltools_file ]
+if [ ! -e $cache_absdir/$jdk21_file ]
 then
-  echo Downloading $android_cltools_url
-  curl $android_cltools_url -o $android_cltools_file
+  echo Downloading $jdk21_url
+  curl $jdk21_url -o $jdk21_file
 fi
-
-cd $fhau_sdk_absdir
-pwd
-
-echo Unpacking $jdk_file
-tar xzvf $cache_absdir/$jdk_file
-
-echo Unpacking $android_cltools_file
-mkdir $fhau_sdk_absdir/Android
-cd $fhau_sdk_absdir/Android
-unzip $cache_absdir/$android_cltools_file
-mv cmdline-tools latest
-mkdir cmdline-tools
-mv latest cmdline-tools/latest
-
-cd $fhau_sdk_absdir
-
-if [ -d $fhau_sdk_absdir/jdk-21.0.2 ]
+echo Unpacking $jdk21_file
+tar xzvf $cache_absdir/$jdk21_file
+if [ -d $sdk_absdir/jdk-21.0.2 ]
 then
   # Linux location
-  export JAVA_HOME=$fhau_sdk_absdir/jdk-21.0.2
-elif [ -d $fhau_sdk_absdir/jdk-21.0.2.jdk/Contents/Home ]
+  export JAVA_HOME=$sdk_absdir/jdk-21.0.2
+elif [ -d $sdk_absdir/jdk-21.0.2.jdk/Contents/Home ]
 then
   # macOS location
-  export JAVA_HOME=$fhau_sdk_absdir/jdk-21.0.2.jdk/Contents/Home
+  export JAVA_HOME=$sdk_absdir/jdk-21.0.2.jdk/Contents/Home
 else
   echo Could not find appropriate JAVA_HOME
   exit 5
 fi
-ANDROID_USER_HOME=$fhau_sdk_absdir/Android
 
-cat > $fhau_sdk_absdir/fhau_sdk_vars.sh <<+
+if [ ! -e $cache_absdir/$android_cltools_file ]
+then
+  echo Downloading $android_cltools_url
+  curl $android_cltools_url -o $android_cltools_file
+fi
+echo Unpacking $android_cltools_file
+mkdir $sdk_absdir/Android
+cd $sdk_absdir/Android
+unzip $cache_absdir/$android_cltools_file
+mv cmdline-tools latest
+mkdir cmdline-tools
+mv latest cmdline-tools/latest
+cd $sdk_absdir
+ANDROID_USER_HOME=$sdk_absdir/Android
+
+cat > $sdk_absdir/maneline-sdk-vars.sh <<+
 
 JAVA_HOME=$JAVA_HOME
 ANDROID_USER_HOME=$ANDROID_USER_HOME
 ANDROID_HOME=$ANDROID_USER_HOME
-GRADLE_USER_HOME=$fhau_sdk_absdir/gradle-user-home
+GRADLE_USER_HOME=$sdk_absdir/gradle-user-home
 GRADLE_LOCAL_JAVA_HOME=$JAVA_HOME
-PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$JAVA_HOME/bin:$PATH
+BALENA_HOME=$BALENA_HOME
 
-export JAVA_HOME ANDROID_HOME ANDROID_USER_HOME GRADLE_USER_HOME GRADLE_LOCAL_JAVA_HOME PATH
+PATH=\$JAVA_HOME/bin:\$ANDROID_HOME/cmdline-tools/latest/bin:\$BALENA_HOME/bin:\$PATH
+
+export ANDROID_HOME ANDROID_USER_HOME GRADLE_USER_HOME GRADLE_LOCAL_JAVA_HOME
+export JAVA_HOME BALENA_HOME PATH
 
 +
 
-. $fhau_sdk_absdir/fhau_sdk_vars.sh
+. $sdk_absdir/maneline-sdk-vars.sh
 
 # We need to overwrite a non-version-controlled file in the root
 # directory of the repository to ensure the SDK is found by Gradle
 cat > $repo_dir/local.properties <<+
 # local.properties file overwritten by $0 on $(date --iso-8601)
-sdk.dir=$fhau_sdk_absdir/Android
+sdk.dir=$sdk_absdir/Android
 +
 
 sdkmanager=$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager
