@@ -3,7 +3,8 @@
 template=$(dirname $0)/lcd-480x320-template.svg
 ipaddress=$(ip addr | grep -e wlan0 -e wlp3s0 | grep inet | grep -Eo "[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+" | head -1)
 swversion=v0.2.0+beta99
-ampname="Not connected"
+ampname="Mustang LT40S"
+fwversion="firmware 1.0.7"
 psslot=41
 psname1=EVENING
 psname2=RAGE
@@ -18,13 +19,13 @@ icon_data_uri="data:image/png;base64,$icon_data_base64"
 qrcode_data_base64=$(zint -b QRCODE -d http://$ipaddress:8080 --filetype=PNG --direct | base64 --wrap=0)
 qrcode_data_uri="data:image/png;base64,$qrcode_data_base64"
 
-
 svg_text=$(
   cat $template |
   sed -e "s/##/$psslot/" |
   sed -e "s/@ipaddress/$ipaddress/" |
   sed -e "s/@swversion/$swversion/" |
   sed -e "s/@ampname/$ampname/" |
+  sed -e "s/@fwversion/$fwversion/" |
   sed -e "s/@psname1/$psname1/" |
   sed -e "s/@psname2/$psname2/" |
   sed -e "s/@psmodule1/$psmodule1/" |
@@ -36,7 +37,7 @@ svg_text=$(
   sed -e "s^@qrcode_data_uri^$qrcode_data_uri^"
 )
 
-echo $svg_text | rsvg-convert - -o lcd.png
+echo $svg_text | rsvg-convert - -o assets/lcd-mockup.png
 if [ ! "$?" = 0 ]
 then
   echo SVG Text:
