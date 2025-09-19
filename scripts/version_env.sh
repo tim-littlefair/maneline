@@ -14,7 +14,7 @@ then
   echo "Wrong number of arguments $#, require exactly 4 arguments"
   echo Usage: source $BASH_SOURCE major minor patch build
 else
-  release_prefix=$(printf "%d.%02d.%02d+beta%04d" $1 $2 $3 $4)
+  release_prefix=$(printf "%d.%d.%d+beta%04d" $1 $2 $3 $4)
   echo "Release prefix will be $release_prefix"
   export RELEASE_VERSION_MAJOR=$1
   export RELEASE_VERSION_MINOR=$2
