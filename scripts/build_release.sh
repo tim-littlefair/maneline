@@ -154,7 +154,6 @@ then
   fi
   echo $push_cmd
   $push_cmd
-  shift
 fi
 
 # By default, in dev/interactive mode we leave $balenaFakerootDir
