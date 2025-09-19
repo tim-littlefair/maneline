@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="480"
+   height="320"
+   viewBox="0 0 480 320"
+   version="2.0"
+   id="svg5"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css?family=Josefin+Sans');
+      @font-face {
+        font-family: "Josefin+Sans";
+      }
+
+      tspan {
+      font-family: "Josefin+Sans", sans-serif;
+      }
+    </style>
+  </defs>
+
+  <g id="layer1">
+    <rect
+        style="fill:#eee"
+        id="icon"
+        width="480.0"
+        height="320.0"
+        x="0.0"
+        y="0.0" />
+    <image
+        href="@icon_data_uri"
+        x="140.0"
+        y="10.0"
+        width="200.0"
+        height="200.0"
+    />
+    <rect
+        style="fill:#ccc"
+      x="10.0"
+      y="220.0"
+      width="460.0"
+      height="90.0"
+      />
+    <text style="font-size:42px;fill:#333"
+        text-anchor="middle"
+        x="240.0"
+        y="280.0"
+    >Starting up</text>
+  </g>
+  <metadata
+     id="metadata9">
+    <rdf:RDF>
+      <cc:License
+         rdf:about="http://creativecommons.org/licenses/by-nd/4.0/">
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Reproduction" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Distribution" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Notice" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Attribution" />
+      </cc:License>
+      <cc:Work
+         rdf:about="">
+        <cc:license
+           rdf:resource="http://creativecommons.org/licenses/by-nd/4.0/" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+</svg>
