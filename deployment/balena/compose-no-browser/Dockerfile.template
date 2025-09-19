@@ -84,6 +84,7 @@ RUN apt-get install -y --no-install-recommends --no-install-suggests zint fbi li
 FROM platform-layer AS web-app
 COPY ./lua ./lua
 COPY ./web_ui ./web_ui
+COPY ./lcd_ui ./lcd_ui
 COPY ./jar ./jar
 
 COPY run.sh $WORKDIR

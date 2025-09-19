@@ -109,6 +109,7 @@ then
   cp -R web-app/lua $balenaFakerootDir
   cp -R web-app/run.sh $balenaFakerootDir
   cp -R web-app/web_ui $balenaFakerootDir
+  cp -R web-app/lcd_ui $balenaFakerootDir
   cp -R desktop-app/build/libs $balenaFakerootDir/jar
   cat deployment/balena/compose-no-browser/balena.yml | \
     sed -e "s/0.0.0/$buildString/" | \
