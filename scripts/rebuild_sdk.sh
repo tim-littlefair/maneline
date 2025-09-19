@@ -143,27 +143,37 @@ build_lua () {
   _dir=$1
   _make_target=$2
 
+  echo Building $_dir
   cd $_dir
-  make $make_target
+  make $lua_make_target
   mkdir bin
   mv src/lua src/luac bin
   cd ..
+  echo $_dir built
 }
 
 build_luarocks () {
   _dir=$1
   _luadir=$sdk_absdir/$2
 
-  _oldpath=$PATH
-  PATH=$_luadir/bin:$PATH
+  echo Building $_dir for $luadir
   cd $_dir
-  ./configure --local=$($_luadir)
+  ./configure --prefix=$_luadir \
+    --with-lua=$_luadir \
+    --with-lua-bin=$_luadir/bin \
+    --with-lua-include=$_luadir/src \
+    --with-lua-lib=$_luadir/src
   make
   make install
   make clean
-  luarocks install pegasus
-  PATH=$_oldpath
+  for p in \
+    luasec luasocket lualogging luafilesystem lua-cjson cqueues \
+    mimetypes lzlib pegasus
+  do
+    $_luadir/bin/luarocks install $p
+  done
   cd ..
+  echo $_dir for $luadir built
 }
 
 osname=$(uname -s)
@@ -173,6 +183,7 @@ then
   jdk25_url=https://download.java.net/java/GA/jdk25/bd75d5f9689641da8e1daabeccb5528b/36/GPL/openjdk-25_linux-x64_bin.tar.gz
   balena_cli_url=https://github.com/balena-io/balena-cli/releases/download/v22.4.4/balena-cli-v22.4.4-linux-x64-standalone.tar.gz
   android_cltools_url=https://dl.google.com/android/repository/commandlinetools-linux-13114758_latest.zip
+  lua_make_target=linux
 elif [ "$osname" = "Darwin" ]
 then
   # For now, Intel binaries are preferred to those for Apple Silicon
@@ -180,6 +191,7 @@ then
   jdk25_url=https://download.java.net/java/GA/jdk25/bd75d5f9689641da8e1daabeccb5528b/36/GPL/openjdk-25_macos-x64_bin.tar.gz
   balena_cli_url=https://github.com/balena-io/balena-cli/releases/download/v22.4.4/balena-cli-v22.4.4-macOS-x64-standalone.tar.gz
   android_cltools_url=https://dl.google.com/android/repository/commandlinetools-mac-13114758_latest.zip
+  lua_make_target=macosx
 fi
 
 # Lua is downloaded as source - same on both architectures
@@ -200,9 +212,6 @@ build_lua lua-5.4.8 all
 build_luarocks luarocks-3.12.2 lua-5.1.5
 build_luarocks luarocks-3.12.2 lua-5.4.8
 export LUA_HOME=$sdk_absdir/lua-5.1.5
-pwd
-exit 1
-
 
 download_and_unpack $balena_cli_url "tar xzvf"
 #basename "$balena_cli_url"
@@ -275,7 +284,11 @@ then
   time ./gradlew clean build
 fi
 
-ls -l $sdk_absdir
+which java
+which balena
+which lua
+which luarocks
+which sdkmanager
 
 exit 0
 
