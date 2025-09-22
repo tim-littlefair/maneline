@@ -181,7 +181,7 @@ if [ "$osname" = "Linux" ]
 then
   jdk21_url=https://download.java.net/java/GA/jdk21.0.2/f2283984656d49d69e91c558476027ac/13/GPL/openjdk-21.0.2_linux-x64_bin.tar.gz
   jdk25_url=https://download.java.net/java/GA/jdk25/bd75d5f9689641da8e1daabeccb5528b/36/GPL/openjdk-25_linux-x64_bin.tar.gz
-  balena_cli_url=https://github.com/balena-io/balena-cli/releases/download/v22.4.6/balena-cli-v22.4.6-linux-x64-standalone.tar.gz
+  balena_cli_url=https://github.com/balena-io/balena-cli/releases/download/v22.4.7/balena-cli-v22.4.7-linux-x64-standalone.tar.gz
   android_cltools_url=https://dl.google.com/android/repository/commandlinetools-linux-13114758_latest.zip
   lua_make_target=linux
 elif [ "$osname" = "Darwin" ]
@@ -189,7 +189,7 @@ then
   # For now, Intel binaries are preferred to those for Apple Silicon
   jdk21_url=https://download.java.net/java/GA/jdk21.0.2/f2283984656d49d69e91c558476027ac/13/GPL/openjdk-21.0.2_macos-x64_bin.tar.gz
   jdk25_url=https://download.java.net/java/GA/jdk25/bd75d5f9689641da8e1daabeccb5528b/36/GPL/openjdk-25_macos-x64_bin.tar.gz
-  balena_cli_url=https://github.com/balena-io/balena-cli/releases/download/v22.4.6/balena-cli-v22.4.6-macOS-x64-standalone.tar.gz
+  balena_cli_url=https://github.com/balena-io/balena-cli/releases/download/v22.4.7/balena-cli-v22.4.7-macOS-x64-standalone.tar.gz
   android_cltools_url=https://dl.google.com/android/repository/commandlinetools-mac-13114758_latest.zip
   lua_make_target=macosx
 fi
@@ -211,7 +211,10 @@ build_lua lua-5.1.5 linux
 build_lua lua-5.4.8 all
 build_luarocks luarocks-3.12.2 lua-5.1.5
 build_luarocks luarocks-3.12.2 lua-5.4.8
+
 export LUA_HOME=$sdk_absdir/lua-5.1.5
+export LUA_PATH="$LUA_HOME/share/lua/5.1/?.lua;$LUA_HOME/share/lua/5.1/?/init.lua;;"
+export LUA_CPATH="$LUA_HOME/lib/lua/5.1/?.so;;"
 
 download_and_unpack $balena_cli_url "tar xzvf"
 balena_version=$(./balena/bin/balena --version)
@@ -243,9 +246,9 @@ PATH=\$LUA_HOME/bin:\$PATH
 PATH=\$JAVA_HOME/bin:\$PATH
 export PATH
 
-LUA_PATH="$LUA_HOME/share/lua/5.1/?.lua;$LUA_HOME/share/lua/5.1/?/init.lua;;"
-LUA_CPATH="$LUA_HOME/lib/lua/5.1/?.so;;"
 
+LUA_PATH=\$LUA_PATH
+LUA_CPATH=\$LUA_CPATH
 export LUA_PATH LUA_CPATH
 +
 
