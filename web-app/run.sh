@@ -1,7 +1,11 @@
 #!/bin/bash
 
-# TODO: Generate a splash screen for a GPIO-attached screen if there is one
-fbi lcd_ui/lcd-mockup.png -a -T 1 -d /dev/fb1
+# On RPi only, generate a splash screen for a
+# GPIO-attached screen if there is one
+if [ "$(whoami)" = "root" ]
+then
+  fbi lcd_ui/lcd-mockup.png -a -T 1 -d /dev/fb1
+fi
 
 # If the local browser is enabled, wait for it
 # to come up before starting the Pegasus web
@@ -49,20 +53,35 @@ fi
 # links in the Lua work as they need to.
 # TBD: Would it be better to use LUAPATH?
 
-ls -ald /home/maneline/*
-cd /var/run/maneline
-for d in lua web_ui jar
-do
-    rm -rf ./$d
-    cp -R /home/maneline/$d .
-done
-ls -alR . 
+
+#and On the development workstation,
+if [ -z $RUN_DIR ]
+then
+    # When running on RPi, up-to-date copies of
+    # sh/lua scripts, jar and web
+    # resources are all copied from /home/maneline
+    # into the run directory /var/run/maneline.
+    cd /var/run/maneline
+    for d in lua web_ui jar run.sh
+    do
+        rm -rf ./$d
+        cp -R /home/maneline/$d .
+    done
+else
+    # When running on Linux/macOS development environment
+    # the run directory is supplied in the environment
+    # variable $RUN_DIR and the copying has been done
+    # before the current script starts
+    cd $RUN_DIR
+fi
 
 start_dir=$(pwd)
 echo Starting Pegasus and maneline CLI in directory $start_dir
 
 export cli_jar=$(ls -1 jar/*.jar | sort -r | head -1)
 echo cli jar path=$(pwd)/$cli_jar
+ls
+pwd
 cd ./lua
 
 lua ./run.lua "$start_dir"
