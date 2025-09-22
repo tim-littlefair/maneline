@@ -223,7 +223,7 @@ download_and_unpack $android_cltools_url "unzip -d Android/cmdline-tools"
 mv Android/cmdline-tools/cmdline-tools Android/cmdline-tools/latest
 ANDROID_USER_HOME=$(pwd)/Android
 
-cat > $sdk_absdir/maneline-sdk-vars.sh <<+
+cat > $sdk_absdir/sdk-vars.sh <<+
 
 JAVA_HOME=$JAVA_HOME
 ANDROID_USER_HOME=$ANDROID_USER_HOME
@@ -243,9 +243,13 @@ PATH=\$LUA_HOME/bin:\$PATH
 PATH=\$JAVA_HOME/bin:\$PATH
 export PATH
 
+LUA_PATH="$LUA_HOME/share/lua/5.1/?.lua;$LUA_HOME/share/lua/5.1/?/init.lua;;"
+LUA_CPATH="$LUA_HOME/lib/lua/5.1/?.so;;"
+
+export LUA_PATH LUA_CPATH
 +
 
-. $sdk_absdir/maneline-sdk-vars.sh
+. $sdk_absdir/sdk-vars.sh
 
 # We need to overwrite a non-version-controlled file in the root
 # directory of the repository to ensure the SDK is found by Gradle
