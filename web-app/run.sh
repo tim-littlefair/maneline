@@ -4,7 +4,8 @@
 # GPIO-attached screen if there is one
 if [ "$(whoami)" = "root" ]
 then
-  fbi lcd_ui/lcd-mockup.png -a -T 1 -d /dev/fb1
+  fbi lcd_ui/lcd-mockup-large.png -a -T 1 -noverbose -d /dev/fb0
+  fbi lcd_ui/lcd-mockup.png -a -T 1 -noverbose -d /dev/fb1
 fi
 
 # If the local browser is enabled, wait for it

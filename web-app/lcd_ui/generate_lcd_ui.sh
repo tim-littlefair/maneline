@@ -39,16 +39,19 @@ qrcode_data_uri="data:image/png;base64,$qrcode_data_base64"
 
 # Generate a mockup
 svg_text1=$(generate_svg_text)
+echo $svg_text1 > $(dirname $0)/lcd-mockup.svg
 echo $svg_text1 | rsvg-convert - -o $(dirname $0)/lcd-mockup.png
+echo $svg_text1 | rsvg-convert - --zoom=2.5 -o $(dirname $0)/lcd-mockup-large.png
 if [ ! "$?" = 0 ]
 then
   echo SVG Text:
   echo $svg_text1
 fi
 
-# Generate a splash screen
+# Generate a splash screen (must be PNG, must be < 13k to display on Balena)
 template=$(dirname $0)/lcd-480x320-splash.svg
 svg_text2=$(generate_svg_text)
+echo $svg_text2 > $(dirname $0)/lcd-startup.svg
 echo $svg_text2 | rsvg-convert - -o $(dirname $0)/lcd-startup.png
 if [ ! "$?" = 0 ]
 then
