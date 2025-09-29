@@ -6,9 +6,9 @@
 # https://web.archive.org/web/20250903031237/https://www.waveshare.com/wiki/2.13inch_e-Paper_HAT_Manual#Working_With_Raspberry_Pi
 # for the instructions this section covers
 
-cd $(dirname $0)
+apt-get update
 apt-get install -y --no-install-suggests --no-install-recommends build-essential python3 python3-setuptools \
-    python3-pip python3-pil python3-numpy python3-spidev python3-gpiozero python3-liblgpio 
+    python3-pip python3-pil python3-numpy python3-spidev python3-gpiozero python3-lgpio 
 
 if [ "0" = "1" ]
 then
@@ -46,5 +46,6 @@ unzip E-Paper_code.zip -d e-Paper
 #./epd
 mv e-Paper/RaspberryPi_JetsonNano/python/lib .
 mv e-Paper/RaspberryPi_JetsonNano/python/pic .
+rm -rf e-Paper
 
 exit 0
