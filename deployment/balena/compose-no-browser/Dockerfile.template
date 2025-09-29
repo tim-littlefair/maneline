@@ -85,7 +85,10 @@ FROM platform-layer AS web-app
 COPY ./lua ./lua
 COPY ./web_ui ./web_ui
 COPY ./lcd_ui ./lcd_ui
+COPY ./epaper_ui ./epaper_ui
 COPY ./jar ./jar
+
+RUN sh ./epaper_ui/epaper_support_install.sh
 
 COPY run.sh $WORKDIR
 RUN chmod +x run.sh
