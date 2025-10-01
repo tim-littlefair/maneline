@@ -113,6 +113,16 @@ then
   cp -R web-app/web_ui $balenaFakerootDir
   cp -R web-app/lcd_ui $balenaFakerootDir
   cp -R web-app/epaper_ui $balenaFakerootDir
+  if [ ! -f _work/E-Paper_code.zip ]
+  then
+    wget https://files.waveshare.com/upload/7/71/E-Paper_code.zip
+    mv E-Paper_code.zip _work
+  fi
+  unzip _work/E-Paper_code.zip RaspberryPi_JetsonNano/python/**
+  mv RaspberryPi_JetsonNano/python/lib web-app/epaper_ui/lib
+  mv RaspberryPi_JetsonNano/python/pic web-app/epaper_ui/pic
+  rm -rf RaspberryPi_JetsonNano
+
   cp -R desktop-app/build/libs $balenaFakerootDir/jar
   cat deployment/balena/compose-no-browser/balena.yml | \
     sed -e "s/0.0.0/$buildString/" | \
@@ -136,7 +146,7 @@ then
     deploy_fleet=maneline-rpi-any
     shift
   else
-    echo "$1" | grep "192.168.1"
+    echo "$1" | grep "192.168"
     if [ "$?" = "0" ]
     then
       # IP address of a device, hopefully in local mode
@@ -158,16 +168,6 @@ then
   fi
   echo $push_cmd
   $push_cmd
-fi
-
-# By default, in dev/interactive mode we leave $balenaFakerootDir
-# on the filesystem to allow tweaks and re-runs.
-# The following flag overrides this and deletes the
-# directory, and will be used in successful CI runs.
-if [ "$1" = "--rm-balena-fakeroot" ]
-then
-  rm -rf $balendaFakerootDir
-  shift
 fi
 
 if [ ! -z "$*" ]

@@ -114,7 +114,6 @@ if __name__ == "__main__":
             generate_url_qrcode(ipaddr)
             epaper_image = generate_url_image(ipaddr)
         if epd is not None:
-            epd.displayPartBaseImage(epd.getbuffer(epaper_image))
             epd.displayPartial(epd.getbuffer(epaper_image))
             epd.sleep()
         elif "--show-in-browser" in sys.argv:

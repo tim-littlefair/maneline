@@ -12,15 +12,29 @@
 # package spidev, so python3-pip is not required.
 # This service depends on the 
 
-apt-get update
-apt-get install -y --no-install-suggests --no-install-recommends --fix-missing \
-    python3 python3-pil python3-numpy python3-spidev python3-gpiozero python3-lgpio \
-    vim iproute2
+cat > /usr/lib/systemd/system/maneline-startup.service <<+
+[Unit]
+Description=Display Maneline startup message on e-paper
+ConditionACPower=true
+Before=network.target
 
-wget https://files.waveshare.com/upload/7/71/E-Paper_code.zip
-unzip E-Paper_code.zip -d /tmp
-mv /tmp/RaspberryPi_JetsonNano/python/lib epaper_ui/lib
-mv /tmp/RaspberryPi_JetsonNano/python/pic epaper_ui/pic
-rm -rf /tmp/RaspberryPi_JetsonNano/ E-Paper_code.zip 
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /home/maneline/epaper_ui/epaper_ui.py --starting-up
++
+
+cat > /usr/lib/systemd/system/maneline-shutdown.service <<+
+[Unit]
+Description=Display Maneline shutdown message on e-paper
+ConditionACPower=true
+Before=final.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /home/maneline/epaper_ui/epaper_ui.py --shutting-down
++
+
+/usr/bin/systemctl enable maneline-startup.service
+/usr/bin/systemctl enable maneline-shutdown.service
 
 exit 0
