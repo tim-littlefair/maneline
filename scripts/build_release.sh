@@ -74,7 +74,7 @@ then
 
   if [ "0" = "0" ] && [ -f ~/.balena/token ]
   then
-     echo Balena already logged in
+    echo Balena already logged in
   elif [ ! -z "$BALENA_TOKEN" ]
   then
     set +e
@@ -82,24 +82,26 @@ then
     echo Balena login returned $?
     set -e
   else
-     echo "No Balena token in filesystem or environment"
-     exit 1
+    echo "No Balena token in filesystem or environment"
+    exit 1
   fi
 
   balenaFakerootDir=_work/balena_fakeroot-$buildString
-  if [ -d  "$balenaFakerootDir" ]
+  if [ "$1" = "--remove-stale-fakeroot" ]
   then
-    if [ "$1" = "--remove-stale-fakeroot" ]
+    if [ -d $balenaFakerootDir ]
     then
       echo Removing stale directory $balenaFakerootDir
-      rm -rf $balenaFakerootDir || true
+      rm -rf $balenaFakerootDir
       echo Stale directory removed
-      shift
     else
-      echo $balenaFakerootDir already exists.
-      echo Please delete it manually if you want to repeat a prior build.
-      exit 1
-    fi
+      echo No stale directory found at $balenaFakerootDir
+    fi  
+    shift
+  else
+    echo $balenaFakerootDir already exists.
+    echo Please delete it manually or include flag --remove-stale-fakeroot if you want to repeat a prior build.
+    exit 1
   fi
 
   echo Building deployment root at $balenaFakerootDir
