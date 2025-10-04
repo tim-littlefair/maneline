@@ -119,8 +119,8 @@ then
     mv E-Paper_code.zip _work
   fi
   unzip _work/E-Paper_code.zip RaspberryPi_JetsonNano/python/**
-  mv RaspberryPi_JetsonNano/python/lib web-app/epaper_ui/lib
-  mv RaspberryPi_JetsonNano/python/pic web-app/epaper_ui/pic
+  mv RaspberryPi_JetsonNano/python/lib $balenaFakerootDir/web-app/epaper_ui/lib
+  mv RaspberryPi_JetsonNano/python/pic $balenaFakerootDir/web-app/epaper_ui/pic
   rm -rf RaspberryPi_JetsonNano
 
   cp -R desktop-app/build/libs $balenaFakerootDir/jar
