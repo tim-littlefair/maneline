@@ -115,12 +115,12 @@ then
   cp -R web-app/epaper_ui $balenaFakerootDir
   if [ ! -f _work/E-Paper_code.zip ]
   then
-    wget https://files.waveshare.com/upload/7/71/E-Paper_code.zip
-    mv E-Paper_code.zip _work
+    wget --output-document=_work/E-Paper_code.zip https://files.waveshare.com/upload/7/71/E-Paper_code.zip
   fi
-  unzip _work/E-Paper_code.zip RaspberryPi_JetsonNano/python/**
-  mv RaspberryPi_JetsonNano/python/lib $balenaFakerootDir/web-app/epaper_ui/lib
-  mv RaspberryPi_JetsonNano/python/pic $balenaFakerootDir/web-app/epaper_ui/pic
+  unzip -o _work/E-Paper_code.zip 'RaspberryPi_JetsonNano/python/lib/**'
+  unzip -o _work/E-Paper_code.zip 'RaspberryPi_JetsonNano/python/pic/**'
+  mv RaspberryPi_JetsonNano/python/lib $balenaFakerootDir/epaper_ui/lib
+  mv RaspberryPi_JetsonNano/python/pic $balenaFakerootDir/epaper_ui/pic
   rm -rf RaspberryPi_JetsonNano
 
   cp -R desktop-app/build/libs $balenaFakerootDir/jar
