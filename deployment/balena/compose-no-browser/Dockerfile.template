@@ -87,8 +87,7 @@ RUN luarocks install pegasus
 # python3 and the python3- packages are used to render the barcode for displaying on the optional e-paper UI
 # systemctl is used to enable scripts to display startup and shutdown on either the epaper or LCD UI
 RUN apt-get install -y --no-install-recommends --no-install-suggests iproute2 zint librsvg2-bin optipng \
-    python3 python3-pil python3-numpy python3-spidev python3-gpiozero python3-lgpio \
-    systemctl
+    python3 python3-pil python3-numpy python3-spidev python3-gpiozero python3-lgpio 
 
 FROM platform-layer AS web-app
 COPY ./lua ./lua
@@ -97,7 +96,11 @@ COPY ./lcd_ui ./lcd_ui
 COPY ./epaper_ui ./epaper_ui
 COPY ./jar ./jar
 
-RUN sh ./epaper_ui/epaper_support_install.sh
+# Disable e-paper support for now
+# Might need to implement systemd running to get the behaviour
+# we want (i.e displaing out of service message before going down)
+# ref: https://docs.balena.io/learn/more/masterclasses/services-masterclass/#5-running-systemd-in-a-service
+# RUN sh ./epaper_ui/epaper_support_install.sh
 
 COPY run.sh $WORKDIR
 RUN chmod +x run.sh
