@@ -7,6 +7,7 @@
 import sys
 import json
 import os
+import subprocess
 import time
 import traceback
 import webbrowser
@@ -20,7 +21,11 @@ def getNetworkIp():
     s.connect(('<broadcast>', 12345))  # 12345 is random port. 0 fails on Mac.
     return s.getsockname()[0]
 
-def generate_svg(svg_template, ipaddr,device_details, preset_details):
+def generate_svg(
+        svg_template, ipaddr,
+        device_details, preset_details,
+        icon_data_uri, qrcode_data_uri
+):
     svg_text = svg_template
     svg_text = svg_text.replace("@ipaddress",ipaddr)
     for key in device_details.keys():
@@ -30,6 +35,8 @@ def generate_svg(svg_template, ipaddr,device_details, preset_details):
             svg_text = svg_text.replace("##",preset_details.get(key,"?"))
         else:             
             svg_text = svg_text.replace("@"+key,str(preset_details.get(key,"Passthru")))
+    svg_text = svg_text.replace("@icon_data_uri",icon_data_uri)
+    svg_text = svg_text.replace("@qrcode_data_uri",qrcode_data_uri)
     svg_fn = f"maneline_lcd-{time.time()}.svg"
     open(svg_fn,"w").write(svg_text)
     webbrowser.open(svg_fn)
@@ -42,7 +49,22 @@ def find_latest_session_dir(run_dir):
     ]
     return session_dirs[-1]
 
-    
+def generate_icon_data_uri():
+    generation_outcome = subprocess.run(
+        f"cat {run_dir}/web_ui/_static/maneline-icon-512x512.png|base64 --wrap=0",
+        shell=True, capture_output=True, text=True
+    )
+    icon_data_base64=generation_outcome.stdout
+    return f"data:image/png;base64,{icon_data_base64}"
+
+def generate_qrcode_data_uri(ipaddr):
+    generation_outcome = subprocess.run(
+        f"zint -b QRCODE -d http://{ipaddr}:8080 --filetype=PNG --direct| base64 --wrap=0",
+        shell=True, capture_output=True, text=True
+    )
+    qrcode_data_base64=generation_outcome.stdout
+    return f"data:image/png;base64,{qrcode_data_base64}"
+
 if __name__ == "__main__":
     try:
         run_dir=None
@@ -59,7 +81,13 @@ if __name__ == "__main__":
         session_dir = find_latest_session_dir(run_dir)
         device_details = json.load(open(os.path.join(run_dir,"amp-details.json")))
         preset_details = json.load(open(os.path.join(run_dir,"preset-details.json")))
-        generate_svg(svg_template_str, ipaddr, device_details, preset_details)
+        icon_data_uri = generate_icon_data_uri()
+        qrcode_data_uri = generate_qrcode_data_uri(ipaddr)
+        generate_svg(
+            svg_template_str, ipaddr,
+            device_details, preset_details,
+            icon_data_uri, qrcode_data_uri
+        )
 
     except:
         traceback.print_exc()
@@ -98,10 +126,7 @@ psmodule3=a:Twin65
 psmodule4=d:MonoDelay
 psmodule5=r:LargeHallReverb
 
-icon_data_base64=$(base64 --wrap=0 < assets/maneline-icon.png)
-icon_data_uri="data:image/png;base64,$icon_data_base64"
-qrcode_data_base64=$(zint -b QRCODE -d http://$ipaddress:8080 --filetype=PNG --direct | base64 --wrap=0)
-qrcode_data_uri="data:image/png;base64,$qrcode_data_base64"
+
 
 # Generate a mockup
 svg_text1=$(generate_svg_text)
