@@ -29,29 +29,36 @@ def generate_svg(svg_template, ipaddr,device_details, preset_details):
         if key == "psslot":
             svg_text = svg_text.replace("##",preset_details.get(key,"?"))
         else:             
-            svg_text = svg_text.replace("@"+key,preset_details.get(key,"?"))
+            svg_text = svg_text.replace("@"+key,str(preset_details.get(key,"Passthru")))
     svg_fn = f"maneline_lcd-{time.time()}.svg"
     open(svg_fn,"w").write(svg_text)
     webbrowser.open(svg_fn)
     pass
+
+def find_latest_session_dir(run_dir):
+    session_dirs = [
+        d for d in sorted(os.listdir("."))
+        if d.startswith("session_")
+    ]
+    return session_dirs[-1]
+
     
 if __name__ == "__main__":
     try:
         run_dir=None
-        lcd_ui_dir=None
         try:
             run_dir=sys.argv[1]
-            lcd_ui_dir="./web-app/lcd_ui"
         except IndexError:
             run_dir="."
-            lcd_ui_dir=".."
+        lcd_ui_dir=f"{run_dir}/lcd_ui"
         svg_template_str = open(
             os.path.join(lcd_ui_dir,"lcd-480x320-template.svg"),
             "rt"
         ).read()
         ipaddr=getNetworkIp()
-        device_details = json.load(open(os.path.join(run_dir,"amp_details.json")))
-        preset_details = json.load(open(os.path.join(run_dir,"preset_details.json")))
+        session_dir = find_latest_session_dir(run_dir)
+        device_details = json.load(open(os.path.join(run_dir,"amp-details.json")))
+        preset_details = json.load(open(os.path.join(run_dir,"preset-details.json")))
         generate_svg(svg_template_str, ipaddr, device_details, preset_details)
 
     except:

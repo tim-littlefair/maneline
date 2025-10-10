@@ -290,7 +290,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
             ampDetails.add("ampname", new JsonPrimitive(fmicDevice.getProduct()));
             ampDetails.add("fwversion", new JsonPrimitive(m_firmwareVersion));
             FileOutputStream ampDetailsStream = null;
-            ampDetailsStream = new FileOutputStream(m_outputPath + "/amp_details.json");
+            ampDetailsStream = new FileOutputStream("./amp-details.json");
             ampDetailsStream.write(ampDetails.toString().getBytes());
             ampDetailsStream.close();
 

@@ -1,6 +1,7 @@
 package net.heretical_camelid.maneline.lib;
 
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 
 import net.heretical_camelid.maneline.lib.interfaces.IPresetResponseReader;
 import net.heretical_camelid.maneline.lib.registries.PresetRegistry;
@@ -8,6 +9,9 @@ import net.heretical_camelid.maneline.lib.registries.PresetRecord;
 import net.heretical_camelid.maneline.lib.utilities.ByteArrayTranslator;
 import net.heretical_camelid.maneline.lib.utilities.RawProtobufUtilities;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -418,16 +422,52 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
                 "Preset info: name=%s (slot=%02d)\nAudio graph:\n%s",
                 displayName,m_currentPresetIndex,effectDetails
             );
+            log(m_currentPresetDetails);
+            
             HashMap<String,String > lcdAttributes = new HashMap<String,String>();
-            lcdAttributes.put("psslot", String.format("%02d",m_currentPresetIndex));
-            lcdAttributes.put("psname1",currentPresetRecord.displayName().substring(0,8).strip());
-            lcdAttributes.put("psname2",currentPresetRecord.displayName().substring(8).strip());
-            lcdAttributes.put( "psmodule1", currentPresetRecord.moduleName("stomp"));
-            lcdAttributes.put( "psmodule2", currentPresetRecord.moduleName("mod"));
-            lcdAttributes.put( "psmodule3", currentPresetRecord.moduleName("amp"));
-            lcdAttributes.put( "psmodule4", currentPresetRecord.moduleName("delay"));
-            lcdAttributes.put( "psmodule5", currentPresetRecord.moduleName("reverb"));
-            log(m_currentPresetDetails,lcdAttributes);
+
+            JsonObject presetDetails = new JsonObject();
+            presetDetails.add(
+                "psslot",
+                new JsonPrimitive(String.format("%02d",m_currentPresetIndex))
+            );
+            presetDetails.add(
+                "psname1",
+                new JsonPrimitive(currentPresetRecord.displayName().substring(0,8).strip())
+            );
+            presetDetails.add(
+                "psname2",
+                new JsonPrimitive(currentPresetRecord.displayName().substring(8).strip())
+            );
+            presetDetails.add(
+                "psmodule1",
+                new JsonPrimitive(currentPresetRecord.moduleName("stomp"))
+            );
+            presetDetails.add( "psmodule2",
+                new JsonPrimitive(currentPresetRecord.moduleName("mod"))
+            );
+            presetDetails.add( "psmodule3",
+                new JsonPrimitive(currentPresetRecord.moduleName("amp"))
+            );
+            presetDetails.add( "psmodule4",
+                new JsonPrimitive(currentPresetRecord.moduleName("delay"))
+            );
+            presetDetails.add( "psmodule5",
+                new JsonPrimitive(currentPresetRecord.moduleName("reverb"))
+            );
+
+            FileOutputStream presetDetailsStream = null;
+            try {
+                presetDetailsStream = new FileOutputStream(
+                    "./preset-details.json"
+                );
+                presetDetailsStream.write(presetDetails.toString().getBytes());
+                presetDetailsStream.close();
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         } else {
             m_currentPresetDetails = "No preset record found for index " + m_currentPresetIndex;
         }

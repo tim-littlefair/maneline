@@ -4,7 +4,7 @@ rundir=$(pwd)/_work/webhome
 
 if [ "$1" = "--clean" ]
 then
-    rm -rf $rundir
+    rm -rf $rundir/* $rundir
     shift
 fi
 
@@ -18,6 +18,11 @@ check_webhome() {
     if [ ! -L $rundir/web_ui ]
     then
         ln -s ../../web-app/web_ui $rundir
+    fi
+
+    if [ ! -L $rundir/lcd_ui ]
+    then
+        ln -s ../../web-app/lcd_ui $rundir
     fi
 
     if [ ! -L $rundir/lua ]
