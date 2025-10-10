@@ -123,21 +123,67 @@
         x="120.0"
         y="240.0"
     >@psmodule1</text>
+
     <text style="font-size:22px;fill:#333"
-        text-anchor="middle"
-        x="120.0"
-        y="272.0"
+          text-anchor="middle"
+          x="240.0"
+          y="240.0"
+    >&#x21e8;</text>
+
+    <text style="font-size:22px;fill:#333"
+          text-anchor="middle"
+          x="360.0"
+          y="240.0"
+    >@psmodule2</text>
+
+    <text style="font-size:22px;fill:#333"
+          text-anchor="middle"
+          x="360.0"
+          y="260.0"
     >&#x21e9;</text>
     <text style="font-size:22px;fill:#333"
-        text-anchor="middle"
-        x="120.0"
-        y="300.0"
-    >@psmodule2</text>
+          text-anchor="middle"
+          x="340.0"
+          y="270.0"
+    >&#x21e6;</text>
+
     <text style="font-size:22px;fill:#333"
-        text-anchor="middle"
-        x="220.0"
-        y="305.0"
+          text-anchor="middle"
+          x="240.0"
+          y="270.0"
+    >@psmodule3</text>
+
+    <text style="font-size:22px;fill:#333"
+          text-anchor="middle"
+          x="140.0"
+          y="270.0"
+    >&#x21e6;</text>
+    <text style="font-size:22px;fill:#333"
+          text-anchor="middle"
+          x="120.0"
+          y="280.0"
+    >&#x21e9;</text>
+
+    <text style="font-size:22px;fill:#333"
+          text-anchor="middle"
+          x="120.0"
+          y="300.0"
+    >@psmodule4</text>
+
+    <text style="font-size:22px;fill:#333"
+          text-anchor="middle"
+          x="240.0"
+          y="300.0"
     >&#x21e8;</text>
+
+    <text style="font-size:22px;fill:#333"
+          text-anchor="middle"
+          x="360.0"
+          y="300.0"
+    >@psmodule5</text>
+
+
+    <!--
     <text style="font-size:22px;fill:#333"
         text-anchor="middle"
         x="240.0"
@@ -146,33 +192,9 @@
     <text style="font-size:22px;fill:#333"
         text-anchor="middle"
         x="240.0"
-        y="270.0"
-    >@psmodule3</text>
-    <text style="font-size:22px;fill:#333"
-        text-anchor="middle"
-        x="240.0"
         y="250.0"
     >&#x21e7;</text>
-    <text style="font-size:22px;fill:#333"
-        text-anchor="middle"
-        x="265.0"
-        y="240.0"
-    >&#x21e8;</text>
-    <text style="font-size:22px;fill:#333"
-        text-anchor="middle"
-        x="360.0"
-        y="240.0"
-    >@psmodule4</text>
-    <text style="font-size:22px;fill:#333"
-        text-anchor="middle"
-        x="360.0"
-        y="272.0"
-    >&#x21e9;</text>
-    <text style="font-size:22px;fill:#333"
-        text-anchor="middle"
-        x="360.0"
-        y="300.0"
-    >@psmodule5</text>
+    -->
   </g>
   <metadata
      id="metadata9">
