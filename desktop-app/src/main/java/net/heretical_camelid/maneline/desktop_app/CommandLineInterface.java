@@ -131,14 +131,11 @@ public class CommandLineInterface {
             if (dotJarOffset != -1) {
                 cmdLine = cmdLine.substring(0, dotJarOffset + ".jar".length());
             } else {
-                cmdLine = null;
+                // Exact command line not available - take a stab at it.
+                cmdLine = "java -jar maneline-cli-XX.YY.ZZ.jar";
             }
         }
 
-        if(cmdLine==null) {
-            // Exact command line not available - take a stab at it.
-            cmdLine = "java -jar maneline-cli-XX.YY.ZZ.jar";
-        }
         HashMap<String,String> substitutions = new HashMap<>();
         substitutions.put("%PROG%",cmdLine);
         showMessageWithSubstitutions(

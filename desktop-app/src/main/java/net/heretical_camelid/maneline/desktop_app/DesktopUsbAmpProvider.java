@@ -18,6 +18,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+
 import net.heretical_camelid.maneline.lib.registries.SlotBasedPresetSuiteExporter;
 
 import static net.heretical_camelid.maneline.lib.AbstractMessageProtocolBase.enable_printAsHex2;
@@ -32,6 +35,8 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
     PresetRegistry m_presetRegistry;
     SuiteRegistry m_suiteRegistry;
     HidServices m_hidServices;
+
+    final String m_outputPath;
 
     public DesktopUsbAmpProvider(boolean s_webMode, String outputPath) {
 
@@ -48,6 +53,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
             }
             assert outputDir.exists() : "Failed to create output directory";
         }
+        m_outputPath = outputPath;
 
         if(s_loggingAgent!=null) {
             // Logging agent already exists, no need to recreate it
@@ -172,7 +178,6 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
                 requestReport=true;
                 // TODO?: Consider implementing a CLI switch for 'have a go anyway'?
                 fmicDevice = null;
-
             }
             if (requestReport) {
                 System.out.println();
@@ -271,6 +276,38 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
         }
     }
 
+    private void saveAmpDetailsJson(HidDevice fmicDevice) {
+        // If we get to this point dump a JSON file in the run directory
+        // which the LCD UI can consume to display the maneline software
+        // version and details of maneline the connected amp
+        try {
+            JsonObject ampDetails = new JsonObject();
+            String manelineAppVersion = getClass().getPackage().getImplementationVersion();
+            if(manelineAppVersion==null) {
+                manelineAppVersion="unknown";
+            }
+            ampDetails.add("swversion", new JsonPrimitive(manelineAppVersion));
+            ampDetails.add("ampname", new JsonPrimitive(fmicDevice.getProduct()));
+            ampDetails.add("fwversion", new JsonPrimitive(m_firmwareVersion));
+            FileOutputStream ampDetailsStream = null;
+            ampDetailsStream = new FileOutputStream(m_outputPath + "/amp_details.json");
+            ampDetailsStream.write(ampDetails.toString().getBytes());
+            ampDetailsStream.close();
+
+            // LCD UI also needs to consume a JSON file with details of the current
+            // preset, we create an empty version of this.
+            JsonObject presetDetails = new JsonObject();
+            FileOutputStream presetDetailsStream = new FileOutputStream(
+                m_outputPath + "/preset_details.json");
+            presetDetailsStream.write(presetDetails.toString().getBytes());
+            presetDetailsStream.close();
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public void stopProvider() {
         m_protocol.doShutdown();
         m_hidServices.stop();
@@ -286,6 +323,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
         String[] firmwareVersionEtc = new String[] { null };
         int startupStatus = m_protocol.doStartup(firmwareVersionEtc);
         m_firmwareVersion = m_protocol.getFirmwareVersion();
+        saveAmpDetailsJson(hidDevice);
 
         // The desktop app is used to generate curated suites of presets.
         // notify the relevant class in the library of the product name,

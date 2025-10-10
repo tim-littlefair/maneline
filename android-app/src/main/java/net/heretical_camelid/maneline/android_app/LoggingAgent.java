@@ -5,6 +5,8 @@ import android.widget.TextView;
 import net.heretical_camelid.maneline.lib.interfaces.ILoggingAgent;
 import net.heretical_camelid.maneline.lib.interfaces.LoggingAgentBase;
 
+import java.util.Map;
+
 public class LoggingAgent
     extends LoggingAgentBase
     implements ILoggingAgent {
@@ -20,10 +22,10 @@ public class LoggingAgent
     }
 
     @Override
-    public void appendToLog(String messageToAppend, Object extraObject) {
-        if(extraObject!=null) {
+    public void appendToLog(String messageToAppend, Map<String,String> extraAttributes) {
+        if(extraAttributes!=null) {
             assert messageToAppend!=null;
-            messageToAppend += extraObject.toString();
+            messageToAppend += extraAttributes.toString();
         }
 
         if(messageToAppend!=null) {

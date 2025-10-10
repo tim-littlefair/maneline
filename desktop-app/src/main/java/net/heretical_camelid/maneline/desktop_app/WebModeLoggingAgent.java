@@ -1,20 +1,16 @@
 package net.heretical_camelid.maneline.desktop_app;
 
-/*
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.simple.SimpleLogger;
-*/
+import net.heretical_camelid.maneline.lib.interfaces.LoggingAgentBase;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import static net.logstash.logback.argument.StructuredArguments.kv;
-
-import net.heretical_camelid.maneline.lib.interfaces.LoggingAgentBase;
+import org.slf4j.spi.LoggingEventBuilder;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
+import java.util.HashMap;
+import java.util.Map;
 
 public class WebModeLoggingAgent extends LoggingAgentBase {
     private static final Logger m_logger = LoggerFactory.getLogger("FILE");
@@ -37,12 +33,15 @@ public class WebModeLoggingAgent extends LoggingAgentBase {
     }
 
     @Override
-    public void appendToLog(String messageToAppend, Object o) {
+    public void appendToLog(
+        String messageToAppend,
+        Map<String,String> extraAttributes
+    ) {
         assert messageToAppend != null;
         final String messageToAppendWithObject;
-        if(o!=null) {
+        if(extraAttributes!=null) {
             messageToAppendWithObject = String.format(
-                "%s object=%s", messageToAppend, o
+                "%s object=%s", messageToAppend, extraAttributes
             );
         } else {
             messageToAppendWithObject = messageToAppend;
@@ -50,7 +49,14 @@ public class WebModeLoggingAgent extends LoggingAgentBase {
         if(m_sessionLog==null) {
             System.out.println(messageToAppendWithObject);
         } else if(getTransactionName() != null) {
-            m_logger.info(messageToAppend, o);
+            LoggingEventBuilder leb = m_logger.atInfo();
+            leb = leb.setMessage(messageToAppend);
+            if(extraAttributes!=null) {
+                for(String k: extraAttributes.keySet()) {
+                    leb = leb.addKeyValue(k,extraAttributes.get(k));
+                }
+            }
+            leb.log();
         } else {
             m_sessionLog.println(messageToAppendWithObject);
         }

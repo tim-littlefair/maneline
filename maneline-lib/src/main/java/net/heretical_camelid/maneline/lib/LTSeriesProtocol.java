@@ -1,5 +1,7 @@
 package net.heretical_camelid.maneline.lib;
 
+import com.google.gson.JsonObject;
+
 import net.heretical_camelid.maneline.lib.interfaces.IPresetResponseReader;
 import net.heretical_camelid.maneline.lib.registries.PresetRegistry;
 import net.heretical_camelid.maneline.lib.registries.PresetRecord;
@@ -8,6 +10,7 @@ import net.heretical_camelid.maneline.lib.utilities.RawProtobufUtilities;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.HashMap;
 
 // Useful reference:
 // https://github.com/brentmaxwell/LtAmp/tree/main/Schema/protobuf
@@ -145,18 +148,14 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
     @Override
     public String getStatus() {
         final String[] retval = new String[1];
+        final PresetRecord[] presetRecord = new PresetRecord[1];
         s_presetResponseReader = new IPresetResponseReader() {
             @Override
             public void notifyPresetResponse(int slotIndex, String presetJson) {
+                presetRecord[0] = new PresetRecord("",presetJson.getBytes());
                 retval[0] = "currentPresetIndex="+slotIndex;
             }
         };
-        setLogTransactionName("currentPresetIndex");
-        appendToLog(
-            "preset=" + m_currentPresetIndex,
-            m_currentPresetDetails
-        );
-        setLogTransactionName(null);
         s_presetResponseReader = null;
         return retval[0];
     }
@@ -419,7 +418,16 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
                 "Preset info: name=%s (slot=%02d)\nAudio graph:\n%s",
                 displayName,m_currentPresetIndex,effectDetails
             );
-            log(m_currentPresetDetails);
+            HashMap<String,String > lcdAttributes = new HashMap<String,String>();
+            lcdAttributes.put("psslot", String.format("%02d",m_currentPresetIndex));
+            lcdAttributes.put("psname1",currentPresetRecord.displayName().substring(0,8).strip());
+            lcdAttributes.put("psname2",currentPresetRecord.displayName().substring(8).strip());
+            lcdAttributes.put( "psmodule1", currentPresetRecord.moduleName("stomp"));
+            lcdAttributes.put( "psmodule2", currentPresetRecord.moduleName("mod"));
+            lcdAttributes.put( "psmodule3", currentPresetRecord.moduleName("amp"));
+            lcdAttributes.put( "psmodule4", currentPresetRecord.moduleName("delay"));
+            lcdAttributes.put( "psmodule5", currentPresetRecord.moduleName("reverb"));
+            log(m_currentPresetDetails,lcdAttributes);
         } else {
             m_currentPresetDetails = "No preset record found for index " + m_currentPresetIndex;
         }

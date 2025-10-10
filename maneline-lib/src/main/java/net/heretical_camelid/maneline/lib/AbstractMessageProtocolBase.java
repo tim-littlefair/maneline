@@ -4,6 +4,8 @@ import net.heretical_camelid.maneline.lib.interfaces.IDeviceTransport;
 import net.heretical_camelid.maneline.lib.interfaces.ILoggingAgent;
 import net.heretical_camelid.maneline.lib.registries.PresetRegistry;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -51,6 +53,14 @@ public abstract class AbstractMessageProtocolBase {
     protected static void log(String message) {
         if(s_loggingAgent!=null) {
             s_loggingAgent.appendToLog(message);
+        } else {
+            System.out.println(message);
+        }
+    }
+
+    protected static void log(String message, HashMap<String, String> extraAttributes) {
+        if(s_loggingAgent!=null) {
+            s_loggingAgent.appendToLog(message,extraAttributes);
         } else {
             System.out.println(message);
         }
@@ -122,9 +132,9 @@ public abstract class AbstractMessageProtocolBase {
         return name;
     }
 
-    void appendToLog(String message, Object o) {
+    void appendToLog(String message, Map<String,String> extraAttributes) {
         if(s_loggingAgent!=null) {
-            s_loggingAgent.appendToLog(message,o);
+            s_loggingAgent.appendToLog(message,extraAttributes);
         }
     }
     void setLogTransactionName(String transactionName) {
