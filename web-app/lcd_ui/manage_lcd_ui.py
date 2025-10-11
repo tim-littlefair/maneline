@@ -28,20 +28,26 @@ def getNetworkIp():
 def generate_svg(
         svg_template, ipaddr,
         device_details, preset_details,
-        icon_data_uri, qrcode_data_uri
+        icon_data_uri, qrcode_data_uri,
+        run_dir
 ):
     svg_text = svg_template
     svg_text = svg_text.replace("@ipaddress",ipaddr)
     for key in device_details.keys():
-        svg_text = svg_text.replace("@"+key,device_details.get(key,"?"))
+        value = device_details.get(key,"?")
+        if value == "swversion" and len(value)>14:
+            value=value[0:14]
+        svg_text = svg_text.replace("@"+key,value)
+
     for key in preset_details.keys():
         if key == "psslot":
             svg_text = svg_text.replace("##",preset_details.get(key,"?"))
         else:             
-            svg_text = svg_text.replace("@"+key,str(preset_details.get(key,"Passthru")))
+            svg_text = svg_text.replace("@"+key,str(preset_details.get(key,"?")))
     svg_text = svg_text.replace("@icon_data_uri",icon_data_uri)
     svg_text = svg_text.replace("@qrcode_data_uri",qrcode_data_uri)
-    svg_fn = f"maneline_lcd-{time.time()}.svg"
+    session_dir = find_latest_session_dir(run_dir)
+    svg_fn = f"{session_dir}/maneline_lcd-{time.time():.3f}.svg"
     open(svg_fn,"w").write(svg_text)
     return svg_fn
 
@@ -90,24 +96,30 @@ def update_lcd_ui(run_dir, ipaddr, display_method):
     svg_fn=generate_svg(
         svg_template_str, ipaddr,
         device_details, preset_details,
-        icon_data_uri, qrcode_data_uri
+        icon_data_uri, qrcode_data_uri,
+        run_dir
     )
     if display_method is None:
         pass
     elif display_method == "--web":
         webbrowser.open(svg_fn)
     elif display_method.startswith("--fb"):
-        dev_path=display_method.replace("--","/dev/")
-        assert os.path.exists(dev_path)
         png_fn=svg_fn.replace(".svg",".png")
         subprocess.run(
             f"/usr/bin/rsvg-convert -w 480 -h 320 {svg_fn} -o {png_fn}",
             shell=True
         )
-        subprocess.run(
-            f"/usr/bin/fbi -T 1 -noverbose -d {dev_path} {png_fn}",
-            shell=True
-        )
+        dev_paths = None
+        if display_method == "--fb-both":
+            dev_paths = [ "/dev/fb0", "/dev/fb1" ]
+        else:
+            dev_paths=[ display_method.replace("--","/dev/") ]
+        for dev_path in dev_paths:
+            assert os.path.exists(dev_path)
+            subprocess.run(
+                f"/usr/bin/fbi -a -T 1 -noverbose -d {dev_path} {png_fn}",
+                shell=True
+            )
     else:
         print(f"Unexpected display method: {display_method}", file=sys.stderr)
         exit(1)

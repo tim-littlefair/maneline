@@ -79,7 +79,7 @@ echo cli jar path=$(pwd)/$cli_jar
 # the GPIO-attached LCD if there is one
 if [ "$(whoami)" = "root" ]
 then
-  python3 lcd_ui/manage_lcd_ui.py . --fb1 &
+  python3 lcd_ui/manage_lcd_ui.py . --fb-both &
   lcd_ui_manager_pid=$!
   echo LCD being managed by process $lcd_ui_manager_pid
 fi
