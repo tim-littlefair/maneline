@@ -16,11 +16,11 @@ export releaseString=$RELEASE_VERSION_MAJOR.$RELEASE_VERSION_MINOR.$RELEASE_VERS
 export gitHash=$(git rev-parse HEAD | cut -c 1-7)
 export gitUncleanFileCount=$(git diff --name-only | wc -l)
 export buildId=$(printf "%04d" "$BUILD_ID")
-export buildString="$releaseString+beta$buildId.$gitHash.$gitUncleanFileCount"
 
 if [ "$gitUncleanFileCount" = "0" ]  
 then
   export buildGitRef="#$gitHash"
+  export buildString="$releaseString+beta$buildId"
 else
   # buildGitRef will include the basenames of the files which are 
   # dirty relative to the commit identified by gitHash
@@ -28,6 +28,7 @@ else
   # Wrapping the command with 'echo' collapses newlines in 
   # $gitUncleanFileList to spaces
   export buildGitRef=$(echo "#$gitHash" + changes to: $gitUncleanFileList)
+  export buildString="$releaseString+beta$buildId.$gitHash.$gitUncleanFileCount"
 fi
 
 # Android releases require a numeric version code, which must increase
@@ -161,7 +162,7 @@ then
 
   if [ "$1" = "--debug" ]
   then
-    push_cmd="balena push --debug $draft_flag --source $balenaFakerootDir $deploy_fleet"
+    push_cmd="balena push --debug --emulated $draft_flag --source $balenaFakerootDir $deploy_fleet"
     shift
   else
     push_cmd="balena push $draft_flag --source $balenaFakerootDir $deploy_fleet"
