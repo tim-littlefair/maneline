@@ -1,13 +1,5 @@
 #!/bin/bash
 
-# On RPi only, generate a splash screen for a
-# GPIO-attached screen if there is one
-if [ "$(whoami)" = "root" ]
-then
-  fbi lcd_ui/lcd-mockup-large.png -a -T 1 -noverbose -d /dev/fb0
-  fbi lcd_ui/lcd-mockup.png -a -T 1 -noverbose -d /dev/fb1
-fi
-
 # If the local browser is enabled, wait for it
 # to come up before starting the Pegasus web
 # server and its FHAU command line subprocess.
@@ -63,7 +55,7 @@ then
     # resources are all copied from /home/maneline
     # into the run directory /var/run/maneline.
     cd /var/run/maneline
-    for d in lua web_ui jar run.sh
+    for d in lua web_ui lcd_ui jar run.sh
     do
         rm -rf ./$d
         cp -R /home/maneline/$d .
@@ -81,7 +73,17 @@ echo Starting Pegasus and maneline CLI in directory $start_dir
 
 export cli_jar=$(ls -1 jar/*.jar | sort -r | head -1)
 echo cli jar path=$(pwd)/$cli_jar
-ls
+
+# On RPi only, start a background process to watch for
+# updates to the file preset-details.json and refresh
+# the GPIO-attached LCD if there is one
+if [ "$(whoami)" = "root" ]
+then
+  python3 lcd_ui/manage_lcd_ui.py . --fb1 &
+  lcd_ui_manager_pid=$!
+  echo LCD being managed by process $lcd_ui_manager_pid
+fi
+
 pwd
 cd ./lua
 
@@ -93,12 +95,16 @@ cli_run_status=$?
 
 echo "Pegasus/CLI app has exited with status $cli_run_status"
 
+if [ ! -z $lcd_ui_manager_pid ]
+then
+  kill $lcd_ui_manager_pid
+fi
+
 # Allow the background sleep/curl subprocess to return its status
 wait
 
 echo "The Pegasus/CLI container will exit in $exit_wait_sleep_length seconds"
 sleep $exit_wait_sleep_length
-
 
 echo "Pegasus/CLI container will exit now"
 exit $cli_run_status

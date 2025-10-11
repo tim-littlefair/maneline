@@ -83,11 +83,13 @@ RUN luarocks install pegasus
 
 # iproute2 is required to get the IP address of the device
 # zint is used to generate a 2D barcode with the URL of the webserver from the IP address
-# librsvg2-bin, optipng and fbi are used to render the barcode into SVG's for displaying on the optional LCD UI
-# python3 and the python3- packages are used to render the barcode for displaying on the optional e-paper UI
-# systemctl is used to enable scripts to display startup and shutdown on either the epaper or LCD UI
-RUN apt-get install -y --no-install-recommends --no-install-suggests iproute2 zint librsvg2-bin optipng \
-    python3 python3-pil python3-numpy python3-spidev python3-gpiozero python3-lgpio 
+# librsvg2-bin, optipng, fbi and fbset are used to render the barcode into SVG's for
+# displaying on the optional LCD UI
+# python3 and the python3- packages are used to render the barcode for displaying on the
+# optional e-paper UI
+RUN apt-get install -y --no-install-recommends --no-install-suggests \
+    iproute2 zint librsvg2-bin optipng fbi fbset \
+    python3 python3-pil python3-numpy python3-spidev python3-gpiozero python3-lgpio python3-watchdog
 
 FROM platform-layer AS web-app
 COPY ./lua ./lua

@@ -43,8 +43,7 @@ def generate_svg(
     svg_text = svg_text.replace("@qrcode_data_uri",qrcode_data_uri)
     svg_fn = f"maneline_lcd-{time.time()}.svg"
     open(svg_fn,"w").write(svg_text)
-    webbrowser.open(svg_fn)
-    pass
+    return svg_fn
 
 def find_latest_session_dir(run_dir):
     session_dirs = [
@@ -70,38 +69,71 @@ def generate_qrcode_data_uri(ipaddr):
     return f"data:image/png;base64,{qrcode_data_base64}"
 
 class PresetUpdatedHandler(PatternMatchingEventHandler):
-    def __init__(self, run_dir, ipaddr):
+    def __init__(self, run_dir, ipaddr, display_method):
         super().__init__(
             patterns = [ "./preset-details.json" ],
             ignore_directories=True
         )
         self.run_dir = run_dir
         self.ipaddr = ipaddr
+        self.display_method = display_method
 
     def on_closed(self,event):
-        print(event)
-        update_lcd_ui(self.run_dir, self.ipaddr)
+        update_lcd_ui(self.run_dir, self.ipaddr, display_method)
 
 
-def update_lcd_ui(run_dir, ipaddr):
+def update_lcd_ui(run_dir, ipaddr, display_method):
     device_details = json.load(open(os.path.join(run_dir, "amp-details.json")))
     preset_details = json.load(open(os.path.join(run_dir, "preset-details.json")))
     icon_data_uri = generate_icon_data_uri()
     qrcode_data_uri = generate_qrcode_data_uri(ipaddr)
-    generate_svg(
+    svg_fn=generate_svg(
         svg_template_str, ipaddr,
         device_details, preset_details,
         icon_data_uri, qrcode_data_uri
     )
-
+    if display_method is None:
+        pass
+    elif display_method == "--web":
+        webbrowser.open(svg_fn)
+    elif display_method.startswith("--fb"):
+        dev_path=display_method.replace("--","/dev/")
+        assert os.path.exists(dev_path)
+        png_fn=svg_fn.replace(".svg",".png")
+        subprocess.run(
+            f"/usr/bin/rsvg-convert -w 480 -h 320 {svg_fn} -o {png_fn}",
+            shell=True
+        )
+        subprocess.run(
+            f"/usr/bin/fbi -T 1 -noverbose -d {dev_path} {png_fn}",
+            shell=True
+        )
+    else:
+        print(f"Unexpected display method: {display_method}", file=sys.stderr)
+        exit(1)
 
 if __name__ == "__main__":
     try:
         run_dir=None
+        display_method=None
         try:
             run_dir=sys.argv[1]
+            sys.argv.pop(1)
         except IndexError:
             run_dir="."
+        try:
+            display_method=sys.argv[1]
+            if display_method=="--fbX":
+                if os.path.exists("/dev/fb1"):
+                    display_method="--fb1"
+                elif os.path.exists("/dev/fb0"):
+                    display_method="--fb0"
+                else:
+                    display_method=None
+            display_method=sys.argv.pop(1)
+        except IndexError:
+            pass
+
         lcd_ui_dir=f"{run_dir}/lcd_ui"
         svg_template_str = open(
             os.path.join(lcd_ui_dir,"lcd-480x320-template.svg"),
@@ -109,17 +141,17 @@ if __name__ == "__main__":
         ).read()
         ipaddr=getNetworkIp()
         session_dir = find_latest_session_dir(run_dir)
-        update_lcd_ui(run_dir, ipaddr)
 
         preset_details_observer = Observer()
         preset_details_observer.schedule(
-            PresetUpdatedHandler(run_dir, ipaddr),
+            PresetUpdatedHandler(run_dir, ipaddr, display_method),
             f"{run_dir}",recursive=True,
         )
         preset_details_observer.start()
+        #update_lcd_ui(run_dir, ipaddr, display_method)
         try:
-            while(True):
-                time.sleep(0.1)
+            while True:
+                time.sleep(60)
         except KeyboardInterrupt:
             pass
         preset_details_observer.stop()
