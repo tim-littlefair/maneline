@@ -15,9 +15,8 @@
       @font-face {
         font-family: "Josefin+Sans";
       }
-
-      tspan {
-      font-family: "Josefin+Sans", sans-serif;
+      text, tspan {
+        font-family: "Josefin+Sans", sans-serif;
       }
     </style>
   </defs>

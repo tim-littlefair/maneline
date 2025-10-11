@@ -35,10 +35,9 @@ def generate_svg(
     svg_text = svg_text.replace("@ipaddress",ipaddr)
     for key in device_details.keys():
         value = device_details.get(key,"?")
-        if value == "swversion" and len(value)>14:
+        if key == "swversion" and len(value)>14:
             value=value[0:14]
         svg_text = svg_text.replace("@"+key,value)
-
     for key in preset_details.keys():
         if key == "psslot":
             svg_text = svg_text.replace("##",preset_details.get(key,"?"))
@@ -106,7 +105,7 @@ def update_lcd_ui(run_dir, ipaddr, display_method):
     elif display_method.startswith("--fb"):
         png_fn=svg_fn.replace(".svg",".png")
         subprocess.run(
-            f"/usr/bin/rsvg-convert -w 480 -h 320 {svg_fn} -o {png_fn}",
+            f"/usr/bin/rsvg-convert -w 2400 -h 1600 {svg_fn} -o {png_fn}",
             shell=True
         )
         dev_paths = None
