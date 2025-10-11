@@ -114,11 +114,13 @@ def update_lcd_ui(run_dir, ipaddr, display_method):
         else:
             dev_paths=[ display_method.replace("--","/dev/") ]
         for dev_path in dev_paths:
-            assert os.path.exists(dev_path)
-            subprocess.run(
-                f"/usr/bin/fbi -a -T 1 -noverbose -d {dev_path} {png_fn}",
-                shell=True
-            )
+            if os.path.exists(dev_path):
+                subprocess.run(
+                    f"/usr/bin/fbi -a -T 1 -noverbose -d {dev_path} {png_fn}",
+                    shell=True
+                )
+            else:
+                pass
     else:
         print(f"Unexpected display method: {display_method}", file=sys.stderr)
         exit(1)
