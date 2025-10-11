@@ -38,25 +38,25 @@
         y="10.0px"
     />
     <text
-        style="font-size:14px;fill:#a11">
+        style="font-size:13px;fill:#a11">
       <tspan
           x="10.0"
           y="130.0">Maneline</tspan>
     </text>
     <text
-        style="font-size:14px;fill:#a11">
+        style="font-size:13px;fill:#a11">
       <tspan
           x="10.0"
           y="150.0">@swversion</tspan>
     </text>
     <text
-        style="font-size:14px;fill:#a11">
+        style="font-size:13px;fill:#a11">
       <tspan
           x="10.0"
           y="170.0">@ampname</tspan>
     </text>
     <text
-        style="font-size:14px;fill:#a11">
+        style="font-size:13px;fill:#a11">
       <tspan
           x="10.0"
           y="190.0">@fwversion</tspan>
@@ -69,19 +69,19 @@
         y="10.0"
     />
     <text
-        style="font-size:14px;fill:#11a">
+        style="font-size:13px;fill:#11a">
       <tspan
           x="370.0"
           y="130.0">http://</tspan>
     </text>
     <text
-        style="font-size:14px;fill:#11a">
+        style="font-size:13px;fill:#11a">
       <tspan
           x="370.0"
           y="150.0">@ipaddress</tspan>
     </text>
     <text
-        style="font-size:14px;fill:#11a">
+        style="font-size:13px;fill:#11a">
       <tspan
           x="370.0"
           y="170.0">:8080</tspan>
@@ -94,19 +94,19 @@
         height="200.0"
     />
     <text
-      style="font-size:120px;fill:#fff"
+      style="font-size:110px;fill:#fff"
       text-anchor="middle"
       x="240.0"
       y="100.0"
     >##</text>
     <text
-        style="font-size:45px; fill:#fff"
+        style="font-size:40px; fill:#fff"
         text-anchor="middle"
         x="240.0"
         y="150.0"
     >@psname1</text>
     <text
-        style="font-size:45px; fill:#fff"
+        style="font-size:40px; fill:#fff"
         text-anchor="middle"
         x="240.0"
         y="200.0"
