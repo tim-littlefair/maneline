@@ -84,8 +84,8 @@ public class PresetRecord {
                     replace("DUBS_", "").
                     // MMP prefix
                     replace("ACD_", "").
-                    // placeholder where no module selected
-                    replace("Passthru","");
+                    // suffix on some MMP presets (presumably also GT/GTX)
+                    replace("GT", "");
             }
         }
         return "";
