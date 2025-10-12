@@ -55,7 +55,10 @@ def find_latest_session_dir(run_dir):
         d for d in sorted(os.listdir("."))
         if d.startswith("session_")
     ]
-    return session_dirs[-1]
+    if len(session_dirs)>0:
+        return session_dirs[-1]
+    else:
+        return None
 
 def generate_icon_data_uri():
     generation_outcome = subprocess.run(
@@ -153,8 +156,6 @@ if __name__ == "__main__":
             "rt"
         ).read()
         ipaddr=getNetworkIp()
-        session_dir = find_latest_session_dir(run_dir)
-
         preset_details_observer = Observer()
         preset_details_observer.schedule(
             PresetUpdatedHandler(run_dir, ipaddr, display_method),

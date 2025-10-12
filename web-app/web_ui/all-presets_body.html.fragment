@@ -27,8 +27,8 @@ function td_inner_html(i) {
 }
 
 function populate_table() {
-    max_cols=6
-    max_rows=5
+    max_cols=8
+    max_rows=8
     tbody_inner_html = ""
     for(let row=1; row<=max_rows; ++row)
     {

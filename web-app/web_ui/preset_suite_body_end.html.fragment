@@ -28,7 +28,7 @@ function td_inner_html(i, nameLine1, nameLine2) {
 suite_from_json = #SUITE_JSON#
 
 function populate_table() {
-    max_cols=6
+    max_cols=8
     tbody_inner_html = ""
     index_into_suite=0
     while(index_into_suite<suite_from_json.presets.length)

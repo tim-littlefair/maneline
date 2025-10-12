@@ -4265,7 +4265,7 @@ a .wy-menu-vertical li button.toctree-expand {
 
 .wy-tray-container li {
   display: block;
-  width: 300px;
+  width: 200px;
   background: transparent;
   color: #fff;
   text-align: center;
@@ -5883,7 +5883,7 @@ html {
 }
 
 .wy-menu-vertical {
-  width: 300px
+  width: 200px
 }
 
 .wy-menu-vertical header,
@@ -6181,7 +6181,7 @@ html {
 
 .wy-side-nav-search {
   display: block;
-  width: 300px;
+  width: 200px;
   padding: .809em;
   margin-bottom: .809em;
   z-index: 200;
@@ -6303,7 +6303,7 @@ html {
   bottom: 0;
   left: 0;
   padding-bottom: 2em;
-  width: 300px;
+  width: 200px;
   overflow-x: hidden;
   overflow-y: hidden;
   min-height: 100%;
@@ -6364,15 +6364,15 @@ html {
 }
 
 .wy-nav-content-wrap {
-  margin-left: 300px;
+  margin-left: 200px;
   background: #fcfcfc;
   min-height: 100%
 }
 
 .wy-nav-content {
-  padding: 1.618em 3.236em;
+  padding: 1.0em 2.0em;
   height: 100%;
-  max-width: 800px;
+  max-width: 1000px;
   margin: auto
 }
 
@@ -6474,7 +6474,7 @@ footer span.commit code {
   }
 
   .wy-nav-side {
-    left: -300px
+    left: -200px
   }
 
   .wy-nav-side.shift {
@@ -6534,7 +6534,7 @@ footer span.commit code {
   position: fixed;
   bottom: 0;
   left: 0;
-  width: 300px;
+  width: 200px;
   color: #fcfcfc;
   background: #1f1d1d;
   font-family: Lato, proxima-nova, Helvetica Neue, Arial, sans-serif;
@@ -6664,7 +6664,7 @@ footer span.commit code {
   right: 20px;
   left: auto;
   border: none;
-  max-width: 300px;
+  max-width: 200px;
   max-height: 90%
 }
 

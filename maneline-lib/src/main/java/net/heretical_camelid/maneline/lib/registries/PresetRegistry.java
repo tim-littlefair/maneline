@@ -259,8 +259,8 @@ public class PresetRegistry implements IPresetResponseReader {
                         // TL: really this is just my favourites
                         // at the moment - no promises that it won't
                         // change over time
-                        suitePathPrefix, "PickNMix",
-                        1, 2, 7, 8, 12, 14, 15, 30, 31
+                        suitePathPrefix, "Favourites",
+                        1, 2, 7, 12, 14, 15, 17, 30
                     ),
                     createSuite(suitePathPrefix, "Folk", 1, 10, 30),
                     createSuite(suitePathPrefix, "Blues", 3, 8, 17, 26),

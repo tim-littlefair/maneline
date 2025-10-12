@@ -120,7 +120,7 @@ function Web_UI:handle(request, response)
     else
         if req_path=="/index.html"
         then
-            response:addHeader("Cache-Control","max-age=3600")
+            response:addHeader("Cache-Control","max-age=60, stale-while-revalidate=120")
             response:writeFile("./web_ui/index.html")
         elseif req_path=="/cds"
         then
@@ -144,14 +144,14 @@ function Web_UI:handle(request, response)
             response:write(suite_html)
         elseif req_path=="/favicon.ico"
         then
-            response:addHeader("Cache-Control","max-age=3600")
+            response:addHeader("Cache-Control","max-age=60, stale-while-revalidate=120")
             response:writeFile("./web_ui/_static/maneline-icon-512x512.png")
         else
             if lfs.attributes("."..req_path)
             then
                 if req_path:find("web_ui")
                 then
-                    response:addHeader("Cache-Control","max-age=360, stale-while-revalidate=3600")
+                    response:addHeader("Cache-Control","max-age=60, stale-while-revalidate=120")
                 end
                 response:writeFile("."..req_path)
             else
