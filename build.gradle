@@ -26,7 +26,7 @@ buildscript {
         classpath 'io.netty:netty-codec-http:4.2.6.Final'
         classpath 'io.netty:netty-codec-http2:4.2.6.Final'
         classpath 'org.apache.commons:commons-compress:1.28.0'
-        classpath "org.apache.commons:commons-lang3:3.18.0"
+        classpath "org.apache.commons:commons-lang3:3.19.0"
         classpath "org.apache.commons:commons-collections4:4.5.0"
         classpath "commons-io:commons-io:2.20.0"
         classpath 'com.google.guava:guava:33.5.0-android'
