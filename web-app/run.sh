@@ -82,6 +82,8 @@ then
   python3 lcd_ui/manage_lcd_ui.py . --fb-both &
   lcd_ui_manager_pid=$!
   echo LCD being managed by process $lcd_ui_manager_pid
+else
+  python3 -c "import webbrowser ; webbrowser.open('http://127.0.0.1:8080')"
 fi
 
 pwd

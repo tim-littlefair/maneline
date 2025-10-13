@@ -19,9 +19,10 @@ local Fhau = {}
 local session_start_time_t = os.time()
 local session_name = "session_"..os.date("%Y%m%d%H%M%S")
 local fhau_cli_input_fd = nil
+local retained_session_names = {}
 
 function Fhau:purge_stale_session_dirs(number_to_retain)
-    session_dirs = io.popen("ls -1d session_* | sort --reverse","r")
+    session_dirs = io.popen('test -z "session_*" && ls -1d session_* | sort --reverse',"r")
     for i=0,number_to_retain
     do
         dir=session_dirs:read("*line")
@@ -30,6 +31,7 @@ function Fhau:purge_stale_session_dirs(number_to_retain)
             break
         else
             print("Retaining "..dir)
+            table.insert(retained_session_names,dir)
         end
     end
     while(session_dirs)
@@ -74,8 +76,6 @@ function Fhau:check_for_cli_death()
         end
     end
 end
-
-
 
 function Fhau:relay_stdin_line(line)
     if(line)
@@ -159,6 +159,14 @@ function Fhau:get_preset_suite_path(num,name)
        "%s/suites/%s-%s.preset_suite.json",
        session_name, num, name
     )
+end
+
+function Fhau:get_retained_session_names()
+    return retained_session_names
+end
+
+function Fhau:get_current_session_name()
+    return session_name
 end
 
 return Fhau

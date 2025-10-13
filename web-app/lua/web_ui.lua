@@ -45,17 +45,6 @@ function build_cds_html(startup_messages)
     end
 end
 
-function Web_UI:build_all_presets_html()
-    header_text = file_text("web_ui/frame_head.html.fragment")
-    body_text = file_text("web_ui/all-presets_body.html.fragment")
-    if(header_text and body_text)
-    then
-        return header_text .. body_text
-    else
-        return "problems?"
-    end
-end
-
 function Web_UI:build_preset_suite_html(suite_name, suite_file_path, header_level)
     header_text = file_text("web_ui/frame_head.html.fragment")
     body_start = string.gsub(string.gsub(
@@ -81,12 +70,27 @@ function Web_UI:build_preset_suite_html(suite_name, suite_file_path, header_leve
     end
 end
 
-function Web_UI:preset_suite(suite_from_json)
+function Web_UI:build_sessions_html(retained_session_names, current_session_name)
     header_text = file_text("web_ui/frame_head.html.fragment")
-    body_text = file_text("web_ui/all-presets_body.html.fragment")
-    if(header_text and body_text)
+    body_start = file_text("web_ui/sessions_body_start.html.fragment")
+    sessions_json = '[' ..
+        '{ name: "session_xxxxxxxxxxxxxx", start_date: "251008", start_time: "1456", end_time: "1724" },' ..
+        '{ name: "session_yyyyyyyyyyyyyy", start_date: "251008", start_time: "1456", end_time: "1724" },' ..
+        '{ name: "session_zzzzzzzzzzzzzz", start_date: "251008", start_time: "1456", end_time: "1724" }' ..
+    ']'
+    body_end = nil
+    if(sessions_json~=nil)
     then
-        return header_text .. body_text
+        body_end = string.gsub(
+            file_text("web_ui/sessions_body_end.html.fragment"),
+            "#SESSIONS_JSON#", sessions_json
+        )
+    else
+        body_end = file_text("web_ui/not_connected_body_end.html.fragment")
+    end
+    if(header_text and body_start and body_end)
+    then
+        return header_text .. body_start .. body_end
     else
         return "problems?"
     end
@@ -142,6 +146,14 @@ function Web_UI:handle(request, response)
             suite_path = fhau_cli:get_preset_suite_path(suite_num, suite_name)
             suite_html = Web_UI:build_preset_suite_html(suite_name, suite_path, "3")
             response:write(suite_html)
+        elseif req_path=="/sessions"
+        then
+            response:addHeader("Cache-Control","no-cache")
+            sessions_html = Web_UI:build_sessions_html(
+                fhau_cli:get_retained_session_names(),
+                fhau_cli:get_current_session_name()
+            )
+            response:write(sessions_html)
         elseif req_path=="/favicon.ico"
         then
             response:addHeader("Cache-Control","max-age=60, stale-while-revalidate=120")
