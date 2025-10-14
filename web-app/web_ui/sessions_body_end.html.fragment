@@ -38,7 +38,7 @@ function populate_table() {
         tbody_inner_html +="<td>" + session.name + "<td>\n"
         tbody_inner_html +="<td>" + session.start_date + "<td>\n"
         tbody_inner_html +="<td>" + session.start_time + "<td>\n"
-        tbody_inner_html +="<td>" + session.end_time + "<td>\n"
+        tbody_inner_html +="<td>" + session.duration_mins + "<td>\n"
         tbody_inner_html +="<td>" + "<a>presets</a>" + "<td>\n"
         tbody_inner_html +="<td>" + "<a>everything</a>" + "<td>\n"
         tbody_inner_html += "</tr>\n"

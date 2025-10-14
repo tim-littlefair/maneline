@@ -22,8 +22,9 @@ local fhau_cli_input_fd = nil
 local retained_session_names = {}
 
 function Fhau:purge_stale_session_dirs(number_to_retain)
-    session_dirs = io.popen('test -z "session_*" && ls -1d session_* | sort --reverse',"r")
-    for i=0,number_to_retain
+    session_dirs = io.popen('test ! -z "session_*" && ls -1d session_* | sort --reverse',"r")
+    local dir=nil
+    for i=1,number_to_retain
     do
         dir=session_dirs:read("*line")
         if(dir==nil)
@@ -34,17 +35,19 @@ function Fhau:purge_stale_session_dirs(number_to_retain)
             table.insert(retained_session_names,dir)
         end
     end
-    while(session_dirs)
+    -- Any remaining subdirectories need to be deleted
+    while(true)
     do
-        dir=session_dirs:read("*line")
         if(dir==nil)
         then
             break
         else
             print("Deleting "..dir)
             os.execute("rm -rf "..dir)
+            dir=session_dirs:read("*line")
         end
     end
+    print(#retained_session_names.." session directories retained")
 end
 
 function Fhau:start_fhau_cli()

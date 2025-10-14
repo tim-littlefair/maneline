@@ -14,6 +14,7 @@
 local lfs = require('lfs')
 local fhau_cli = require('fhau_cli')
 local cjson = require('cjson.safe')
+local sessions = require('sessions')
 
 local Web_UI = {}
 
@@ -73,11 +74,8 @@ end
 function Web_UI:build_sessions_html(retained_session_names, current_session_name)
     header_text = file_text("web_ui/frame_head.html.fragment")
     body_start = file_text("web_ui/sessions_body_start.html.fragment")
-    sessions_json = '[' ..
-        '{ name: "session_xxxxxxxxxxxxxx", start_date: "251008", start_time: "1456", end_time: "1724" },' ..
-        '{ name: "session_yyyyyyyyyyyyyy", start_date: "251008", start_time: "1456", end_time: "1724" },' ..
-        '{ name: "session_zzzzzzzzzzzzzz", start_date: "251008", start_time: "1456", end_time: "1724" }' ..
-    ']'
+    all_sessions = sessions:get_sessions(retained_session_names, current_session_name)
+    sessions_json = cjson.encode(all_sessions)
     body_end = nil
     if(sessions_json~=nil)
     then

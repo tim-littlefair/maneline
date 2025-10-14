@@ -82,19 +82,17 @@ then
   python3 lcd_ui/manage_lcd_ui.py . --fb-both &
   lcd_ui_manager_pid=$!
   echo LCD being managed by process $lcd_ui_manager_pid
-else
-  python3 -c "import webbrowser ; webbrowser.open('http://127.0.0.1:8080')"
 fi
 
-pwd
 cd ./lua
 
+# The lua process started on the next line will be the
+# parent process for the Java CLI session
 lua ./run.lua "$start_dir"
 
 # If something goes wrong, we don't want the container to loop
 # tightly, so we have a delay between detection and exit
 cli_run_status=$?
-
 echo "Pegasus/CLI app has exited with status $cli_run_status"
 
 if [ ! -z $lcd_ui_manager_pid ]

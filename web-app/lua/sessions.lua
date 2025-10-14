@@ -15,18 +15,26 @@ local lfs = require('lfs')
 local cjson = require('cjson.safe')
 
 local Sessions = {}
+local all_sessions = nil
 
 function get_session(session_name)
+    session_dir_mod_time=lfs.attributes(session_name,"modification")
     iter, dir_obj = lfs.dir(session_name)
-    session_end_time=lfs.attributes(session_name,"modification")
-    session_start_time=session_end_time
+    session_start_time=os.time()
+    session_end_time=session_dir_mod_time
     f=dir_obj:next()
     while(f~=nil)
     do
         file_mod_time = lfs.attributes(session_name.."/"..f,"modification")
-        if file_mod_time<session_start_time
+        if f ~= ".."
         then
-            session_start_time=file_mod_time
+            if file_mod_time<session_start_time
+            then
+                session_start_time=file_mod_time
+            elseif file_mod_time>session_end_time
+            then
+                session_end_time=file_mod_time
+            end
         end
         f=dir_obj:next()
     end
@@ -42,17 +50,25 @@ function Sessions:get_sessions(
     retained_session_names,
     current_session_name
 )
-    sessions = {}
-    for _, rsn in ipairs(retained_session_names)
-    do
-        table.insert(sessions,get_session(rsn))
+    if all_sessions == nil
+    then
+        lfs.mkdir(current_session_name)
+        all_sessions = {}
+        table.insert(all_sessions,get_session(current_session_name))
+        for _, rsn in ipairs(retained_session_names)
+        do
+            retained_session = get_session(rsn)
+            if retained_session ~= nil
+            then
+                table.insert(all_sessions,retained_session)
+            end
+        end
     end
-    table.insert(sessions,get_session(current_session_name))
-    return sessions
+    return all_sessions
 end
 
-sessions = Sessions:get_sessions({"docs","git-hooks","maneline-lib"},"assets")
-print(cjson.encode(sessions))
+-- sessions = Sessions:get_sessions({"docs","git-hooks","maneline-lib"},"assets")
+-- print(cjson.encode(sessions))
 
 return Sessions
 

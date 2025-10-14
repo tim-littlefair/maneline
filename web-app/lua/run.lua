@@ -17,6 +17,7 @@ local socket = require 'socket'
 local pegasus_evtclt = require("pegasus_event_client")
 local event_loop = require('event_loop')
 local fhau_cli = require('fhau_cli')
+local sessions = require 'sessions'
 
 -- scripts/run_web_cli.sh is intended to provide
 -- a way to simulate the balena deploy environment
@@ -41,6 +42,12 @@ end
 pegasus_evtclt:create_handler(lfs.currentdir())
 fhau_cli:purge_stale_session_dirs(10)
 fhau_cli:start_fhau_cli()
+
+-- Initialize the list of sessions
+sessions:get_sessions(
+    fhau_cli:get_retained_session_names(),
+    fhau_cli:get_current_session_name()
+)
 
 function get_stdin_event_client()
     local retval = {}

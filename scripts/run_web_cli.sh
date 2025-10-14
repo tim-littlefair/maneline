@@ -67,7 +67,6 @@ check_webhome() {
 
 check_webhome
 cd $rundir
-ls -l .
 RUN_DIR=$rundir LOCAL_BROWSER=0 sh ./run.sh $rundir
 
 
