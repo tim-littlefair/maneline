@@ -7,6 +7,13 @@
   <meta name="description" content="">
   <meta name="author" content="Tim Littlefair">
 
+
+  <!--
+  Prevent Chrome etc from wasting memory/CPU doing prefetches of session zip files
+  as soon as it sees links to them
+  -->
+  <meta http-equiv="x-dns-prefetch-control" content="off">
+
   <title>Maneline Web UI</title>
 
   <link rel="stylesheet" href="web_ui/_static/css/theme.css" type="text/css" />
