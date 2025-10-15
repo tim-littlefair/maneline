@@ -73,14 +73,14 @@ end
 
 function Web_UI:build_sessions_html(retained_session_names, current_session_name)
     header_text = file_text("web_ui/frame_head.html.fragment")
-    body_start = file_text("web_ui/sessions_body_start.html.fragment")
+    body_start = file_text("web_ui/table_body_start.html.fragment")
     all_sessions = sessions:get_sessions(retained_session_names, current_session_name)
     sessions_json = cjson.encode(all_sessions)
     body_end = nil
     if(sessions_json~=nil)
     then
         body_end = string.gsub(
-            file_text("web_ui/sessions_body_end.html.fragment"),
+            file_text("web_ui/table_body_end.html.fragment"),
             "#SESSIONS_JSON#", sessions_json
         )
     else
@@ -144,6 +144,14 @@ function Web_UI:handle(request, response)
             suite_path = fhau_cli:get_preset_suite_path(suite_num, suite_name)
             suite_html = Web_UI:build_preset_suite_html(suite_name, suite_path, "3")
             response:write(suite_html)
+        elseif req_path=="/sessions"
+        then
+            response:addHeader("Cache-Control","no-cache")
+            sessions_html = Web_UI:build_sessions_html(
+                fhau_cli:get_retained_session_names(),
+                fhau_cli:get_current_session_name()
+            )
+            response:write(sessions_html)
         elseif req_path=="/sessions"
         then
             response:addHeader("Cache-Control","no-cache")
