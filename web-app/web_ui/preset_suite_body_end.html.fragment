@@ -48,10 +48,14 @@ function populate_table() {
         else
         {
             preset_from_json = suite_from_json.presets[index_into_suite]
+            name1=preset_from_json.presetName.substring(0,8).trim()
+            name2=preset_from_json.presetName.substring(8,16).trim()
+            if(name2=="") {
+                name2="&nbsp;"
+            }
             tbody_inner_html += td_inner_html(
                 preset_from_json.originSlotIndex,
-                preset_from_json.presetName.substring(0,8).replace(" ","&nbsp;"),
-                preset_from_json.presetName.substring(8,16).replace(" ","&nbsp;")
+                name1,name2
             )
         }
         if(col==max_cols-1)
