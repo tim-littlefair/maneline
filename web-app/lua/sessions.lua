@@ -19,6 +19,10 @@ local all_sessions = nil
 
 function get_session(session_name)
     session_dir_mod_time=lfs.attributes(session_name,"modification")
+    if session_dir_mod_time==nil
+    then
+        return nil
+    end
     iter, dir_obj = lfs.dir(session_name)
     session_start_time=os.time()
     session_end_time=session_dir_mod_time
