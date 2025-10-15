@@ -59,6 +59,12 @@ function Fhau:start_fhau_cli()
 end
 
 function Fhau:check_for_cli_death()
+    -- We use the modified timestamp on the session directory
+    -- to measure session duration
+    -- Update the timestamp to ensure that sessions which aren't
+    -- actively logging still get the right duration
+    lfs.touch(session_name)
+
     -- Our only link to the CLI subprocess is the file descriptor
     -- we use to send commands.
     -- We check whether it is alive by sending a newline (which

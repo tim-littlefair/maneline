@@ -77,7 +77,7 @@ function Web_UI:build_sessions_html(retained_session_names, current_session_name
         file_text("web_ui/table_body_start.html.fragment"),
         "#TABLE_NAME#","Sessions"
     )
-    all_sessions = sessions:get_sessions(retained_session_names, current_session_name)
+    local all_sessions = sessions:get_sessions(retained_session_names, current_session_name)
     body_end = nil
     if(all_sessions~=nil)
     then
@@ -88,7 +88,7 @@ function Web_UI:build_sessions_html(retained_session_names, current_session_name
             table.insert(session_row_data, s.name)
             table.insert(session_row_data, s.start_date)
             table.insert(session_row_data, s.start_time)
-            table.insert(session_row_data, s.duration_mins)
+            table.insert(session_row_data, s.duration)
             table.insert(session_row_data, "./@subpage/presets")
             table.insert(session_row_data, "./@download.zip")
             table.insert(session_table_data,session_row_data)

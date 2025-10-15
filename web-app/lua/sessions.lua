@@ -15,7 +15,7 @@ local lfs = require('lfs')
 local cjson = require('cjson.safe')
 
 local Sessions = {}
-local all_sessions = nil
+local retained_sessions = nil
 
 function get_session(session_name)
     session_dir_mod_time=lfs.attributes(session_name,"modification")
@@ -46,7 +46,13 @@ function get_session(session_name)
     session.name = session_name
     session.start_date = os.date("%Y-%m-%d",session_start_time)
     session.start_time = os.date("%H:%M",session_start_time)
-    session.duration_mins = math.floor(0.5+((session_end_time-session_start_time)/60))
+    session_duration_seconds = session_end_time-session_start_time
+    if(session_duration_seconds<=90)
+    then
+        session.duration=session_duration_seconds.." seconds"
+    else
+        session.duration=math.floor(0.5+(session_duration_seconds/60)).." minutes"
+    end
     return session
 end
 
@@ -54,25 +60,35 @@ function Sessions:get_sessions(
     retained_session_names,
     current_session_name
 )
-    if all_sessions == nil
+    current_session = get_session(current_session_name)
+    if current_session == nil
     then
         lfs.mkdir(current_session_name)
-        all_sessions = {}
-        table.insert(all_sessions,get_session(current_session_name))
+        current_session = get_session(current_session_name)
+    end
+    all_sessions = {}
+    table.insert(all_sessions,current_session)
+    if retained_sessions == nil
+    then
+        retained_sessions = {}
         for _, rsn in ipairs(retained_session_names)
         do
             retained_session = get_session(rsn)
             if retained_session ~= nil
             then
-                table.insert(all_sessions,retained_session)
+                table.insert(retained_sessions,retained_session)
             end
+        end
+    end
+    for _, rs in ipairs(retained_sessions)
+    do
+        if rs ~= nil
+        then
+            table.insert(all_sessions,rs)
         end
     end
     return all_sessions
 end
-
--- sessions = Sessions:get_sessions({"docs","git-hooks","maneline-lib"},"assets")
--- print(cjson.encode(sessions))
 
 return Sessions
 
