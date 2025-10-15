@@ -3,23 +3,26 @@
 </body>
 
 <script>
-columns = [ "Start date", "Start time", "Duration", "Presets", "All session files" ]
-row_data = [
+columns = #COLUMNS#
+row_data = #ROWS#
+/*
+[
     [ "session_20251014165615", "2025-10-14", "16:56", "7 minutes", "./@subpage/presets", "@download.zip"],
     [ "session_20251014165630", "2025-10-14", "16:56", "7 minutes", "./@subpage/presets", "@download.zip" ],
 ]
+*/
 
 function populate_table() {
     tbody_inner_html = ""
     tbody_inner_html += "<tr>\n"
     for(let i=0; i<columns.length; ++i) {
-        tbody_inner_html += "    <th>"+columns[i]+"</th>\n"
+        tbody_inner_html += "    <th class='session_table'>"+columns[i]+"</th>\n"
     }
     tbody_inner_html += "</tr>\n"
     for(let i=0; i<row_data.length; ++i) {
         tbody_inner_html += "<tr>\n"
         for(let j=1; j<row_data[i].length; ++j) {
-            cell_data = row_data[i][j]
+            cell_data = new String(row_data[i][j])
             if(cell_data.match("@subpage"))
             {
                 anchor_target = cell_data.replace("@subpage",row_data[i][0])
@@ -28,7 +31,7 @@ function populate_table() {
                 anchor_target = cell_data.replace("@download",row_data[i][0])
                 cell_data="<a href='./" + anchor_target + "'>" + anchor_target + "</a>"
             }
-            tbody_inner_html +="        <td>" + cell_data + "</td>\n"
+            tbody_inner_html +="        <td class='session_table'>" + cell_data + "</td>\n"
         }
         tbody_inner_html += "</tr>\n"
     }

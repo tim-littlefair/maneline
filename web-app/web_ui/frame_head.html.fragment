@@ -18,6 +18,10 @@
       width: 100px;
       height: auto;
     }
+    .session_table {
+      border: 2px solid rgb(0 0 0);
+      padding: 5px;
+    }
   </style>
 </head>
 

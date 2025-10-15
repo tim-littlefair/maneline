@@ -40,8 +40,8 @@ function get_session(session_name)
     end
     session = {}
     session.name = session_name
-    session.start_date = os.date("%Y%m%d",session_start_time)
-    session.start_time = os.date("%H%M",session_start_time)
+    session.start_date = os.date("%Y-%m-%d",session_start_time)
+    session.start_time = os.date("%H:%M",session_start_time)
     session.duration_mins = math.floor(0.5+((session_end_time-session_start_time)/60))
     return session
 end

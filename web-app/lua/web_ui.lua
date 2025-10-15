@@ -73,15 +73,35 @@ end
 
 function Web_UI:build_sessions_html(retained_session_names, current_session_name)
     header_text = file_text("web_ui/frame_head.html.fragment")
-    body_start = file_text("web_ui/table_body_start.html.fragment")
+    body_start = string.gsub(
+        file_text("web_ui/table_body_start.html.fragment"),
+        "#TABLE_NAME#","Sessions"
+    )
     all_sessions = sessions:get_sessions(retained_session_names, current_session_name)
-    sessions_json = cjson.encode(all_sessions)
     body_end = nil
-    if(sessions_json~=nil)
+    if(all_sessions~=nil)
     then
+        session_table_data = {}
+        for _,s in ipairs(all_sessions)
+        do
+            session_row_data = {}
+            table.insert(session_row_data, s.name)
+            table.insert(session_row_data, s.start_date)
+            table.insert(session_row_data, s.start_time)
+            table.insert(session_row_data, s.duration_mins)
+            table.insert(session_row_data, "./@subpage/presets")
+            table.insert(session_row_data, "./@download.zip")
+            table.insert(session_table_data,session_row_data)
+        end
+        sessions_json = cjson.encode(session_table_data)
+        body_end = file_text("web_ui/table_body_end.html.fragment")
         body_end = string.gsub(
-            file_text("web_ui/table_body_end.html.fragment"),
-            "#SESSIONS_JSON#", sessions_json
+            body_end,
+            "#COLUMNS#", "[ 'Start date', 'Start time', 'Duration', 'Presets', 'All session files' ]"
+        )
+        body_end = string.gsub(
+            body_end,
+            "#ROWS#", sessions_json
         )
     else
         body_end = file_text("web_ui/not_connected_body_end.html.fragment")
