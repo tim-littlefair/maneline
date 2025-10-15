@@ -184,6 +184,11 @@ function Web_UI:handle(request, response)
         then
             response:addHeader("Cache-Control","max-age=60, stale-while-revalidate=120")
             response:writeFile("./web_ui/_static/maneline-icon-512x512.png")
+        elseif req_path=="/.well-known/appspecific/com.chrome.devtools.json"
+        then
+            -- Chrome automation feature (only affects localhost connections)
+            response:addHeader("Cache-Control","max-age=14400")
+            response:statusCode(404,"Not supported")
         else
             if lfs.attributes("."..req_path)
             then
@@ -194,7 +199,8 @@ function Web_UI:handle(request, response)
                 response:writeFile("."..req_path)
             else
                 response:addHeader("Cache-Control","no-cache")
-                io.stdout:write(" !!!not found!!!")
+                io.stdout:write("!!!not found!!!:"..req_path.."\n")
+                io.stdout:flush()
                 response:write("<html>Not found: "..req_path.."</html>")
             end
         end
