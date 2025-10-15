@@ -16,9 +16,9 @@
 
   <title>Maneline Web UI</title>
 
-  <link rel="stylesheet" href="web_ui/_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="web_ui/_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="web_ui/_static/style-font.css" type="text/css" />
+  <link rel="stylesheet" href="/web_ui/_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="/web_ui/_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="/web_ui/_static/style-font.css" type="text/css" />
 
   <style>
     button {
