@@ -29,6 +29,12 @@
 
   </style>
 
+  <script>
+      function resize_iframe(iframe) {
+        iframe.style.height = iframe.contentWindow.document.body.scrollHeight + 'px';
+      }
+    </script>
+
 </head>
 
 <body class="wy-body-for-nav">
@@ -78,31 +84,35 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div itemprop="articleBody">      
               <div class="section">
-                <div>
-                  <iframe id="cds" src="/cds" style="height:380px;"></iframe>
+                <div style="height:auto;">
+                  <iframe id="cds" src="/cds" onload="resize_iframe(this)"></iframe>
                 </div>
 
                 <div style="height:auto;">
                     <h2><span>Preset Suites</span></h2>
-                    <iframe id="favourites" src="/suite?num=01&name=Favourites" style="height:140px;"></iframe>
-                    <iframe id="folk" src="/suite?num=02&name=Folk" style="height:140px;"></iframe>
-                    <iframe id="blues" src="/suite?num=03&name=Blues" style="height:140px;"></iframe>
-                    <iframe id="rock" src="/suite?num=04&name=Rock" style="height:140px;"></iframe>
-                    <iframe id="jazz" src="/suite?num=05&name=Jazz" style="height:140px;"></iframe>
-                    <iframe id="country" src="/suite?num=06&name=Country" style="height:140px;"></iframe>
-                    <iframe id="heavy" src="/suite?num=07&name=Heavy" style="height:140px;"></iframe>
-                    <iframe id="trippy" src="/suite?num=08&name=Trippy" style="height:140px;"></iframe>
+                    <iframe id="favourites" src="/suite?num=01&name=Favourites"  onload="resize_iframe(this)"></iframe>
+                    <iframe id="folk" src="/suite?num=02&name=Folk"  onload="resize_iframe(this)"></iframe>
+                    <iframe id="blues" src="/suite?num=03&name=Blues"  onload="resize_iframe(this)"></iframe>
+                    <iframe id="rock" src="/suite?num=04&name=Rock"  onload="resize_iframe(this)"></iframe>
+                    <iframe id="jazz" src="/suite?num=05&name=Jazz"  onload="resize_iframe(this)"></iframe>
+                    <iframe id="country" src="/suite?num=06&name=Country"  onload="resize_iframe(this)"></iframe>
+                    <iframe id="heavy" src="/suite?num=07&name=Heavy"  onload="resize_iframe(this)"></iframe>
+                    <iframe id="trippy" src="/suite?num=08&name=Trippy"  onload="resize_iframe(this)"></iframe>
                 </div>
 
                 <div>
-                    <iframe id="all_presets" src="/all-presets" style="height:510px;"></iframe>
+                    <iframe id="all_presets" src="/all-presets"  onload="resize_iframe(this)"></iframe>
                 </div>
+
+                <div><p>&nbsp;</p></div><!-- spacer - not sure why but more space needed here -->
 
                 <div>
-                    <iframe id="sessions" src="/sessions" style="height:510px;"></iframe>
+                    <iframe id="sessions" src="/sessions"  onload="resize_iframe(this)"></iframe>
                 </div>
 
-                <div style="height:600px;">
+                <div><p>&nbsp;</p></div><!-- spacer - not sure why but more space needed here -->
+
+                <div  onload="resize_iframe(this)">
                     <h2 id="credits"><span>Credits</span></h2>
                     <p>
                         Source code for this project is available at:
