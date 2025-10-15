@@ -15,6 +15,7 @@ local lfs = require('lfs')
 local fhau_cli = require('fhau_cli')
 local cjson = require('cjson.safe')
 local sessions = require('sessions')
+local session_presets = require('session_presets')
 
 local Web_UI = {}
 
@@ -84,14 +85,14 @@ function Web_UI:build_sessions_html(retained_session_names, current_session_name
         session_table_data = {}
         for _,s in ipairs(all_sessions)
         do
-            session_row_data = {}
-            table.insert(session_row_data, s.name)
-            table.insert(session_row_data, s.start_date)
-            table.insert(session_row_data, s.start_time)
-            table.insert(session_row_data, s.duration)
-            table.insert(session_row_data, "./@subpage/presets")
-            table.insert(session_row_data, "./@download.zip")
-            table.insert(session_table_data,session_row_data)
+            preset_row_data = {}
+            table.insert(preset_row_data, s.name)
+            table.insert(preset_row_data, s.start_date)
+            table.insert(preset_row_data, s.start_time)
+            table.insert(preset_row_data, s.duration)
+            table.insert(preset_row_data, "./@subpage/presets")
+            table.insert(preset_row_data, "./@download.zip")
+            table.insert(session_table_data,preset_row_data)
         end
         sessions_json = cjson.encode(session_table_data)
         body_end = file_text("web_ui/table_body_end.html.fragment")
@@ -102,6 +103,56 @@ function Web_UI:build_sessions_html(retained_session_names, current_session_name
         body_end = string.gsub(
             body_end,
             "#ROWS#", sessions_json
+        )
+    else
+        body_end = file_text("web_ui/not_connected_body_end.html.fragment")
+    end
+    if(header_text and body_start and body_end)
+    then
+        return header_text .. body_start .. body_end
+    else
+        return "problems?"
+    end
+end
+
+function Web_UI:build_session_presets_html(session_name)
+    header_text = file_text("web_ui/frame_head.html.fragment")
+    body_start = string.gsub(
+        file_text("web_ui/table_body_start.html.fragment"),
+        "#TABLE_NAME#","Presets from session "..session_name
+    )
+    local session_presets = session_presets:get_session_presets(session_name)
+    print(session_name)
+    body_end = nil
+    if(session_presets~=nil)
+    then
+        preset_table_data = {}
+        for _,p in ipairs(session_presets)
+        do
+            preset_row_data = {}
+            table.insert(preset_row_data, p.filenamePrefix)
+            table.insert(preset_row_data, p.slot)
+            table.insert(preset_row_data, p.displayName)
+            table.insert(preset_row_data, p.module1)
+            table.insert(preset_row_data, p.module2)
+            table.insert(preset_row_data, p.module3)
+            table.insert(preset_row_data, p.module4)
+            table.insert(preset_row_data, p.module5)
+            table.insert(
+                preset_row_data,
+                "./presets/@subpage.pretty_preset.json"
+            )
+            table.insert(preset_table_data,preset_row_data)
+        end
+        presets_json = cjson.encode(preset_table_data)
+        body_end = file_text("web_ui/table_body_end.html.fragment")
+        body_end = string.gsub(
+            body_end,
+            "#COLUMNS#", "[ 'Slot', 'Display name', 'Module 1', 'Module 2', 'Module 3', 'Module 4', 'Module 5', 'Minimal JSON'  ]"
+        )
+        body_end = string.gsub(
+            body_end,
+            "#ROWS#", presets_json
         )
     else
         body_end = file_text("web_ui/not_connected_body_end.html.fragment")
@@ -172,14 +223,15 @@ function Web_UI:handle(request, response)
                 fhau_cli:get_current_session_name()
             )
             response:write(sessions_html)
-        elseif req_path=="/sessions"
+        elseif string.find(req_path,"^/session_%d+/presets$")
         then
+            print(req_path)
+            first, last = string.find(req_path,"session_%d+")
+            session = string.sub(req_path,first,last)
+            print(session)
             response:addHeader("Cache-Control","no-cache")
-            sessions_html = Web_UI:build_sessions_html(
-                fhau_cli:get_retained_session_names(),
-                fhau_cli:get_current_session_name()
-            )
-            response:write(sessions_html)
+            presets_html = Web_UI:build_session_presets_html(session)
+            response:write(presets_html)
         elseif req_path=="/favicon.ico"
         then
             response:addHeader("Cache-Control","max-age=60, stale-while-revalidate=120")
