@@ -122,7 +122,6 @@ function Web_UI:build_session_presets_html(session_name)
         "#TABLE_NAME#","Presets from session "..session_name
     )
     local session_presets = session_presets:get_session_presets(session_name)
-    print(session_name)
     body_end = nil
     if(session_presets~=nil)
     then
@@ -148,7 +147,7 @@ function Web_UI:build_session_presets_html(session_name)
         body_end = file_text("web_ui/table_body_end.html.fragment")
         body_end = string.gsub(
             body_end,
-            "#COLUMNS#", "[ 'Slot', 'Display name', 'Module 1', 'Module 2', 'Module 3', 'Module 4', 'Module 5', 'Minimal JSON'  ]"
+            "#COLUMNS#", "[ 'Slot', 'Display name', 'Module 1', 'Module 2', 'Module 3', 'Module 4', 'Module 5', 'Parameters'  ]"
         )
         body_end = string.gsub(
             body_end,
@@ -225,10 +224,8 @@ function Web_UI:handle(request, response)
             response:write(sessions_html)
         elseif string.find(req_path,"^/session_%d+/presets$")
         then
-            print(req_path)
             first, last = string.find(req_path,"session_%d+")
             session = string.sub(req_path,first,last)
-            print(session)
             response:addHeader("Cache-Control","no-cache")
             presets_html = Web_UI:build_session_presets_html(session)
             response:write(presets_html)

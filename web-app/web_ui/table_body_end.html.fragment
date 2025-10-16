@@ -29,7 +29,7 @@ function populate_table() {
                 cell_data="<a href='./" + anchor_target + "' target='_blank'>" + anchor_target + "</a>"
             } else if(cell_data.match("@download")) {
                 anchor_target = cell_data.replace("@download",row_data[i][0])
-                cell_data="<a href='./" + anchor_target + "'>" + anchor_target + "</a>"
+                cell_data="<a href='./" + anchor_target + "' target='_blank'>" + anchor_target + "</a>"
             }
             tbody_inner_html +="        <td class='session_table'>" + cell_data + "</td>\n"
         }

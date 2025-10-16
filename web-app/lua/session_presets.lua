@@ -18,13 +18,13 @@ local SessionPresets = {}
 
 function _csv_get_next_field(line,field_start_pos)
     local field_value, next_field_pos
-    next_comma_pos=string.find(line,",",field_start_pos)
+    next_comma_pos=line:find(",",field_start_pos)
     if next_comma_pos
     then
-        field_value = string.sub(line,field_start_pos,next_comma_pos-1)
+        field_value = line:sub(field_start_pos,next_comma_pos-1)
         next_field_pos=next_comma_pos+1
     else
-        field_value = string.sub(line,field_start_pos,#line)
+        field_value = line:sub(field_start_pos,#line)
         next_field_pos=nil
     end
     return field_value, next_field_pos
