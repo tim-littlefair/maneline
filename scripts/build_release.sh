@@ -133,7 +133,7 @@ then
   echo Remaining arguments: $*
 
   # Which device/fleet should be the deploy target
-  draft_flag=--draft
+  extra_push_flags=--draft
   if [ "$1" = "--fhau-staging" ]
   then
     deploy_fleet=fhau-staging
@@ -152,7 +152,7 @@ then
     then
       # IP address of a device, hopefully in local mode
       deploy_fleet=$1
-      draft_flag=
+      extra_push_flags="--detached --nolive"
       shift
     else
       deploy_fleet=fhau-staging
@@ -162,10 +162,10 @@ then
 
   if [ "$1" = "--debug" ]
   then
-    push_cmd="balena push --debug --emulated $draft_flag --source $balenaFakerootDir $deploy_fleet"
+    push_cmd="balena push --debug $extra_push_flags --source $balenaFakerootDir $deploy_fleet"
     shift
   else
-    push_cmd="balena push $draft_flag --source $balenaFakerootDir $deploy_fleet"
+    push_cmd="balena push $extra_push_flags --source $balenaFakerootDir $deploy_fleet"
   fi
   echo $push_cmd
   $push_cmd
