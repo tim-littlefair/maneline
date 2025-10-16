@@ -40,7 +40,7 @@ end
 -- The pegasus handler and the FHAU CLI subprocess must 
 -- both be created after the current directory is set
 pegasus_evtclt:create_handler(lfs.currentdir())
-fhau_cli:purge_stale_session_dirs(10)
+fhau_cli:purge_stale_session_dirs(20)
 fhau_cli:start_fhau_cli()
 
 -- Initialize the list of sessions

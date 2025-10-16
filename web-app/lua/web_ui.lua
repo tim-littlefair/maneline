@@ -16,6 +16,7 @@ local fhau_cli = require('fhau_cli')
 local cjson = require('cjson.safe')
 local sessions = require('sessions')
 local session_presets = require('session_presets')
+local balena_actions = require('balena_actions')
 
 local Web_UI = {}
 
@@ -181,15 +182,17 @@ function Web_UI:handle(request, response)
         elseif(post_params.command)
         then
             fhau_cli:relay_stdin_line(post_params.command.."\n")
-        elseif(post_params.action=="shutdown")
+        elseif(post_params.balena_action~=nil)
         then
-            os.execute(
-                'curl -X POST --header "Content-Type:application/json" ' ..
-                '$BALENA_SUPERVISOR_ADDRESS/v1/shutdown?apikey=$BALENA_SUPERVISOR_API_KEY'
-            )
+            outcome = balena_actions:do_action(post_params.balena_action)
+            print(outcome)
+            response:write(outcome)
+            response:close()
         else
             -- What is going on???
             io.stderr:write("POST params: ",cjson.encode(post_params))
+            response:statusCode(501)
+            response:close()
         end
     elseif request:method()~="GET"
     then

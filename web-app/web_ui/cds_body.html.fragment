@@ -17,15 +17,24 @@ function setMessages() {
 window.onload = setMessages
 
 function request_action(s) {
-    action_response = fetch(
+    var action_response = fetch(
         window.location.origin,
         {
             method: "POST",
-            body: `action=${s}`,
+            body: `balena_action=${s}`,
             headers: { "Content-type": "application/json; charset=UTF-8" }
         }
     )
     alert(`${s} requested`)
+    /*
+    await action_response
+    if(action_response.ok) {
+        response_body = action_response.body
+        alert(response_body)
+    } else {
+        alert(action_response.statusText)
+    }
+    */
 }
 </script>
 
