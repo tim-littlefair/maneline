@@ -16,19 +16,45 @@ local cjson = require('cjson.safe')
 
 local SessionPresets = {}
 
+function _csv_get_next_field(line,field_start_pos)
+    local field_value, next_field_pos
+    next_comma_pos=string.find(line,",",field_start_pos)
+    if next_comma_pos
+    then
+        field_value = string.sub(line,field_start_pos,next_comma_pos-1)
+        next_field_pos=next_comma_pos+1
+    else
+        field_value = string.sub(line,field_start_pos,#line)
+        next_field_pos=nil
+    end
+    return field_value, next_field_pos
+end
+
 function SessionPresets:get_session_presets(session_name)
-    preset_rows = {}
-    preset_row = {}
-    preset_row.filenamePrefix="60S_____FUZZ____-0af8-3fbc"
-    preset_row.slot="1"
-    preset_row.displayName="60S     FUZZ    "
-    preset_row.module1="VariFuzz"
-    preset_row.module2="Passthru"
-    preset_row.module3="Plexi87"
-    preset_row.module4="TapeDelayLite"
-    preset_row.module5="LargePlate"
-    table.insert(preset_rows, preset_row)
-    print(cjson.encode(preset_rows))
+    local preset_rows = {}
+    local presets_csv=io.open(session_name.."/presets.csv")
+
+    _ = presets_csv:read("*line") -- first line are headers
+    preset_line = presets_csv:read("*line")
+    while preset_line ~= nil
+    do
+        preset_row = {}
+        field_pos=0
+
+        preset_row.slot, field_pos = _csv_get_next_field(preset_line,field_pos)
+        preset_row.displayName, field_pos = _csv_get_next_field(preset_line,field_pos)
+        preset_row.module1, field_pos = _csv_get_next_field(preset_line,field_pos)
+        preset_row.module2, field_pos = _csv_get_next_field(preset_line,field_pos)
+        preset_row.module3, field_pos = _csv_get_next_field(preset_line,field_pos)
+        preset_row.module4, field_pos = _csv_get_next_field(preset_line,field_pos)
+        preset_row.module5, field_pos = _csv_get_next_field(preset_line,field_pos)
+        audioHash, field_pos = _csv_get_next_field(preset_line,field_pos)
+        preset_row.filenamePrefix=preset_row.displayName:gsub(" ","_").."-"..audioHash
+        table.insert(preset_rows, preset_row)
+
+        preset_line = presets_csv:read("*line")
+    end
+
     return preset_rows
 end
 
