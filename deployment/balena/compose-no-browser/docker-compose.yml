@@ -59,6 +59,8 @@ services:
       #  - cli_jar_build=../desktop-cli/build/libs
     network_mode: host
     privileged: true
+    labels:
+      - io.balena.features.supervisor-api=1
     ports:
       - 8080
     environment:

@@ -181,6 +181,12 @@ function Web_UI:handle(request, response)
         elseif(post_params.command)
         then
             fhau_cli:relay_stdin_line(post_params.command.."\n")
+        elseif(post_params.action=="shutdown")
+        then
+            os.execute(
+                'curl -X POST --header "Content-Type:application/json" ' ..
+                '$BALENA_SUPERVISOR_ADDRESS/v1/shutdown?apikey=$BALENA_SUPERVISOR_API_KEY'
+            )
         else
             -- What is going on???
             io.stderr:write("POST params: ",cjson.encode(post_params))

@@ -1,7 +1,10 @@
 <body class="wy-body-for-nav" id="content_body" >
 <h2>
     <span>Connection/Device State</span>
-    <button onclick="window.parent.location.reload()" style="font-size:16px; float:right;">Refresh</button>
+    <button onclick="request_action('shutdown')" style="font-size:16px; float:right;">shutdown</button>
+    <button onclick="request_action('reboot')" style="font-size:16px; float:right;">reboot</button>
+    <button onclick="request_action('restart')" style="font-size:16px; float:right;">restart</button>
+    <button onclick="window.parent.location.reload()" style="font-size:16px; float:right;">refresh</button>
 </h2>
 
 <div id="cds_messages" style="text-wrap:pretty;overflow-wrap:break-word;">&nbsp;</div>
@@ -12,6 +15,18 @@ function setMessages() {
     document.querySelector("div").innerHTML = "%MESSAGES_STRING%";
 }
 window.onload = setMessages
+
+function request_action(s) {
+    action_response = fetch(
+        window.location.origin,
+        {
+            method: "POST",
+            body: `action=${s}`,
+            headers: { "Content-type": "application/json; charset=UTF-8" }
+        }
+    )
+    alert(`${s} requested`)
+}
 </script>
 
 </html>
