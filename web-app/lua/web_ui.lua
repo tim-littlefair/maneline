@@ -190,7 +190,7 @@ function Web_UI:handle(request, response)
             response:close()
         else
             -- What is going on???
-            io.stderr:write("POST params: ",cjson.encode(post_params))
+            print("Unexpected POST, params: ",cjson.encode(post_params))
             response:statusCode(501)
             response:close()
         end

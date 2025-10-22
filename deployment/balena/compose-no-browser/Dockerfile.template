@@ -100,7 +100,7 @@ COPY ./jar ./jar
 
 # Disable e-paper support for now
 # Might need to implement systemd running to get the behaviour
-# we want (i.e displaing out of service message before going down)
+# we want (i.e displaying out of service message before going down)
 # ref: https://docs.balena.io/learn/more/masterclasses/services-masterclass/#5-running-systemd-in-a-service
 # RUN sh ./epaper_ui/epaper_support_install.sh
 

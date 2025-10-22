@@ -118,8 +118,8 @@ then
   then
     wget --output-document=_work/E-Paper_code.zip https://files.waveshare.com/upload/7/71/E-Paper_code.zip
   fi
-  unzip -o _work/E-Paper_code.zip 'RaspberryPi_JetsonNano/python/lib/**'
-  unzip -o _work/E-Paper_code.zip 'RaspberryPi_JetsonNano/python/pic/**'
+  unzip -qq -o _work/E-Paper_code.zip 'RaspberryPi_JetsonNano/python/lib/**'
+  unzip -qq -o _work/E-Paper_code.zip 'RaspberryPi_JetsonNano/python/pic/**'
   mv RaspberryPi_JetsonNano/python/lib $balenaFakerootDir/epaper_ui/lib
   mv RaspberryPi_JetsonNano/python/pic $balenaFakerootDir/epaper_ui/pic
   rm -rf RaspberryPi_JetsonNano

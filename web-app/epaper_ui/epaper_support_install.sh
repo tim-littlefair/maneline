@@ -10,9 +10,10 @@
 # Note that Debian/APT package python3-spidev is installed 
 # instead of following the instruction to install PyPi 
 # package spidev, so python3-pip is not required.
-# This service depends on the 
 
-cat > /usr/lib/systemd/system/maneline-startup.service <<+
+if false
+then
+  cat > /usr/lib/systemd/system/maneline-startup.service <<+
 [Unit]
 Description=Display Maneline startup message on e-paper
 ConditionACPower=true
@@ -23,7 +24,7 @@ Type=oneshot
 ExecStart=/usr/bin/python3 /home/maneline/epaper_ui/epaper_ui.py --starting-up
 +
 
-cat > /usr/lib/systemd/system/maneline-shutdown.service <<+
+  cat > /usr/lib/systemd/system/maneline-shutdown.service <<+
 [Unit]
 Description=Display Maneline shutdown message on e-paper
 ConditionACPower=true
@@ -34,7 +35,8 @@ Type=oneshot
 ExecStart=/usr/bin/python3 /home/maneline/epaper_ui/epaper_ui.py --shutting-down
 +
 
-/usr/bin/systemctl enable maneline-startup.service
-/usr/bin/systemctl enable maneline-shutdown.service
+  /usr/bin/systemctl enable maneline-startup.service
+  /usr/bin/systemctl enable maneline-shutdown.service
+fi
 
 exit 0

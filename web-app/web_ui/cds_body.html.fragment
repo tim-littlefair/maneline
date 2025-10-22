@@ -17,7 +17,7 @@ function setMessages() {
 window.onload = setMessages
 
 function request_action(s) {
-    var action_response = fetch(
+    fetch(
         window.location.origin,
         {
             method: "POST",

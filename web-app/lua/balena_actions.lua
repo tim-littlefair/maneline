@@ -17,11 +17,13 @@ local BalenaActions = {}
 function _post_balena_request(action_name)
     command_prefix='curl -X POST --header "Content-Type:application/json"'
     command_data=cjson.encode({
-        appId=os.environ["BALENA_APP_ID"],
+        appId=os.getenv("BALENA_APP_ID"),
         force=true
     })
     action_url='$BALENA_SUPERVISOR_ADDRESS/v1/'..action_name..'?apikey=$BALENA_SUPERVISOR_API_KEY'
-    os.execute(command_prefix..' -d '..command_data..' '..action_url)
+    command=command_prefix.." -d '"..command_data.."' "..action_url
+    os.execute(command)
+    print() -- add newline after curl output
 end
 
 function BalenaActions:do_action(action_name)
@@ -36,6 +38,8 @@ function BalenaActions:do_action(action_name)
     then
         _post_balena_request(action_name)
         return "Balena action "..action_name.." has been requested"
+    else
+        return "Unexpected Balena action "..action_name.." has not been requested"
     end
 end
 

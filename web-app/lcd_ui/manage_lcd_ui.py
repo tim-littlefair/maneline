@@ -7,6 +7,7 @@
 import sys
 import json
 import os
+import signal
 import subprocess
 import time
 import traceback
@@ -111,11 +112,15 @@ def update_lcd_ui(run_dir, ipaddr, display_method):
             f"/usr/bin/rsvg-convert -w 2400 -h 1600 {svg_fn} -o {png_fn}",
             shell=True
         )
-        dev_paths = None
-        if display_method == "--fb-both":
-            dev_paths = [ "/dev/fb0", "/dev/fb1" ]
-        else:
-            dev_paths=[ display_method.replace("--","/dev/") ]
+        update_selected_lcds(display_method, png_fn)
+    else:
+        exit(1)
+def update_selected_lcds(display_method, png_fn):
+    dev_paths = None
+    if display_method == "--fb-both":
+        dev_paths = [ "/dev/fb0", "/dev/fb1" ]
+    else:
+        dev_paths=[ display_method.replace("--","/dev/") ]
         for dev_path in dev_paths:
             if os.path.exists(dev_path):
                 subprocess.run(
@@ -124,14 +129,15 @@ def update_lcd_ui(run_dir, ipaddr, display_method):
                 )
             else:
                 pass
-    else:
-        print(f"Unexpected display method: {display_method}", file=sys.stderr)
-        exit(1)
+
+display_method=None
+def sigterm_handler(signum,frame):
+    update_selected_lcds(display_method,"lcd_ui/lcd_shutdown.png")
+    raise KeyboardInterrupt
 
 if __name__ == "__main__":
     try:
         run_dir=None
-        display_method=None
         try:
             run_dir=sys.argv[1]
             sys.argv.pop(1)
@@ -161,11 +167,13 @@ if __name__ == "__main__":
             PresetUpdatedHandler(run_dir, ipaddr, display_method),
             f"{run_dir}",recursive=True,
         )
+        signal.signal(signal.SIGTERM,sigterm_handler)
+        signal.signal(signal.SIGCHLD,signal.SIG_IGN)
         preset_details_observer.start()
         #update_lcd_ui(run_dir, ipaddr, display_method)
         try:
             while True:
-                time.sleep(60)
+                time.sleep(3)
         except KeyboardInterrupt:
             pass
         preset_details_observer.stop()
