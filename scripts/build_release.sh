@@ -199,12 +199,15 @@ elif [ ! "$deploy_fleet" = "muddy-hail" ]
   exit 1
 else
   echo Deploying using git
+  echo Fetching and pulling
+  git -C $balenaFakerootDir fetch
+  git -C $balenaFakerootDir pull
   echo Adding
   for f_or_d in $(ls -1 $balenaFakerootDir)
   do
     git -C $balenaFakerootDir add $f_or_d
   done
-    git -C $balenaFakerootDir status
+  git -C $balenaFakerootDir status
   echo Committing
   git -C $balenaFakerootDir commit -m "Deploying using legacy git method for release $buildString
 
