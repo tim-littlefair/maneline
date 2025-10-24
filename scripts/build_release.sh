@@ -1,5 +1,11 @@
 #! /bin/bash
 
+# Because of problems reported in this message:
+# https://forums.balena.io/t/problems-doing-a-balena-push-free-tier/374797/10
+# pushing using the balena CLI is unreliable for this project so the
+# legacy git method is used
+push_method=git
+
 # This is a quick and dirty script to build and run a release of Maneline
 set -e
 
@@ -69,106 +75,143 @@ then
   shift
 fi
 
-if [ "$1" = "--deploy-balena-beta" ]
+if [ ! "$1" = "--deploy-balena-beta" ]
+then
+  exit 0
+else
+  shift
+fi
+
+if [ "0" = "0" ] && [ -f ~/.balena/token ]
+then
+  echo Balena already logged in
+elif [ ! -z "$BALENA_TOKEN" ]
+then
+  set +e
+  balena login --token $BALENA_TOKEN
+  echo Balena login returned $?
+  set -e
+else
+  echo "No Balena token in filesystem or environment"
+  exit 1
+fi
+
+balenaFakerootDir=_work/balena_fakeroot-$buildString
+if [ "$1" = "--remove-stale-fakeroot" ]
 then
   shift
-
-  if [ "0" = "0" ] && [ -f ~/.balena/token ]
+  if [ -d $balenaFakerootDir ]
   then
-    echo Balena already logged in
-  elif [ ! -z "$BALENA_TOKEN" ]
-  then
-    set +e
-    balena login --token $BALENA_TOKEN
-    echo Balena login returned $?
-    set -e
+    echo Removing stale directory $balenaFakerootDir
+    rm -rf $balenaFakerootDir
+    echo Stale directory removed
   else
-    echo "No Balena token in filesystem or environment"
-    exit 1
+    echo No stale directory found at $balenaFakerootDir
   fi
+else
+  echo $balenaFakerootDir already exists.
+  echo Please delete it manually or include flag --remove-stale-fakeroot if you want to repeat a prior build.
+  exit 1
+fi
 
-  balenaFakerootDir=_work/balena_fakeroot-$buildString
-  if [ "$1" = "--remove-stale-fakeroot" ]
-  then
-    if [ -d $balenaFakerootDir ]
-    then
-      echo Removing stale directory $balenaFakerootDir
-      rm -rf $balenaFakerootDir
-      echo Stale directory removed
-    else
-      echo No stale directory found at $balenaFakerootDir
-    fi  
-    shift
-  else
-    echo $balenaFakerootDir already exists.
-    echo Please delete it manually or include flag --remove-stale-fakeroot if you want to repeat a prior build.
-    exit 1
-  fi
-
-  echo Building deployment root at $balenaFakerootDir
+echo Building deployment root at $balenaFakerootDir
+if [ "$push_method" = "git" ]
+then
+  echo Before clone
+  git clone --depth=1 gh_tim_littlefair@git.balena-cloud.com:gh_tim_littlefair/muddy-hail.git $balenaFakerootDir
+  echo After clone
+  for f_or_d in $(ls -1 $balenaFakerootDir)
+  do
+    git -C $balenaFakerootDir rm -r $f_or_d
+  done
+  echo After deletion
+  git -C $balenaFakerootDir status
+else
   mkdir -p "$balenaFakerootDir"
-  cp deployment/balena/compose-no-browser/docker-compose.yml $balenaFakerootDir
-  cp deployment/balena/compose-no-browser/Dockerfile.template $balenaFakerootDir
-  cp -R web-app/lua $balenaFakerootDir
-  cp -R web-app/run.sh $balenaFakerootDir
-  cp -R web-app/web_ui $balenaFakerootDir
-  cp -R web-app/lcd_ui $balenaFakerootDir
-  cp -R web-app/epaper_ui $balenaFakerootDir
-  if [ ! -f _work/E-Paper_code.zip ]
-  then
-    wget --output-document=_work/E-Paper_code.zip https://files.waveshare.com/upload/7/71/E-Paper_code.zip
-  fi
-  unzip -qq -o _work/E-Paper_code.zip 'RaspberryPi_JetsonNano/python/lib/**'
-  unzip -qq -o _work/E-Paper_code.zip 'RaspberryPi_JetsonNano/python/pic/**'
-  mv RaspberryPi_JetsonNano/python/lib $balenaFakerootDir/epaper_ui/lib
-  mv RaspberryPi_JetsonNano/python/pic $balenaFakerootDir/epaper_ui/pic
-  rm -rf RaspberryPi_JetsonNano
+fi
 
-  cp -R desktop-app/build/libs $balenaFakerootDir/jar
-  cat deployment/balena/compose-no-browser/balena.yml | \
-    sed -e "s/0.0.0/$buildString/" | \
-    sed -e "s/%GITREF%/$buildGitRef/" \
-    > $balenaFakerootDir/balena.yml
-  echo Files copied to $balenaFakerootDir
-  echo Remaining arguments: $*
 
-  # Which device/fleet should be the deploy target
-  extra_push_flags=--draft
-  if [ "$1" = "--fhau-staging" ]
+cp deployment/balena/compose-no-browser/docker-compose.yml $balenaFakerootDir
+cp deployment/balena/compose-no-browser/Dockerfile.template $balenaFakerootDir
+cp --recursive --force web-app/lua $balenaFakerootDir
+cp --recursive --force web-app/run.sh $balenaFakerootDir
+cp --recursive --force web-app/web_ui $balenaFakerootDir
+cp --recursive --force web-app/lcd_ui $balenaFakerootDir
+cp --recursive --force web-app/epaper_ui $balenaFakerootDir
+if [ ! -f _work/E-Paper_code.zip ]
+then
+  wget --output-document=_work/E-Paper_code.zip https://files.waveshare.com/upload/7/71/E-Paper_code.zip
+fi
+unzip -qq -o _work/E-Paper_code.zip 'RaspberryPi_JetsonNano/python/lib/**'
+unzip -qq -o _work/E-Paper_code.zip 'RaspberryPi_JetsonNano/python/pic/Font.ttc'
+mv RaspberryPi_JetsonNano/python/lib $balenaFakerootDir/epaper_ui/lib
+mv RaspberryPi_JetsonNano/python/pic $balenaFakerootDir/epaper_ui/pic
+rm -rf RaspberryPi_JetsonNano
+
+cp --recursive --force desktop-app/build/libs $balenaFakerootDir/jar
+cat deployment/balena/compose-no-browser/balena.yml | \
+  sed -e "s/0.0.0/$buildString/" | \
+  sed -e "s/%GITREF%/$buildGitRef/" \
+  > $balenaFakerootDir/balena.yml
+echo Files copied to $balenaFakerootDir
+
+# Which device/fleet should be the deploy target
+extra_push_flags=""
+if [ "$1" = "--muddy-hail" ]
+then
+  deploy_fleet=muddy-hail
+  shift
+elif [ "$1" = "--fhau-staging" ]
+then
+  deploy_fleet=fhau-staging
+  shift
+elif [ "$1" = "--fhau-ci-32bit" ]
+then
+  deploy_fleet=fhau-ci-32bit
+  shift
+elif [ "$1" = "--maneline-rpi-any" ]
+then
+  deploy_fleet=maneline-rpi-any
+  shift
+else
+  echo "$1" | grep "192.168"
+  if [ "$?" = "0" ]
   then
+    # IP address of a device, hopefully in local mode
+    deploy_fleet=$1
+    # extra_push_flags="--detached --nolive"
+    shift
+  else
     deploy_fleet=fhau-staging
-    shift
-  elif [ "$1" = "--fhau-ci-32bit" ]
-  then
-    deploy_fleet=fhau-ci-32bit
-    shift
-  elif [ "$1" = "--maneline-rpi-any" ]
-  then
-    deploy_fleet=maneline-rpi-any
-    shift
-  else
-    echo "$1" | grep "192.168"
-    if [ "$?" = "0" ]
-    then
-      # IP address of a device, hopefully in local mode
-      deploy_fleet=$1
-      extra_push_flags="--detached --nolive"
-      shift
-    else
-      deploy_fleet=fhau-staging
-    fi
   fi
-  echo Will deploy to $deploy_fleet
+fi
+echo Will deploy to $deploy_fleet
 
-  if [ "$1" = "--debug" ]
-  then
-    push_cmd="balena push --debug $extra_push_flags --source $balenaFakerootDir $deploy_fleet"
-    shift
-  else
-    push_cmd="balena push $extra_push_flags --source $balenaFakerootDir $deploy_fleet"
-  fi
-  echo $push_cmd
+if [ "$push_method" = "balena_cli" ]
+then
+  echo Remaining arguments: $*
+  extra_push_flags="$extra_push_flags $*"
+  push_cmd="balena push $extra_push_flags --source $balenaFakerootDir gh_tim_littlefair/$deploy_fleet"
   $push_cmd
+elif [ ! "$deploy_fleet" = "muddy-hail" ]
+  then
+  echo "The only push method available for fleets other than muddy-hail is 'balena_cli'"
+  exit 1
+else
+  echo Deploying using git
+  echo Adding
+  for f_or_d in $(ls -1 $balenaFakerootDir)
+  do
+    git -C $balenaFakerootDir add $f_or_d
+  done
+    git -C $balenaFakerootDir status
+  echo Committing
+  git -C $balenaFakerootDir commit -m "Deploying using legacy git method for release $buildString
+
+$buildGitRef"
+  echo Pushing
+  git -C $balenaFakerootDir push
+  echo Push done
 fi
 
 if [ ! -z "$*" ]

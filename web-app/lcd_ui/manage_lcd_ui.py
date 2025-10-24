@@ -121,14 +121,14 @@ def update_selected_lcds(display_method, png_fn):
         dev_paths = [ "/dev/fb0", "/dev/fb1" ]
     else:
         dev_paths=[ display_method.replace("--","/dev/") ]
-        for dev_path in dev_paths:
-            if os.path.exists(dev_path):
-                subprocess.run(
-                    f"/usr/bin/fbi -a -T 1 -noverbose -d {dev_path} {png_fn}",
-                    shell=True
-                )
-            else:
-                pass
+    for dev_path in dev_paths:
+        if os.path.exists(dev_path):
+            subprocess.run(
+                f"/usr/bin/fbi -a -T 1 -noverbose -d {dev_path} {png_fn}",
+                shell=True
+            )
+        else:
+            pass
 
 display_method=None
 def sigterm_handler(signum,frame):
@@ -167,19 +167,19 @@ if __name__ == "__main__":
             PresetUpdatedHandler(run_dir, ipaddr, display_method),
             f"{run_dir}",recursive=True,
         )
-        signal.signal(signal.SIGTERM,sigterm_handler)
-        signal.signal(signal.SIGCHLD,signal.SIG_IGN)
+        # signal.signal(signal.SIGTERM,sigterm_handler)
+        # signal.signal(signal.SIGCHLD,signal.SIG_IGN)
         preset_details_observer.start()
-        #update_lcd_ui(run_dir, ipaddr, display_method)
+        update_lcd_ui(run_dir, ipaddr, display_method)
         try:
             while True:
                 time.sleep(3)
         except KeyboardInterrupt:
-            pass
+            update_selected_lcds(display_method,"lcd_ui/lcd_shutdown.png")
         preset_details_observer.stop()
         preset_details_observer.join()
-
 
     except:
         traceback.print_exc()
 
+update_selected_lcds(display_method,"lcd_ui/lcd_shutdown.png")
