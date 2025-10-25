@@ -21,12 +21,12 @@ buildscript {
         // with known vulnerabilities.
 
         classpath 'org.jsoup:jsoup:1.21.2'
-        classpath 'io.netty:netty-common:4.1.125.Final'
-        classpath 'io.netty:netty-handler:4.1.125.Final'
+        classpath 'io.netty:netty-common:4.2.7.Final'
+        classpath 'io.netty:netty-handler:4.2.7.Final'
         classpath 'io.netty:netty-codec-http:4.2.7.Final'
         classpath 'io.netty:netty-codec-http2:4.2.7.Final'
         classpath 'org.apache.commons:commons-compress:1.28.0'
-        classpath "org.apache.commons:commons-lang3:3.18.0"
+        classpath "org.apache.commons:commons-lang3:3.19.0"
         classpath "org.apache.commons:commons-collections4:4.5.0"
         classpath "commons-io:commons-io:2.20.0"
         classpath 'com.google.guava:guava:33.5.0-android'
@@ -39,8 +39,8 @@ buildscript {
         // packages in the 3.X.Y series, these will need to be
         // maintained manually until the transitive dependency
         // which brings them in requires 4.X.Y.
-        classpath 'com.google.protobuf:protobuf-kotlin:4.32.1'
-        classpath 'com.google.protobuf:protobuf-java:4.32.1'
+        classpath 'com.google.protobuf:protobuf-kotlin:4.33.0'
+        classpath 'com.google.protobuf:protobuf-java:4.33.0'
 
         classpath 'com.android.tools.build:gradle:8.13.0'
 
