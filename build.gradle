@@ -23,8 +23,8 @@ buildscript {
         classpath 'org.jsoup:jsoup:1.21.2'
         classpath 'io.netty:netty-common:4.1.125.Final'
         classpath 'io.netty:netty-handler:4.1.125.Final'
-        classpath 'io.netty:netty-codec-http:4.2.6.Final'
-        classpath 'io.netty:netty-codec-http2:4.2.6.Final'
+        classpath 'io.netty:netty-codec-http:4.2.7.Final'
+        classpath 'io.netty:netty-codec-http2:4.2.7.Final'
         classpath 'org.apache.commons:commons-compress:1.28.0'
         classpath "org.apache.commons:commons-lang3:3.18.0"
         classpath "org.apache.commons:commons-collections4:4.5.0"
