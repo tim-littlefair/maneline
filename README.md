@@ -59,6 +59,22 @@ Specifically, this project is consists of:
   mentioned above, and enables a user interface hosted in a web 
   browser to control the capabilities provided by the CLI application.
 
+As of late October 2025, there I have created a very rough YouTube video illustrating the 
+software's capabilities at this point in time:
+
+https://youtu.be/K_7ckuZkv9Y
+
+A sandbox used to build and deploy the baseline of software running in this demonstration 
+can be reproduced using git repository tag 0.2.0+beta0055.  
+
+The build process is repeatable but changing from baseline to baseline and not yet well 
+documented, but I will always be happy to recommend a recent baseline and provide detailed 
+instructions for that baseline to anyone who reaches out to me - please read the following 
+GitHub issues for instructions on how to do this:
+
+https://github.com/tim-littlefair/maneline/issues/70
+
+
 # Licensing and Distribution
 
 The original software in this project is licensed under the 
