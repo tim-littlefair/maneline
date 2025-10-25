@@ -4,7 +4,7 @@
 # https://forums.balena.io/t/problems-doing-a-balena-push-free-tier/374797/10
 # pushing using the balena CLI is unreliable for this project so the
 # legacy git method is used
-push_method=git
+push_method=balena_cli
 
 # This is a quick and dirty script to build and run a release of Maneline
 set -e
