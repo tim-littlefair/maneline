@@ -62,7 +62,7 @@ Specifically, this project is consists of:
 As of late October 2025, there I have created a very rough YouTube video illustrating the 
 software's capabilities at this point in time:
 
-https://youtu.be/K_7ckuZkv9Y
+https://www.youtube.com/watch?v=Zl81TAoySjk
 
 A sandbox used to build and deploy the baseline of software running in this demonstration 
 can be reproduced using git repository tag 0.2.0+beta0055.  
