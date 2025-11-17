@@ -31,7 +31,7 @@ class DeviceTransportHid4Java implements IDeviceTransport {
         }
         catch(Exception e) {
             e.printStackTrace();
-            System.out.print(e.toString());
+            System.out.print(e);
             return "Last error message not available";
         }
     }

@@ -1,14 +1,21 @@
 package net.heretical_camelid.maneline.desktop_app;
 
+import net.heretical_camelid.maneline.lib.AbstractMessageProtocolBase;
+import net.heretical_camelid.maneline.lib.DefaultLoggingAgent;
+import net.heretical_camelid.maneline.lib.LTSeriesProtocol;
 import net.heretical_camelid.maneline.lib.interfaces.IAmpProvider;
 import net.heretical_camelid.maneline.lib.interfaces.ILoggingAgent;
 import net.heretical_camelid.maneline.lib.registries.PresetRegistry;
 import net.heretical_camelid.maneline.lib.registries.SuiteRecord;
 import net.heretical_camelid.maneline.lib.registries.SuiteRegistry;
-import org.hid4java.*;
-import org.hid4java.event.HidServicesEvent;
 
-import net.heretical_camelid.maneline.lib.*;
+import org.hid4java.HidDevice;
+import org.hid4java.HidManager;
+import org.hid4java.HidServices;
+import org.hid4java.HidServicesListener;
+import org.hid4java.HidServicesSpecification;
+import org.hid4java.ScanMode;
+import org.hid4java.event.HidServicesEvent;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -16,6 +23,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.Set;
 
 import com.google.gson.JsonObject;
@@ -222,14 +230,14 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
                                     System.out.println("have FMIC's USB vendor id.");
                                     System.out.println("A reboot may be required to activate the new rules.");
                                     try {
-                                        byte[] manelineRulesBytes = DesktopUsbAmpProvider.class.getResourceAsStream(
+                                        byte[] manelineRulesBytes = Objects.requireNonNull(
+                                            DesktopUsbAmpProvider.class.getResourceAsStream(
                                             "/assets/50-maneline.rules"
+                                            )
                                         ).readAllBytes();
                                         FileOutputStream manelineRulesFOS = new FileOutputStream("50-maneline.rules");
                                         manelineRulesFOS.write(manelineRulesBytes);
                                         manelineRulesFOS.close();
-                                    } catch (FileNotFoundException e) {
-                                        throw new RuntimeException(e);
                                     } catch (IOException e) {
                                         throw new RuntimeException(e);
                                     }
