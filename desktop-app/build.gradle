@@ -40,9 +40,9 @@ dependencies {
     implementation 'org.slf4j:slf4j-api:2.0.17'
     implementation 'com.google.code.gson:gson:2.13.2'
 
-    implementation 'ch.qos.logback:logback-core:1.5.20'
-    implementation 'ch.qos.logback:logback-classic:1.5.20'
-    implementation 'net.logstash.logback:logstash-logback-encoder:8.1'
+    implementation 'ch.qos.logback:logback-core:1.5.21'
+    implementation 'ch.qos.logback:logback-classic:1.5.21'
+    implementation 'net.logstash.logback:logstash-logback-encoder:9.0'
 
 
     implementation group: 'org.apache.logging.log4j', name: 'log4j-layout-template-json', version: '2.25.2'

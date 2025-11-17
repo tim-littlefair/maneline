@@ -28,21 +28,13 @@ buildscript {
         classpath 'org.apache.commons:commons-compress:1.28.0'
         classpath "org.apache.commons:commons-lang3:3.19.0"
         classpath "org.apache.commons:commons-collections4:4.5.0"
-        classpath "commons-io:commons-io:2.20.0"
+        classpath "commons-io:commons-io:2.21.0"
         classpath 'com.google.guava:guava:33.5.0-android'
         classpath 'org.jdom:jdom2:2.0.6.1'
+        classpath 'com.google.protobuf:protobuf-kotlin:4.33.1'
+        classpath 'com.google.protobuf:protobuf-java:4.33.1'
 
-        // The next two dependencies are flagged by Android Studio
-        // as outdated, but the versions AS would auto-update to have
-        // undergone a major version bump to 4.X.Y.
-        // As at 25/09/09 3.25.8 is the latest version for both
-        // packages in the 3.X.Y series, these will need to be
-        // maintained manually until the transitive dependency
-        // which brings them in requires 4.X.Y.
-        classpath 'com.google.protobuf:protobuf-kotlin:4.33.0'
-        classpath 'com.google.protobuf:protobuf-java:4.33.0'
-
-        classpath 'com.android.tools.build:gradle:8.13.0'
+        classpath 'com.android.tools.build:gradle:8.13.1'
 
     }
 }
@@ -52,12 +44,14 @@ allprojects {
         google()
         mavenCentral()
     }
-    tasks.withType(JavaCompile) {
-        options.deprecation = true
+    tasks.withType(JavaCompile).tap {
+        configureEach {
+            options.deprecation = true
+        }
     }
 }
 
-// For Android apps relased via PlayStore, versionCode must
+// For Android apps released via PlayStore, versionCode must
 // be a monotonically increasing integer.
 // This will be substituted during release candidate builds
 // by a script in a release build following the format
