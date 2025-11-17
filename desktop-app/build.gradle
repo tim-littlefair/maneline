@@ -2,6 +2,12 @@ plugins {
     id 'java'
 }
 
+repositories {
+    maven {
+        url = "https://raw.github.com/eurotech/kura_addons/mvn-repo"
+    }
+}
+
 java {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
@@ -37,8 +43,11 @@ dependencies {
 
     implementation 'net.java.dev.jna:jna:5.18.1'
     implementation 'org.hid4java:hid4java:0.8.0'
+    implementation 'tinyb:tinyb:1.0.100'
     implementation 'org.slf4j:slf4j-api:2.0.17'
     implementation 'com.google.code.gson:gson:2.13.2'
+
+
 
     implementation 'ch.qos.logback:logback-core:1.5.21'
     implementation 'ch.qos.logback:logback-classic:1.5.21'
