@@ -21,17 +21,33 @@ local session_name = "session_"..os.date("%Y%m%d%H%M%S")
 local fhau_cli_input_fd = nil
 local retained_session_names = {}
 
-function Fhau:purge_stale_session_dirs(number_to_retain)
+function Fhau:manage_session_dirs(number_to_retain)
     session_dirs = io.popen('test ! -z "session_*" && ls -1d session_* | sort --reverse',"r")
     local dir=nil
-    for i=1,number_to_retain
+    for i=1,number_to_retain*2
     do
         dir=session_dirs:read("*line")
-        if(dir==nil)
+        if dir==nil
         then
             break
+        elseif dir:match(".zip$")
+        then
+            -- skip
         else
-            print("Retaining "..dir)
+            session_zip = dir..".zip"
+            if lfs.attributes(session_zip)==nil
+            then
+                zip_status = os.execute(
+                    "cd "..dir.." && zip -r ../"..session_zip.." . && cd .."
+                )
+                print(
+                    "Retaining "..dir..
+                    " and created "..session_zip..
+                    " with status "..zip_status
+                )
+            else
+                print("Retaining "..dir.." and "..session_zip)
+            end
             table.insert(retained_session_names,dir)
         end
     end

@@ -238,6 +238,14 @@ function Web_UI:handle(request, response)
             response:addHeader("Cache-Control","no-cache")
             presets_html = Web_UI:build_session_presets_html(session)
             response:write(presets_html)
+        elseif string.find(req_path,"^/session_%d+\.zip$")
+        then
+            first, last = string.find(req_path,"session_%d+")
+            session = string.sub(req_path,first,last)
+            response:addHeader("Cache-Control","no-cache")
+            response:addHeader("")
+            presets_html = Web_UI:build_session_presets_html(session)
+            response:write(presets_html)
         elseif req_path=="/favicon.ico"
         then
             response:addHeader("Cache-Control","max-age=60, stale-while-revalidate=120")
