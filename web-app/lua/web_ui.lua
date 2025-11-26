@@ -213,7 +213,7 @@ function Web_UI:handle(request, response)
         then
             response:addHeader("Cache-Control","no-cache")
             all_presets_path = fhau_cli:get_all_presets_path()
-            all_presets_html = Web_UI:build_preset_suite_html("All Presets", all_presets_path, "2")
+            all_presets_html = Web_UI:build_preset_suite_html("Current Loaded Presets", all_presets_path, "2")
             response:write(all_presets_html)
         elseif req_path=="/suite"
         then
