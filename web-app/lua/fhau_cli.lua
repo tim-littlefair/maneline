@@ -24,6 +24,10 @@ local retained_session_names = {}
 function Fhau:manage_session_dirs(number_to_retain)
     session_dirs = io.popen('test ! -z "session_*" && ls -1d session_* | sort --reverse',"r")
     local dir=nil
+    -- Read the first line, which will be the current session
+    -- We want to exclude this from the logic below which creates
+    -- a session zip file
+    session_dirs:read("*line")
     for i=1,number_to_retain*2
     do
         dir=session_dirs:read("*line")

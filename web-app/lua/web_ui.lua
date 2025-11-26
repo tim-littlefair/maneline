@@ -92,7 +92,12 @@ function Web_UI:build_sessions_html(retained_session_names, current_session_name
             table.insert(preset_row_data, s.start_time)
             table.insert(preset_row_data, s.duration)
             table.insert(preset_row_data, "./@subpage/presets")
-            table.insert(preset_row_data, "./@download.zip")
+            if s.name==current_session_name
+            then
+                table.insert(preset_row_data, "session still in progress")
+            else
+                table.insert(preset_row_data, "./@download.zip")
+            end
             table.insert(session_table_data,preset_row_data)
         end
         sessions_json = cjson.encode(session_table_data)
@@ -240,12 +245,12 @@ function Web_UI:handle(request, response)
             response:write(presets_html)
         elseif string.find(req_path,"^/session_%d+\.zip$")
         then
-            first, last = string.find(req_path,"session_%d+")
-            session = string.sub(req_path,first,last)
+            first, last = string.find(req_path,"session_%d+\.zip")
+            session_zip = string.sub(req_path,first,last)
             response:addHeader("Cache-Control","no-cache")
-            response:addHeader("")
-            presets_html = Web_UI:build_session_presets_html(session)
-            response:write(presets_html)
+            response:addHeader("Content-Type","application/zip")
+            response:addHeader("Content-Disposition","attachment; filename="..session_zip)
+            response:writeFile(session_zip)
         elseif req_path=="/favicon.ico"
         then
             response:addHeader("Cache-Control","max-age=60, stale-while-revalidate=120")
