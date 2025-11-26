@@ -21,4 +21,5 @@ class_java_src=$(ls */src/main/java/$(echo $class | sed -e 's^\.^/^g').java)
 ls -l $class_java_src
 
 javac -proc:full -cp ./desktop-app/build/libs/maneline-cli-0.0.0.jar -d ./_work $class_java_src
-java -cp ./_work:./desktop-app/build/libs/maneline-cli-0.0.0.jar $class
+jar_file=./desktop-app/build/libs/maneline-cli-0.0.0.jar
+java -cp ./_work:$jar_file -Djava.library.path=../tl-bluetooth-cli/target/native/linux/x86_64 $class
