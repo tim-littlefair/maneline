@@ -91,12 +91,13 @@ function Web_UI:build_sessions_html(retained_session_names, current_session_name
             table.insert(preset_row_data, s.start_date)
             table.insert(preset_row_data, s.start_time)
             table.insert(preset_row_data, s.duration)
-            table.insert(preset_row_data, "./@subpage/presets")
+            table.insert(preset_row_data, "@subpage/presets")
+            table.insert(preset_row_data, "@subpage.log")
             if s.name==current_session_name
             then
                 table.insert(preset_row_data, "session still in progress")
             else
-                table.insert(preset_row_data, "./@download.zip")
+                table.insert(preset_row_data, "@subpage.zip")
             end
             table.insert(session_table_data,preset_row_data)
         end
@@ -104,7 +105,7 @@ function Web_UI:build_sessions_html(retained_session_names, current_session_name
         body_end = file_text("web_ui/table_body_end.html.fragment")
         body_end = string.gsub(
             body_end,
-            "#COLUMNS#", "[ 'Start date', 'Start time', 'Duration', 'Presets', 'All session files' ]"
+            "#COLUMNS#", "[ 'Start date', 'Start time', 'Duration', 'Presets', 'Log', 'All session files' ]"
         )
         body_end = string.gsub(
             body_end,
@@ -243,6 +244,16 @@ function Web_UI:handle(request, response)
             response:addHeader("Cache-Control","no-cache")
             presets_html = Web_UI:build_session_presets_html(session)
             response:write(presets_html)
+        elseif string.find(req_path,"^/session_%d+\.log$")
+        then
+            first, last = string.find(req_path,"session_%d+\.log")
+            session_log_fname = string.sub(req_path,first,last)
+            session_name = string.sub(req_path,first,last-4)
+            session_path = session_name.."/session.log"
+            response:addHeader("Cache-Control","no-cache")
+            response:addHeader("Content-Type","test/plain")
+            response:addHeader("Content-Disposition","inline; filename="..session_log_fname)
+            response:writeFile(session_path)
         elseif string.find(req_path,"^/session_%d+\.zip$")
         then
             first, last = string.find(req_path,"session_%d+\.zip")

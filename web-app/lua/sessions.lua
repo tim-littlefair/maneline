@@ -18,26 +18,25 @@ local Sessions = {}
 local retained_sessions = nil
 
 function get_session(session_name)
-    session_dir_mod_time=lfs.attributes(session_name,"modification")
-    if session_dir_mod_time==nil
+    session_end_time=lfs.attributes(session_name,"modification")
+    session_start_time=session_end_time
+    if session_end_time==nil
     then
         return nil
     end
     iter, dir_obj = lfs.dir(session_name)
-    session_start_time=os.time()
-    session_end_time=session_dir_mod_time
     f=dir_obj:next()
     while(f~=nil)
     do
-        file_mod_time = lfs.attributes(session_name.."/"..f,"modification")
         if f ~= ".."
         then
-            if file_mod_time<session_start_time
-            then
-                session_start_time=file_mod_time
-            elseif file_mod_time>session_end_time
+            file_mod_time = lfs.attributes(session_name.."/"..f,"modification")
+            if file_mod_time>session_end_time
             then
                 session_end_time=file_mod_time
+            elseif file_mod_time<session_start_time
+            then
+                session_start_time = file_mod_time
             end
         end
         f=dir_obj:next()

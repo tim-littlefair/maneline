@@ -3,31 +3,6 @@
 </body>
 
 <script>
-    /*
-function select_preset(i) {
-    fetch(
-        window.location.origin, 
-        {
-            method: "POST",
-            body: `command=preset&slot=${i}`,
-            headers: { "Content-type": "application/json; charset=UTF-8" }
-        }
-    )
-    setTimeout(() => {
-        parent.window.location.reload(true)
-    }, 1000)
-}
-
-function td_inner_html(i, nameLine1, nameLine2) {
-    idStr=`0${i}`
-    idStr=idStr.substring(idStr.length-2,idStr.length)
-    btnId = "preset"+idStr
-    btnText = "preset&nbsp;"+idStr+"<br/>"+nameLine1+"<br/>"+nameLine2
-    return `<td><button id="${btnId}" onclick="select_preset(${i})" />${btnText}</td>\n`
-}
-*/
-
-
 sessions = #SESSIONS_JSON#
 
 function populate_table() {
@@ -40,6 +15,7 @@ function populate_table() {
         tbody_inner_html +="<td>" + session.start_time + "<td>\n"
         tbody_inner_html +="<td>" + session.duration_mins + "<td>\n"
         tbody_inner_html +="<td>" + "<a>presets</a>" + "<td>\n"
+        tbody_inner_html +="<td>" + "<a>log</a>" + "<td>\n"
         tbody_inner_html +="<td>" + "<a>everything</a>" + "<td>\n"
         tbody_inner_html += "</tr>\n"
     }
