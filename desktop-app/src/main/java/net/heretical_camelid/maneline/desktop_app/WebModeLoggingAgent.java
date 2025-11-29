@@ -48,7 +48,7 @@ public class WebModeLoggingAgent extends LoggingAgentBase {
         }
         if(m_sessionLog==null) {
             System.out.println(messageToAppendWithObject);
-        } else if(true || getTransactionName() != null) {
+        } else if(getTransactionName() != null) {
             LoggingEventBuilder leb = m_logger.atInfo();
             leb = leb.setMessage(messageToAppend);
             if(extraAttributes!=null) {
@@ -80,7 +80,6 @@ public class WebModeLoggingAgent extends LoggingAgentBase {
         assert getSessionName() != null:
             "Session name must be set before setting transaction name"
         ;
-        /*
         if(transactionName!=null) {
             super.setTransactionName(transactionName);
             LogbackRollingPolicy_SingleMessagePerFile.setFilenamePattern(
@@ -89,6 +88,5 @@ public class WebModeLoggingAgent extends LoggingAgentBase {
         } else {
             super.setTransactionName(null);
         }
-         */
     }
 }
