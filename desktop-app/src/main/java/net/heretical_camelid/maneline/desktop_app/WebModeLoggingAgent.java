@@ -9,7 +9,6 @@ import org.slf4j.spi.LoggingEventBuilder;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
-import java.util.HashMap;
 import java.util.Map;
 
 public class WebModeLoggingAgent extends LoggingAgentBase {
@@ -30,6 +29,7 @@ public class WebModeLoggingAgent extends LoggingAgentBase {
         // Hopefully this is only instantiated once
         assert s_instance == null;
         s_instance = this;
+
     }
 
     @Override
@@ -48,7 +48,7 @@ public class WebModeLoggingAgent extends LoggingAgentBase {
         }
         if(m_sessionLog==null) {
             System.out.println(messageToAppendWithObject);
-        } else if(true || getTransactionName() != null) {
+        } else if(getTransactionName() != null) {
             LoggingEventBuilder leb = m_logger.atInfo();
             leb = leb.setMessage(messageToAppend);
             if(extraAttributes!=null) {
@@ -80,15 +80,17 @@ public class WebModeLoggingAgent extends LoggingAgentBase {
         assert getSessionName() != null:
             "Session name must be set before setting transaction name"
         ;
-        /*
+        if(super.getTransactionName()!=null) {
+            appendToLog("Transaction finished", null);
+        }
         if(transactionName!=null) {
             super.setTransactionName(transactionName);
-            LogbackRollingPolicy_SingleMessagePerFile.setFilenamePattern(
-                String.format("%s/%s-%%03d.%s",getSessionName(), transactionName,"json")
+            LogbackRollingPolicy.setFilenamePattern(
+                String.format("%s/txn%%03d-%s-%%02d",getSessionName(), transactionName)
             );
+            appendToLog("Transaction started");
         } else {
             super.setTransactionName(null);
         }
-         */
     }
 }

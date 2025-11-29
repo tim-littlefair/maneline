@@ -17,29 +17,30 @@ import ch.qos.logback.core.rolling.TriggeringPolicy;
  * session, and within sessions into transactions by
  * filename prefix.
  */
-public class LogbackRollingPolicy_SingleMessagePerFile<E>
+public class LogbackRollingPolicy<E>
     extends RollingPolicyBase
     implements TriggeringPolicy<E> {
 
 
     static String fileNamePatternStr;
-    static private int rollingNumber = 0;
+    static private int txnNumber = 0;
+    static private int txnLineNumber = 0;
+    static private int txnRolloverNumber = 0;
+    static private int txnFileLineLimit = 1000; // ?TODO?: set accessor
 
-    static private LogbackRollingPolicy_SingleMessagePerFile s_instance = null;
+    static private LogbackRollingPolicy s_instance = null;
 
     static public void setFilenamePattern(String fnpStr) {
+        assert s_instance != null;
         fileNamePatternStr = fnpStr;
-        rollingNumber = 0;
-        if(s_instance!=null) {
-            s_instance.rollover();
-        }
+        ++txnNumber;
+        s_instance.rollover();
     }
 
     FileAppender<?> parentAppender;
 
-    public LogbackRollingPolicy_SingleMessagePerFile() {
+    public LogbackRollingPolicy() {
         super();
-        setFilenamePattern("log-%03d.txt");
         assert s_instance == null;
         s_instance = this;
     }
@@ -57,9 +58,9 @@ public class LogbackRollingPolicy_SingleMessagePerFile<E>
 
     @Override
     public void rollover() throws RolloverFailure {
-        String nextLogPath = String.format(fileNamePatternStr,rollingNumber);
+        String nextLogPath = String.format(fileNamePatternStr, txnNumber, txnRolloverNumber);
         parentAppender.setFile(nextLogPath);
-        rollingNumber++;
+        txnRolloverNumber++;
     }
 
     @Override
@@ -69,6 +70,13 @@ public class LogbackRollingPolicy_SingleMessagePerFile<E>
 
     @Override
     public boolean isTriggeringEvent(File activeFile, final E event) {
-        return true;
+        if(txnLineNumber==txnFileLineLimit) {
+            ++txnRolloverNumber;
+            txnLineNumber=0;
+            return true;
+        } else {
+            ++txnLineNumber;
+            return false;
+        }
     }
 }

@@ -20,12 +20,10 @@ public abstract class LoggingAgentBase implements ILoggingAgent {
     public void setTransactionName(String transactionName) {
         assert m_sessionName != null: "Transaction name should not be set before session name";
         if(transactionName!=null) {
-            appendToLog(String.format("Start of transaction %s",transactionName));
             m_transactionName = transactionName;
         } else {
             String endingTransactionName = m_transactionName;
             m_transactionName = null;
-            appendToLog(String.format("End of transaction %s",endingTransactionName));
         }
     }
 
