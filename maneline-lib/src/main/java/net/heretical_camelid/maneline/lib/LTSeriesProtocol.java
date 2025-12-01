@@ -12,6 +12,7 @@ import net.heretical_camelid.maneline.lib.utilities.RawProtobufUtilities;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -50,6 +51,12 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
 
     final Thread m_heartbeatThread;
     boolean m_heartbeatStopped = false;
+
+    static String s_outputPath = null;
+    public static void setOutputPath(String outputPath) {
+        s_outputPath = outputPath;
+    }
+
 
     public LTSeriesProtocol(
         boolean startHeartbeat,
@@ -423,7 +430,16 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
                 displayName,m_currentPresetIndex,effectDetails
             );
             log(m_currentPresetDetails);
-            
+            if(s_outputPath!=null) {
+                try {
+                    FileOutputStream productInfoStream = new FileOutputStream(
+                        s_outputPath + "/current-preset-details.txt"
+                    );
+                    productInfoStream.write(m_currentPresetDetails.getBytes(Charset.defaultCharset()));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
             HashMap<String,String > lcdAttributes = new HashMap<String,String>();
 
             JsonObject presetDetails = new JsonObject();

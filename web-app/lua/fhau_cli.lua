@@ -144,24 +144,18 @@ end
 
 function Fhau:get_cxn_and_dev_status()
     local cxn_status
-    fd1 = io.open(session_name.."/startProvider-001.json","rb")
+    fd1 = io.open(session_name.."/fmic-product-info.txt","rb")
     if fd1
     then
-        cxn_status=cjson.decode(fd1:read("*all")).message
+        cxn_status=fd1:read("*all");
         fd1:close()
     end
     local preset_status
-    fd2 = io.open(session_name.."/current-preset-details-001.json","rb")
-    while fd2
-    do
-        preset_json=fd2:read("*line")
-        if preset_json
-        then
-            preset_status = cjson.decode(preset_json).message
-        else
-            fd2:close()
-            break
-        end
+    fd2 = io.open(session_name.."/current-preset-details.txt","rb")
+    if fd2
+    then
+        preset_status=fd2:read("*all")
+        fd2:close()
     end
 
     local retval

@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
@@ -60,6 +61,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
                 outputDir.mkdirs();
             }
             assert outputDir.exists() : "Failed to create output directory";
+            LTSeriesProtocol.setOutputPath(outputPath);
         }
         m_outputPath = outputPath;
 
@@ -124,10 +126,19 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
         } else {
             boolean requestReport = false;
             int productId = fmicDevice.getProductId();
-            s_loggingAgent.appendToLog( String.format(
+            String productInfo = String.format(
                 "Using FMIC device with VID/PID=%04x:%04x product='%s' path=%s",
                 fmicDevice.getVendorId(), productId, fmicDevice.getProduct(), fmicDevice.getPath()
-            ));
+            );
+            s_loggingAgent.appendToLog(productInfo);
+            try {
+                FileOutputStream productInfoStream = new FileOutputStream(
+                    m_outputPath + "/fmic-product-info.txt"
+                );
+                productInfoStream.write(productInfo.getBytes(Charset.defaultCharset()));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
             // The serial number and release are less interesting than the items
             // above so we log them in a separate message, which will not be
             // displayed on the web UI.
