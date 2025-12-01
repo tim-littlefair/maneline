@@ -9,7 +9,6 @@ import org.slf4j.spi.LoggingEventBuilder;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
-import java.util.HashMap;
 import java.util.Map;
 
 public class WebModeLoggingAgent extends LoggingAgentBase {
@@ -20,6 +19,7 @@ public class WebModeLoggingAgent extends LoggingAgentBase {
     static WebModeLoggingAgent s_instance = null;
 
     static void setSessionNameStatic(String sessionName) {
+        assert sessionName != null;
         assert s_instance != null;
         s_instance.setSessionName(sessionName);
     }
@@ -30,6 +30,7 @@ public class WebModeLoggingAgent extends LoggingAgentBase {
         // Hopefully this is only instantiated once
         assert s_instance == null;
         s_instance = this;
+        setTransactionName(null);
     }
 
     @Override
@@ -64,6 +65,7 @@ public class WebModeLoggingAgent extends LoggingAgentBase {
 
     @Override
     public void setSessionName(String sessionName) {
+        assert sessionName != null;
         super.setSessionName(sessionName);
         try {
             m_sessionLog = new PrintStream(new FileOutputStream(
@@ -80,12 +82,21 @@ public class WebModeLoggingAgent extends LoggingAgentBase {
         assert getSessionName() != null:
             "Session name must be set before setting transaction name"
         ;
+        if(super.getTransactionName()!=null) {
+            appendToLog(
+                String.format("Transaction %s logged separately",getTransactionName()),
+                null
+            );
+        }
         if(transactionName!=null) {
             super.setTransactionName(transactionName);
-            LogbackRollingPolicy_SingleMessagePerFile.setFilenamePattern(
-                String.format("%s/%s-%%03d.%s",getSessionName(), transactionName,"json")
+            LogbackRollingPolicy.setFilenamePattern(
+                String.format("%s/txn%%03d-%s-%%02d",getSessionName(), transactionName)
             );
         } else {
+            LogbackRollingPolicy.setFilenamePattern(
+                String.format("%s/debug.log",getSessionName())
+            );
             super.setTransactionName(null);
         }
     }

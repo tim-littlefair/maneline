@@ -68,19 +68,21 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
         } else if (s_webMode) {
             s_loggingAgent = new WebModeLoggingAgent();
             WebModeLoggingAgent.setSessionNameStatic(outputPath);
-            AbstractMessageProtocolBase.setLoggingAgent(WebModeLoggingAgent.s_instance);
+            AbstractMessageProtocolBase.setLoggingAgent(s_loggingAgent);
             s_loggingAgent.appendToLog("Web mode logging enabled");
         } else {
             s_loggingAgent = new DefaultLoggingAgent();
+            AbstractMessageProtocolBase.setLoggingAgent(s_loggingAgent);
+            s_loggingAgent.appendToLog("Default logging enabled");
         }
-        AbstractMessageProtocolBase.setLoggingAgent(s_loggingAgent);
         m_presetRegistry = new PresetRegistry(outputPath);
         m_suiteRegistry = new SuiteRegistry(m_presetRegistry);
         m_protocol = new LTSeriesProtocol(true,true);
     }
 
     void startProvider() {
-        s_loggingAgent.setTransactionName("txn00-startProvider");
+        s_loggingAgent.setTransactionName("startProvider");
+        s_loggingAgent.appendToLog("Starting DesktopUsbAmpProvider");
         // Demonstrate low level traffic logging
         // HidApi.logTraffic = true;
 
