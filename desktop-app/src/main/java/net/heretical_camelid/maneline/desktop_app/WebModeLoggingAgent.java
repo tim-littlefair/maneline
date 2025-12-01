@@ -82,7 +82,7 @@ public class WebModeLoggingAgent extends LoggingAgentBase {
         ;
         if(transactionName!=null) {
             super.setTransactionName(transactionName);
-            LogbackRollingPolicy_SingleMessagePerFile.setFilenamePattern(
+            LogbackRollingPolicy.setFilenamePattern(
                 String.format("%s/%s-%%03d.%s",getSessionName(), transactionName,"json")
             );
         } else {

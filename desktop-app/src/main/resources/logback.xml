@@ -1,5 +1,8 @@
 <configuration>
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
         <encoder>
             <pattern>%msg%n</pattern>
         </encoder>
@@ -10,28 +13,20 @@
     // https://tobydevlin.com/blog/structured-logging-in-java-with-slf4j-and-logback
     -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>fhau.log</file>
-
-        <!-- rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <file>null</file>
-            <fileNamePattern>fhau-%d{}-%i.qqq</fileNamePattern>
-            <maxFileSize>1</maxFileSize>
-        </rollingPolicy -->
-
-        <rollingPolicy class="net.heretical_camelid.maneline.desktop_app.LogbackRollingPolicy_SingleMessagePerFile"/>
-
-        <!-- triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-            <maxFileSize>1</maxFileSize>
-        </triggeringPolicy -->
-
+        <file>dummy.log</file>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>DEBUG</level>
+        </filter>
+        <rollingPolicy class="net.heretical_camelid.maneline.desktop_app.LogbackRollingPolicy"/>
         <encoder class="net.logstash.logback.encoder.LogstashEncoder">
             <includeMdc>false</includeMdc>
             <includeContext>false</includeContext>
             <fieldNames>
                 <timestamp>[ignore]</timestamp>
                 <version>[ignore]</version>
+                <logger>[ignore]</logger>
+                <levelValue>[ignore]</levelValue>
             </fieldNames>
-            <shortenedLoggerNameLength>0</shortenedLoggerNameLength>
         </encoder>
     </appender>
 

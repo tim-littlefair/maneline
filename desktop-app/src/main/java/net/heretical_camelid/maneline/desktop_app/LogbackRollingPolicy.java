@@ -2,6 +2,7 @@
 package net.heretical_camelid.maneline.desktop_app;
 
 import java.io.File;
+import java.io.StringBufferInputStream;
 
 import ch.qos.logback.core.FileAppender;
 import ch.qos.logback.core.rolling.RollingPolicyBase;
@@ -17,31 +18,39 @@ import ch.qos.logback.core.rolling.TriggeringPolicy;
  * session, and within sessions into transactions by
  * filename prefix.
  */
-public class LogbackRollingPolicy_SingleMessagePerFile<E>
+public class LogbackRollingPolicy<E>
     extends RollingPolicyBase
     implements TriggeringPolicy<E> {
 
 
-    static String fileNamePatternStr;
-    static private int rollingNumber = 0;
+    static String fileNamePatternStr = "../before-session.log";
+    static private int txnNumber = 1;
+    static private int txnLineNumber = 0;
+    static private int txnRolloverNumber = 0;
+    static private int txnFileLineLimit = 1000; // ?TODO?: static set accessor?
 
-    static private LogbackRollingPolicy_SingleMessagePerFile s_instance = null;
+    static private LogbackRollingPolicy s_instance = null;
 
+    static private void pl(String s) {
+        /* System.out.println(s); */
+    }
     static public void setFilenamePattern(String fnpStr) {
+        pl(">setFilenamePattern " + fileNamePatternStr + "->" + fnpStr);
+        assert s_instance != null;
         fileNamePatternStr = fnpStr;
-        rollingNumber = 0;
-        if(s_instance!=null) {
-            s_instance.rollover();
-        }
+        txnRolloverNumber = 0;
+        pl("<setFilenamePattern=" + fnpStr);
     }
 
     FileAppender<?> parentAppender;
 
-    public LogbackRollingPolicy_SingleMessagePerFile() {
+
+    public LogbackRollingPolicy() {
         super();
-        setFilenamePattern("log-%03d.txt");
+        pl(">LogbackRollingPolicy");
         assert s_instance == null;
         s_instance = this;
+        pl("<LogbackRollingPolicy");
     }
 
     /**
@@ -51,15 +60,19 @@ public class LogbackRollingPolicy_SingleMessagePerFile<E>
      */
     @Override
     public void setParent(FileAppender<?> appender) {
+        pl(">setParent");
         super.setParent(appender);
         this.parentAppender = appender;
+        pl("<setParent");
     }
 
     @Override
     public void rollover() throws RolloverFailure {
-        String nextLogPath = String.format(fileNamePatternStr,rollingNumber);
+        pl(">rollover");
+        txnRolloverNumber++;
+        String nextLogPath = String.format(fileNamePatternStr, txnRolloverNumber);
         parentAppender.setFile(nextLogPath);
-        rollingNumber++;
+        pl("<rollover");
     }
 
     @Override
@@ -70,5 +83,19 @@ public class LogbackRollingPolicy_SingleMessagePerFile<E>
     @Override
     public boolean isTriggeringEvent(File activeFile, final E event) {
         return true;
+/*
+        pl(">isTriggeringEvent");
+        if(txnLineNumber==0) {
+            ++txnLineNumber;
+            pl("<isTriggeringEvent false");
+            return true;
+        } else if (txnLineNumber==txnFileLineLimit) {
+            txnLineNumber=0;
+        } else {
+            ++txnLineNumber;
+        }
+        pl("<isTriggeringEvent false");
+        return false;
+ */
     }
 }
