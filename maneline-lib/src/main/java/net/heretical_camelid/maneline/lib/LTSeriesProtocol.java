@@ -73,7 +73,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
 
     public int doStartup(String[] firmwareVersionEtc) {
         assert m_deviceTransport!=null;
-        setLogTransactionName("txn01-startup");
+        setLogTransactionName("startup");
         String[][] startupCommands = new String[][]{
             // First message has messageId 113, LtAmp's ModalStatusMessage
             // On LT40S, when messageId 113 is sent, the amp responds with the same messageId 113
@@ -117,7 +117,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         assert m_deviceTransport!=null;
         s_presetResponseReader = presetRegistry;
         for (int i = firstPreset; i <= lastPreset; ++i) {
-            setLogTransactionName(String.format("txn02-getPreset%03d",i));
+            setLogTransactionName(String.format("getPreset%03d",i));
             int psJsonStatus = sendPresetJsonRequest(i);
             setLogTransactionName(null);
             if (psJsonStatus != STATUS_OK) {

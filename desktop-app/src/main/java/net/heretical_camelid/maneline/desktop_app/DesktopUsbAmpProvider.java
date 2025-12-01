@@ -80,7 +80,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
     }
 
     void startProvider() {
-        s_loggingAgent.setTransactionName("txn00-startProvider");
+        s_loggingAgent.setTransactionName("startProvider");
         // Demonstrate low level traffic logging
         // HidApi.logTraffic = true;
 

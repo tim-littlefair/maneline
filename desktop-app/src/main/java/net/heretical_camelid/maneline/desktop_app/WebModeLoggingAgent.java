@@ -24,6 +24,11 @@ public class WebModeLoggingAgent extends LoggingAgentBase {
         s_instance.setSessionName(sessionName);
     }
 
+    static String getSessionNameStatic() {
+        assert s_instance != null;
+        return s_instance.getSessionName();
+    }
+
     public WebModeLoggingAgent() {
         super();
 

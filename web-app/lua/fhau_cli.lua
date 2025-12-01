@@ -144,7 +144,7 @@ end
 
 function Fhau:get_cxn_and_dev_status()
     local cxn_status
-    fd1 = io.open(session_name.."/txn00-startProvider-001.json","rb")
+    fd1 = io.open(session_name.."/startProvider-001.json","rb")
     if fd1
     then
         cxn_status=cjson.decode(fd1:read("*all")).message

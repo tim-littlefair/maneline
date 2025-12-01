@@ -8,12 +8,8 @@
         </encoder>
     </appender>
 
-    <!--
-    // JSON logging based on a tutorial at:
-    // https://tobydevlin.com/blog/structured-logging-in-java-with-slf4j-and-logback
-    -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>dummy.log</file>
+        <file>/dev/null</file> <!-- will be overridden -->
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>DEBUG</level>
         </filter>
@@ -22,7 +18,7 @@
             <includeMdc>false</includeMdc>
             <includeContext>false</includeContext>
             <fieldNames>
-                <timestamp>[ignore]</timestamp>
+                <!--timestamp>[ignore]</timestamp-->
                 <version>[ignore]</version>
                 <logger>[ignore]</logger>
                 <levelValue>[ignore]</levelValue>
