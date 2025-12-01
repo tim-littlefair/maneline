@@ -43,14 +43,17 @@ function get_session(session_name)
     end
     session = {}
     session.name = session_name
-    session.start_date = os.date("%Y-%m-%d",session_start_time)
+    session.start_date = os.date("%y-%m-%d",session_start_time)
     session.start_time = os.date("%H:%M",session_start_time)
     session_duration_seconds = session_end_time-session_start_time
-    if(session_duration_seconds<=90)
+    if(session_duration_seconds<=120)
     then
-        session.duration=session_duration_seconds.." seconds"
+        session.duration=session_duration_seconds.." secs"
+    elseif(session_duration_seconds<=120*60)
+    then
+        session.duration=math.floor(0.5+(session_duration_seconds/60)).." mins"
     else
-        session.duration=math.floor(0.5+(session_duration_seconds/60)).." minutes"
+        session.duration=math.floor(0.5+(session_duration_seconds/(60*60))).." hours"
     end
     return session
 end

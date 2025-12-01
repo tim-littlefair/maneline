@@ -17,7 +17,7 @@ fhau_errors = require 'fhau_errors'
 local Fhau = {}
 
 local session_start_time_t = os.time()
-local session_name = "session_"..os.date("%Y%m%d%H%M%S")
+local session_name = "session_"..os.date("%y%m%d%H%M%S")
 local fhau_cli_input_fd = nil
 local retained_session_names = {}
 
