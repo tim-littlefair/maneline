@@ -16,6 +16,7 @@ import org.hid4java.HidServicesListener;
 import org.hid4java.HidServicesSpecification;
 import org.hid4java.ScanMode;
 import org.hid4java.event.HidServicesEvent;
+import org.hid4java.jna.HidApi;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -38,7 +39,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
 {
     final private static int VID_FMIC = 0x1ed8;
 
-    static ILoggingAgent s_loggingAgent;
+    static WebModeLoggingAgent s_loggingAgent = null;
     AbstractMessageProtocolBase m_protocol;
     String m_firmwareVersion;
     PresetRegistry m_presetRegistry;
@@ -65,27 +66,19 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
         }
         m_outputPath = outputPath;
 
-        if(s_loggingAgent!=null) {
-            // Logging agent already exists, no need to recreate it
-        } else if (s_webMode) {
-            s_loggingAgent = new WebModeLoggingAgent();
-            WebModeLoggingAgent.setSessionNameStatic(outputPath);
-            AbstractMessageProtocolBase.setLoggingAgent(WebModeLoggingAgent.s_instance);
-            s_loggingAgent.appendToLog("Web mode logging enabled");
-        } else {
-            s_loggingAgent = new DefaultLoggingAgent();
-        }
+        assert s_loggingAgent == null;
+        s_loggingAgent = new WebModeLoggingAgent();
+        WebModeLoggingAgent.setSessionNameStatic(outputPath);
         AbstractMessageProtocolBase.setLoggingAgent(s_loggingAgent);
+        s_loggingAgent.appendToLog("Web mode logging enabled");
+
         m_presetRegistry = new PresetRegistry(outputPath);
         m_suiteRegistry = new SuiteRegistry(m_presetRegistry);
         m_protocol = new LTSeriesProtocol(true,true);
+        AbstractMessageProtocolBase.setLoggingAgent(s_loggingAgent);
     }
 
     void startProvider() {
-        s_loggingAgent.setTransactionName("startProvider");
-        // Demonstrate low level traffic logging
-        // HidApi.logTraffic = true;
-
         // Configure to use custom specification
         HidServicesSpecification hidServicesSpecification = new HidServicesSpecification();
 
@@ -104,6 +97,9 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
         m_hidServices = HidManager.getHidServices(hidServicesSpecification);
         // Register for service events
         m_hidServices.addHidServicesListener(this);
+
+        // Demonstrate low level traffic logging
+        // HidApi.logTraffic = true;
 
         // Manually start HID services
         m_hidServices.start();
@@ -167,6 +163,17 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
                     "A future version of Maneline may be able to connect to this device over BLE"
                 );
             } else if(
+                fmicDevice.getProduct().contains(" LTX")
+            ) {
+                s_loggingAgent.appendToLog(
+                    "Probable LTX series device - not expected to be detected via USB HID"
+                );
+                s_loggingAgent.appendToLog(
+                    "A future version of Maneline may be able to connect to this device over BLE"
+                );
+                requestReport = true;
+                fmicDevice = null;
+            } else if(
                 fmicDevice.getProduct().contains(" LT")
             ) {
                 s_loggingAgent.appendToLog(
@@ -183,7 +190,6 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
                     "A future version of Maneline may be able to connect to this device over BLE"
                 );
                 requestReport = true;
-                // TODO?: Consider implementing a CLI switch for 'have a go anyway'?
                 fmicDevice = null;
             } else if(fmicDevice.getProductId()<=15){
                 s_loggingAgent.appendToLog(
@@ -216,14 +222,16 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
 
             if (fmicDevice == null) {
                 // Shut down and rely on auto-shutdown hook to clear HidApi resources
-                System.out.println("No FMIC device found");
+                s_loggingAgent.appendToLog("No FMIC device found");
             } else {
                 // Open the device
                 if (fmicDevice.isClosed()) {
                     if (!fmicDevice.open()) {
                         String lastUsbHidError = fmicDevice.getLastErrorMessage();
                         if(!lastUsbHidError.equals("Device not initialised")) {
-                          System.out.println("FMIC device error: " + lastUsbHidError);
+                            s_loggingAgent.appendToLog(
+                                "FMIC device error: " + lastUsbHidError
+                            );
                         } else {
                             System.out.println("The FMIC device could not be initialised");
                             System.out.println("This may (or may not) relate to whether the user has OS-level permissions");
@@ -265,7 +273,6 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
                             }
                         }
                         // Attempt to open the device failed, so we stop here
-                        s_loggingAgent.setTransactionName(null);
                         return;
                     }
                 }
@@ -287,10 +294,11 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
                     //printAsHex2(reportDescriptor,"<");
                     enable_printAsHex2 = e_pah2_prev_state;
                 }
-                s_loggingAgent.setTransactionName(null);
 
                 // Initialise the Fender Mustang/Rumble device
+                s_loggingAgent.setTransactionName("initialiseDevice");
                 handleInitialise(fmicDevice);
+                s_loggingAgent.setTransactionName(null);
             }
         }
     }

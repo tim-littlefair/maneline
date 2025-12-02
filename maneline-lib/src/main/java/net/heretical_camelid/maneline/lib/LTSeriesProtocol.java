@@ -50,6 +50,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
     String m_currentPresetDetails;
 
     final Thread m_heartbeatThread;
+    int m_heartbeatsSentSinceLastLog = 0;
     boolean m_heartbeatStopped = false;
 
     static String s_outputPath = null;
@@ -195,10 +196,24 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
     private int sendCommand(String commandBytesHex, String commandDescription, boolean responseExpected) {
         byte[] commandBytes = new byte[64];
         colonSeparatedHexToByteArray(commandBytesHex, commandBytes);
-        if(commandDescription!=null) {
+        if(Thread.currentThread()==m_heartbeatThread) {
+            ++m_heartbeatsSentSinceLastLog;
+        } else {
+            if(m_heartbeatsSentSinceLastLog>0) {
+                log(String.format(
+                    "%d heartbeats sent since last command", m_heartbeatsSentSinceLastLog
+                ));
+                m_heartbeatsSentSinceLastLog=0;
+            }
+            setLogTransactionName("command");
+            assert(commandDescription!=null);
             log("Sending " + commandDescription);
         }
-        return sendCommandBytes(commandBytes,responseExpected);
+        int retval = sendCommandBytes(commandBytes,responseExpected);
+        if(Thread.currentThread()==m_heartbeatThread) {
+            setLogTransactionName(null);
+        }
+        return retval;
     }
     synchronized private int sendCommandBytes(byte[] commandBytes, boolean responseExpected) {
         logAsHex2(commandBytes, "<");

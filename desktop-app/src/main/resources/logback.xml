@@ -1,5 +1,5 @@
 <configuration>
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>INFO</level>
         </filter>
@@ -8,15 +8,16 @@
         </encoder>
     </appender>
 
-    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>/dev/null</file> <!-- will be overridden -->
+    <appender name="SESSION_APPENDER" class="ch.qos.logback.core.FileAppender">
+        <file>session2.log</file> <!-- will be overridden -->
+        <immediateFlush>true</immediateFlush>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>DEBUG</level>
         </filter>
-        <rollingPolicy class="net.heretical_camelid.maneline.desktop_app.LogbackRollingPolicy"/>
         <encoder class="net.logstash.logback.encoder.LogstashEncoder">
             <includeMdc>false</includeMdc>
             <includeContext>false</includeContext>
+            <timestampPattern>yy-MM-dd'T'HH:mm:ss.SSS</timestampPattern>
             <fieldNames>
                 <!--timestamp>[ignore]</timestamp-->
                 <version>[ignore]</version>
@@ -26,8 +27,34 @@
         </encoder>
     </appender>
 
+    <appender name="TRANSACTION_APPENDER" class="ch.qos.logback.core.FileAppender">
+        <file>txn.log</file> <!-- will be overridden -->
+        <immediateFlush>true</immediateFlush>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>DEBUG</level>
+        </filter>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <includeMdc>false</includeMdc>
+            <includeContext>false</includeContext>
+            <timestampPattern>yy-MM-dd'T'HH:mm:ss.SSS</timestampPattern>
+            <fieldNames>
+                <!--timestamp>[ignore]</timestamp-->
+                <version>[ignore]</version>
+                <logger>[ignore]</logger>
+                <levelValue>[ignore]</levelValue>
+            </fieldNames>
+        </encoder>
+    </appender>
+
+    <logger name="SESSION_LOGGER" level="debug">
+        <appender-ref ref="SESSION_APPENDER"/>
+    </logger>
+
+    <logger name="TRANSACTION_LOGGER" level="debug">
+        <appender-ref ref="TRANSACTION_APPENDER"/>
+    </logger>
+
     <root level="info">
-        <appender-ref ref="STDOUT"/>
-        <appender-ref ref="FILE"/>
+        <appender-ref ref="CONSOLE"/>
     </root>
 </configuration>
