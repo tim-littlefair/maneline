@@ -1,4 +1,9 @@
 <configuration>
+
+	<property name="LOG_ROOT" value="." />
+	<property name="SESSION_LOG_FILE_NAME" value="session3.log" />
+	<property name="TXN_LOG_FILE_PATTERN" value="txn%03d-%s.log" />
+
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>INFO</level>
@@ -27,9 +32,18 @@
         </encoder>
     </appender>
 
-    <appender name="TRANSACTION_APPENDER" class="ch.qos.logback.core.FileAppender">
-        <file>txn.log</file> <!-- will be overridden -->
+    <appender name="TRANSACTION_APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>txn.log</file> <!-- will be overridden early in run -->
         <immediateFlush>true</immediateFlush>
+        <rollingPolicy class="net.heretical_camelid.maneline.desktop_app.LogbackRollingPolicy">
+			<fileNamePattern>${LOG_ROOT}/${TXN_LOG_FILE_PATTERN}</fileNamePattern>
+			<!-- each archived file's size will be max 10MB -->
+			<maxFileSize>10MB</maxFileSize>    
+			<!-- 30 days to keep -->
+			<maxHistory>30</maxHistory>
+			<!-- total size of all archive files, if total size > 100GB, it will delete old archived file -->
+			<totalSizeCap>1GB</totalSizeCap>
+		</rollingPolicy>        
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>DEBUG</level>
         </filter>
