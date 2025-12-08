@@ -31,8 +31,8 @@ buildscript {
         classpath "commons-io:commons-io:2.21.0"
         classpath 'com.google.guava:guava:33.5.0-android'
         classpath 'org.jdom:jdom2:2.0.6.1'
-        classpath 'com.google.protobuf:protobuf-kotlin:4.33.1'
-        classpath 'com.google.protobuf:protobuf-java:4.33.1'
+        classpath 'com.google.protobuf:protobuf-kotlin:4.33.2'
+        classpath 'com.google.protobuf:protobuf-java:4.33.2'
 
         classpath 'com.android.tools.build:gradle:8.13.1'
 
