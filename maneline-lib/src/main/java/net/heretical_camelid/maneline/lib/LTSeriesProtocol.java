@@ -88,6 +88,8 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             new String[]{"35:09:08:00:8a:07:04:08:00:10:00", "initialisation request","initRequest"},
             // The second message requests the firmware version
             new String[]{"35:07:08:00:b2:06:02:08:01:00:10", "firmware version request","fwverRequest"},
+            // The third message requests the product identification
+            new String[]{"35:07:08:00:aa:06:02:08:01", "product identification","prodidRequest"},
         };
         int startupCommandIndex=0;
         for (String[] sc : startupCommands) {
@@ -97,9 +99,8 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
                 return scStatus;
             }
         }
-
-        assert startupCommandIndex == 2: "Unexpected number of startup commands";
-        sendProductIdentificationRequest();
+        assert startupCommandIndex == 3: "Unexpected number of startup commands";
+        // sendProductIdentificationRequest();
         // sendBadCommand();
         setLogTransactionName(null);
 
@@ -138,10 +139,15 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         // send a message to the amp asking it to
         // switch to the SYNC_END context
         final int TARGET_CONTEXT_SYNC_END = 1;
+        setLogTransactionName("switchToSyncEnd");
         sendModalStatusRequest(TARGET_CONTEXT_SYNC_END);
+        setLogTransactionName(null);
 
         // finally request the current preset index
+        setLogTransactionName("requestCurrentPresetIndex");
         sendCurrentPresetIndexRequest();
+        setLogTransactionName(null);
+
         return STATUS_OK;
     }
 
@@ -196,27 +202,27 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
     private int sendCommand(String commandBytesHex, String commandDescription, boolean responseExpected) {
         byte[] commandBytes = new byte[64];
         colonSeparatedHexToByteArray(commandBytesHex, commandBytes);
-        if(Thread.currentThread()==m_heartbeatThread) {
-            ++m_heartbeatsSentSinceLastLog;
-        } else {
+        final int retval;
+        if(Thread.currentThread()!=m_heartbeatThread) {
+            assert(commandDescription!=null);
             if(m_heartbeatsSentSinceLastLog>0) {
                 log(String.format(
-                    "%d heartbeats sent since last command", m_heartbeatsSentSinceLastLog
+                    "%d heartbeats sent since last log message", m_heartbeatsSentSinceLastLog
                 ));
                 m_heartbeatsSentSinceLastLog=0;
             }
-            setLogTransactionName("command");
-            assert(commandDescription!=null);
             log("Sending " + commandDescription);
-        }
-        int retval = sendCommandBytes(commandBytes,responseExpected);
-        if(Thread.currentThread()==m_heartbeatThread) {
-            setLogTransactionName(null);
+            retval = sendCommandBytes(commandBytes,responseExpected);
+        } else {
+            retval = sendCommandBytes(commandBytes,responseExpected);
+            ++m_heartbeatsSentSinceLastLog;
         }
         return retval;
     }
     synchronized private int sendCommandBytes(byte[] commandBytes, boolean responseExpected) {
-        logAsHex2(commandBytes, "<");
+        if(Thread.currentThread()!=m_heartbeatThread) {
+            logAsHex2(commandBytes, "<");
+        }
         int bytesWritten = m_deviceTransport.write(commandBytes);
         if (bytesWritten < 0) {
             log(m_deviceTransport.getLastErrorMessage());
@@ -232,8 +238,6 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         }
         return STATUS_OK;
     }
-
-
 
     int parseResponse(byte[] assembledResponseMessage) {
         // LT series responses are broadly based on Google protobuf
@@ -357,8 +361,8 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             assert messagePbType == 2;
             // contentLength varies, is typically around 1900-2500 bytes
             // we don't attempt to handle cases where it is less than
-            // 127 bytes
-            assert contentLength > 127;
+            // 128 bytes
+            assert contentLength >= 128;
             assert contentStartOffset == 6;
 
             assert 0x0a == assembledResponseMessage[6]; // param 1 of pbtype 2
@@ -433,7 +437,6 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
     }
 
     private void logCurrentPresetDetails() {
-        setLogTransactionName("current-preset-details");
         PresetRecord currentPresetRecord = PresetRegistry.getPresetRecord(m_currentPresetIndex);
         if(currentPresetRecord!=null) {
             String displayName = currentPresetRecord.displayName().strip().replaceAll("\\s+"," ");
@@ -502,7 +505,6 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         } else {
             m_currentPresetDetails = "No preset record found for index " + m_currentPresetIndex;
         }
-        setLogTransactionName(null);
     }
 
     private int readAndAssembleResponsePackets() {
@@ -614,27 +616,14 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         // byte 10: (single byte varint) 00 => always 'OK' for requests
         // LT40S will respond to this command by sending
         // a message of type 112 (not documented in LtAmp, proposed name ModalStatus)
-        final String commandHexBytes = (
-            "35:09:08:00:8a:07:04:08:" +
-            String.format("%02x", context) +
-            ":10:00"
+        final String commandHexBytes = (String.format(
+            "35:09:08:00:8a:07:04:08:%02x:10:00", context
+        ));
+        return sendCommand(
+            commandHexBytes,
+            "request for modal status "+context,
+            true
         );
-        return sendCommand(commandHexBytes, null,true);
-    }
-    private int sendProductIdentificationRequest() {
-        // bytes 0: 35 => LT frame type for a single frame message
-        // byte 1: 07 => length of payload
-        // bytes 2-3: 08:00 => protobuf prefix
-        // bytes 4-5: (two byte varint) aa:06  => 810 = 8*101 + 2
-        // - message id is 101 (LtAmp's ProductIdentificationRequest)
-        // - protobuf type 2 is variable length data
-        // byte 6: (single byte varint) 04 => data length is 2 bytes
-        // byte 7: (single byte varint) 08 => tag for param 1 of type VARINT
-        // byte 8: (single byte varint) 01 => request=1
-        // LT40S will respond to this command by sending
-        // a message of type 100 (LtAmp's ProductIdentificationStatus)
-        final String commandHexBytes = "35:07:08:00:aa:06:02:08:01";
-        return sendCommand(commandHexBytes, null,true);
     }
 
     private int sendPresetJsonRequest(int i) {
@@ -651,11 +640,15 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         final String commandHexBytes =
             "35:07:08:00:ca:06:02:08:" + String.format("%02x", i)
             ;
-        return sendCommand(commandHexBytes, null,true);
+        return sendCommand(
+            commandHexBytes,
+            String.format("preset %d JSON request", i),
+            true
+        );
     }
     private int sendCurrentPresetIndexRequest() {
         final String commandHexBytes = "35:07:08:00:c2:06:02:08:01";
-        return sendCommand(commandHexBytes, null,true);
+        return sendCommand(commandHexBytes, "current preset index request",true);
     }
 
     private int sendBadCommand() {
@@ -671,7 +664,6 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         // LT40S will respond to this command by sending
         // a message of type 31 (LtAmp's PresetJSONMessage)
         final String commandHexBytes = "35:07:08:00:ba:3e:02:08:0f";
-        return sendCommand(commandHexBytes, null,true);
+        return sendCommand(commandHexBytes, "bad command",true);
     }
-
 }

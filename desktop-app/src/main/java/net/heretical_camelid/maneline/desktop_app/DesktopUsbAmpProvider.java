@@ -296,9 +296,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
                 }
 
                 // Initialise the Fender Mustang/Rumble device
-                s_loggingAgent.setTransactionName("initialiseDevice");
                 handleInitialise(fmicDevice);
-                s_loggingAgent.setTransactionName(null);
             }
         }
     }
@@ -320,14 +318,6 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
             ampDetailsStream = new FileOutputStream("./amp-details.json");
             ampDetailsStream.write(ampDetails.toString().getBytes());
             ampDetailsStream.close();
-
-            // LCD UI also needs to consume a JSON file with details of the current
-            // preset, we create an empty version of this.
-            JsonObject presetDetails = new JsonObject();
-            FileOutputStream presetDetailsStream = new FileOutputStream(
-                m_outputPath + "/preset_details.json");
-            presetDetailsStream.write(presetDetails.toString().getBytes());
-            presetDetailsStream.close();
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         } catch (IOException e) {

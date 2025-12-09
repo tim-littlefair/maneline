@@ -18,11 +18,8 @@ import ch.qos.logback.core.rolling.TriggeringPolicy;
  * session, and within sessions into transactions by
  * filename prefix.
  */
-public class LogbackRollingPolicy<E>
-    extends RollingPolicyBase
-    implements TriggeringPolicy<E> {
 
-
+/*
     static String fileNamePatternStr = "../before-session.log";
     static private int txnNumber = 0;
     static private int txnLineNumber = 0;
@@ -34,7 +31,7 @@ public class LogbackRollingPolicy<E>
     static private void pl(String s) {
         // /*
         System.out.println(s);
-        // */
+        // */ /*
     }
     static public void setFilenamePattern(String fnpStr) {
         if(fnpStr==null) {
@@ -79,7 +76,7 @@ public class LogbackRollingPolicy<E>
      * This class requires access to the appender object
      * so that it can set the filename
      * @param appender
-     */
+     * /
     @Override
     public void setParent(FileAppender<?> appender) {
         pl(">setParent");
@@ -101,23 +98,51 @@ public class LogbackRollingPolicy<E>
     public String getActiveFileName() {
         return getParentsRawFileProperty();
     }
+*/
+
+
+public class LogbackRollingPolicy<E>
+    extends RollingPolicyBase
+    implements TriggeringPolicy<E> {
+
+    boolean m_triggerOnNextEvent;
+    String m_filenamePatternStr;
+    private int m_txnNumber;
+    private int m_txnEvents;
+
+    public LogbackRollingPolicy() {
+        m_txnNumber = 0;
+        m_txnEvents = 0;
+        m_filenamePatternStr = null;
+        m_triggerOnNextEvent = false;
+    }
+
+    public void setFilenamePattern(String filenamePatternStr) {
+        m_filenamePatternStr = filenamePatternStr;
+        if(filenamePatternStr.contains("%")) {
+            m_txnEvents = 0;
+            ++m_txnNumber;
+        }
+        m_triggerOnNextEvent = true;
+    }
+
+    @Override 
+    public String getActiveFileName() {
+        return String.format(m_filenamePatternStr,m_txnNumber++);
+    }
 
     @Override
     public boolean isTriggeringEvent(File activeFile, final E event) {
-        pl(">isTriggeringEvent");
-        if(txnLineNumber==0) {
-            ++txnLineNumber;
-            pl("<isTriggeringEvent true because first");
+        ++m_txnEvents;
+        if(m_triggerOnNextEvent) {
+            m_triggerOnNextEvent = false;
             return true;
-        } else if (txnLineNumber==txnFileLineLimit) {
-            ++txnRolloverNumber;
-            txnLineNumber=0;
-            pl("<isTriggeringEvent true because last");
-            return true;
-        } else {
-            ++txnLineNumber;
         }
-        pl("<isTriggeringEvent false");
         return false;
+    }
+
+    @Override
+    public void rollover() {
+
     }
 }

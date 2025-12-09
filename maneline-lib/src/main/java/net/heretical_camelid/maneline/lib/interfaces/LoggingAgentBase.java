@@ -20,9 +20,16 @@ public abstract class LoggingAgentBase implements ILoggingAgent {
     public void setTransactionName(String transactionName) {
         assert m_sessionName != null: "Transaction name should not be set before session name";
         if(transactionName!=null) {
+            assert m_transactionName == null: String.format(
+                "Attempt to set transaction name to %s when transaction %s is already in progress",
+                transactionName, m_transactionName
+            );
             m_transactionName = transactionName;
         } else {
-            String endingTransactionName = m_transactionName;
+            assert m_transactionName != null: String.format(
+                "Attempt to set transaction name to null when no transaction is in progress",
+                transactionName, m_transactionName
+            );
             m_transactionName = null;
         }
     }

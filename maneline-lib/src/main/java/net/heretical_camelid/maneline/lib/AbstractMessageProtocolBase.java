@@ -89,7 +89,7 @@ public abstract class AbstractMessageProtocolBase {
             return;
         }
         StringBuffer sb = new StringBuffer();
-        sb.append(String.format("%s [%02x]:", directionChar, dataSentOrReceived.length));
+        sb.append(String.format("%s [%02d]:", directionChar, dataSentOrReceived.length));
         int trailingZeroByteCount = -1; // -1 signifies 'no non-zero bytes seen yet'
         for (int i=dataSentOrReceived.length-1; i>0; --i) {
             if (dataSentOrReceived[i]!=0) {
