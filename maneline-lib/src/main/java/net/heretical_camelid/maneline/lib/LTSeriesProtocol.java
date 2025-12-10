@@ -77,6 +77,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         m_processResponsesAfterHeartbeat = processResponsesAfterHeartbeat;
         m_heartbeatStopped = !startHeartbeat;
         m_heartbeatThread = new HeartbeatThread();
+        m_heartbeatThread.setName("LT-device-heartbeat");
     }
 
     public int doStartup(String[] firmwareVersionEtc) {

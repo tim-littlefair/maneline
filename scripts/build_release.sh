@@ -1,16 +1,27 @@
 #! /bin/bash
 
-# Because of problems reported in this message:
-# https://forums.balena.io/t/problems-doing-a-balena-push-free-tier/374797/10
-# pushing using the balena CLI is unreliable for this project so the
-# legacy git method is used
-push_method=balena_cli
-
 # This is a quick and dirty script to build and run a release of Maneline
 set -e
 
+# Because of problems reported in this message:
+# https://forums.balena.io/t/problems-doing-a-balena-push-free-tier/374797/10
+# pushing using the balena CLI is sometimes unreliable for this project so the
+# legacy git method is supported as an alternative.
+push_method=balena_cli
+
 git restore build.gradle
 git restore deployment/balena/*/balena.yml
+
+if [ "$1" = "--beta" ]
+then
+  releaseLevel=beta
+  shift
+else
+  # shortening 'alpha' to 'alph' is deliberate
+  # for real estate reasons
+  releaseLevel=alph
+fi
+
 
 # This script is run by Jenkins, which is expected to have set
 # the three string parameters RELEASE_VERSION_{MAJOR,MINOR,PATCH}
@@ -23,10 +34,10 @@ export gitHash=$(git rev-parse HEAD | cut -c 1-7)
 export gitUncleanFileCount=$(git diff --name-only | wc -l)
 export buildId=$(printf "%04d" "$BUILD_ID")
 
-if [ "$gitUncleanFileCount" = "0" ]  
+export buildString="$releaseString+$releaseLevel$buildId"
+if [ "$gitUncleanFileCount" = "0" ]
 then
   export buildGitRef="#$gitHash"
-  export buildString="$releaseString+beta$buildId"
 else
   # buildGitRef will include the basenames of the files which are 
   # dirty relative to the commit identified by gitHash
@@ -34,7 +45,7 @@ else
   # Wrapping the command with 'echo' collapses newlines in 
   # $gitUncleanFileList to spaces
   export buildGitRef=$(echo "#$gitHash" + changes to: $gitUncleanFileList)
-  export buildString="$releaseString+beta$buildId.$gitHash.$gitUncleanFileCount"
+  export buildString="$buildString.$gitHash.$gitUncleanFileCount"
 fi
 
 # Android releases require a numeric version code, which must increase
@@ -75,7 +86,7 @@ then
   shift
 fi
 
-if [ ! "$1" = "--deploy-balena-beta" ]
+if [ ! "$1" = "--deploy-balena" ]
 then
   exit 0
 else

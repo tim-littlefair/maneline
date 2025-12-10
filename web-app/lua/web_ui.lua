@@ -249,7 +249,7 @@ function Web_UI:handle(request, response)
             first, last = string.find(req_path,"session_%d+\.log")
             session_log_fname = string.sub(req_path,first,last)
             session_name = string.sub(req_path,first,last-4)
-            session_path = session_name.."/session.log"
+            session_path = session_name.."/session-info.log"
             response:addHeader("Cache-Control","no-cache")
             response:addHeader("Content-Type","test/plain")
             response:addHeader("Content-Disposition","inline; filename="..session_log_fname)
