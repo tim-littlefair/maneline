@@ -14,6 +14,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 
@@ -100,16 +101,15 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
                 return scStatus;
             }
         }
-        assert startupCommandIndex == 3: "Unexpected number of startup commands";
-        // sendProductIdentificationRequest();
-        // sendBadCommand();
         setLogTransactionName(null);
+        assert startupCommandIndex == 3: "Unexpected number of startup commands";
 
         return STATUS_OK;
     }
 
     @Override
     public void doShutdown() {
+        setLogTransactionName("shutdown");
         log("Shutting down");
         synchronized(m_heartbeatThread) {
             log("Setting heartbeat stop flag");
@@ -118,6 +118,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         }
         m_heartbeatThread.interrupt();
         log("Heartbeat thread interrupted");
+        setLogTransactionName(null);
     }
 
     @Override
@@ -159,7 +160,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         } else if(m_heartbeatThread.isAlive()) {
             log("Heartbeat thread is already started");
         } else {
-            //log("Starting heartbeat thread");
+            log("Starting heartbeat thread");
             m_heartbeatThread.start();
         }
     }
@@ -175,7 +176,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
                 retval[0] = "currentPresetIndex="+slotIndex;
             }
         };
-        s_presetResponseReader = null;
+        // s_presetResponseReader = null;
         return retval[0];
     }
 
@@ -196,51 +197,96 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             "request to activate preset at slot " + slotIndex
         };
 
+        setLogTransactionName(String.format("requestPreset%03d",slotIndex));
         int scStatus = sendCommand(switchPresetCommand[0],switchPresetCommand[1],true);
+        setLogTransactionName(null);
         return scStatus;
     }
 
     private int sendCommand(String commandBytesHex, String commandDescription, boolean responseExpected) {
         byte[] commandBytes = new byte[64];
         colonSeparatedHexToByteArray(commandBytesHex, commandBytes);
-        final int retval;
+        assert(commandDescription!=null);
+        return sendCommandBytes(commandBytes,responseExpected, commandDescription);
+    }
+    synchronized private int sendCommandBytes(
+        byte[] commandBytes, boolean responseExpected, String commandDescription
+    ) {
+        // This function has some complexity related to our desire to
+        // be able to fully log bytes sent, received and the response
+        // parse process, but also be able to suppress this logging for
+        // heartbeats which contain no interesting information.
+
+        boolean loggingRequired;
+        final int status;
+        final int bytesWritten;
+        final int bytesRead;
+        ArrayList<String> readPhaseLogMessages = new ArrayList<String>();
+
         if(Thread.currentThread()!=m_heartbeatThread) {
-            assert(commandDescription!=null);
-            if(m_heartbeatsSentSinceLastLog>0) {
+            loggingRequired = true;
+        } else {
+            loggingRequired = false;
+        }
+        bytesWritten = m_deviceTransport.write(commandBytes);
+        if (bytesWritten < 0) {
+            bytesRead=0;
+            loggingRequired = true;
+            status = STATUS_WRITE_FAIL;
+        } else if (responseExpected == false) {
+            bytesRead=0;
+            loggingRequired = false;
+            status = STATUS_OK;
+        } else {
+            bytesRead = readAndAssembleResponsePackets(readPhaseLogMessages);
+            if (bytesRead < 0) {
+                loggingRequired = true;
+                status = STATUS_REASSEMBLY_FAIL;
+            } else {
+                status = STATUS_OK;
+            }
+        }
+
+        // Most heartbeat messages will not receive a response.
+        // If a response is received, we do want to log the
+        // message and its response
+        if(!readPhaseLogMessages.isEmpty()) {
+            loggingRequired = true;
+        }
+
+
+        if (loggingRequired == true) {
+            if (m_heartbeatsSentSinceLastLog > 0) {
                 log(String.format(
-                    "%d heartbeats sent since last log message", m_heartbeatsSentSinceLastLog
+                    "%d heartbeats sent since last message logged", m_heartbeatsSentSinceLastLog
                 ));
-                m_heartbeatsSentSinceLastLog=0;
+                m_heartbeatsSentSinceLastLog = 0;
+            }
+            if(Thread.currentThread()==m_heartbeatThread) {
+                setLogTransactionName("heartbeatThreadUpdate");
             }
             log("Sending " + commandDescription);
-            retval = sendCommandBytes(commandBytes,responseExpected);
+            logAsHex2(commandBytes, "<");
+            for(String rplm: readPhaseLogMessages) {
+                log(rplm);
+            }
+            if(bytesWritten<0 || bytesRead<0) {
+                log(String.format(
+                    "Command error: write_result=%d read_result=%d status=%d transport_message=%s",
+                    bytesWritten, bytesRead, status,
+                    m_deviceTransport.getLastErrorMessage()
+                ));
+            }
+            if(Thread.currentThread()==m_heartbeatThread) {
+                setLogTransactionName(null);
+            }
         } else {
-            retval = sendCommandBytes(commandBytes,responseExpected);
             ++m_heartbeatsSentSinceLastLog;
         }
-        return retval;
-    }
-    synchronized private int sendCommandBytes(byte[] commandBytes, boolean responseExpected) {
-        if(Thread.currentThread()!=m_heartbeatThread) {
-            logAsHex2(commandBytes, "<");
-        }
-        int bytesWritten = m_deviceTransport.write(commandBytes);
-        if (bytesWritten < 0) {
-            log(m_deviceTransport.getLastErrorMessage());
-            return STATUS_WRITE_FAIL;
-        }
-        if(responseExpected==false) {
-            return STATUS_OK;
-        }
-        int bytesRead = readAndAssembleResponsePackets();
-        if (bytesRead < 0) {
-            //log(m_deviceTransport.getLastErrorMessage());
-            return STATUS_REASSEMBLY_FAIL;
-        }
-        return STATUS_OK;
+        return status;
     }
 
-    int parseResponse(byte[] assembledResponseMessage) {
+    int parseResponse(byte[] assembledResponseMessage, ArrayList<String> readPhaseLogMessages) {
         // LT series responses are broadly based on Google protobuf
         // structuring, with the opcode identifying the message type
         // expressed as a 1-byte or 2-byte varint at offset 2 in
@@ -307,7 +353,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         // messages which don't generate their own logging,
         // but it can be logged here during development by uncommenting the
         // next line
-        // log(responseDescription);
+        // readPhaseLogMessages.add(responseDescription);
 
         if (messageId==113) {
             // This is a response to the ModalStatusRequest message
@@ -320,7 +366,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             m_modalContext = 0xff&assembledResponseMessage[6];
             assert assembledResponseMessage[7]==0x10; // param 1 of pbtype 0
             m_modalState = 0xff&assembledResponseMessage[8];
-            log(String.format(
+            readPhaseLogMessages.add(String.format(
                 "Modal Status: context:%d state:%d",
                 m_modalContext,m_modalState
             ));
@@ -341,11 +387,11 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             assert payloadStringLength == contentLength - 2;
             if(messageId==103) {
                 m_firmwareVersion = new String(assembledResponseMessage, 7, payloadStringLength);
-                log("Firmware version: " + m_firmwareVersion);
+                readPhaseLogMessages.add("Firmware version: " + m_firmwareVersion);
             } else {
                 assert messageId==100;
                 m_productIdentifier = new String(assembledResponseMessage, 7, payloadStringLength);
-                log("Product identifier: " + m_productIdentifier);
+                readPhaseLogMessages.add("Product identifier: " + m_productIdentifier);
             }
         } else if (messageId==31 || messageId==32) {
             // This is either of
@@ -409,12 +455,12 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             assert assembledResponseMessage[5] == 0x08; // param 1 of pbtype 0
             final int errorType = 0xff & assembledResponseMessage[6];
             if (errorType >= 0 && errorType < Message200_ErrorTypes.length) {
-                log(String.format(
+                readPhaseLogMessages.add(String.format(
                     "Unsupported message status received with status=%d (%s)",
                     errorType, Message200_ErrorTypes[errorType]
                 ));
             } else {
-                log(String.format(
+                readPhaseLogMessages.add(String.format(
                     "Unsupported message status received with undocumented status=%d",
                     errorType
                 ));
@@ -431,7 +477,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             m_currentPresetIndex = 0xff&assembledResponseMessage[6];
             logCurrentPresetDetails();
         } else {
-            log(responseDescription);
+            readPhaseLogMessages.add(responseDescription);
         }
 
         return STATUS_OK;
@@ -508,7 +554,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         }
     }
 
-    private int readAndAssembleResponsePackets() {
+    private int readAndAssembleResponsePackets(ArrayList<String> readPhaseLogMessages) {
         byte[] assemblyBuffer = new byte[4096];
         int assemblyBufferOffset = 0;
         while (true) {
@@ -516,7 +562,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             int packetBytesRead;
             packetBytesRead = m_deviceTransport.read(packetBuffer);
             if (packetBytesRead < 0) {
-                log(String.format(
+                readPhaseLogMessages.add(String.format(
                     "read failed, read_status=%d error=%s",
                     packetBytesRead,  m_deviceTransport.getLastErrorMessage()
                 ));
@@ -526,7 +572,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
                 return STATUS_OK;
             } else if (packetBytesRead != 64) {
                 // USB HID packets are always exactly 64 bytes
-                log(String.format(
+                readPhaseLogMessages.add(String.format(
                     "read incomplete, bytes=%d error=%s",
                     packetBytesRead, m_deviceTransport.getLastErrorMessage()
                 ));
@@ -535,7 +581,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             // All the cases above return from the function, so if we get 
             // here we are certain that we have succeeded in receiving exactly
             // one packet of 64 bytes
-            logAsHex2(packetBuffer, ">");
+            readPhaseLogMessages.add(bufferToHex2(packetBuffer, ">"));
             assert packetBuffer[0] == 0x00;
             int packetContentStart = 3;
             int contentLength = packetBuffer[2];
@@ -570,8 +616,8 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
 
         // Dump the reassembled message with a distinctive direction character
         byte[] reassembledMessage = Arrays.copyOfRange(assemblyBuffer, 0, assemblyBufferOffset);
-        logAsHex2(reassembledMessage, "+>");
-        parseResponse(reassembledMessage);
+        readPhaseLogMessages.add(bufferToHex2(reassembledMessage, "+>"));
+        parseResponse(reassembledMessage,readPhaseLogMessages);
         return STATUS_OK;
     }
 
@@ -587,7 +633,7 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
                 }
                 String[] heartbeatCommand = new String[] {
                     "35:07:08:00:c9:01:02:08:01",
-                    null
+                    "LT-series heartbeat"
                 };
                 sendCommand(
                     heartbeatCommand[0],heartbeatCommand[1],

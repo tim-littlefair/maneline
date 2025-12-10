@@ -16,5 +16,7 @@ public interface ILoggingAgent {
     public static void main(String[] args) {
         System.out.println("No tests for ILoggingAgent");
     }
+
+    Object getTransactionName();
 }
 

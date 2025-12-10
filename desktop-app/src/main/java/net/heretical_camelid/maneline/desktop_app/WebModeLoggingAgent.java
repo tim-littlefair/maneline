@@ -142,8 +142,10 @@ public class WebModeLoggingAgent extends LoggingAgentBase {
             ));
         }
         super.setTransactionName(transactionName);
-        ++m_txnNumber;
-        m_txnMessageCounter = 0;
+        if(transactionName!=null) {
+            ++m_txnNumber;
+            m_txnMessageCounter = 0;
+        }
         m_transactionLU.m_appender.start();
     }
 }

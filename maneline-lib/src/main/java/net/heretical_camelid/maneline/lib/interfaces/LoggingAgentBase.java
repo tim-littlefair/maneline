@@ -34,9 +34,11 @@ public abstract class LoggingAgentBase implements ILoggingAgent {
         }
     }
 
+    @Override
     public String getTransactionName() {
         return m_transactionName;
     }
+
     @Override
     public void clearLog() {
         // This implementation does nothing but

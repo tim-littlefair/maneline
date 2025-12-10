@@ -4,6 +4,8 @@ import net.heretical_camelid.maneline.lib.utilities.RawProtobufUtilities;
 
 import org.junit.Assert;
 
+import java.util.ArrayList;
+
 public class LTSeriesProtocolTest {
     LTSeriesProtocol m_protocol;
     byte[] m_h2bResult;
@@ -41,7 +43,8 @@ public class LTSeriesProtocolTest {
         m_h2bResult = RawProtobufUtilities.hexToBytes(
             "08:00:8a:07:04:08:00:10:00"
         );
-        m_protocol.parseResponse(m_h2bResult);
+        ArrayList<String> readPhaseLogMessages = new ArrayList<String>();
+        m_protocol.parseResponse(m_h2bResult, readPhaseLogMessages);
         Assert.assertEquals(0, m_protocol.m_modalContext);
         Assert.assertEquals(0, m_protocol.m_modalState);
     }

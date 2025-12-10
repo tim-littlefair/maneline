@@ -53,6 +53,12 @@ public abstract class AbstractMessageProtocolBase {
     protected static void log(String message) {
         if(s_loggingAgent!=null) {
             s_loggingAgent.appendToLog(message);
+            /*
+            System.out.println(String.format(
+                "Logged to txn %s: %s",
+                s_loggingAgent.getTransactionName(), message
+            ));
+             */
         } else {
             System.out.println(message);
         }
@@ -88,16 +94,20 @@ public abstract class AbstractMessageProtocolBase {
         if(s_loggingAgent==null) {
             return;
         }
+        s_loggingAgent.appendToLog(bufferToHex2(dataSentOrReceived, directionChar));
+    }
+
+    protected static String bufferToHex2(byte[] dataSentOrReceived, String prefixString) {
         StringBuffer sb = new StringBuffer();
-        sb.append(String.format("%s [%02d]:", directionChar, dataSentOrReceived.length));
+        sb.append(String.format("%s [%02d]:", prefixString, dataSentOrReceived.length));
         int trailingZeroByteCount = -1; // -1 signifies 'no non-zero bytes seen yet'
-        for (int i=dataSentOrReceived.length-1; i>0; --i) {
+        for (int i = dataSentOrReceived.length-1; i>0; --i) {
             if (dataSentOrReceived[i]!=0) {
                 trailingZeroByteCount = dataSentOrReceived.length - i - 1;
                 break;
             }
         }
-        for (int i=0; i<dataSentOrReceived.length; ++i) {
+        for (int i = 0; i< dataSentOrReceived.length; ++i) {
             sb.append(String.format(" %02x", dataSentOrReceived[i]));
             if (dataSentOrReceived.length-i==trailingZeroByteCount) {
                 sb.append(" ...");
@@ -105,7 +115,7 @@ public abstract class AbstractMessageProtocolBase {
             }
         }
         sb.append("\n");
-        s_loggingAgent.appendToLog(sb.toString());
+        return sb.toString();
     }
 
     public static String getStringAttribute(
