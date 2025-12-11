@@ -24,10 +24,15 @@ public class CommandLineInterface {
     private static final int FHAU_STATUS_INTERACTIVE_INPUT_FAILURE = 92;
     private static final int FHAU_STATUS_DISCLAIMER_ACCEPT_FILE_PERMISSION_ERROR = 93;
 
+    // Values 101-109 are reserved for conditions arising out of web app handling
+    // and are defined here
+    private static final int FHAU_STATUS_SERVICE_RESTART_REQUESTED = 101;
+
     private static PrintStream s_cliLogStream = null;
     private static boolean s_webMode = false;
 
-    static void doInteractive(DesktopUsbAmpProvider provider) {
+    static int doInteractive(DesktopUsbAmpProvider provider) {
+        int exitStatus=0;
         provider.startProvider();
         boolean continueAcceptingCommands=true;
         Scanner commandScanner = new Scanner(System.in);
@@ -54,9 +59,12 @@ public class CommandLineInterface {
                     continue;
                 }
 
-                if(lineWords[0].equals("start")) {
-                    provider.startProvider();
-                } else if(lineWords[0].equals("exit") || lineWords[0].equals("quit")) {
+                /*
+                if(lineWords[0].equals("reset")) {
+                    provider.resetProvider();
+                } else
+                 */
+                if(lineWords[0].equals("exit") || lineWords[0].equals("quit")) {
                     provider.stopProvider();
                     continueAcceptingCommands=false;
                 } else if(lineWords[0].equals("preset")) {
@@ -65,10 +73,17 @@ public class CommandLineInterface {
                 } else if(lineWords[0].equals("status")) {
                     String statusLines = provider.getStatus();
                     System.out.println(statusLines);
+                } else if(lineWords[0].equals("restart")) {
+                    System.out.println("Service restart requested");
+                    continueAcceptingCommands=false;
+                    exitStatus = FHAU_STATUS_SERVICE_RESTART_REQUESTED;
                 } else if(lineWords[0].equals("help")) {
                     showInteractiveHelp();
                 } else {
                     System.out.println("Failed to parse line: "+line);
+                }
+                if(continueAcceptingCommands) {
+                    System.out.println("Command? ");
                 }
             }
             catch (NumberFormatException e) {
@@ -77,8 +92,15 @@ public class CommandLineInterface {
             catch (InterruptedException e) {
                 System.out.println("\nInterrupted sleep");
             }
-            System.out.println("\nCommand? ");
         }
+        try {
+            FileOutputStream fos = new FileOutputStream("./cli_exit_status");
+            fos.write(String.valueOf(exitStatus).getBytes());
+            fos.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return exitStatus;
     }
 
     static boolean s_argParamForceDisclaimer = false;
@@ -111,7 +133,8 @@ public class CommandLineInterface {
             DesktopUsbAmpProvider provider = new DesktopUsbAmpProvider(s_webMode, s_argParamOutputDir);
             CommandLineInterface cli = new CommandLineInterface();
             if (s_argParamInteractive) {
-                cli.doInteractive(provider);
+                int exitStatus = cli.doInteractive(provider);
+                System.exit(exitStatus);
             }
         }
         catch(FhauLibException e) {

@@ -95,6 +95,20 @@ function Fhau:check_for_cli_death()
     if(flush_status~=true)
     then
         local close_status=fhau_cli_input_fd:close()
+        -- Under Lua 5.1 close_status is a boolean
+        -- and there is no way of accessing the actual
+        -- process exit status from here.
+        -- There is a workaround in place between
+        -- desktop-app/.../CommandLineInterface.java
+        -- and
+        -- web-app/run.sh which uses an optional
+        -- indicator file to override the useless
+        -- exit code supplied by Lua in cases
+        -- where run.sh needs to see it (i.e., presently,
+        -- just the restart case).
+        -- Updating to Lua 5.2 or later is under consideration
+        -- but there is no commitment to do this at the
+        -- present time.
         if(close_status)
         then
             print("CLI process has completed OK")

@@ -1,51 +1,15 @@
 #!/bin/bash
 
-# If the local browser is enabled, wait for it
-# to come up before starting the Pegasus web
-# server and its FHAU command line subprocess.
-browser_api_url=http://127.0.0.1:5011
-maneline_url=http://127.0.0.1:8080
-browser_wait_sleep_length=10
-cli_wait_sleep_length=10
-cli_start_sleep_length=10
-exit_wait_sleep_length=10
+exit_wait_sleep_length=2
 
-if [ true ]
-then
-  while true
-  do
-      if [ ! "$LOCAL_BROWSER" = "1" ]
-      then
-          echo Local browser disabled
-          break
-      fi
-      sleep $browser_wait_sleep_length
-
-      browser_api_response=$(curl --silent -X GET $browser_api_url/url 2>&1)
-      echo $browser_api_response | grep --silent -e "file:///" -e "http://" -e "data:"
-      if [ ! "$?" = "0" ]
-      then
-          echo $browser_api_response
-          echo Local browser API not ready
-      else
-          echo Local browser API is ready
-          sleep $cli_wait_sleep_length
-          nohup sh -c "sleep $cli_start_sleep_length; curl --silent -X POST --data-urlencode url=http://127.0.0.1:8080 $browser_api_url/url" &
-          break
-      fi
-  done
-fi
-
-# ... actually we don't, but we pass $start_dir to the 
-# lua process and it does an lfs.chdir() to that directory
+# We pass $start_dir to the lua process and it
+# does an lfs.chdir() to that directory
 # after all of the local lua files are loaded.
 # The reason we need to do this is related to the
 # way the app runs in the development environment -
 # the CWD at start time is a symlink, we need to
 # chdir to the symlink target so that relative
 # links in the Lua work as they need to.
-# TBD: Would it be better to use LUAPATH?
-
 
 #and On the development workstation,
 if [ -z $RUN_DIR ]
@@ -86,14 +50,39 @@ fi
 
 cd ./lua
 
-# The lua process started on the next line will be the
-# parent process for the Java CLI session
-lua ./run.lua "$start_dir"
+while true
+do
+    # Under Lua 5.1 the :close() method on a file descriptor opened
+    # with io:popen() returns a boolean (always true?) and there is
+    # no way of accessing the true exit status of the subprocess.
+    # I could fix this by upgrading to Lua 5.2 or later, but
+    # for now I prefer to stick with 5.1 and work around this
+    # by dropping an indicator file containing the exit status value.
+    exit_status_file=$start_dir/cli_exit_status
+    if [ -f $exit_status_file ]
+    then
+        rm $exit_status_file
+    fi
 
-# If something goes wrong, we don't want the container to loop
-# tightly, so we have a delay between detection and exit
-cli_run_status=$?
-echo "Pegasus/CLI app has exited with status $cli_run_status"
+    # The lua process started on the next line will be the
+    # parent process for the Java CLI session
+    lua ./run.lua "$start_dir"
+    cli_exit_status=$?
+
+    if [ -f $exit_status_file ]
+    then
+        cli_exit_status=$(cat $exit_status_file)
+        rm $exit_status_file
+    fi
+    echo "Pegasus/CLI app has exited with status $cli_exit_status"
+
+    if [ "$cli_exit_status" = "101" ]
+    then
+        echo Restart of CLI process due to user request
+    else
+        break
+    fi
+done
 
 if [ ! -z $lcd_ui_manager_pid ]
 then

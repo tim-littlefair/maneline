@@ -11,6 +11,7 @@
 -- https://github.com/tim-littlefair/maneline/blob/main/LICENSE
 
 local cjson = require('cjson.safe')
+local fhau_cli = require('fhau_cli')
 
 local BalenaActions = {}
 
@@ -29,7 +30,16 @@ end
 function BalenaActions:do_action(action_name)
     if os.getenv("BALENA_SUPERVISOR_ADDRESS") == nil
     then
-        return "Requested action '"..action_name.."' is only available on Balena hosts"
+        -- running on non-Balena Linux/macOS host
+        -- On this context, the only action supported is
+        -- to restart the CLI executable
+        if action_name=="restart"
+        then
+            fhau_cli:relay_stdin_line("restart\n")
+            return "Balena service restart simulated"
+        else
+            return "Requested action '"..action_name.."' is not available on non-Balena hosts"
+        end
     elseif (
         action_name=="shutdown" or
         action_name=="reboot" or
