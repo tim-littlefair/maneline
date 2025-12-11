@@ -176,21 +176,27 @@ build_luarocks () {
   echo $_dir for $luadir built
 }
 
+## Latest versions of the key packages
+
+# from https://docs.balena.io/reference/balena-cli/latest/
+balena_version=v23.3.8
+android_cltools_version=13114758
+
 osname=$(uname -s)
 if [ "$osname" = "Linux" ]
 then
   jdk21_url=https://download.java.net/java/GA/jdk21.0.2/f2283984656d49d69e91c558476027ac/13/GPL/openjdk-21.0.2_linux-x64_bin.tar.gz
   jdk25_url=https://download.java.net/java/GA/jdk25/bd75d5f9689641da8e1daabeccb5528b/36/GPL/openjdk-25_linux-x64_bin.tar.gz
-  balena_cli_url=https://github.com/balena-io/balena-cli/releases/download/v22.4.15/balena-cli-v22.4.15-linux-x64-standalone.tar.gz
-  android_cltools_url=https://dl.google.com/android/repository/commandlinetools-linux-13114758_latest.zip
+  balena_cli_url=https://github.com/balena-io/balena-cli/releases/download/$balena_version/balena-cli-$balena_version-linux-x64-standalone.tar.gz
+  android_cltools_url=https://dl.google.com/android/repository/commandlinetools-linux-${android_cltools_version}_latest.zip
   lua_make_target=linux
 elif [ "$osname" = "Darwin" ]
 then
   # For now, Intel binaries are preferred to those for Apple Silicon
   jdk21_url=https://download.java.net/java/GA/jdk21.0.2/f2283984656d49d69e91c558476027ac/13/GPL/openjdk-21.0.2_macos-x64_bin.tar.gz
   jdk25_url=https://download.java.net/java/GA/jdk25/bd75d5f9689641da8e1daabeccb5528b/36/GPL/openjdk-25_macos-x64_bin.tar.gz
-  balena_cli_url=https://github.com/balena-io/balena-cli/releases/download/v22.4.15/balena-cli-v22.4.15-macOS-x64-standalone.tar.gz
-  android_cltools_url=https://dl.google.com/android/repository/commandlinetools-mac-13114758_latest.zip
+  balena_cli_url=https://github.com/balena-io/balena-cli/releases/download/$balena_version/balena-cli-$balena_version-macOS-x64-standalone.tar.gz
+  android_cltools_url=https://dl.google.com/android/repository/commandlinetools-mac-${android_cltools_version}_latest.zip
   lua_make_target=macosx
 fi
 
