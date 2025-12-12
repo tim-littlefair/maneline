@@ -10,31 +10,21 @@ buildscript {
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
 
-        // We need to include
-        // classpath 'com.android.tools.build:gradle:8.13.0'
-        // in this section so that the android library and application
-        // plugins become available to subproject build.gradle files.
-        // The other dependencies listed here are intended to reduce
-        // GitHub dependabot noise - they are all non-vulnerable
-        // explicit versions of dependencies for which transitive
-        // dependencies from c.a.t.b:g:8:13.2 would bring in versions
-        // with known vulnerabilities.
+        // Exceptions to this rule have been required in the past when the
+        // release version of the package com.android.tools.build:gradle
+        // (aka the Android Gradle Plugin, or AGP) has brought in dependencies
+        // which triggered security vulnerability alerts from GitHub dependabot.
 
-        /*
-        classpath 'org.jsoup:jsoup:1.21.2'
-        classpath 'io.netty:netty-common:4.2.7.Final'
-        classpath 'io.netty:netty-handler:4.2.7.Final'
-        classpath 'io.netty:netty-codec-http:4.2.7.Final'
-        classpath 'io.netty:netty-codec-http2:4.2.7.Final'
-        classpath 'org.apache.commons:commons-compress:1.28.0'
-        classpath "org.apache.commons:commons-lang3:3.20.0"
-        classpath "org.apache.commons:commons-collections4:4.5.0"
-        classpath "commons-io:commons-io:2.21.0"
-        classpath 'com.google.guava:guava:33.5.0-android'
-        classpath 'org.jdom:jdom2:2.0.6.1'
-        classpath 'com.google.protobuf:protobuf-kotlin:4.33.2'
-        classpath 'com.google.protobuf:protobuf-java:4.33.2'
-        */
+        // AGP is not an application dependency, it adds Android support to
+        // the Gradle build environment and needs to be included here
+        // for the :android-app package to be buildable.
+
+        // When AGP imported vulnerable dependencies in the past, explicit
+        // non-vulnerable versions of the packages named in alerts
+        // were imported here, allowing the security alerts to be cleared.
+
+        // As of AGP 8.13.2 there are no alerts on dependencies so
+        // the explicit version imports have been removed.
 
         classpath 'com.android.tools.build:gradle:8.13.2'
 
