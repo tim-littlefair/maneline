@@ -20,6 +20,7 @@ buildscript {
         // dependencies from c.a.t.b:g:8:13.0 would bring in versions
         // with known vulnerabilities.
 
+        /*
         classpath 'org.jsoup:jsoup:1.21.2'
         classpath 'io.netty:netty-common:4.2.7.Final'
         classpath 'io.netty:netty-handler:4.2.7.Final'
@@ -31,6 +32,7 @@ buildscript {
         classpath "commons-io:commons-io:2.21.0"
         classpath 'com.google.guava:guava:33.5.0-android'
         classpath 'org.jdom:jdom2:2.0.6.1'
+        */
         classpath 'com.google.protobuf:protobuf-kotlin:4.33.2'
         classpath 'com.google.protobuf:protobuf-java:4.33.2'
 
