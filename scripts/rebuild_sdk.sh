@@ -1,5 +1,12 @@
 #!/bin/sh
 
+if [ ! "$0" = "scripts/rebuild_sdk.sh"]
+then
+    echo "This script should be run from the base directory of the repository."
+    echo "The invocation line must start with 'scripts/rebuild_sdk.sh'"
+    exit 1
+fi
+
 start_dir=$(pwd)
 
 # The purpose of this script is to build a composite SDK for
@@ -13,7 +20,34 @@ start_dir=$(pwd)
 # An installation of the Balena command line interface (CLI)
 # An installation of Lua
 
-# The FHAU SDK could be anywhere but it is recommended
+# The Android and Balena tools release changes from month to month,
+# I attempt to pick up these tool releases within about a month.
+
+# The latest versions of the Java and Lua language dependencies
+# change more slowly, but when changes occur they are likely to
+# be more impactful.
+#
+# For Java, while the project remains under active development,
+# I intend to ensure that the versions selected are within the
+# upstream support window, but upgrades will be undertaken
+# less often (i.e. to retire a major version before its support
+# window ends).
+
+# For Lua, version 5.1 has long outlived its upstream support
+# life, but the community using the language has split, with
+# projects using the LuaJIT implementation of the language
+# (which conforms to 5.1 documentation) allegedly outnumbering
+# projects using supported versions of the original implementation.
+# For the moment, I am using the original implementation at
+# version 5.1, but will consider switching to a later version
+# (or perhaps to LuaJIT) at a later date.
+
+# For both Lua and Java, this script will download and install
+# latest available versions alongside the older versions presently
+# in use, to make it easy to investigate the impact of an upgrade
+# at any point in time when it is convenient to do so.
+
+# The maneline SDK could be anywhere but it is recommended
 # it should sit as a sibling directory alongside the
 # root of the Git repository so that
 # a) there is no danger of accidentally checking the 
@@ -39,10 +73,6 @@ else
     echo No value found for SDK name
     exit 1
 fi
-
-# We expect the run to start in the root directory
-# of the Git repository
-repo_dir=$(pwd)
 
 sdk_reldir=../$SDK_NAME
 
@@ -261,7 +291,7 @@ export LUA_PATH LUA_CPATH
 
 # We need to overwrite a non-version-controlled file in the root
 # directory of the repository to ensure the SDK is found by Gradle
-cat > $repo_dir/local.properties <<+
+cat > $start_dir/local.properties <<+
 # local.properties file overwritten by $0 on $(date --iso-8601)
 sdk.dir=$sdk_absdir/Android
 +
@@ -269,11 +299,13 @@ sdk.dir=$sdk_absdir/Android
 sdkmanager=$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager
 
 # I haven't yet found a way of caching the Android SDK download packages
-# Also, Gradle seems to need more than one version of build-tools
-# to complete the first build
+
+# Note that build-tools;35.0.0 and build_tools;36.0.0 are both still
+# required, despite later versions of both being available.
+# If either is missing the initial project build with gradle fails.
 yes | $sdkmanager --install \
-  "build-tools;35.0.0" \
   "build-tools;36.0.0" \
+  "build-tools;35.0.0" \
   "platform-tools" \
   "emulator" \
   "sources;android-36" \
