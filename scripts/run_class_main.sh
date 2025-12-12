@@ -20,6 +20,12 @@ class=net.heretical_camelid.maneline.$1
 class_java_src=$(ls */src/main/java/$(echo $class | sed -e 's^\.^/^g').java)
 ls -l $class_java_src
 
-javac -proc:full -cp ./desktop-app/build/libs/maneline-cli-0.0.0.jar -d ./_work $class_java_src
 jar_file=./desktop-app/build/libs/maneline-cli-0.0.0.jar
-java -cp ./_work:$jar_file -Djava.library.path=../tl-bluetooth-cli/target/native/linux/x86_64 $class
+javac -proc:full -cp $jar_file -d ./_work $class_java_src
+find _work -name $(basename $class_java_src|sed -e 's^java^class^') -ls
+
+shift
+
+jni_path_arg=""
+# jni_path_arg="-Djava.library.path=../tl-bluetooth-cli/target/native/linux/x86_64"
+java -ea -cp ./_work:$jar_file $jni_path_arg $class "$@"
