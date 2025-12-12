@@ -20,14 +20,12 @@ buildscript {
         // dependencies from c.a.t.b:g:8:13.2 would bring in versions
         // with known vulnerabilities.
 
-        classpath 'org.jsoup:jsoup:1.21.2'
-
         /*
+        classpath 'org.jsoup:jsoup:1.21.2'
         classpath 'io.netty:netty-common:4.2.7.Final'
         classpath 'io.netty:netty-handler:4.2.7.Final'
         classpath 'io.netty:netty-codec-http:4.2.7.Final'
         classpath 'io.netty:netty-codec-http2:4.2.7.Final'
-        */
         classpath 'org.apache.commons:commons-compress:1.28.0'
         classpath "org.apache.commons:commons-lang3:3.20.0"
         classpath "org.apache.commons:commons-collections4:4.5.0"
@@ -36,6 +34,7 @@ buildscript {
         classpath 'org.jdom:jdom2:2.0.6.1'
         classpath 'com.google.protobuf:protobuf-kotlin:4.33.2'
         classpath 'com.google.protobuf:protobuf-java:4.33.2'
+        */
 
         classpath 'com.android.tools.build:gradle:8.13.2'
 
