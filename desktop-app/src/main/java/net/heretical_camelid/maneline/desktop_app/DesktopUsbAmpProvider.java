@@ -1,5 +1,8 @@
 package net.heretical_camelid.maneline.desktop_app;
 
+//import static net.heretical_camelid.maneline.lib.AbstractMessageProtocolBase.bufferToHex2;
+//import static net.heretical_camelid.maneline.lib.AbstractMessageProtocolBase.logAsHex2;
+
 import net.heretical_camelid.maneline.lib.AbstractMessageProtocolBase;
 import net.heretical_camelid.maneline.lib.DefaultLoggingAgent;
 import net.heretical_camelid.maneline.lib.LTSeriesProtocol;
@@ -32,8 +35,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
 import net.heretical_camelid.maneline.lib.registries.SlotBasedPresetSuiteExporter;
-
-import static net.heretical_camelid.maneline.lib.AbstractMessageProtocolBase.enable_printAsHex2;
 
 public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
 {
@@ -109,8 +110,15 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
         for (HidDevice hidDevice : m_hidServices.getAttachedHidDevices()) {
             if (hidDevice.getVendorId() != VID_FMIC) {
                 continue;
-            }
-            if (hidDevice.getUsage() == 0x01 && hidDevice.getUsagePage() == 0xffffff00) {
+            } else if (hidDevice.getUsage() == 0x01 && hidDevice.getUsagePage() == 0xffffff00) {
+                s_loggingAgent.setTransactionName("ampHidDetails");
+                s_loggingAgent.appendToLog("Found FMIC device");
+                s_loggingAgent.appendToLog(String.format("PID: %04x", hidDevice.getProductId()));
+                s_loggingAgent.appendToLog("ProductName: " + hidDevice.getProduct());
+                s_loggingAgent.appendToLog("Serial#: " + hidDevice.getSerialNumber());
+                s_loggingAgent.appendToLog(String.format("Usage: %02x", hidDevice.getUsage()));
+                s_loggingAgent.appendToLog(String.format("UsagePage: %08x", hidDevice.getUsagePage()));
+                s_loggingAgent.setTransactionName(null);
                 fmicDevice = hidDevice;
                 break;
             }
@@ -146,6 +154,11 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
                 // Mustang LT40S - tested with firmware 1.0.7
                 s_loggingAgent.appendToLog(
                     "Mustang LT40S - tested with firmware 1.0.7 - expected to work"
+                );
+            } else if (productId==0x0014) {
+                // Mustang LT40S - tested with firmware 1.0.7
+                s_loggingAgent.appendToLog(
+                    "Mustang I v2 - WIP on partial support"
                 );
             } else if (productId==0x0043) {
                 // Original Mustang Micro - with 2024/2025 firmware this does not enumerate as a USB
@@ -285,14 +298,10 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
                   // There is an online HTML/JS tool written by Frank Zao which can
                     // parse USB HID report descriptor.
                     // https://eleccelerator.com/usbdescreqparser/
-                    // I'm not yet sure whether there is anything useful to us here.
-                    // This Git repo contains a reference copy of the tool in
-                    // the assets directory in case the original URL gets bit-rot.
-                    boolean e_pah2_prev_state = enable_printAsHex2;
-                    enable_printAsHex2 = true;
-                    //System.out.println("FMIC device report descriptor: ");
-                    //printAsHex2(reportDescriptor,"<");
-                    enable_printAsHex2 = e_pah2_prev_state;
+                    s_loggingAgent.appendToLog(String.join(": ",
+                        "FMIC device report descriptor: ",
+                        "XXX"//bufferToHex2(reportDescriptor, "")
+                    ));
                 }
 
                 // Initialise the Fender Mustang/Rumble device
