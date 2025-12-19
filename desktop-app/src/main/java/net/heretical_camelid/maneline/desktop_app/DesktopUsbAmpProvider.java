@@ -36,9 +36,72 @@ import com.google.gson.JsonPrimitive;
 
 import net.heretical_camelid.maneline.lib.registries.SlotBasedPresetSuiteExporter;
 
+// This software is intended to interoperate with various series of
+// models of digital modelling guitar amplifiers sold by Fender
+// Musical Instruments Corporation (FMIC) over the period 2012
+// to the present (late 2025 at the time of writing).
+// The majority of these devices have product names based on
+// FMIC's 'Mustang' registered trademark.
+
+// The major series of models for which support is planned include:
+// + models with names with a roman numeral I, II, III, IV or V and an
+//   optional suffix v2 after the trademark Mustang, sold from around 2012
+//   to 2017;
+// + models with product names with a GT- prefixed model number after the
+//   Mustang trademark, sold from around 2018 to 2020;
+// + models under product names with a LT- prefixed model number after the
+//   Mustang trademark, sold from around 2020 to present day;
+// + models with product names with a GTX- prefixed model number after the
+//   Mustang trademark, sold from 2020 to the present day, presumably closely
+//   related to the earlier GT- series;
+// + models with product names with a LTX- prefixed model number after the
+//   Mustang trademark, sold from September 2025 to the present day, presumably
+//   closely related to the earlier LT- series (which is still on sale at the
+//   time of writing);
+// + smaller form factor headphone amplifiers named Mustang Micro (sold from
+//   2021) and Mustang Micro Plus (sold from 2024).
+// There are also a small number of devices fitting into one or other of the
+// ranges below which have names associated with different FMIC trademarks
+// (e.g. Rumble, Bronco, G-DEC).
+
 public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
 {
-    final private static int VID_FMIC = 0x1ed8;
+    // USB devices are identified by vendor id (VID) and product id (PID)
+    // All of the devices presently supported by the maneline software
+    // use the following VID:
+    final private static int FMIC_VID = 0x1ed8;
+
+    // FMIC are not obliged to publish the PIDs of specific products
+    // they release, the most complete listing I can find on the public Internet
+    // http://www.linux-usb.org/usb.ids and only includes devices from the
+    // 2012-2017 roman numeral range, all of which fall in the numeric
+    // range 0x0001 to 0x001f.
+
+    // The known devices with PID's in the 0x0001 to 0x001f range are designed
+    // to interoperate with FMIC's now withdrawn FenderFUSE applications for Windows
+    // and macOS.
+    // If unknown devices with PID's  in this range are discovered, the software
+    // will attempt to operate with them using protocols emulating FenderFUSE.
+    // The term 'classic' will be used to refer to this generation of devices.
+    final private static int MUSTANG_CLASSIC_PID_MIN = 0x0001;
+    final private static int MUSTANG_I_V2_PID = 0x14;
+    final private static int MUSTANG_CLASSIC_PID_MAX = 0x001f;
+
+    // The LT- range consists of models with the Mustang trademark
+    // prefix paired with the model numbers LT25, LT40S and LT50,
+    // and also a model named Rumble LT25 (optimized for amplifying
+    // base guitars).  The PID of the LT50 is presently unknown,
+    // the others are all known.
+    final private static int MUSTANG_LT25_PID=0x0037;
+    final private static int RUMBLE_LT25_PID=0x0038;
+    final private static int MUSTANG_LT40S_PID=0x0046;
+
+    // The PIDs of both small headphone amps are known
+    final private static int MUSTANG_MICRO_ORIGINAL_PID=0x0043;
+    final private static int MUSTANG_MICRO_PLUS_PID=0x003a;
+
+    // No PIDs are yet known for any of the GT-, GTX- or LTX- series
+    // devices
 
     static WebModeLoggingAgent s_loggingAgent = null;
     AbstractMessageProtocolBase m_protocol;
@@ -108,7 +171,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
         // Enumerate devices looking for FMIC vendor id and LT series usage page
         HidDevice fmicDevice = null;
         for (HidDevice hidDevice : m_hidServices.getAttachedHidDevices()) {
-            if (hidDevice.getVendorId() != VID_FMIC) {
+            if (hidDevice.getVendorId() != FMIC_VID) {
                 continue;
             } else if (hidDevice.getUsage() == 0x01 && hidDevice.getUsagePage() == 0xffffff00) {
                 s_loggingAgent.setTransactionName("ampHidDetails");
@@ -128,10 +191,9 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
             // Shut down and rely on auto-shutdown hook to clear HidApi resources
             s_loggingAgent.appendToLog( "No FMIC device found");
         } else {
-            boolean requestReport = false;
             int productId = fmicDevice.getProductId();
             String productInfo = String.format(
-                "Using FMIC device with VID/PID=%04x:%04x product='%s' path=%s",
+                "Detected FMIC device with VID/PID=%04x:%04x product='%s' path=%s",
                 fmicDevice.getVendorId(), productId, fmicDevice.getProduct(), fmicDevice.getPath()
             );
             s_loggingAgent.appendToLog(productInfo);
@@ -150,73 +212,84 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
                 "serial#=%s release=%d",
                 fmicDevice.getSerialNumber(), fmicDevice.getReleaseNumber()
             ));
-            if (productId==0x0046) {
-                // Mustang LT40S - tested with firmware 1.0.7
-                s_loggingAgent.appendToLog(
-                    "Mustang LT40S - tested with firmware 1.0.7 - expected to work"
-                );
-            } else if (productId==0x0014) {
-                // Mustang LT40S - tested with firmware 1.0.7
-                s_loggingAgent.appendToLog(
-                    "Mustang I v2 - WIP on partial support"
-                );
-            } else if (productId==0x0043) {
-                // Original Mustang Micro - with 2024/2025 firmware this does not enumerate as a USB
-                // HID Device - including it here in the distant hope that a future firmware might
-                s_loggingAgent.appendToLog(
-                    "Original Mustang Micro - not expected to be detected via USB HID"
-                );
-            } else if (productId==0x003a) {
-                // Mustang Micro Plus - with 2024/2025 firmware this does not enumerate as a USB
-                // HID Device - including it here in the slightly less distant hope that a future firmware might
-                s_loggingAgent.appendToLog(
-                    "Mustang Micro Plus - not expected to be detected via USB HID"
-                );
-                s_loggingAgent.appendToLog(
-                    "A future version of Maneline may be able to connect to this device over BLE"
-                );
-            } else if(
-                fmicDevice.getProduct().contains(" LTX")
-            ) {
-                s_loggingAgent.appendToLog(
-                    "Probable LTX series device - not expected to be detected via USB HID"
-                );
-                s_loggingAgent.appendToLog(
-                    "A future version of Maneline may be able to connect to this device over BLE"
-                );
-                requestReport = true;
-                fmicDevice = null;
-            } else if(
-                fmicDevice.getProduct().contains(" LT")
-            ) {
-                s_loggingAgent.appendToLog(
-                    "Probable LT series device - not tested - may or may not work"
-                );
-                requestReport = true;
-            } else if(
-                fmicDevice.getProduct().contains(" GT")
-            ) {
-                s_loggingAgent.appendToLog(
-                    "Probable GT/GTX series device - not expected to be detected via USB HID"
-                );
-                s_loggingAgent.appendToLog(
-                    "A future version of Maneline may be able to connect to this device over BLE"
-                );
-                requestReport = true;
-                fmicDevice = null;
-            } else if(fmicDevice.getProductId()<=15){
-                s_loggingAgent.appendToLog(
-                    "Older FMIC device - possibly supported by mustang-plug - disabled because not expected to work"
-                );
-                fmicDevice = null;
-            } else {
-                s_loggingAgent.appendToLog(
-                    "Unrecognized FMIC device - disabled because not expected to work"
-                );
-                requestReport=true;
-                // TODO?: Consider implementing a CLI switch for 'have a go anyway'?
-                fmicDevice = null;
+
+            // Explore the capabilities of the device
+            boolean usbRecordingSupported = true;
+            boolean fenderFuseUsbProtocolSupported = false;
+            boolean fenderToneUsbProtocolSupported = false;
+            boolean fenderToneBleProtocolSupported = false;
+            boolean requestReport = false;
+            final String testStatusNote;
+            switch(productId) {
+
+                // Tested devices begin
+                case MUSTANG_LT40S_PID:
+                    fenderToneUsbProtocolSupported = true;
+                    testStatusNote = "Mustang LT40S - tested with firmware 1.0.7 - expected to support control and recording";
+                    break;
+
+                case MUSTANG_I_V2_PID:
+                    fenderFuseUsbProtocolSupported = true;
+                    testStatusNote = "Mustang I v2 - tested with firmware TBD - expected to support recording only";
+                    break;
+
+                case MUSTANG_MICRO_PLUS_PID:
+                    fenderToneBleProtocolSupported = true;
+                    testStatusNote = String.format(
+                        "Mustang Micro Plus - tested with firmware TBD - expected to support recording only",
+                        fmicDevice.getProduct()
+                    );
+                    break;
+
+                //TODO: Check whether this presents a USB HID interface
+                //      If not, it won't be returned by the line earlier
+                //      in this file containing
+                //      m_hidServices.getAttachedHidDevices()
+                //      so there's not much point in handing here (even
+                //      though recording on this device is probably doable).
+                case MUSTANG_MICRO_ORIGINAL_PID:
+                    testStatusNote = (
+                        "Mustang Micro (original) - tested with firmware TBD - expected to support recording only"
+                    );
+                    break;
+                // Tested devices end
+
+                // Devices with known PID's for which confidence is high
+                case MUSTANG_LT25_PID:
+                case RUMBLE_LT25_PID:
+                    fenderToneUsbProtocolSupported = true;
+                    s_loggingAgent.appendToLog(String.format(
+                        "%s - not tested but expected to support control and recording",
+                        fmicDevice.getProduct()
+                    ));
+                    fenderToneUsbProtocolSupported = true;
+                    requestReport = true;
+                    break;
+
+                default:
+                    requestReport = true;
+                    if(fmicDevice.getProduct().contains(" LT50")) {
+                        s_loggingAgent.appendToLog(String.format(
+                            "%s - not tested but expected to support control and recording",
+                            // we strongly expect that the product name will be 'Mustang LT50'
+                            fmicDevice.getProduct()
+                        ));
+                        fenderToneUsbProtocolSupported = true;
+                    } else if (productId <= MUSTANG_CLASSIC_PID_MAX) {
+                        s_loggingAgent.appendToLog(String.format(
+                            "%s - not tested - may support recording",
+                            fmicDevice.getProduct()
+                        ));
+                        fenderFuseUsbProtocolSupported = true;
+                    } else {
+                        s_loggingAgent.appendToLog(String.format(
+                            "%s - not tested - may support recording",
+                            fmicDevice.getProduct()
+                        ));
+                        fenderToneBleProtocolSupported = true;
+                    }
             }
+
             if (requestReport) {
                 System.out.println();
                 System.out.println("The USB device you have connected to is not yet confirmed to work with Maneline.");
@@ -233,9 +306,11 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
                 System.out.println();
             }
 
-            if (fmicDevice == null) {
+
+            if (fenderToneUsbProtocolSupported != true) {
+                fmicDevice = null;
                 // Shut down and rely on auto-shutdown hook to clear HidApi resources
-                s_loggingAgent.appendToLog("No FMIC device found");
+                s_loggingAgent.appendToLog("No supported FMIC device found");
             } else {
                 // Open the device
                 if (fmicDevice.isClosed()) {
