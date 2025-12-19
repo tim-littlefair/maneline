@@ -3,11 +3,12 @@ package net.heretical_camelid.maneline.desktop_app;
 //import static net.heretical_camelid.maneline.lib.AbstractMessageProtocolBase.bufferToHex2;
 //import static net.heretical_camelid.maneline.lib.AbstractMessageProtocolBase.logAsHex2;
 
+import static net.heretical_camelid.maneline.lib.AbstractMessageProtocolBase.bufferToHex2;
+
 import net.heretical_camelid.maneline.lib.AbstractMessageProtocolBase;
-import net.heretical_camelid.maneline.lib.DefaultLoggingAgent;
+import net.heretical_camelid.maneline.lib.ClassicSeriesProtocol;
 import net.heretical_camelid.maneline.lib.LTSeriesProtocol;
 import net.heretical_camelid.maneline.lib.interfaces.IAmpProvider;
-import net.heretical_camelid.maneline.lib.interfaces.ILoggingAgent;
 import net.heretical_camelid.maneline.lib.registries.PresetRegistry;
 import net.heretical_camelid.maneline.lib.registries.SuiteRecord;
 import net.heretical_camelid.maneline.lib.registries.SuiteRegistry;
@@ -19,7 +20,6 @@ import org.hid4java.HidServicesListener;
 import org.hid4java.HidServicesSpecification;
 import org.hid4java.ScanMode;
 import org.hid4java.event.HidServicesEvent;
-import org.hid4java.jna.HidApi;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -138,7 +138,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
 
         m_presetRegistry = new PresetRegistry(outputPath);
         m_suiteRegistry = new SuiteRegistry(m_presetRegistry);
-        m_protocol = new LTSeriesProtocol(true,true);
+        m_protocol = null;
         AbstractMessageProtocolBase.setLoggingAgent(s_loggingAgent);
     }
 
@@ -291,98 +291,110 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
             }
 
             if (requestReport) {
-                System.out.println();
-                System.out.println("The USB device you have connected to is not yet confirmed to work with Maneline.");
-                System.out.println("Please consider adding a report on this device as a comment here:");
-                System.out.println("https://github.com/tim-littlefair/feral-horse-amp-utils/issues/2");
-                System.out.println("Contents of the report should be:");
-                System.out.println("+ USB VID/PID and product name reported a few lines above this message");
-                System.out.println("+ If the software reports a firmware version a few lines below this");
-                System.out.println("  message, please include it in the report");
-                System.out.println("+ Does the software run gracefully, list preset names and amp-based");
-                System.out.println("  preset suites?");
-                System.out.println("+ If the software does not run gracefully, or exits without outputting");
-                System.out.println("  lists, please include the output");
-                System.out.println();
+                askUserToSendDeviceOutcomeReport();
             }
 
-
-            if (fenderToneUsbProtocolSupported != true) {
+            if (fenderToneUsbProtocolSupported == true) {
+                m_protocol = new LTSeriesProtocol(true, true);
+            } else if(fenderFuseUsbProtocolSupported == true) {
+                m_protocol = new ClassicSeriesProtocol(true, true);
+            } else {
                 fmicDevice = null;
                 // Shut down and rely on auto-shutdown hook to clear HidApi resources
                 s_loggingAgent.appendToLog("No supported FMIC device found");
-            } else {
-                // Open the device
-                if (fmicDevice.isClosed()) {
-                    if (!fmicDevice.open()) {
-                        String lastUsbHidError = fmicDevice.getLastErrorMessage();
-                        if(!lastUsbHidError.equals("Device not initialised")) {
-                            s_loggingAgent.appendToLog(
-                                "FMIC device error: " + lastUsbHidError
-                            );
-                        } else {
-                            System.out.println("The FMIC device could not be initialised");
-                            System.out.println("This may (or may not) relate to whether the user has OS-level permissions");
-                            System.out.println("to access USB devices.");
-                            String osName = System.getProperty("os.name");
-                            File udevRulesDir = new File("/usr/lib/udev/rules.d");
-                            if(udevRulesDir.exists()) {
-                                File manelineUdevRules = new File("/usr/lib/udev/rules.d/50-maneline.rules");
-                                if (!manelineUdevRules.exists()) {
-                                    System.out.println("You may need to modify udev rules to allow a non-root user logged in");
-                                    System.out.println("on the console to access USB devices.");
-                                    System.out.println("Maneline will drop a file called '50-maneline.rules' in the working directory.");
-                                    System.out.println("Use 'sudo' to copy or move this file to /usr/lib/udev/rules.d.");
-                                    System.out.println("Once installed, this file will permit non-root access to devices which");
-                                    System.out.println("have FMIC's USB vendor id.");
-                                    System.out.println("A reboot may be required to activate the new rules.");
-                                    try {
-                                        byte[] manelineRulesBytes = Objects.requireNonNull(
-                                            DesktopUsbAmpProvider.class.getResourceAsStream(
-                                            "/assets/50-maneline.rules"
-                                            )
-                                        ).readAllBytes();
-                                        FileOutputStream manelineRulesFOS = new FileOutputStream("50-maneline.rules");
-                                        manelineRulesFOS.write(manelineRulesBytes);
-                                        manelineRulesFOS.close();
-                                    } catch (IOException e) {
-                                        throw new RuntimeException(e);
-                                    }
-                                } else {
-                                    System.out.println("This system appears to have udev rules permitting members of group");
-                                    System.out.println("'plugdev' to access USB devices.");
-                                    System.out.println("You may need to reboot your system if these rules were only created");
-                                    System.out.println("since last reboot.");
-                                    System.out.println("You may need to add the current user to the group 'plugdev' if he/she");
-                                    System.out.println("is not already a member.  Run the command 'groups' to find out.");
-                                    System.out.println("If you change group membership, you may need to log out and log");
-                                    System.out.println("back in to activate the rights of the new group membership.");
-                                }
-                            }
-                        }
-                        // Attempt to open the device failed, so we stop here
-                        return;
+                return;
+            }
+
+            // Open the device
+            if (fmicDevice.isClosed()) {
+                if (!fmicDevice.open()) {
+                    handleFmicDeviceOpenFailure(fmicDevice);
+                    return;
+                }
+            }
+
+            // Perform a USB ReportDescriptor operation to determine general device capabilities
+            // Reports can be up to 4096 bytes for complex devices.
+            // Probably won't need this but allocate max capacity anyway.
+            byte[] reportDescriptor = new byte[4096];
+            if (fmicDevice.getReportDescriptor(reportDescriptor) > 0) {
+              // There is an online HTML/JS tool written by Frank Zao which can
+                // parse USB HID report descriptor.
+                // https://eleccelerator.com/usbdescreqparser/
+                s_loggingAgent.appendToLog(String.join(": ",
+                    "FMIC device report descriptor: ",
+                    bufferToHex2(reportDescriptor, "")
+                ));
+            }
+
+            // Initialise the Fender Mustang/Rumble device
+            handleInitialise(fmicDevice);
+        }
+    }
+
+    private static void handleFmicDeviceOpenFailure(HidDevice fmicDevice) {
+        String lastUsbHidError = fmicDevice.getLastErrorMessage();
+        if(!lastUsbHidError.equals("Device not initialised")) {
+            s_loggingAgent.appendToLog(
+                "FMIC device error: " + lastUsbHidError
+            );
+        } else {
+            System.out.println("The FMIC device could not be initialised");
+            System.out.println("This may (or may not) relate to whether the user has OS-level permissions");
+            System.out.println("to access USB devices.");
+            String osName = System.getProperty("os.name");
+            File udevRulesDir = new File("/usr/lib/udev/rules.d");
+            if(udevRulesDir.exists()) {
+                File manelineUdevRules = new File("/usr/lib/udev/rules.d/50-maneline.rules");
+                if (!manelineUdevRules.exists()) {
+                    System.out.println("You may need to modify udev rules to allow a non-root user logged in");
+                    System.out.println("on the console to access USB devices.");
+                    System.out.println("Maneline will drop a file called '50-maneline.rules' in the working directory.");
+                    System.out.println("Use 'sudo' to copy or move this file to /usr/lib/udev/rules.d.");
+                    System.out.println("Once installed, this file will permit non-root access to devices which");
+                    System.out.println("have FMIC's USB vendor id.");
+                    System.out.println("A reboot may be required to activate the new rules.");
+                    try {
+                        byte[] manelineRulesBytes = Objects.requireNonNull(
+                            DesktopUsbAmpProvider.class.getResourceAsStream(
+                            "/assets/50-maneline.rules"
+                            )
+                        ).readAllBytes();
+                        FileOutputStream manelineRulesFOS = new FileOutputStream("50-maneline.rules");
+                        manelineRulesFOS.write(manelineRulesBytes);
+                        manelineRulesFOS.close();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
                     }
+                } else {
+                    System.out.println("This system appears to have udev rules permitting members of group");
+                    System.out.println("'plugdev' to access USB devices.");
+                    System.out.println("You may need to reboot your system if these rules were only created");
+                    System.out.println("since last reboot.");
+                    System.out.println("You may need to add the current user to the group 'plugdev' if he/she");
+                    System.out.println("is not already a member.  Run the command 'groups' to find out.");
+                    System.out.println("If you change group membership, you may need to log out and log");
+                    System.out.println("back in to activate the rights of the new group membership.");
                 }
-
-                // Perform a USB ReportDescriptor operation to determine general device capabilities
-                // Reports can be up to 4096 bytes for complex devices.
-                // Probably won't need this but allocate max capacity anyway.
-                byte[] reportDescriptor = new byte[4096];
-                if (fmicDevice.getReportDescriptor(reportDescriptor) > 0) {
-                  // There is an online HTML/JS tool written by Frank Zao which can
-                    // parse USB HID report descriptor.
-                    // https://eleccelerator.com/usbdescreqparser/
-                    s_loggingAgent.appendToLog(String.join(": ",
-                        "FMIC device report descriptor: ",
-                        "XXX"//bufferToHex2(reportDescriptor, "")
-                    ));
-                }
-
-                // Initialise the Fender Mustang/Rumble device
-                handleInitialise(fmicDevice);
             }
         }
+        // Attempt to open the device failed, so we stop here
+    }
+
+    private static void askUserToSendDeviceOutcomeReport() {
+        System.out.println();
+        System.out.println("The USB device you have connected to is not yet confirmed to work with Maneline.");
+        System.out.println("Please consider adding a report on this device as a comment here:");
+        System.out.println("https://github.com/tim-littlefair/feral-horse-amp-utils/issues/2");
+        System.out.println("Contents of the report should be:");
+        System.out.println("+ USB VID/PID and product name reported a few lines above this message");
+        System.out.println("+ If the software reports a firmware version a few lines below this");
+        System.out.println("  message, please include it in the report");
+        System.out.println("+ Does the software run gracefully, list preset names and amp-based");
+        System.out.println("  preset suites?");
+        System.out.println("+ If the software does not run gracefully, or exits without outputting");
+        System.out.println("  lists, please include the output");
+        System.out.println();
     }
 
     private void saveAmpDetailsJson(HidDevice fmicDevice) {
