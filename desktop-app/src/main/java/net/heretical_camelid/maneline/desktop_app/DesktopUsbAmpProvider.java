@@ -90,8 +90,8 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
     // The LT- range consists of models with the Mustang trademark
     // prefix paired with the model numbers LT25, LT40S and LT50,
     // and also a model named Rumble LT25 (optimized for amplifying
-    // base guitars).  The PID of the LT50 is presently unknown,
-    // the others are all known.
+    // base guitars).
+    final private static int MUSTANG_LT50_PID=0x0036;
     final private static int MUSTANG_LT25_PID=0x0037;
     final private static int RUMBLE_LT25_PID=0x0038;
     final private static int MUSTANG_LT40S_PID=0x0046;
@@ -255,6 +255,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
                 // Tested devices end
 
                 // Devices with known PID's for which confidence is high
+                case MUSTANG_LT50_PID:
                 case MUSTANG_LT25_PID:
                 case RUMBLE_LT25_PID:
                     fenderToneUsbProtocolSupported = true;
@@ -268,14 +269,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
 
                 default:
                     requestReport = true;
-                    if(fmicDevice.getProduct().contains(" LT50")) {
-                        s_loggingAgent.appendToLog(String.format(
-                            "%s - not tested but expected to support control and recording",
-                            // we strongly expect that the product name will be 'Mustang LT50'
-                            fmicDevice.getProduct()
-                        ));
-                        fenderToneUsbProtocolSupported = true;
-                    } else if (productId <= MUSTANG_CLASSIC_PID_MAX) {
+                    if (productId <= MUSTANG_CLASSIC_PID_MAX) {
                         s_loggingAgent.appendToLog(String.format(
                             "%s - not tested - may support recording",
                             fmicDevice.getProduct()
@@ -390,8 +384,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
         System.out.println("+ USB VID/PID and product name reported a few lines above this message");
         System.out.println("+ If the software reports a firmware version a few lines below this");
         System.out.println("  message, please include it in the report");
-        System.out.println("+ Does the software run gracefully, list preset names and amp-based");
-        System.out.println("  preset suites?");
+        System.out.println("+ Does the software run gracefully, and list the names of available presets?");
         System.out.println("+ If the software does not run gracefully, or exits without outputting");
         System.out.println("  lists, please include the output");
         System.out.println();

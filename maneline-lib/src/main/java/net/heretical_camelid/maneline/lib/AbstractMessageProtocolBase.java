@@ -97,7 +97,7 @@ public abstract class AbstractMessageProtocolBase {
         s_loggingAgent.appendToLog(bufferToHex2(dataSentOrReceived, directionChar));
     }
 
-    protected static String bufferToHex2(byte[] dataSentOrReceived, String prefixString) {
+    public static String bufferToHex2(byte[] dataSentOrReceived, String prefixString) {
         StringBuffer sb = new StringBuffer();
         sb.append(String.format("%s [%02d]:", prefixString, dataSentOrReceived.length));
         int trailingZeroByteCount = -1; // -1 signifies 'no non-zero bytes seen yet'
