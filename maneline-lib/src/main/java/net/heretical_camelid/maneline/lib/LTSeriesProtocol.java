@@ -122,12 +122,10 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
     }
 
     @Override
-    public int getPresetNamesList(
-        int firstPreset, int lastPreset, PresetRegistry presetRegistry
-    ) {
+    public int getPresetNamesList(PresetRegistry presetRegistry) {
         assert m_deviceTransport!=null;
         s_presetResponseReader = presetRegistry;
-        for (int i = firstPreset; i <= lastPreset; ++i) {
+        for (int i = 1; i <= 60; ++i) {
             setLogTransactionName(String.format("getPreset%03d",i));
             int psJsonStatus = sendPresetJsonRequest(i);
             setLogTransactionName(null);

@@ -1,5 +1,7 @@
 package net.heretical_camelid.maneline.lib;
 
+import static java.util.Arrays.copyOfRange;
+
 import net.heretical_camelid.maneline.lib.interfaces.IPresetResponseReader;
 import net.heretical_camelid.maneline.lib.registries.PresetRecord;
 import net.heretical_camelid.maneline.lib.registries.PresetRegistry;
@@ -9,9 +11,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
-// https://github.com/offa/plug/blob/master/doc/Technicalities.md
-// contains some useful knowledge in relation to the implementation
-// of this protocol.
+/**
+ * The class below has been heavily dependent on the following
+ * reference document:
+ * https://github.com/offa/plug/blob/master/doc/Technicalities.md
+ * doc/Technicalities.md
+ */
 public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
     static IPresetResponseReader s_presetResponseReader = null;
 
@@ -55,18 +60,17 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
         m_processResponsesAfterHeartbeat = processResponsesAfterHeartbeat;
         m_heartbeatStopped = !startHeartbeat;
         m_heartbeatThread = new HeartbeatThread();
-        m_heartbeatThread.setName("LT-device-heartbeat");
+        m_heartbeatThread.setName("Classic-device-heartbeat");
     }
 
     @Override
     public int doStartup(String[] firmwareVersionEtc) {
         assert m_deviceTransport!=null;
         setLogTransactionName("classicStartup");
+        // This function sends packets 1 and 2 described here:
+        // https://github.com/offa/plug/blob/master/doc/Technicalities.md#2-connecting
         String[][] startupCommands = new String[][]{
-            // First message has messageId 113, LtAmp's ModalStatusMessage
-            // On LT40S, when messageId 113 is sent, the amp responds with the same messageId 113
             new String[]{"00:c3", "initialisation request","classicInitRequest"},
-            // The second message requests the firmware version
             new String[]{"1a:c1", "firmware version request","classicFwverRequest"},
         };
         int startupCommandIndex=0;
@@ -87,12 +91,6 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
         firmwareVersionEtc[0] = m_firmwareVersion;
 
         return STATUS_OK;
-        /*
-        throw new UnsupportedOperationException(String.format(
-            "%s does not support %s",
-            this.getClass().getSimpleName(), "doStartup(String[] firmwareVersionEtc)"
-        ));
-         */
     }
 
     @Override
@@ -101,18 +99,10 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
     }
 
     @Override
-    public void doShutdown() {
-        throw new UnsupportedOperationException(String.format(
-            "%s does not support %s",
-            this.getClass().getSimpleName(), "doShutdown()"
-        ));
-    }
-
-    @Override
-    public int getPresetNamesList(
-        int firstPreset, int lastPreset, PresetRegistry presetRegistry
-    ) {
+    public int getPresetNamesList(PresetRegistry presetRegistry) {
         setLogTransactionName("classicPresetList");
+        // This function sends the third packet described here:
+        // https://github.com/offa/plug/blob/master/doc/Technicalities.md#2-connecting
         int scStatus = sendCommand("ff:c1", "preset list request",true);
         setLogTransactionName(null);
         if (scStatus != STATUS_OK) {
@@ -147,9 +137,12 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
         ));
     }
 
+
     @Override
     public int switchPreset(int slotIndex) {
         setLogTransactionName(String.format("classicSelectPreset%03d", slotIndex));
+        // This function sends the packet described here:
+        // https://github.com/offa/plug/blob/master/doc/Technicalities.md#6-choosing-memory-bank
         int scStatus = sendCommand(
             String.format("1c:01:01:00:%02x:00:01", slotIndex),
             String.format("request to select preset %d",slotIndex),
@@ -157,6 +150,11 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
         );
         setLogTransactionName(null);
         return scStatus;
+    }
+
+    @Override
+    public void doShutdown() {
+        // do nothing
     }
 
     private int sendCommand(String commandBytesHex, String commandDescription, boolean responseExpected) {
@@ -194,9 +192,8 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
             loggingRequired = false;
             status = STATUS_OK;
         } else {
-            ArrayList<String> responseMessages = new ArrayList<String>();
-            bytesRead = readAndAssembleResponsePackets(responseMessages, loggingRequired);
-            System.out.println(String.join("\n",responseMessages));
+            readPhaseLogMessages.clear();
+            bytesRead = readAndAssembleResponsePackets(readPhaseLogMessages, loggingRequired);
             if (bytesRead < 0) {
                 loggingRequired = true;
                 status = STATUS_REASSEMBLY_FAIL;
@@ -241,6 +238,7 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
         } else {
             ++m_heartbeatsSentSinceLastLog;
         }
+        readPhaseLogMessages.clear();
         return status;
     }
 
@@ -276,12 +274,14 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
         byte[] assemblyBuffer = new byte[40960];
         int assemblyBufferOffset = 0;
         boolean messageComplete = false;
-        while (true) {
+        while (messageComplete==false) {
             byte[] packetBuffer = new byte[64];
             int packetBytesRead;
             packetBytesRead = m_deviceTransport.read(packetBuffer);
             if (packetBytesRead == 0) {
-                // No response available, not an error
+                // No more response bytes available,
+                // expected when response complete,
+                // not an error
                 messageComplete = true;
             } else if (packetBytesRead < 0) {
                 readPhaseLogMessages.add(String.format(
@@ -297,105 +297,75 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
                     bufferToHex2(packetBuffer,"!>")
                 ));
                 return STATUS_READ_FAIL;
-            } else {
-                // Nominal case
-                /*
-                readPhaseLogMessages.add(String.format(
-                    "packet received buffer=%s",
-                    bufferToHex2(packetBuffer,">")
-                ));
-                 */
             }
-            // All the non-nominal cases above return from the function, so if we get
-            // here we are certain that we have succeeded in receiving exactly
-            // one packet of 64 bytes, and that after processing this we should
-            // loop round and attempt to receive another packet.
-            readPhaseLogMessages.add(bufferToHex2(packetBuffer, ">"));
+
             int contentLength=packetBytesRead;
             System.arraycopy(packetBuffer, 0, assemblyBuffer, assemblyBufferOffset, contentLength);
             assemblyBufferOffset+=contentLength;
-
-
-
-            /*
-            assert packetBuffer[0] == 0x00;
-            int packetContentStart = 3;
-            int contentLength = packetBuffer[2];
-            switch (packetBuffer[1]) {
-                case 0x33: // first packet of multi-packet message
-                    assert assemblyBufferOffset == 0;
-                    assert contentLength == 0x3d;
-                    messageComplete = false;
-                    break;
-
-                case 0x34: // middle packet of multi-packet message
-                    assert contentLength == 0x3d;
-                    messageComplete = false;
-                    break;
-
-                case 0x35: // sole packet of single-packet message
-                    assert contentLength <= 0x3d;
-                    messageComplete = true;
-                    break;
-
-                default:
-                    return STATUS_REASSEMBLY_FAIL;
-            }
-            assert assemblyBufferOffset + contentLength < assemblyBuffer.length;
-            System.arraycopy(packetBuffer, packetContentStart, assemblyBuffer, assemblyBufferOffset, contentLength);
-            assemblyBufferOffset += contentLength;
-             */
 
             // As the code stands today, the code does not have any way of recognizing when all
             // packets have been received other than attempting a read and timing out with
             // an empty buffer.  At some time in the future there may be logic to recognize the
             // last packet without an needing an additional read and timeout, if/when this is
-            // implemented the messageComplete boolean will be set to true and exit will be here.
-            if (messageComplete) {
-                break;
-            }
+            // implemented the messageComplete boolean will be set to true.
         }
 
-        assemblyBuffer = Arrays.copyOfRange(assemblyBuffer, 0, assemblyBufferOffset);
+        assemblyBuffer = copyOfRange(assemblyBuffer, 0, assemblyBufferOffset);
         if(loggingRequired==true) {
             readPhaseLogMessages.add(String.format(
                 "message complete, message=%s",
                 bufferToHex2(assemblyBuffer, "+>")
             ));
         }
-
         assert (assemblyBuffer.length % 64) == 0: String.format(
             "Reassembled message length is %d, expected to be an exact multiple of 64 bytes",
             assemblyBuffer.length
         );
         while(assemblyBuffer.length>0) {
-            String b2hex2 = bufferToHex2(Arrays.copyOfRange(assemblyBuffer,0,64), ">");
-            if (
+            byte[] packet64 = Arrays.copyOfRange(assemblyBuffer,0,64);
+            String b2hex2 = bufferToHex2(packet64, ">");
+            if (b2hex2.startsWith("> [64]: 00 ...")) {
+                // 64 NUL bytes - no meaning, not worth logging
+                continue;
+            } else if (
                 (m_firmwareVersion == null) &&
                     b2hex2.startsWith("> [64]: 01 00") &&
                     (assemblyBuffer.length >= 4)
             ) {
                 m_firmwareVersion = String.format("%d.%d", (int) assemblyBuffer[2], (int) assemblyBuffer[3]);
-            } else if (b2hex2.startsWith("> [64]: 1c 01")) {
+                readPhaseLogMessages.add(
+                    String.format("Firmware version packet=%s", b2hex2)
+                );
+            } else if (b2hex2.startsWith("> [64]: 1c 01 04")) {
                 int presetSlot = (int) assemblyBuffer[4];
                 int whichSlotAttribute = (int) assemblyBuffer[2];
-                if ((whichSlotAttribute == 4) && (m_presetRecords.get(presetSlot) == null)) {
+                if (m_presetRecords.get(presetSlot) == null) {
                     String presetName = new String(assemblyBuffer, 16, 48);
                     presetName = presetName.substring(0, presetName.indexOf(0));
                     PresetJO pjo = new PresetJO(presetName);
                     PresetRecord pr = new PresetRecord(presetName, pjo.toString().getBytes());
                     m_presetRecords.add(presetSlot, pr);
+                    readPhaseLogMessages.add(
+                        String.format("Packet containing name of preset %d (first time)=%s", presetSlot, b2hex2)
+                    );
+                } else {
+                    readPhaseLogMessages.add(
+                        String.format("Packet containing name of preset %d (already seen)=%s", presetSlot, b2hex2)
+                    );
+                }
+            } else {
+                readPhaseLogMessages.add(
+                    String.format("Unclassifed packet=%s", b2hex2)
+                );
+            }
+            if(loggingRequired==true) {
+                for(String rplm: readPhaseLogMessages) {
+                    log(rplm);
                 }
             }
-            assemblyBuffer = Arrays.copyOfRange(assemblyBuffer, 64, assemblyBuffer.length);
+            assemblyBuffer = copyOfRange(assemblyBuffer, 64, assemblyBuffer.length);
         }
 
-        // Dump the reassembled message with a distinctive direction character
-        // byte[] reassembledMessage = Arrays.copyOfRange(assemblyBuffer, 0, assemblyBufferOffset);
-        // readPhaseLogMessages.add(bufferToHex2(reassembledMessage, "+>"));
-        // parseResponse(reassembledMessage,readPhaseLogMessages);
         return STATUS_OK;
     }
-
-
 }

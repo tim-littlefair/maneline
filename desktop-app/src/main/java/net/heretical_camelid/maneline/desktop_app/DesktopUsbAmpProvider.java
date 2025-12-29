@@ -440,26 +440,8 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
             hidDevice.getProduct(), m_firmwareVersion
         ));
 
-        // The Mustang LT40S with firmware 1.0.7 has 60 presets
-        // According to the internet, Mustang LT50, Mustang/Rumble LT25
-        // had 30 presets on early firmware, but have since had updated
-        // firmware released which supports 60 presets.
-        // If/when we get success reports from devices other than the
-        // LT40S we should update the values below to reflect the
-        // exact capacity of known working model/firmware combinations.
-        // Experiments with LT40S/firmware 1.0.7 show that
-        // _on_that_device_firmware_combination_ there are no adverse
-        // consequences of requesting a preset out of the storage range
-        // of the amp - preset 1 is returned if the request is out of range.
-        int firstPreset = 1;
-        int lastPreset = 60;
-        System.out.println(String.format(
-            "Requesting presets %d-%d - should take about 5 seconds",
-            firstPreset, lastPreset
-        ));
-        int presetNamesStatus = m_protocol.getPresetNamesList(
-            firstPreset,lastPreset, m_presetRegistry
-        );
+        System.out.println("Requesting presets - should take about 5 seconds");
+        int presetNamesStatus = m_protocol.getPresetNamesList(m_presetRegistry);
         if(startupStatus!=0 || presetNamesStatus!=0) {
             System.out.println("doStartup returned " + startupStatus);
             System.out.println("getPresetNamesList returned " + presetNamesStatus);

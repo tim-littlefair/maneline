@@ -23,9 +23,17 @@ public abstract class AbstractMessageProtocolBase {
 
     // Abstract interface begins
     public abstract int doStartup(String[] firmwareVersionEtc);
-    public abstract int getPresetNamesList(
-        int firstPreset, int lastPreset, PresetRegistry presetRegistry
-    );
+    public abstract int getPresetNamesList(PresetRegistry presetRegistry);
+
+    public abstract void startHeartbeatThread();
+    public abstract int switchPreset(int slotIndex);
+
+    public abstract void doShutdown();
+
+    public abstract String getStatus();
+
+    public abstract String getFirmwareVersion();
+
     // future
     // public abstract String getPresetDefinition(int slotIndex);
     // public abstract int switchToPreset(int slotIndex);
@@ -142,6 +150,8 @@ public abstract class AbstractMessageProtocolBase {
         return name;
     }
 
+
+
     void appendToLog(String message, Map<String,String> extraAttributes) {
         if(s_loggingAgent!=null) {
             s_loggingAgent.appendToLog(message,extraAttributes);
@@ -151,15 +161,5 @@ public abstract class AbstractMessageProtocolBase {
         assert s_loggingAgent != null;
         s_loggingAgent.setTransactionName(transactionName);
     }
-
-    public abstract int switchPreset(int slotIndex);
-
-    public abstract void doShutdown();
-
-    public abstract void startHeartbeatThread();
-
-    public abstract String getStatus();
-
-    public abstract String getFirmwareVersion();
 }
 
