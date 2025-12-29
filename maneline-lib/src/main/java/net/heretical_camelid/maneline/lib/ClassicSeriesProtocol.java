@@ -8,7 +8,6 @@ import net.heretical_camelid.maneline.lib.utilities.PresetJO;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import org.json.JSONObject;
 
 // https://github.com/offa/plug/blob/master/doc/Technicalities.md
 // contains some useful knowledge in relation to the implementation
@@ -150,10 +149,14 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
 
     @Override
     public int switchPreset(int slotIndex) {
-        throw new UnsupportedOperationException(String.format(
-            "%s does not support %s",
-            this.getClass().getSimpleName(), "switchPreset(int slotIndex)"
-        ));
+        setLogTransactionName(String.format("classicSelectPreset%03d", slotIndex));
+        int scStatus = sendCommand(
+            String.format("1c:01:01:00:%02x:00:01", slotIndex),
+            String.format("request to select preset %d",slotIndex),
+            true
+        );
+        setLogTransactionName(null);
+        return scStatus;
     }
 
     private int sendCommand(String commandBytesHex, String commandDescription, boolean responseExpected) {
@@ -192,7 +195,7 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
             status = STATUS_OK;
         } else {
             ArrayList<String> responseMessages = new ArrayList<String>();
-            bytesRead = readAndAssembleResponsePackets(responseMessages);
+            bytesRead = readAndAssembleResponsePackets(responseMessages, loggingRequired);
             System.out.println(String.join("\n",responseMessages));
             if (bytesRead < 0) {
                 loggingRequired = true;
@@ -269,7 +272,7 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
     }
 
 
-    private int readAndAssembleResponsePackets(ArrayList<String> readPhaseLogMessages) {
+    private int readAndAssembleResponsePackets(ArrayList<String> readPhaseLogMessages, boolean loggingRequired) {
         byte[] assemblyBuffer = new byte[40960];
         int assemblyBufferOffset = 0;
         boolean messageComplete = false;
@@ -277,20 +280,15 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
             byte[] packetBuffer = new byte[64];
             int packetBytesRead;
             packetBytesRead = m_deviceTransport.read(packetBuffer);
-            if (packetBytesRead < 0) {
+            if (packetBytesRead == 0) {
+                // No response available, not an error
+                messageComplete = true;
+            } else if (packetBytesRead < 0) {
                 readPhaseLogMessages.add(String.format(
                     "read failed, read_status=%d error=%s",
                     packetBytesRead,  m_deviceTransport.getLastErrorMessage()
                 ));
                 return STATUS_READ_FAIL;
-            } else if (packetBytesRead == 0) {
-                // No response available, not an error
-                messageComplete=true;
-                readPhaseLogMessages.add(String.format(
-                    "message complete, message=%s",
-                    bufferToHex2(assemblyBuffer,"+>")
-                ));
-                // return STATUS_OK;
             } else if (packetBytesRead != 64) {
                 // USB HID packets are always exactly 64 bytes
                 readPhaseLogMessages.add(String.format(
@@ -301,10 +299,12 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
                 return STATUS_READ_FAIL;
             } else {
                 // Nominal case
+                /*
                 readPhaseLogMessages.add(String.format(
                     "packet received buffer=%s",
                     bufferToHex2(packetBuffer,">")
                 ));
+                 */
             }
             // All the non-nominal cases above return from the function, so if we get
             // here we are certain that we have succeeded in receiving exactly
@@ -315,27 +315,7 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
             System.arraycopy(packetBuffer, 0, assemblyBuffer, assemblyBufferOffset, contentLength);
             assemblyBufferOffset+=contentLength;
 
-            String b2hex2 = bufferToHex2(packetBuffer,">");
 
-            if(
-                (m_firmwareVersion==null) &&
-                b2hex2.startsWith("> [64]: 01 00") &&
-                (packetBuffer.length >= 4)
-            ) {
-                m_firmwareVersion=String.format("%d.%d",(int)packetBuffer[2],(int)packetBuffer[3]);
-            }
-
-            if(b2hex2.startsWith("> [64]: 1c 01")) {
-                int presetSlot = (int) packetBuffer[4];
-                int whichSlotAttribute = (int) packetBuffer[2];
-                if( (whichSlotAttribute==4) && (m_presetRecords.get(presetSlot)==null) ) {
-                    String presetName = new String(packetBuffer,16,48);
-                    presetName = presetName.substring(0,presetName.indexOf(0));
-                    PresetJO pjo = new PresetJO(presetName);
-                    PresetRecord pr = new PresetRecord(presetName, pjo.toString().getBytes());
-                    m_presetRecords.add(presetSlot, pr);
-                }
-            }
 
             /*
             assert packetBuffer[0] == 0x00;
@@ -376,8 +356,42 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
             }
         }
 
+        assemblyBuffer = Arrays.copyOfRange(assemblyBuffer, 0, assemblyBufferOffset);
+        if(loggingRequired==true) {
+            readPhaseLogMessages.add(String.format(
+                "message complete, message=%s",
+                bufferToHex2(assemblyBuffer, "+>")
+            ));
+        }
+
+        assert (assemblyBuffer.length % 64) == 0: String.format(
+            "Reassembled message length is %d, expected to be an exact multiple of 64 bytes",
+            assemblyBuffer.length
+        );
+        while(assemblyBuffer.length>0) {
+            String b2hex2 = bufferToHex2(Arrays.copyOfRange(assemblyBuffer,0,64), ">");
+            if (
+                (m_firmwareVersion == null) &&
+                    b2hex2.startsWith("> [64]: 01 00") &&
+                    (assemblyBuffer.length >= 4)
+            ) {
+                m_firmwareVersion = String.format("%d.%d", (int) assemblyBuffer[2], (int) assemblyBuffer[3]);
+            } else if (b2hex2.startsWith("> [64]: 1c 01")) {
+                int presetSlot = (int) assemblyBuffer[4];
+                int whichSlotAttribute = (int) assemblyBuffer[2];
+                if ((whichSlotAttribute == 4) && (m_presetRecords.get(presetSlot) == null)) {
+                    String presetName = new String(assemblyBuffer, 16, 48);
+                    presetName = presetName.substring(0, presetName.indexOf(0));
+                    PresetJO pjo = new PresetJO(presetName);
+                    PresetRecord pr = new PresetRecord(presetName, pjo.toString().getBytes());
+                    m_presetRecords.add(presetSlot, pr);
+                }
+            }
+            assemblyBuffer = Arrays.copyOfRange(assemblyBuffer, 64, assemblyBuffer.length);
+        }
+
         // Dump the reassembled message with a distinctive direction character
-        byte[] reassembledMessage = Arrays.copyOfRange(assemblyBuffer, 0, assemblyBufferOffset);
+        // byte[] reassembledMessage = Arrays.copyOfRange(assemblyBuffer, 0, assemblyBufferOffset);
         // readPhaseLogMessages.add(bufferToHex2(reassembledMessage, "+>"));
         // parseResponse(reassembledMessage,readPhaseLogMessages);
         return STATUS_OK;
