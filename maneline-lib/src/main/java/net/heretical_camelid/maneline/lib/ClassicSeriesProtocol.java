@@ -3,9 +3,12 @@ package net.heretical_camelid.maneline.lib;
 import net.heretical_camelid.maneline.lib.interfaces.IPresetResponseReader;
 import net.heretical_camelid.maneline.lib.registries.PresetRecord;
 import net.heretical_camelid.maneline.lib.registries.PresetRegistry;
+import net.heretical_camelid.maneline.lib.utilities.PresetJO;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import org.json.JSONObject;
 
 // https://github.com/offa/plug/blob/master/doc/Technicalities.md
 // contains some useful knowledge in relation to the implementation
@@ -33,6 +36,7 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
         s_outputPath = outputPath;
     }
 
+    ArrayList<PresetRecord> m_presetRecords = new ArrayList<>(Collections.nCopies(24,null));
 
     public ClassicSeriesProtocol(
         boolean startHeartbeat,
@@ -65,14 +69,13 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
             new String[]{"00:c3", "initialisation request","classicInitRequest"},
             // The second message requests the firmware version
             new String[]{"1a:c1", "firmware version request","classicFwverRequest"},
-            // The third message requests the product identification
-            // new String[]{"ff:c1", "preset list request","presetListRequest"},
         };
         int startupCommandIndex=0;
         for (String[] sc : startupCommands) {
             startupCommandIndex++;
             int scStatus = sendCommand(sc[0], sc[1],true);
             if (scStatus != STATUS_OK) {
+                setLogTransactionName(null);
                 return scStatus;
             }
         }
@@ -110,10 +113,19 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
     public int getPresetNamesList(
         int firstPreset, int lastPreset, PresetRegistry presetRegistry
     ) {
-        throw new UnsupportedOperationException(String.format(
-            "%s does not support %s",
-            this.getClass().getSimpleName(), "getPresetNamesList(...)"
-        ));
+        setLogTransactionName("classicPresetList");
+        int scStatus = sendCommand("ff:c1", "preset list request",true);
+        setLogTransactionName(null);
+        if (scStatus != STATUS_OK) {
+            return scStatus;
+        }
+        for(int slotIndex=0; slotIndex<m_presetRecords.size();slotIndex++ ) {
+            PresetRecord pr = m_presetRecords.get(slotIndex);
+            if(pr!=null) {
+                presetRegistry.register(slotIndex, pr.displayName(), pr.prettyJson().getBytes());
+            }
+        }
+        return STATUS_OK;
     }
 
     @Override
@@ -303,11 +315,26 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
             System.arraycopy(packetBuffer, 0, assemblyBuffer, assemblyBufferOffset, contentLength);
             assemblyBufferOffset+=contentLength;
 
+            String b2hex2 = bufferToHex2(packetBuffer,">");
+
             if(
                 (m_firmwareVersion==null) &&
-                bufferToHex2(packetBuffer,">").startsWith("> [64]: 01 00")
+                b2hex2.startsWith("> [64]: 01 00") &&
+                (packetBuffer.length >= 4)
             ) {
                 m_firmwareVersion=String.format("%d.%d",(int)packetBuffer[2],(int)packetBuffer[3]);
+            }
+
+            if(b2hex2.startsWith("> [64]: 1c 01")) {
+                int presetSlot = (int) packetBuffer[4];
+                int whichSlotAttribute = (int) packetBuffer[2];
+                if( (whichSlotAttribute==4) && (m_presetRecords.get(presetSlot)==null) ) {
+                    String presetName = new String(packetBuffer,16,48);
+                    presetName = presetName.substring(0,presetName.indexOf(0));
+                    PresetJO pjo = new PresetJO(presetName);
+                    PresetRecord pr = new PresetRecord(presetName, pjo.toString().getBytes());
+                    m_presetRecords.add(presetSlot, pr);
+                }
             }
 
             /*
