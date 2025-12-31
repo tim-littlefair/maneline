@@ -76,7 +76,9 @@ public class PresetRecord {
             PCS_Node node :
             m_presetCanonicalSerializer.audioGraph.nodes
         ) {
-            if (node.nodeId.equals(whichModule)) {
+            if(node==null) {
+                return "-";
+            } else if (node.nodeId.equals(whichModule)) {
                 return node.FenderId.
                     // LT40S prefix
                     replace("DUBS_", "").
