@@ -73,7 +73,7 @@ end
 function Fhau:start_fhau_cli()
     local jar_file_path=os.getenv("cli_jar")
     fhau_cli_input_fd = io.popen(
-        "java -jar " .. jar_file_path .. " --web=" .. session_name,
+        "java -ea -jar " .. jar_file_path .. " --web=" .. session_name,
         "w"
     )
 end
