@@ -180,7 +180,7 @@ public class PresetRegistry implements IPresetResponseReader {
 
     public void register(int slotIndex, String name, byte[] definition) {
         // Slots are numbered from 1
-        assert slotIndex > 0;
+        assert slotIndex >= 0;
         // This registry requires a definition
         assert definition != null;
 

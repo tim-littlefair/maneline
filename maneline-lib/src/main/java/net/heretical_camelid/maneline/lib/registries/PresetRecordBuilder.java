@@ -22,12 +22,12 @@ public class PresetRecordBuilder {
         m_pcs = new PresetCanonicalSerializer();
         m_pcs.info = new PresetCanonicalSerializer.PCS_Info();
         m_pcs.audioGraph = new PresetCanonicalSerializer.PCS_AudioGraph();
-        m_pcs.audioGraph.nodes = new PresetCanonicalSerializer.PCS_Node[5];
+        m_pcs.audioGraph.nodes = new PCS_Node[5];
         String[] nodeIdValues = new String[]{
             "stomp", "mod", "amp", "delay", "reverb"
         };
         for (int i = 0; i < m_pcs.audioGraph.nodes.length; ++i) {
-            m_pcs.audioGraph.nodes[i] = new PresetCanonicalSerializer.PCS_Node();
+            m_pcs.audioGraph.nodes[i] = new PCS_Node();
             m_pcs.audioGraph.nodes[i].nodeId = nodeIdValues[i];
             m_pcs.audioGraph.nodes[i].FenderId = "DUBS_Passthru";
             m_pcs.audioGraph.nodes[i].dspUnitParameters = new PresetCanonicalSerializer.PCS_DspUnitParameters();

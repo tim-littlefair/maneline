@@ -1,7 +1,6 @@
 package net.heretical_camelid.maneline.lib.registries;
 
 import com.google.gson.Gson;
-import com.google.gson.annotations.Since;
 
 import java.util.Arrays;
 import java.util.List;
@@ -38,7 +37,7 @@ public class PresetCanonicalSerializer {
 
     PCS_Info info;
 
-    PCS_AudioGraph audioGraph;
+    public PCS_AudioGraph audioGraph;
 
     public PresetCanonicalSerializer() {}
     public void validate() {
@@ -77,17 +76,31 @@ public class PresetCanonicalSerializer {
         // identical parameters but different hashes due to JSON
         // element ordering.
 
-        // The canonical ordering of this array is as described in
-        // LT40S documents from Fender:
-        // stomp < mod < amp < reverb < delay
-        Arrays.sort(audioGraph.nodes);
+        // Sorting is only safe if all nodes are non-null
+        // null nodes can occur during processing for
+        // ClassicSeriesProtocol.getPresetNames(), but by
+        // the end of that function all nodes should be fully
+        // populated
+        boolean shouldSortNodes=true;
+        for(PCS_Node n: audioGraph.nodes) {
+            if(n==null) {
+                shouldSortNodes=false;
+                break;
+            }
+        }
+        if(shouldSortNodes) {
+            // The canonical ordering of this array is as described in
+            // LT40S documents from Fender:
+            // stomp < mod < amp < reverb < delay
+            Arrays.sort(audioGraph.nodes);
+        }
 
         // It does not appear to be necessary to sort the connections
         // array
     }
 
-    static class PCS_AudioGraph {
-        PCS_Node[] nodes;
+    public static class PCS_AudioGraph {
+        public PCS_Node[] nodes;
         PCS_Connection[] connections;
     }
 
@@ -102,26 +115,6 @@ public class PresetCanonicalSerializer {
         boolean is_factory_default = true;
         int bpm;
         PCS_Info() { }
-    }
-
-    static class PCS_Node implements Comparable<PCS_Node> {
-        String nodeId;
-        String dspUnit;
-        String FenderId;
-
-        // We want to be able to calculate a hash which excludes
-        // the dspUnitParameters subtrees so that we can easily
-        // spot pairs or sets of presets which use the same
-        // DSP unit type but differ in unit parameters only.
-        // The @Since(91) annotation allows us to do this
-        @Since(91)
-        PCS_DspUnitParameters dspUnitParameters;
-        PCS_Node() {}
-        public int compareTo(PCS_Node other) {
-            int nodeid_index_this = _NODEID_ORDER.indexOf(this.nodeId);
-            int nodeid_index_other = _NODEID_ORDER.indexOf(other.nodeId);
-            return Integer.compare(nodeid_index_this, nodeid_index_other);
-        }
     }
 
     static class PCS_DspUnitParameters {

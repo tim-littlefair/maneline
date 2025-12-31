@@ -1,17 +1,158 @@
 package net.heretical_camelid.maneline.lib.utilities;
 
+import net.heretical_camelid.maneline.lib.registries.PCS_Node;
+import net.heretical_camelid.maneline.lib.registries.PresetRecord;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class PresetJO extends JSONObject {
-    public PresetJO(String presetName) {
-        JSONObject info = new JSONObject();
-        info.put("displayName", presetName);
-        this.put("info", info);
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
-        JSONArray audioGraph_Nodes = new JSONArray();
-        JSONObject audioGraph = new JSONObject();
-        audioGraph.put("nodes",audioGraph_Nodes);
-        this.put("audioGraph", audioGraph);
+public class PresetJO extends JSONObject {
+
+    // convenient debug utility, should always be no-op for checked in code
+    static private void _trace(Object msg) {
+        // System.out.println(msg);
     }
+
+    // The default constructor of org.json.JSONObject will
+    // use an implementation of Map which does not preserve
+    // ordering of keys.
+    // While this is faithful to the semantics of JSON as
+    // defined in RFC 7159, for our application we want to
+    // be able to compare objects of the extended class for
+    // equivalence, and it is convenient to do this by
+    // equality of serialization.
+    // By using the constructor which accepts a preexisting
+    // Map implementation object (both for the derived class
+    // (Java) object itself and for all instances of
+    // org.json.JSONObject attached to it, we are able to lock
+    // in stable ordering behavour.
+    static private Map<String,Object> createMapImplementation() {
+        return new TreeMap<String,Object>();
+    }
+    static public PresetJO create(String presetName) {
+        PresetJO createdJO = new PresetJO();
+
+        JSONObject audioGraph = new JSONObject(createMapImplementation());
+        audioGraph.put("nodes", new JSONArray(5));
+        createdJO.put("audioGraph", audioGraph);
+        createdJO.m_audioGraph_nodes = (JSONArray) getSubObject(
+            createdJO,
+            List.of(new Object[]{"audioGraph", "nodes"})
+        );
+        createdJO.m_audioGraph_nodes.put(4,(JSONObject) null);
+
+        JSONObject info = new JSONObject(createMapImplementation());
+        info.put("displayName", presetName);
+        createdJO.put("info", info);
+
+        return createdJO;
+    }
+
+    static public PresetJO create(PresetRecord pr) {
+        PresetJO createdJO = create(pr.displayName());
+        // For now, PresetRecord is implemented on top of com.google.gson.JsonObject,
+        // while the current class is based on org.json.JSONObject.
+        // Some time soon I will probably refactor the registry to use org.json framework
+        // but for now we need to translate between the comparable but not equivalent
+        // JSON frameworks.
+        PCS_Node[] nodes = pr.getPCS().audioGraph.nodes;
+        assert nodes.length == createdJO.m_audioGraph_nodes.length();
+        for(int i=0; i<nodes.length; ++i) {
+            PCS_Node node = nodes[i];
+            if(node!=null) {
+                createdJO.addAudioGraphNode(node.FenderId, node.nodeId, null, i);
+            }
+        }
+        return createdJO;
+    }
+
+    static private Object getSubObject(Object target, List<Object> keySeq) {
+        for(Object k: keySeq) {
+            _trace(k);
+            if(target instanceof JSONObject) {
+                assert k instanceof String;
+                target = ((JSONObject)target).get((String)k);
+            } else if(target instanceof JSONArray) {
+                assert k instanceof Integer;
+                target = ((JSONArray)target).get((int) k);
+            } else {
+                return null;
+            }
+            _trace(target);
+        }
+        return target;
+    }
+
+    private JSONArray m_audioGraph_nodes;
+    private PresetJO() {
+        super(createMapImplementation());
+    }
+
+
+     public void addAudioGraphNode(
+         String fenderId, String nodeId, String dspUnitParametersJson, int pos
+     ) {
+         JSONObject node = new JSONObject(createMapImplementation());
+         node.put("FenderId", fenderId);
+         node.put("nodeId", nodeId);
+         node.put("dspUnitParameters", createMapImplementation());
+         // TODO handle params
+         // assert m_audioGraph_nodes.isNull(pos);
+         m_audioGraph_nodes.put(pos,node);
+     }
+
+    public PresetRecord exportPresetRecord() {
+        return new PresetRecord(
+            (String) getSubObject(this, List.of("info", "displayName")),
+            this.toString().getBytes(StandardCharsets.UTF_8)
+        );
+    }
+
+     static public void main(String args[]) {
+
+         PresetJO testPreset1 = create("testPreset1");
+         System.out.println(testPreset1.toString(4));
+         JSONArray nodesArray1 = testPreset1.m_audioGraph_nodes;
+         assert nodesArray1 != null;
+         assert nodesArray1.length()==5;
+         for(int i=0; i<nodesArray1.length(); ++i) {
+             assert nodesArray1.isNull(i);
+         }
+
+         PresetJO testPreset2 = create("testPreset2");
+         testPreset2.addAudioGraphNode(
+             "Deluxe65", "amp",
+             "{}",
+             2
+         );
+         System.out.println(testPreset2.toString(4));
+         assert testPreset2.m_audioGraph_nodes.length() == 5;
+         String ampFenderId = (String) getSubObject(
+             testPreset2,
+             List.of("audioGraph","nodes", 2, "FenderId")
+         );
+         assert ampFenderId.equals("Deluxe65");
+
+         PresetJO testPreset3 = create(testPreset2.exportPresetRecord());
+         testPreset3.addAudioGraphNode("Passthru","stomp",null,0);
+         testPreset3.addAudioGraphNode("SineTremolo","mod",null,1);
+         testPreset3.addAudioGraphNode("Passthru","delay",null,3);
+         testPreset3.addAudioGraphNode("Passthru","reverb",null,4);
+         System.out.println(testPreset3.toString(4));
+         // The hash below needs to be maintained manually
+         PresetRecord pr3 = testPreset3.exportPresetRecord();
+         String expectedHash = "7b19-14e2";
+         assert pr3.audioHash().equals(expectedHash): String.format(
+             "audioHash mismatch: expected=%s actual=%s",
+             expectedHash, pr3.audioHash()
+         );
+
+         System.exit(0);
+     }
+
 }

@@ -3,8 +3,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.nio.charset.StandardCharsets;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class PresetRecord {
 
@@ -75,7 +73,7 @@ public class PresetRecord {
 
     public String moduleName(String whichModule) {
         for (
-            PresetCanonicalSerializer.PCS_Node node :
+            PCS_Node node :
             m_presetCanonicalSerializer.audioGraph.nodes
         ) {
             if (node.nodeId.equals(whichModule)) {
@@ -135,9 +133,12 @@ public class PresetRecord {
         StringBuilder sb = new StringBuilder();
         boolean insertSeparator = false;
         for (
-            PresetCanonicalSerializer.PCS_Node node :
+            PCS_Node node :
             m_presetCanonicalSerializer.audioGraph.nodes
         ) {
+            if(node==null) {
+                continue;
+            }
             String nextNodeType = node.nodeId;
             String nodeName = node.FenderId.replace("DUBS_", "");
             if (!nodeName.equals("Passthru")) {
@@ -200,5 +201,9 @@ public class PresetRecord {
             m_presetCanonicalSerializer
         );
         return retval;
+    }
+
+    public PresetCanonicalSerializer getPCS() {
+        return m_presetCanonicalSerializer;
     }
 }

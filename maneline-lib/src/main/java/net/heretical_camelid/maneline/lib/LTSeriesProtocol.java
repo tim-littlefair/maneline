@@ -1,22 +1,14 @@
 package net.heretical_camelid.maneline.lib;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
-
 import net.heretical_camelid.maneline.lib.interfaces.IPresetResponseReader;
 import net.heretical_camelid.maneline.lib.registries.PresetRegistry;
 import net.heretical_camelid.maneline.lib.registries.PresetRecord;
 import net.heretical_camelid.maneline.lib.utilities.ByteArrayTranslator;
 import net.heretical_camelid.maneline.lib.utilities.RawProtobufUtilities;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 
 // Useful reference:
 // https://github.com/brentmaxwell/LtAmp/tree/main/Schema/protobuf
@@ -38,7 +30,6 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         "UNSUPPORTED", "FAILED", "INVALID_PARAM", "INVALID_NODE_ID",
         "PARAM_OUT_OF_BOUNDS", "FACTORY_RESTORE_IN_PROGRESS"
     };
-    static IPresetResponseReader s_presetResponseReader = null;
 
     final boolean m_processResponsesAfterHeartbeat;
 
@@ -46,9 +37,6 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
     int m_modalState;
     String m_firmwareVersion;
     String m_productIdentifier;
-
-    int m_currentPresetIndex;
-    String m_currentPresetDetails;
 
     final Thread m_heartbeatThread;
     int m_heartbeatsSentSinceLastLog = 0;
@@ -64,11 +52,10 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         boolean startHeartbeat,
         boolean processResponsesAfterHeartbeat
     ) {
+        super();
         m_modalContext = -1;
         m_modalState = -1;
         m_firmwareVersion = null;
-        m_currentPresetIndex = -1;
-        m_currentPresetDetails = null;
 
         // On the Android app, the app stops working if we check
         // for responses after a heartbeat, so we can't do that.
@@ -479,77 +466,6 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         }
 
         return STATUS_OK;
-    }
-
-    private void logCurrentPresetDetails() {
-        PresetRecord currentPresetRecord = PresetRegistry.getPresetRecord(m_currentPresetIndex);
-        if(currentPresetRecord!=null) {
-            String displayName = currentPresetRecord.displayName().strip().replaceAll("\\s+"," ");
-            String effectDetails = currentPresetRecord.effects(
-                PresetRecord.EffectsLevelOfDetails.MODULES_AND_PARAMETERS
-            );
-            m_currentPresetDetails = String.format(
-                "Preset info: name=%s (slot=%02d)\nAudio graph:\n%s",
-                displayName,m_currentPresetIndex,effectDetails
-            );
-            log(m_currentPresetDetails);
-            if(s_outputPath!=null) {
-                try {
-                    FileOutputStream productInfoStream = new FileOutputStream(
-                        s_outputPath + "/current-preset-details.txt"
-                    );
-                    productInfoStream.write(m_currentPresetDetails.getBytes(Charset.defaultCharset()));
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-            HashMap<String,String > lcdAttributes = new HashMap<String,String>();
-
-            JsonObject presetDetails = new JsonObject();
-            presetDetails.add(
-                "psslot",
-                new JsonPrimitive(String.format("%02d",m_currentPresetIndex))
-            );
-            presetDetails.add(
-                "psname1",
-                new JsonPrimitive(currentPresetRecord.displayName().substring(0,8).strip())
-            );
-            presetDetails.add(
-                "psname2",
-                new JsonPrimitive(currentPresetRecord.displayName().substring(8).strip())
-            );
-            presetDetails.add(
-                "psmodule1",
-                new JsonPrimitive(currentPresetRecord.moduleName("stomp"))
-            );
-            presetDetails.add( "psmodule2",
-                new JsonPrimitive(currentPresetRecord.moduleName("mod"))
-            );
-            presetDetails.add( "psmodule3",
-                new JsonPrimitive(currentPresetRecord.moduleName("amp"))
-            );
-            presetDetails.add( "psmodule4",
-                new JsonPrimitive(currentPresetRecord.moduleName("delay"))
-            );
-            presetDetails.add( "psmodule5",
-                new JsonPrimitive(currentPresetRecord.moduleName("reverb"))
-            );
-
-            FileOutputStream presetDetailsStream = null;
-            try {
-                presetDetailsStream = new FileOutputStream(
-                    "./preset-details.json"
-                );
-                presetDetailsStream.write(presetDetails.toString().getBytes());
-                presetDetailsStream.close();
-            } catch (FileNotFoundException e) {
-                throw new RuntimeException(e);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        } else {
-            m_currentPresetDetails = "No preset record found for index " + m_currentPresetIndex;
-        }
     }
 
     private int readAndAssembleResponsePackets(ArrayList<String> readPhaseLogMessages) {

@@ -1,9 +1,18 @@
 package net.heretical_camelid.maneline.lib;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+
 import net.heretical_camelid.maneline.lib.interfaces.IDeviceTransport;
 import net.heretical_camelid.maneline.lib.interfaces.ILoggingAgent;
+import net.heretical_camelid.maneline.lib.interfaces.IPresetResponseReader;
+import net.heretical_camelid.maneline.lib.registries.PresetRecord;
 import net.heretical_camelid.maneline.lib.registries.PresetRegistry;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -16,7 +25,11 @@ import java.util.regex.Pattern;
  * implementation is expected to provide.
  */
 public abstract class AbstractMessageProtocolBase {
+    static IPresetResponseReader s_presetResponseReader = null;
     private static ILoggingAgent s_loggingAgent = null;
+    int m_currentPresetIndex;
+    String m_currentPresetDetails;
+
     public static void setLoggingAgent(ILoggingAgent loggingAgent) {
         s_loggingAgent = loggingAgent;
     }
@@ -53,6 +66,8 @@ public abstract class AbstractMessageProtocolBase {
 
     protected AbstractMessageProtocolBase() {
         m_deviceTransport = null;
+        m_currentPresetIndex = -1;
+        m_currentPresetDetails = null;
     }
 
     public void setDeviceTransport(IDeviceTransport deviceTransport) {
@@ -160,6 +175,77 @@ public abstract class AbstractMessageProtocolBase {
     void setLogTransactionName(String transactionName) {
         assert s_loggingAgent != null;
         s_loggingAgent.setTransactionName(transactionName);
+    }
+
+    protected void logCurrentPresetDetails() {
+        PresetRecord currentPresetRecord = PresetRegistry.getPresetRecord(m_currentPresetIndex);
+        if(currentPresetRecord!=null) {
+            String displayName = currentPresetRecord.displayName().strip().replaceAll("\\s+"," ");
+            String effectDetails = currentPresetRecord.effects(
+                PresetRecord.EffectsLevelOfDetails.MODULES_AND_PARAMETERS
+            );
+            m_currentPresetDetails = String.format(
+                "Preset info: name=%s (slot=%02d)\nAudio graph:\n%s",
+                displayName,m_currentPresetIndex,effectDetails
+            );
+            log(m_currentPresetDetails);
+            if(LTSeriesProtocol.s_outputPath !=null) {
+                try {
+                    FileOutputStream productInfoStream = new FileOutputStream(
+                        LTSeriesProtocol.s_outputPath + "/current-preset-details.txt"
+                    );
+                    productInfoStream.write(m_currentPresetDetails.getBytes(Charset.defaultCharset()));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            HashMap<String,String > lcdAttributes = new HashMap<String,String>();
+
+            JsonObject presetDetails = new JsonObject();
+            presetDetails.add(
+                "psslot",
+                new JsonPrimitive(String.format("%02d",m_currentPresetIndex))
+            );
+            presetDetails.add(
+                "psname1",
+                new JsonPrimitive(currentPresetRecord.displayName().substring(0,8).strip())
+            );
+            presetDetails.add(
+                "psname2",
+                new JsonPrimitive(currentPresetRecord.displayName().substring(8).strip())
+            );
+            presetDetails.add(
+                "psmodule1",
+                new JsonPrimitive(currentPresetRecord.moduleName("stomp"))
+            );
+            presetDetails.add( "psmodule2",
+                new JsonPrimitive(currentPresetRecord.moduleName("mod"))
+            );
+            presetDetails.add( "psmodule3",
+                new JsonPrimitive(currentPresetRecord.moduleName("amp"))
+            );
+            presetDetails.add( "psmodule4",
+                new JsonPrimitive(currentPresetRecord.moduleName("delay"))
+            );
+            presetDetails.add( "psmodule5",
+                new JsonPrimitive(currentPresetRecord.moduleName("reverb"))
+            );
+
+            FileOutputStream presetDetailsStream = null;
+            try {
+                presetDetailsStream = new FileOutputStream(
+                    "./preset-details.json"
+                );
+                presetDetailsStream.write(presetDetails.toString().getBytes());
+                presetDetailsStream.close();
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            m_currentPresetDetails = "No preset record found for index " + m_currentPresetIndex;
+        }
     }
 }
 
