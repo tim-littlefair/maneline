@@ -132,7 +132,7 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
             log("Heartbeat thread is already started");
         } else {
             log("NOT starting heartbeat thread");
-            // m_heartbeatThread.start();
+            m_heartbeatThread.start();
         }
     }
 
