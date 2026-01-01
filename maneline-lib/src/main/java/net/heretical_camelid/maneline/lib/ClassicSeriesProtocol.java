@@ -18,8 +18,6 @@ import java.util.Collections;
  * doc/Technicalities.md
  */
 public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
-    static IPresetResponseReader s_presetResponseReader = null;
-
     final boolean m_processResponsesAfterHeartbeat;
 
     final Thread m_heartbeatThread;

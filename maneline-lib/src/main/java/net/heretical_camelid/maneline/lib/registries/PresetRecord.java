@@ -7,7 +7,7 @@ import java.nio.charset.StandardCharsets;
 public class PresetRecord {
 
     final String m_name;
-    final String m_definitionRawJson;
+    final String m_rawDefinition;
     final PresetCanonicalSerializer m_presetCanonicalSerializer;
     String m_audioHash = null;
 
@@ -48,9 +48,9 @@ public class PresetRecord {
 
     public PresetRecord(String name, byte[] definitionBytes) {
         m_name = name;
-        m_definitionRawJson = new String(definitionBytes, StandardCharsets.UTF_8);
+        m_rawDefinition = new String(definitionBytes, StandardCharsets.UTF_8);
         m_presetCanonicalSerializer = PresetRegistry.s_gsonCompact.fromJson(
-            m_definitionRawJson,
+            m_rawDefinition,
             PresetCanonicalSerializer.class
         );
 

@@ -146,7 +146,7 @@ function Web_UI:build_session_presets_html(session_name)
             table.insert(preset_row_data, p.module5)
             table.insert(
                 preset_row_data,
-                "./presets/@subpage.pretty_preset.json"
+                "./presets/@subpage.json"
             )
             table.insert(preset_table_data,preset_row_data)
         end
