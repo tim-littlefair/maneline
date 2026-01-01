@@ -102,13 +102,14 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
 
     @Override
     public int getPresetNamesList(PresetRegistry presetRegistry) {
-        setLogTransactionName("classicPresetList");
         s_presetResponseReader = presetRegistry;
 
+        setLogTransactionName("classicPresetList");
         // This function sends the third packet described here:
         // https://github.com/offa/plug/blob/master/doc/Technicalities.md#2-connecting
         int scStatus = sendCommand("ff:c1", "preset list request",true);
         setLogTransactionName(null);
+
         if (scStatus != STATUS_OK) {
             s_presetResponseReader = null;
             return scStatus;
@@ -130,8 +131,8 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
         } else if(m_heartbeatThread.isAlive()) {
             log("Heartbeat thread is already started");
         } else {
-            log("Starting heartbeat thread");
-            m_heartbeatThread.start();
+            log("NOT starting heartbeat thread");
+            // m_heartbeatThread.start();
         }
     }
 
@@ -198,7 +199,6 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
             loggingRequired = false;
             status = STATUS_OK;
         } else {
-            readPhaseLogMessages.clear();
             bytesRead = readAndAssembleResponsePackets(readPhaseLogMessages, loggingRequired);
             if (bytesRead < 0) {
                 loggingRequired = true;
@@ -231,6 +231,7 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
             for(String rplm: readPhaseLogMessages) {
                 log(rplm);
             }
+            readPhaseLogMessages.clear();
             if(bytesWritten<0 || bytesRead<0) {
                 log(String.format(
                     "Command error: write_result=%d read_result=%d status=%d transport_message=%s",
@@ -244,7 +245,6 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
         } else {
             ++m_heartbeatsSentSinceLastLog;
         }
-        readPhaseLogMessages.clear();
         return status;
     }
 
@@ -316,6 +316,7 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
             // implemented the messageComplete boolean will be set to true.
         }
 
+        // /*
         assemblyBuffer = copyOfRange(assemblyBuffer, 0, assemblyBufferOffset);
         if(loggingRequired==true) {
             readPhaseLogMessages.add(String.format(
@@ -330,9 +331,11 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
         while(assemblyBuffer.length>0) {
             byte[] packet64 = Arrays.copyOfRange(assemblyBuffer,0,64);
             String b2hex2 = bufferToHex2(packet64, ">");
+            boolean savePreset = false;
             if (b2hex2.startsWith("> [64]: 00 ...")) {
                 // 64 NUL bytes - no meaning, not worth logging
-                continue;
+            } else if(b2hex2.startsWith("> [64]: 1c 01 00 ...")) {
+                // also not worth logging
             } else if (
                 (m_firmwareVersion == null) &&
                     b2hex2.startsWith("> [64]: 01 00") &&
@@ -342,9 +345,8 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
                 readPhaseLogMessages.add(
                     String.format("Firmware version packet=%s", b2hex2)
                 );
-            } else if (b2hex2.startsWith("> [64]: 1c 01 04")) {
+            } else if (b2hex2.startsWith("> [64]: 1c 01 04 00")) {
                 int presetSlot = (int) assemblyBuffer[4];
-                int whichSlotAttribute = (int) assemblyBuffer[2];
                 if (m_presetRecords.get(presetSlot) == null) {
                     String presetName = new String(assemblyBuffer, 16, 48);
                     presetName = presetName.substring(0, presetName.indexOf(0));
@@ -354,11 +356,24 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
                     readPhaseLogMessages.add(
                         String.format("Packet containing name of preset %d (first time)=%s", presetSlot, b2hex2)
                     );
+                    savePreset=true;
                 } else {
                     readPhaseLogMessages.add(
                         String.format("Packet containing name of preset %d (already seen)=%s", presetSlot, b2hex2)
                     );
                 }
+            } else if (b2hex2.startsWith("> [64]: 1c 01 04")) {
+                int dspUnitIndex = (int) assemblyBuffer[3];
+                int presetSlot = (int) assemblyBuffer[4];
+                PresetRecord pr = m_presetRecords.get(presetSlot);
+                assert pr != null;
+                String dspUnitName = new String(assemblyBuffer, 16, 48);
+                dspUnitName = dspUnitName.substring(0, dspUnitName.indexOf(0));
+                PresetJO pjo = PresetJO.create(pr);
+                readPhaseLogMessages.add(String.format(
+                    "Packet containing name %s for dspUnit %d of preset %03d: %s",
+                    dspUnitName, dspUnitIndex, presetSlot, b2hex2
+                ));
             } else if (b2hex2.startsWith("> [64]: 1c 01")) {
                 int presetSlot = (int) assemblyBuffer[4];
                 PresetRecord pr = m_presetRecords.get(presetSlot);
@@ -372,19 +387,19 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
                     case 5:
                         nodeId = "amp";
                         pos = 2;
-                    break;
+                        break;
                     case 6:
                         nodeId = "stomp";
                         pos = 0;
-                    break;
+                        break;
                     case 7:
                         nodeId = "mod";
                         pos = 1;
-                    break;
+                        break;
                     case 8:
                         nodeId = "delay";
                         pos = 3;
-                    break;
+                        break;
                     case 9:
                         nodeId = "reverb";
                         pos = 4;
@@ -398,13 +413,17 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
                             s_presetResponseReader.notifyPresetResponse(presetSlot, pjo.toString(4));
                         }
                         break;
+                    case 0x00:
+                        // This appears frequently and has no non-null bytes after the 1c 01
+                        // no need to log it
+                        break;
                     default:
                         readPhaseLogMessages.add(String.format(
                             "Unexpected DSP packet type %d in packet %s",
                             dspPacketType, b2hex2
                         ));
                 }
-                if(pos!=-1) {
+                if((savePreset==true) && (pos!=-1)) {
                     if (nodeFenderId == null) {
                         nodeFenderId = String.format("%s-%03d", nodeId, presetSlot);
                     }
@@ -419,12 +438,13 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
                     String.format("Unclassifed packet=%s", b2hex2)
                 );
             }
-            if(loggingRequired==true) {
-                for(String rplm: readPhaseLogMessages) {
-                    log(rplm);
-                }
-            }
             assemblyBuffer = copyOfRange(assemblyBuffer, 64, assemblyBuffer.length);
+        }
+        // */
+        if(loggingRequired==true) {
+            for(String rplm: readPhaseLogMessages) {
+                log(rplm);
+            }
         }
 
         return STATUS_OK;
