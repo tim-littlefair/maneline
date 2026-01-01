@@ -126,7 +126,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
                 outputDir.mkdirs();
             }
             assert outputDir.exists() : "Failed to create output directory";
-            LTSeriesProtocol.setOutputPath(outputPath);
+            AbstractMessageProtocolBase.setOutputPath(outputPath);
         }
         m_outputPath = outputPath;
 

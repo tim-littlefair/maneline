@@ -35,17 +35,11 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
 
     int m_modalContext;
     int m_modalState;
-    String m_firmwareVersion;
     String m_productIdentifier;
 
     final Thread m_heartbeatThread;
     int m_heartbeatsSentSinceLastLog = 0;
     boolean m_heartbeatStopped = false;
-
-    static String s_outputPath = null;
-    public static void setOutputPath(String outputPath) {
-        s_outputPath = outputPath;
-    }
 
 
     public LTSeriesProtocol(
@@ -55,7 +49,6 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         super();
         m_modalContext = -1;
         m_modalState = -1;
-        m_firmwareVersion = null;
 
         // On the Android app, the app stops working if we check
         // for responses after a heartbeat, so we can't do that.
@@ -163,11 +156,6 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         };
         // s_presetResponseReader = null;
         return retval[0];
-    }
-
-    @Override
-    public String getFirmwareVersion() {
-        return m_firmwareVersion;
     }
 
     @Override

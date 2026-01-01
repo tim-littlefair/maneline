@@ -18,6 +18,16 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+enum ModalContext_e {
+    MC_INITIAL,
+    MC_CONNECTING,
+    MC_GETTING_PRESET_NAMES,
+    MC_GETTING_PRESET_DEFINITIONS,
+    MC_RUNNING,
+    MC_FAILED,
+    MD_EXITED,
+};
+
 /**
  * This class provides some shared utility functions required
  * for message protocol implementation classes, and defines
@@ -26,12 +36,20 @@ import java.util.regex.Pattern;
  */
 public abstract class AbstractMessageProtocolBase {
     static IPresetResponseReader s_presetResponseReader = null;
+    static String s_outputPath = null;
     private static ILoggingAgent s_loggingAgent = null;
     int m_currentPresetIndex;
     String m_currentPresetDetails;
+    String m_firmwareVersion;
+    ModalContext_e m_modalContext;
+
 
     public static void setLoggingAgent(ILoggingAgent loggingAgent) {
         s_loggingAgent = loggingAgent;
+    }
+
+    public static void setOutputPath(String outputPath) {
+        s_outputPath = outputPath;
     }
 
     // Abstract interface begins
@@ -45,7 +63,9 @@ public abstract class AbstractMessageProtocolBase {
 
     public abstract String getStatus();
 
-    public abstract String getFirmwareVersion();
+    public String getFirmwareVersion() {
+        return m_firmwareVersion;
+    }
 
     // future
     // public abstract String getPresetDefinition(int slotIndex);
@@ -68,6 +88,8 @@ public abstract class AbstractMessageProtocolBase {
         m_deviceTransport = null;
         m_currentPresetIndex = -1;
         m_currentPresetDetails = null;
+        m_modalContext = ModalContext_e.MC_INITIAL;
+        m_firmwareVersion = null;
     }
 
     public void setDeviceTransport(IDeviceTransport deviceTransport) {
@@ -81,7 +103,7 @@ public abstract class AbstractMessageProtocolBase {
                 "Logged to txn %s: %s",
                 s_loggingAgent.getTransactionName(), message
             ));
-             */
+            // */
         } else {
             System.out.println(message);
         }
@@ -106,8 +128,8 @@ public abstract class AbstractMessageProtocolBase {
     // This function is based on upstream hid4java's BaseExample.printAsHex()
     // The original prints a buffer in full regardless of whether
     // it is mostly zero-filled.
-    // This variant replaces trailing zero bytes with '...'
-    // (if and only if at least one trailing zero byte is present).
+    // This variant replaces trailing zero bytes with '00 ...'
+    // (if and only if at least two trailing zero bytes are present).
     // This allows larger buffers to be used without blowing out
     // log files with empty bytes (e.g. for the report descriptor).
     // This variant is also suitable for use with both sent
@@ -189,10 +211,10 @@ public abstract class AbstractMessageProtocolBase {
                 displayName,m_currentPresetIndex,effectDetails
             );
             log(m_currentPresetDetails);
-            if(LTSeriesProtocol.s_outputPath !=null) {
+            if(AbstractMessageProtocolBase.s_outputPath !=null) {
                 try {
                     FileOutputStream productInfoStream = new FileOutputStream(
-                        LTSeriesProtocol.s_outputPath + "/current-preset-details.txt"
+                        AbstractMessageProtocolBase.s_outputPath + "/current-preset-details.txt"
                     );
                     productInfoStream.write(m_currentPresetDetails.getBytes(Charset.defaultCharset()));
                 } catch (IOException e) {
