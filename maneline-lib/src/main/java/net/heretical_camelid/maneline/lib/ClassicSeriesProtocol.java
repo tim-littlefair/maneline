@@ -95,7 +95,7 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
         }
 
         s_presetResponseReader = presetRegistry;
-        for(int presetIndex=m_minPresetIndex; presetIndex<m_maxPresetIndex;presetIndex++ ) {
+        for(int presetIndex=m_minPresetIndex; presetIndex<=m_maxPresetIndex;presetIndex++ ) {
             int presetDefinitionStatus = getPresetDefinition(presetIndex, presetRegistry);
             if(presetDefinitionStatus!=STATUS_OK) {
                 scStatus = STATUS_PRESET_FAIL;
@@ -361,20 +361,21 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
             String nodeId = null;
             int effectSlot=(int) packet64[18];
             int nodeIndex;
-            if(effectSlot>3) {
+            if(effectSlot<5) {
                 nodeIndex = effectSlot;
             } else {
-                // the amplifier sits between slot 3 and slot 4
-                // so nodeIndex values assigned to slots 4-7 are
+                // the amplifier sits between effect slot 4 and effect slot 5
+                // so nodeIndex values assigned to slots 5-8 are
                 // one greater than the slot number
-                nodeIndex = effectSlot;
+                nodeIndex = effectSlot + 1;
             }
-            int dspPacketType = packet64[2];
+            int dspPacketType = 0xff & packet64[2];
+            int ampOrEffectModelId = 0xff & packet64[16];
             switch(dspPacketType) {
                 case 5:
                     nodeId = "amp";
                     assert effectSlot==0;
-                    nodeIndex = 4;
+                    nodeIndex = 5;
                     break;
                 case 6:
                     nodeId = "stomp";
@@ -393,15 +394,15 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
                     nodeId = String.format("?dspType-%02x?", dspPacketType);
                     nodeIndex = -1;
             }
+            if (nodeFenderId == null) {
+                nodeFenderId = String.format("%s-%03d", nodeId, ampOrEffectModelId);
+            }
             readPhaseLogMessages.add(String.format(
-                "DSP packet type for nodeId %s at nodeIndex %d: %s: ",
-                nodeId, nodeIndex, b2hex2
+                "DSP packet type for %s:%s at nodeIndex %d: %s: ",
+                nodeId, nodeFenderId, nodeIndex, b2hex2
             ));
             if(m_presetDefinitionBeingPopulated!=null) {
                 if(dspPacketType==0) {
-                    if (nodeFenderId == null) {
-                        nodeFenderId = String.format("%s-%03d", nodeId, presetIndex);
-                    }
                     m_presetRecords.add(
                         presetIndex,
                         m_presetDefinitionBeingPopulated.exportPresetRecord()

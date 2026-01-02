@@ -250,6 +250,8 @@ public class PresetRegistry implements IPresetResponseReader {
                 new PresetCsvGenerator(outputPathBase + "presets.csv")
             );
 
+
+            /*
             // Export suite records
             String suitePathPrefix =  outputPathBase + "suites";
             m_suiteNumber = 0;
@@ -287,6 +289,7 @@ public class PresetRegistry implements IPresetResponseReader {
                     ));
                 }
             }
+             */
 
             // We also create a JSON file containing presets 1-30
             System.out.println();
