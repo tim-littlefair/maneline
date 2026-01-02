@@ -90,7 +90,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
     // The LT- range consists of models with the Mustang trademark
     // prefix paired with the model numbers LT25, LT40S and LT50,
     // and also a model named Rumble LT25 (optimized for amplifying
-    // base guitars).
+    // bass guitars).
     final private static int MUSTANG_LT50_PID=0x0036;
     final private static int MUSTANG_LT25_PID=0x0037;
     final private static int RUMBLE_LT25_PID=0x0038;
