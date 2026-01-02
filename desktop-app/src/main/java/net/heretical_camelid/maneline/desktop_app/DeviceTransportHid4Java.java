@@ -5,6 +5,8 @@ import org.hid4java.HidDevice;
 
 
 class DeviceTransportHid4Java implements IDeviceTransport {
+    private final int READ_TIMEOUT_MS = 200;
+
     final HidDevice m_hidDevice;
 
     DeviceTransportHid4Java(HidDevice hidDevice) {
@@ -13,7 +15,7 @@ class DeviceTransportHid4Java implements IDeviceTransport {
 
     @Override
     public int read(byte[] packetBuffer) {
-        return m_hidDevice.read(packetBuffer, packetBuffer.length);
+        return m_hidDevice.read(packetBuffer, READ_TIMEOUT_MS);
     }
 
     @Override

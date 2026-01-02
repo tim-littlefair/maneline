@@ -159,7 +159,6 @@ public abstract class AbstractMessageProtocolBase {
                 break;
             }
         }
-        sb.append("\n");
         return sb.toString();
     }
 

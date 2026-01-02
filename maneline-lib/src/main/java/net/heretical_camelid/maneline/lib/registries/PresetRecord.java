@@ -140,6 +140,8 @@ public class PresetRecord {
         ) {
             if(node==null) {
                 continue;
+            } else if(node.FenderId==null) {
+                node.FenderId = "?";
             }
             String nextNodeType = node.nodeId;
             String nodeName = node.FenderId.replace("DUBS_", "");

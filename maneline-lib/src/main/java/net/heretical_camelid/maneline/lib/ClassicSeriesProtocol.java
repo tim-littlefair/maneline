@@ -7,6 +7,7 @@ import net.heretical_camelid.maneline.lib.registries.PresetRecord;
 import net.heretical_camelid.maneline.lib.registries.PresetRegistry;
 import net.heretical_camelid.maneline.lib.utilities.PresetJO;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -23,6 +24,11 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
     final Thread m_heartbeatThread;
     int m_heartbeatsSentSinceLastLog = 0;
     boolean m_heartbeatStopped = false;
+
+    int m_minPresetIndex = 1000;
+    int m_maxPresetIndex = -1;
+
+    PresetJO m_presetDefinitionBeingPopulated = null;
 
     ArrayList<PresetRecord> m_presetRecords = new ArrayList<>(Collections.nCopies(24,null));
 
@@ -77,26 +83,26 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
 
     @Override
     public int getPresetNamesList(PresetRegistry presetRegistry) {
-        s_presetResponseReader = presetRegistry;
         // This function sends the third packet described here:
         // https://github.com/offa/plug/blob/master/doc/Technicalities.md#2-connecting
         int scStatus = sendCommand(
-            "ff:c1", "preset list request",
+            "ff:03", "preset list request",
             true, "classicPresetList"
         );
 
         if (scStatus != STATUS_OK) {
-            s_presetResponseReader = null;
             return scStatus;
         }
-        for(int slotIndex=0; slotIndex<m_presetRecords.size();slotIndex++ ) {
-            PresetRecord pr = m_presetRecords.get(slotIndex);
-            if(pr!=null) {
-                presetRegistry.register(slotIndex, pr.displayName(), pr.prettyJson().getBytes());
+
+        s_presetResponseReader = presetRegistry;
+        for(int presetIndex=m_minPresetIndex; presetIndex<m_maxPresetIndex;presetIndex++ ) {
+            int presetDefinitionStatus = getPresetDefinition(presetIndex, presetRegistry);
+            if(presetDefinitionStatus!=STATUS_OK) {
+                scStatus = STATUS_PRESET_FAIL;
             }
         }
         s_presetResponseReader = null;
-        return STATUS_OK;
+        return scStatus;
     }
 
     @Override
@@ -106,7 +112,7 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
         } else if(m_heartbeatThread.isAlive()) {
             log("Heartbeat thread is already started");
         } else {
-            log("NOT starting heartbeat thread");
+            log("Starting heartbeat thread");
             m_heartbeatThread.start();
         }
     }
@@ -304,11 +310,7 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
     private void processPacket(ArrayList<String> readPhaseLogMessages, byte[] packet64) {
         String b2hex2 = bufferToHex2(packet64, ">");
         boolean savePreset = false;
-        if (b2hex2.startsWith("> [64]: 00 ...")) {
-            // 64 NUL bytes - no meaning, not worth logging
-        } else if(b2hex2.startsWith("> [64]: 1c 01 00 ...")) {
-            // also not worth logging
-        } else if (
+        if (
             (m_firmwareVersion == null) &&
                 b2hex2.startsWith("> [64]: 01 00") &&
                 (packet64.length >= 4)
@@ -318,91 +320,97 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
                 String.format("Firmware version packet=%s", b2hex2)
             );
         } else if (b2hex2.startsWith("> [64]: 1c 01 04 00")) {
-            int presetSlot = (int) packet64[4];
-            if (m_presetRecords.get(presetSlot) == null) {
-                String presetName = new String(packet64, 16, 48);
-                presetName = presetName.substring(0, presetName.indexOf(0));
-                PresetJO pjo = PresetJO.create(presetName);
-                PresetRecord pr = new PresetRecord(presetName, pjo.toString().getBytes());
-                m_presetRecords.add(presetSlot, pr);
-                readPhaseLogMessages.add(
-                    String.format("Packet containing name of preset %d (first time)=%s", presetSlot, b2hex2)
-                );
-                savePreset=true;
+            int presetIndex = (int) packet64[4];
+            String presetName = new String(packet64, 16, 48);
+            presetName = presetName.substring(0, presetName.indexOf(0));
+            if( presetIndex<m_minPresetIndex) {
+                m_minPresetIndex = presetIndex;
+            } else if( presetIndex>m_maxPresetIndex) {
+                m_maxPresetIndex = presetIndex;
+            } else if (m_presetDefinitionBeingPopulated!=null) {
+                readPhaseLogMessages.add(String.format(
+                    "Packet containing name '%s' for preset %d (populating)=%s",
+                    presetName, presetIndex, b2hex2
+                ));
+                m_presetDefinitionBeingPopulated.getJSONObject("info").put("displayName",presetName);
             } else {
-                readPhaseLogMessages.add(
-                    String.format("Packet containing name of preset %d (already seen)=%s", presetSlot, b2hex2)
-                );
-                m_currentPresetIndex = presetSlot;
+                readPhaseLogMessages.add(String.format(
+                    "Packet containing name '%s' for preset %d (new current)=%s",
+                    presetName, presetIndex, b2hex2
+                ));
+                m_currentPresetIndex = presetIndex;
                 logCurrentPresetDetails();
             }
         } else if (b2hex2.startsWith("> [64]: 1c 01 04")) {
             int dspUnitIndex = (int) packet64[3];
             int presetSlot = (int) packet64[4];
-            PresetRecord pr = m_presetRecords.get(presetSlot);
-            assert pr != null;
             String dspUnitName = new String(packet64, 16, 48);
             dspUnitName = dspUnitName.substring(0, dspUnitName.indexOf(0));
-            PresetJO pjo = PresetJO.create(pr);
+            if(m_presetDefinitionBeingPopulated!=null) {
+                m_presetDefinitionBeingPopulated.getJSONObject("info").put(
+                    "displayName", dspUnitName
+                );
+            }
             readPhaseLogMessages.add(String.format(
                 "Packet containing name %s for dspUnit %d of preset %03d: %s",
                 dspUnitName, dspUnitIndex, presetSlot, b2hex2
             ));
         } else if (b2hex2.startsWith("> [64]: 1c 01")) {
-            int presetSlot = (int) packet64[4];
-            PresetRecord pr = m_presetRecords.get(presetSlot);
-            PresetJO pjo = PresetJO.create(pr);
+            int presetIndex = (int) packet64[4];
             String nodeFenderId = null;
             String nodeId = null;
-            int pos=-1;
-            assert pr != null: "DSP packet for unseen preset " + presetSlot;
+            int effectSlot=(int) packet64[18];
+            int nodeIndex;
+            if(effectSlot>3) {
+                nodeIndex = effectSlot;
+            } else {
+                // the amplifier sits between slot 3 and slot 4
+                // so nodeIndex values assigned to slots 4-7 are
+                // one greater than the slot number
+                nodeIndex = effectSlot;
+            }
             int dspPacketType = packet64[2];
             switch(dspPacketType) {
                 case 5:
                     nodeId = "amp";
-                    pos = 2;
+                    assert effectSlot==0;
+                    nodeIndex = 4;
                     break;
                 case 6:
                     nodeId = "stomp";
-                    pos = 0;
                     break;
                 case 7:
                     nodeId = "mod";
-                    pos = 1;
                     break;
                 case 8:
                     nodeId = "delay";
-                    pos = 3;
                     break;
                 case 9:
                     nodeId = "reverb";
-                    pos = 4;
                     break;
 
-                case 0x0d:
-                    // This appears after all the others, we can
-                    // treat it as a sign that the preset is complete
-                    // and we can add it to the registry.
-                    if(s_presetResponseReader!=null) {
-                        s_presetResponseReader.notifyPresetResponse(presetSlot, pjo.toString(4));
-                    }
-                    break;
-                case 0x00:
-                    // This appears frequently and has no non-null bytes after the 1c 01
-                    // no need to log it
-                    break;
                 default:
-                    readPhaseLogMessages.add(String.format(
-                        "Unexpected DSP packet type %d in packet %s",
-                        dspPacketType, b2hex2
-                    ));
+                    nodeId = String.format("?dspType-%02x?", dspPacketType);
+                    nodeIndex = -1;
             }
-            if((savePreset==true) && (pos!=-1)) {
-                if (nodeFenderId == null) {
-                    nodeFenderId = String.format("%s-%03d", nodeId, presetSlot);
+            readPhaseLogMessages.add(String.format(
+                "DSP packet type for nodeId %s at nodeIndex %d: %s: ",
+                nodeId, nodeIndex, b2hex2
+            ));
+            if(m_presetDefinitionBeingPopulated!=null) {
+                if(dspPacketType==0) {
+                    if (nodeFenderId == null) {
+                        nodeFenderId = String.format("%s-%03d", nodeId, presetIndex);
+                    }
+                    m_presetRecords.add(
+                        presetIndex,
+                        m_presetDefinitionBeingPopulated.exportPresetRecord()
+                    );
+                } else if(nodeIndex!=-1) {
+                    m_presetDefinitionBeingPopulated.addAudioGraphNode(
+                        nodeFenderId, nodeId, null, nodeIndex
+                    );
                 }
-                pjo.addAudioGraphNode(nodeFenderId, nodeId, null, pos);
-                m_presetRecords.add(presetSlot, pjo.exportPresetRecord());
             }
         } else if (b2hex2.startsWith("> [64]: 00 00 1c")) {
             // with MustangIv2 firmware 2.1, this is an empty response to a heartbeat
@@ -412,5 +420,27 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
                 String.format("Unclassifed packet=%s", b2hex2)
             );
         }
+    }
+
+    private int getPresetDefinition(int slotIndex, PresetRegistry presetRegistry) {
+        String transactionName = String.format("classicGetPresetDefinition%03d", slotIndex);
+        // This function sends the packet described here:
+        // https://github.com/offa/plug/blob/master/doc/Technicalities.md#6-choosing-memory-bank
+        m_presetDefinitionBeingPopulated = PresetJO.create("");
+        int scStatus = sendCommand(
+            String.format("1c:01:01:00:%02x:00:01:00", slotIndex),
+            String.format("request for definition of preset %d",slotIndex),
+            true,
+            transactionName
+        );
+        if(scStatus==STATUS_OK) {
+            presetRegistry.register(
+                slotIndex,
+                m_presetDefinitionBeingPopulated.exportPresetRecord().displayName(),
+                m_presetDefinitionBeingPopulated.toString(4).getBytes(StandardCharsets.UTF_8)
+            );
+        }
+        m_presetDefinitionBeingPopulated = null;
+        return scStatus;
     }
 }

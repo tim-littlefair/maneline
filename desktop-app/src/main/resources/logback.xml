@@ -42,6 +42,8 @@
                 <version>[ignore]</version>
                 <logger>[ignore]</logger>
                 <levelValue>[ignore]</levelValue>
+                <level>[ignore]</level>
+                <thread>[ignore]</thread>
             </fieldNames>
         </encoder>
     </appender>

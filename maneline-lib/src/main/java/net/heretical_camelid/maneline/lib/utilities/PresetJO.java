@@ -44,7 +44,7 @@ public class PresetJO extends JSONObject {
             createdJO,
             List.of(new Object[]{"audioGraph", "nodes"})
         );
-        createdJO.m_audioGraph_nodes.put(4,(JSONObject) null);
+        createdJO.m_audioGraph_nodes.put(9,(JSONObject) null);
 
         JSONObject info = new JSONObject(createMapImplementation());
         info.put("displayName", presetName);
@@ -93,6 +93,16 @@ public class PresetJO extends JSONObject {
         super(createMapImplementation());
     }
 
+    public void addAudioGraphAmp(
+        String fenderId, String nodeId, String dspUnitParametersJson
+    ) {
+        JSONObject node = new JSONObject(createMapImplementation());
+        node.put("FenderId", fenderId);
+        node.put("nodeId", nodeId);
+        node.put("dspUnitParameters", createMapImplementation());
+        // TODO handle params
+        m_audioGraph_nodes.put(4,node);
+    }
 
      public void addAudioGraphNode(
          String fenderId, String nodeId, String dspUnitParametersJson, int pos
@@ -102,8 +112,7 @@ public class PresetJO extends JSONObject {
          node.put("nodeId", nodeId);
          node.put("dspUnitParameters", createMapImplementation());
          // TODO handle params
-         // assert m_audioGraph_nodes.isNull(pos);
-         m_audioGraph_nodes.put(pos,node);
+         m_audioGraph_nodes.put(pos<4?pos:pos+1,node);
      }
 
     public PresetRecord exportPresetRecord() {

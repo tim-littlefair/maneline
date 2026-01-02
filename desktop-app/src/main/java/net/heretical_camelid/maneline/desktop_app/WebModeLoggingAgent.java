@@ -112,7 +112,7 @@ public class WebModeLoggingAgent extends LoggingAgentBase {
     }
 
     @Override
-    public void setTransactionName(String transactionName) {
+    synchronized public void setTransactionName(String transactionName) {
         assert getSessionName() != null:
             "Session name must be set before setting transaction name"
         ;
@@ -145,6 +145,11 @@ public class WebModeLoggingAgent extends LoggingAgentBase {
         if(transactionName!=null) {
             ++m_txnNumber;
             m_txnMessageCounter = 0;
+        } else if(m_txnMessageCounter==0) {
+            // An empty file will already exist, so
+            // back off the transaction number so that
+            // the next transaction inherits it.
+            --m_txnNumber;
         }
         m_transactionLU.m_appender.start();
     }
