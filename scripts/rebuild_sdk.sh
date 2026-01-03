@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [ ! "$0" = "scripts/rebuild_sdk.sh"]
+if [ ! "$0" = "scripts/rebuild_sdk.sh" ]
 then
     echo "This script should be run from the base directory of the repository."
     echo "The invocation line must start with 'scripts/rebuild_sdk.sh'"
@@ -206,6 +206,20 @@ build_luarocks () {
   echo $_dir for $luadir built
 }
 
+build_pyvenv_for_moonshine_wrangler() {
+  # maneline does not presently use Python directly but sister project
+  # moonshine-wrangler (reverse engineering, documentation and code
+  # generation, including generating source files for maneline) does.
+  # If the SDK is being installed alongside moonshine-wrangler
+  # sandbox create a virtual environment pre-populated with the required
+  # packages.
+  if [ -f ../moonshine-wrangler/requirements.txt ]
+  then
+    python3.12 -m venv python.venv
+    PYTHON_VENV=$sdk_absdir/python.venv
+    $PYTHON_VENV/bin/pip install -r ../moonshine-wrangler/requirements.txt
+  fi
+}
 ## Latest versions of the key packages
 
 # from https://docs.balena.io/reference/balena-cli/latest/
@@ -236,6 +250,7 @@ lua51_url=https://www.lua.org/ftp/lua-5.1.5.tar.gz
 lua54_url=https://www.lua.org/ftp/lua-5.4.8.tar.gz
 luarocks_url=https://luarocks.org/releases/luarocks-3.12.2.tar.gz
 
+
 download_and_unpack $jdk21_url "tar xzvf"
 download_and_unpack $jdk25_url "tar xzvf"
 set_java_home jdk-21.0.2
@@ -262,6 +277,8 @@ download_and_unpack $android_cltools_url "unzip -d Android/cmdline-tools"
 mv Android/cmdline-tools/cmdline-tools Android/cmdline-tools/latest
 ANDROID_USER_HOME=$(pwd)/Android
 
+build_pyvenv_for_moonshine_wrangler
+
 cat > $sdk_absdir/sdk-vars.sh <<+
 
 JAVA_HOME=$JAVA_HOME
@@ -271,6 +288,7 @@ GRADLE_USER_HOME=$sdk_absdir/gradle-user-home
 GRADLE_LOCAL_JAVA_HOME=$JAVA_HOME
 BALENA_HOME=$BALENA_HOME
 LUA_HOME=$LUA_HOME
+PYTHON_VENV=$PYTHON_VENV
 
 export JAVA_HOME LUA_HOME BALENA_HOME
 export ANDROID_HOME ANDROID_USER_HOME GRADLE_USER_HOME GRADLE_LOCAL_JAVA_HOME
@@ -285,6 +303,12 @@ export PATH
 LUA_PATH="$LUA_PATH"
 LUA_CPATH="$LUA_CPATH"
 export LUA_PATH LUA_CPATH
+
+if [ ! -z "$PYTHON_VENV" ]
+then
+  source $PYTHON_VENV/bin/activate
+fi
+
 +
 
 . $sdk_absdir/sdk-vars.sh
