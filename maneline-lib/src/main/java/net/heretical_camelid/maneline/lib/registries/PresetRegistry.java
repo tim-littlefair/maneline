@@ -251,12 +251,12 @@ public class PresetRegistry implements IPresetResponseReader {
             );
 
 
-            /*
             // Export suite records
             String suitePathPrefix =  outputPathBase + "suites";
             m_suiteNumber = 0;
             List<SlotBasedPresetSuiteExporter> suiteExporters =
                 Arrays.asList(new SlotBasedPresetSuiteExporter[]{
+                    /*
                     createSuite(
                         // TL: really this is just my favourites
                         // at the moment - no promises that it won't
@@ -271,6 +271,7 @@ public class PresetRegistry implements IPresetResponseReader {
                     createSuite(suitePathPrefix, "Country", 5, 6, 23, 25, 27),
                     createSuite(suitePathPrefix, "Heavy", 2, 7, 11, 14, 16, 28),
                     createSuite(suitePathPrefix, "Trippy", 15, 18, 21, 24, 29),
+                    */
 
                     // We also create a JSON file in the suite format 
                     // containing all presets.
@@ -289,7 +290,6 @@ public class PresetRegistry implements IPresetResponseReader {
                     ));
                 }
             }
-             */
 
             // We also create a JSON file containing presets 1-30
             System.out.println();
