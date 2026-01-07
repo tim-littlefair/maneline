@@ -5,10 +5,11 @@
  */
 
 package net.heretical_camelid.maneline.lib.generated;
-import static java.util.Arrays.copyOfRange;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeMap;
@@ -24,28 +25,49 @@ class DspModuleParam extends JSONObject {
 
 class DspModule extends JSONObject {
     DspModule(String moduleName, Object moduleType) {
-        put("_moduleName",moduleName);
-        put("_moduleType",moduleType);
-        TreeMap sortedParamMap = new TreeMap<String,Object>();
-        put("_moduleParams",new JSONObject(sortedParamMap));
+        put("_moduleName", moduleName);
+        put("_moduleType", moduleType);
+        TreeMap sortedParamMap = new TreeMap<String, Object>();
+        put("_moduleParams", new JSONObject(sortedParamMap));
     }
-
+}
 public class FUSE_Classic_Preset extends JSONObject {
-    DspModule[] m_modules;
     private int AMP_POS = 6;
+    private int MAX_MODULES = 11;
     public FUSE_Classic_Preset(byte[] presetBytes) {
-        m_modules = new DspModule[11];
+        final String moduleName;
+        DspModule[] modules = new DspModule[MAX_MODULES];
         if(presetBytes.length==64*8) {
+            moduleName = new String(presetBytes,16,48, StandardCharsets.UTF_8);
             bytesToAmp(
                 Arrays.copyOfRange(presetBytes,64*1,64*2),
-                Arrays.copyOfRange(presetBytes,64*6,64*7)
+                Arrays.copyOfRange(presetBytes,64*6,64*7),
+                modules
             );
             for(int i=2; i<6; ++i) {
                 bytesToEffect(
-                    Arrays.copyOfRange(presetBytes,i*64,(i+1)*64)
+                    Arrays.copyOfRange(presetBytes,i*64,(i+1)*64),
+                    modules
                 );
             }
+        } else {
+            throw new UnsupportedOperationException(String.format(
+                "FUSE preset cannot be created for buffer of %d bytes",
+                presetBytes.length
+            ));
         }
+        JSONObject info = new JSONObject();
+        info.put("displayName", moduleName);
+        JSONObject audioGraph = new JSONObject();
+        JSONArray nodes = new JSONArray();
+        for(int i=0; i<MAX_MODULES; ++i) {
+            if(modules[i]!=null) {
+                nodes.put(modules[i]);
+            }
+        }
+        audioGraph.put("nodes", nodes);
+        put("info", info);
+        put("audioGraph", audioGraph);
     }
 
     /** 
@@ -53,85 +75,99 @@ public class FUSE_Classic_Preset extends JSONObject {
      * generates a DspModule/JSONObject and returns 
      * the audio
      */
-    void bytesToAmp(byte[] ampBytes1, byte[] ampBytes2) {
+    void bytesToAmp(byte[] ampBytes1, byte[] ampBytes2, DspModule[] modules) {
         assert ampBytes1[2]==5;
         int ampId = (0xFF&ampBytes1[16]) + (0x100*ampBytes1[17]);
         AbstractMap.SimpleEntry<String,String> moduleTypeAndName = _MODULE_TYPES_AND_NAMES.get(ampId);
-        assert moduleTypeAndName.getKey().equals("A");
-        m_modules[AMP_POS] = new DspModule(moduleTypeAndName.getValue(),"amp");
+        if(moduleTypeAndName!=null) {
+            assert moduleTypeAndName.getKey().equals("A");
+            modules[AMP_POS] = new DspModule(moduleTypeAndName.getValue(), "amp");
+        } else {
+            modules[AMP_POS] = new DspModule(String.valueOf(ampId), "amp");
+        }
+
     }
-    void bytesToEffect(byte[] effectBytes) {
+    void bytesToEffect(byte[] effectBytes, DspModule[] modules) {
         // TODO
     }
-}
+    static void registerModuleTypeAndName(int moduleId, String moduleType, String moduleName) {
 
-private static Map<Integer,AbstractMap.SimpleEntry<String,String>> _MODULE_TYPES_AND_NAMES = new TreeMap<>();
-static {
-    _MODULE_TYPES_AND_NAMES.put(109,new AbstractMap.SimpleEntry<String,String>("A","Metal2000"));
+    }
+    static Map<Integer,AbstractMap.SimpleEntry<String,String>> _MODULE_TYPES_AND_NAMES = new TreeMap<>();
+    static void registerModule(int moduleId, String moduleType, String moduleName) {
+        _MODULE_TYPES_AND_NAMES.put(
+            moduleId,
+            new AbstractMap.SimpleEntry<String,String>(moduleType, moduleName)
+        );
+    }
+    static {
+        registerModule(109,"A","Metal2000");
+        registerModule(114, "A", "Super-Sonic");
 
-    /*
-    7: ('S', 'Compressor'),
-    11: ('R', '65FenderSpring'),
-    18: ('M', 'Sine Chorus'),
-    19: ('M', 'Tri Chorus'),
-    21: ('D', 'Ducking'),
-    22: ('D', 'Mono'),
-    24: ('M', 'Sine Flanger'),
-    25: ('M', 'Tri Flanger'),
-    26: ('S', 'Fuzz'),
-    31: ('M', 'Pitch Shift'),
-    33: ('R', '63FenderSpring'),
-    34: ('M', 'Ring Mod'),
-    36: ('R', 'Small Hall'),
-    38: ('R', 'Small Room'),
-    41: ('M', 'Step Filter'),
-    42: ('D', 'Stereo Tape'),
-    43: ('D', 'Tape'),
-    45: ('M', 'Vibratone'),
-    58: ('R', 'Large Hall'),
-    59: ('R', 'Large Room'),
-    60: ('S', 'Overdrive'),
-    64: ('M', 'VintageTrem'),
-    65: ('M', 'SineTrem'),
-    67: ('D', 'Echo Filter'),
-    68: ('D', 'Multitap'),
-    69: ('D', 'Ping Pong'),
-    70: ('D', 'Reverse'),
-    72: ('D', 'StEchoFilt'),
-    73: ('S', 'Wah'),
-    74: ('S', 'Touch Wah'),
-    75: ('R', 'Large Plate'),
-    76: ('R', 'Ambient'),
-    77: ('R', 'Arena'),
-    78: ('R', 'Small Plate'),
-    79: ('M', 'Phaser'),
-    83: ('A', "'65 Deluxe"),
-    93: ('A', 'American90s'),
-    94: ('A', "Brit '80s"),
-    97: ('A', "Brit '60s"),
-    100: ('A', "'59 Bassman"),
-    103: ('A', "'57 Deluxe"),
-    106: ('A', 'Princeton'),
-    109: ('A', 'Metal 2000'),
-    114: ('A', 'Super-Sonic'),
-    117: ('A', "'65 Twin"),
-    121: ('A', "Brit '70s"),
-    124: ('A', "'57 Champ"),
-    136: ('S', 'Simple Comp'),
-    186: ('S', 'Greenbox'),
-    241: ('A', 'Studio Pre'),
-    244: ('M', 'Wah'),
-    245: ('M', 'Touch Wah'),
-    246: ('A', "'57 Twin"),
-    249: ('A', "'60s Thrift"),
-    252: ('A', 'Brit Colour'),
-    255: ('A', 'Brit Watts'),
-    259: ('S', 'Ranger'),
-    271: ('S', 'Big Fuzz'),
-    272: ('S', 'Orangebox'),
-    273: ('S', 'Blackbox'),
-    4127: ('M', 'Diatonic Pitch'),
-     */
-}
+        /*
+        7: ('S', 'Compressor'),
+        11: ('R', '65FenderSpring'),
+        18: ('M', 'Sine Chorus'),
+        19: ('M', 'Tri Chorus'),
+        21: ('D', 'Ducking'),
+        22: ('D', 'Mono'),
+        24: ('M', 'Sine Flanger'),
+        25: ('M', 'Tri Flanger'),
+        26: ('S', 'Fuzz'),
+        31: ('M', 'Pitch Shift'),
+        33: ('R', '63FenderSpring'),
+        34: ('M', 'Ring Mod'),
+        36: ('R', 'Small Hall'),
+        38: ('R', 'Small Room'),
+        41: ('M', 'Step Filter'),
+        42: ('D', 'Stereo Tape'),
+        43: ('D', 'Tape'),
+        45: ('M', 'Vibratone'),
+        58: ('R', 'Large Hall'),
+        59: ('R', 'Large Room'),
+        60: ('S', 'Overdrive'),
+        64: ('M', 'VintageTrem'),
+        65: ('M', 'SineTrem'),
+        67: ('D', 'Echo Filter'),
+        68: ('D', 'Multitap'),
+        69: ('D', 'Ping Pong'),
+        70: ('D', 'Reverse'),
+        72: ('D', 'StEchoFilt'),
+        73: ('S', 'Wah'),
+        74: ('S', 'Touch Wah'),
+        75: ('R', 'Large Plate'),
+        76: ('R', 'Ambient'),
+        77: ('R', 'Arena'),
+        78: ('R', 'Small Plate'),
+        79: ('M', 'Phaser'),
+        83: ('A', "'65 Deluxe"),
+        93: ('A', 'American90s'),
+        94: ('A', "Brit '80s"),
+        97: ('A', "Brit '60s"),
+        100: ('A', "'59 Bassman"),
+        103: ('A', "'57 Deluxe"),
+        106: ('A', 'Princeton'),
+        109: ('A', 'Metal 2000'),
+        114: ('A', 'Super-Sonic'),
+        117: ('A', "'65 Twin"),
+        121: ('A', "Brit '70s"),
+        124: ('A', "'57 Champ"),
+        136: ('S', 'Simple Comp'),
+        186: ('S', 'Greenbox'),
+        241: ('A', 'Studio Pre'),
+        244: ('M', 'Wah'),
+        245: ('M', 'Touch Wah'),
+        246: ('A', "'57 Twin"),
+        249: ('A', "'60s Thrift"),
+        252: ('A', 'Brit Colour'),
+        255: ('A', 'Brit Watts'),
+        259: ('S', 'Ranger'),
+        271: ('S', 'Big Fuzz'),
+        272: ('S', 'Orangebox'),
+        273: ('S', 'Blackbox'),
+        4127: ('M', 'Diatonic Pitch'),
+         */
+    }
+
 }
 

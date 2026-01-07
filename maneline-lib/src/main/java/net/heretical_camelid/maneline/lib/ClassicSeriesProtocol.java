@@ -2,7 +2,7 @@ package net.heretical_camelid.maneline.lib;
 
 import static java.util.Arrays.copyOfRange;
 
-import net.heretical_camelid.maneline.lib.interfaces.IPresetResponseReader;
+import net.heretical_camelid.maneline.lib.generated.FUSE_Classic_Preset;
 import net.heretical_camelid.maneline.lib.registries.PresetRecord;
 import net.heretical_camelid.maneline.lib.registries.PresetRegistry;
 import net.heretical_camelid.maneline.lib.utilities.PresetJO;
@@ -28,7 +28,8 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
     int m_minPresetIndex = 1000;
     int m_maxPresetIndex = -1;
 
-    PresetJO m_presetDefinitionBeingPopulated = null;
+    byte[] m_presetDefinitionBuffer = null;
+    int m_presetDefinitionPacketsConsumed = 0;
 
     ArrayList<PresetRecord> m_presetRecords = new ArrayList<>(Collections.nCopies(24,null));
 
@@ -327,12 +328,14 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
                 m_minPresetIndex = presetIndex;
             } else if( presetIndex>m_maxPresetIndex) {
                 m_maxPresetIndex = presetIndex;
-            } else if (m_presetDefinitionBeingPopulated!=null) {
+            } else if (m_presetDefinitionBuffer!=null) {
                 readPhaseLogMessages.add(String.format(
                     "Packet containing name '%s' for preset %d (populating)=%s",
                     presetName, presetIndex, b2hex2
                 ));
-                m_presetDefinitionBeingPopulated.getJSONObject("info").put("displayName",presetName);
+                assert m_presetDefinitionPacketsConsumed==0;
+                System.arraycopy(packet64,0, m_presetDefinitionBuffer, 0, 64 );
+                m_presetDefinitionPacketsConsumed = 1;
             } else {
                 readPhaseLogMessages.add(String.format(
                     "Packet containing name '%s' for preset %d (new current)=%s",
@@ -346,20 +349,34 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
             int presetSlot = (int) packet64[4];
             String dspUnitName = new String(packet64, 16, 48);
             dspUnitName = dspUnitName.substring(0, dspUnitName.indexOf(0));
-            if(m_presetDefinitionBeingPopulated!=null) {
-                m_presetDefinitionBeingPopulated.getJSONObject("info").put(
-                    "displayName", dspUnitName
-                );
-            }
             readPhaseLogMessages.add(String.format(
                 "Packet containing name %s for dspUnit %d of preset %03d: %s",
                 dspUnitName, dspUnitIndex, presetSlot, b2hex2
             ));
+            if(m_presetDefinitionBuffer!=null) {
+                assert m_presetDefinitionPacketsConsumed==0;
+                System.arraycopy(packet64,0, m_presetDefinitionBuffer, 0, 64 );
+                m_presetDefinitionPacketsConsumed = 1;
+            }
         } else if (b2hex2.startsWith("> [64]: 1c 01")) {
             int presetIndex = (int) packet64[4];
             String nodeFenderId = null;
             String nodeId = null;
             int effectSlot=(int) packet64[18];
+            readPhaseLogMessages.add(String.format(
+                "DSP packet type for %s:%s at effectSlot %d: %s: ",
+                nodeId, nodeFenderId, effectSlot, b2hex2
+            ));
+            if(m_presetDefinitionBuffer!=null) {
+                assert m_presetDefinitionPacketsConsumed<8;
+                System.arraycopy(
+                    packet64, 0,
+                    m_presetDefinitionBuffer, 64 * m_presetDefinitionPacketsConsumed,
+                    64
+                );
+                m_presetDefinitionPacketsConsumed += 1;
+            }
+            /*
             int nodeIndex;
             if(effectSlot<5) {
                 nodeIndex = effectSlot;
@@ -397,22 +414,19 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
             if (nodeFenderId == null) {
                 nodeFenderId = String.format("%s-%03d", nodeId, ampOrEffectModelId);
             }
-            readPhaseLogMessages.add(String.format(
-                "DSP packet type for %s:%s at nodeIndex %d: %s: ",
-                nodeId, nodeFenderId, nodeIndex, b2hex2
-            ));
-            if(m_presetDefinitionBeingPopulated!=null) {
+            if(m_presetDefinitionBuffer!=null) {
                 if(dspPacketType==0) {
                     m_presetRecords.add(
                         presetIndex,
-                        m_presetDefinitionBeingPopulated.exportPresetRecord()
+                        m_presetDefinitionBuffer.exportPresetRecord()
                     );
                 } else if(nodeIndex!=-1) {
-                    m_presetDefinitionBeingPopulated.addAudioGraphNode(
+                    m_presetDefinitionBuffer.addAudioGraphNode(
                         nodeFenderId, nodeId, null, nodeIndex
                     );
                 }
             }
+             */
         } else if (b2hex2.startsWith("> [64]: 00 00 1c")) {
             // with MustangIv2 firmware 2.1, this is an empty response to a heartbeat
             // it can be ignored
@@ -427,7 +441,7 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
         String transactionName = String.format("classicGetPresetDefinition%03d", slotIndex);
         // This function sends the packet described here:
         // https://github.com/offa/plug/blob/master/doc/Technicalities.md#6-choosing-memory-bank
-        m_presetDefinitionBeingPopulated = PresetJO.create("");
+        m_presetDefinitionBuffer = new byte[64*8];
         int scStatus = sendCommand(
             String.format("1c:01:01:00:%02x:00:01:00", slotIndex),
             String.format("request for definition of preset %d",slotIndex),
@@ -435,13 +449,16 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
             transactionName
         );
         if(scStatus==STATUS_OK) {
+            FUSE_Classic_Preset fcp = new FUSE_Classic_Preset(m_presetDefinitionBuffer);
+            m_presetDefinitionBuffer = null;
+            m_presetDefinitionPacketsConsumed=0;
             presetRegistry.register(
                 slotIndex,
-                m_presetDefinitionBeingPopulated.exportPresetRecord().displayName(),
-                m_presetDefinitionBeingPopulated.toString(4).getBytes(StandardCharsets.UTF_8)
+                fcp.getJSONObject("info").getString("displayName"),
+                fcp.toString(4).getBytes(StandardCharsets.UTF_8)
             );
         }
-        m_presetDefinitionBeingPopulated = null;
+        m_presetDefinitionBuffer = null;
         return scStatus;
     }
 }
