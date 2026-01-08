@@ -6,40 +6,38 @@
 
 package net.heretical_camelid.maneline.lib.generated;
 
+import net.heretical_camelid.maneline.lib.AbstractMessageProtocolBase;
+import net.heretical_camelid.maneline.lib.registries.PresetJO;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.AbstractMap;
 
-class DspModuleParam extends JSONObject {
-    public DspModuleParam(String paramName, Object paramType, Object paramValue) {
-        put("_paramName",paramName);
-        put("_paramType",paramType);
-        put("_paramValue",paramValue);
-    }
-}
-
-class DspModule extends JSONObject {
-    DspModule(String moduleName, Object moduleType) {
-        put("FenderId", moduleName);
-        put("nodeId", moduleType);
-        TreeMap sortedParamMap = new TreeMap<String, Object>();
-        put("dspParameters", new JSONObject(sortedParamMap));
-    }
-}
-public class FUSE_Classic_Preset extends JSONObject {
+public class FUSE_Classic_Preset extends PresetJO {
     private int AMP_POS = 6;
     private int MAX_MODULES = 11;
     public FUSE_Classic_Preset(byte[] presetBytes) {
-        String moduleName;
+        super();
+        final String presetName;
         DspModule[] modules = new DspModule[MAX_MODULES];
+        JSONArray fuseRawPackets = new JSONArray(8);
         if(presetBytes.length==64*8) {
-            moduleName = new String(presetBytes,16,48, StandardCharsets.UTF_8);
-            moduleName = moduleName.replace("\u0000","");
+            for(int packetSeq=0; packetSeq<8; ++packetSeq) {
+                fuseRawPackets.put(AbstractMessageProtocolBase.bufferToHex2(
+                    Arrays.copyOfRange(presetBytes,64*packetSeq,64*(packetSeq+1)),
+                   ""
+                ));
+            }
+            presetName = (
+                new String(presetBytes,16,48, StandardCharsets.UTF_8)
+                .replace("\u0000","")
+            );
             bytesToAmp(
                 Arrays.copyOfRange(presetBytes,64*1,64*2),
                 Arrays.copyOfRange(presetBytes,64*6,64*7),
@@ -57,18 +55,13 @@ public class FUSE_Classic_Preset extends JSONObject {
                 presetBytes.length
             ));
         }
-        JSONObject info = new JSONObject();
-        info.put("displayName", moduleName);
-        JSONObject audioGraph = new JSONObject();
-        JSONArray nodes = new JSONArray();
+        info().put("displayName",presetName);
         for(int i=0; i<MAX_MODULES; ++i) {
             if(modules[i]!=null) {
-                nodes.put(modules[i]);
+                audioGraph_nodes().put(modules[i]);
             }
         }
-        audioGraph.put("nodes", nodes);
-        put("info", info);
-        put("audioGraph", audioGraph);
+        metadata().put("fuseRawPackets", fuseRawPackets);
     }
 
     /** 

@@ -453,11 +453,10 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
             m_presetDefinitionPacketsConsumed=0;
             presetRegistry.register(
                 slotIndex,
-                fcp.getJSONObject("info").getString("displayName"),
+                fcp.displayName(),
                 fcp.toString(4).getBytes(StandardCharsets.UTF_8)
             );
         }
-        m_presetDefinitionBuffer = null;
         return scStatus;
     }
 }

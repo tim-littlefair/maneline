@@ -51,10 +51,16 @@ public class PresetRecord {
     // TODO: FenderTone LT Desktop sends to the amp for the same module.
     static Gson s_dspParamGson = new GsonBuilder().create();
 
+    public PresetRecord(PresetJO presetJO, byte[] definitionBytes) {
+        m_presetJO = presetJO;
+        m_name = presetJO.displayName();
+        m_rawDefinition = new String(definitionBytes, StandardCharsets.UTF_8);
+    }
+
     public PresetRecord(String name, byte[] definitionBytes) {
         m_name = name;
         m_rawDefinition = new String(definitionBytes, StandardCharsets.UTF_8);
-        m_presetJO = PresetJO.create("");
+        m_presetJO = new PresetJO(m_rawDefinition);
 
         // Presets with different histories (i.e. unmodified firmware presets
         // vs presets imported or modified by Fender Tone) can have JSON
