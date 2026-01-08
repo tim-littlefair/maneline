@@ -79,10 +79,18 @@ public class FUSE_Classic_Preset extends PresetJO {
         } else {
             modules[AMP_POS] = new DspModule(String.valueOf(ampId), "amp");
         }
-
     }
     void bytesToEffect(byte[] effectBytes, DspModule[] modules) {
-        // TODO
+        assert effectBytes[2]>=6&&effectBytes[2]<=9;
+        int effectId = (0xFF&effectBytes[16]) + (0x100*effectBytes[17]);
+        int signalChainPos= (0xFF&effectBytes[18]);
+        AbstractMap.SimpleEntry<String,String> moduleTypeAndName = _MODULE_TYPES_AND_NAMES.get(effectId);
+        if(moduleTypeAndName!=null) {
+            assert moduleTypeAndName.getKey().equals("A")==false;
+            modules[signalChainPos] = new DspModule(moduleTypeAndName.getValue(), "amp");
+        } else {
+            modules[signalChainPos] = new DspModule(String.valueOf(effectId), "amp");
+        }        // TODO
     }
     static void registerModuleTypeAndName(int moduleId, String moduleType, String moduleName) {
 

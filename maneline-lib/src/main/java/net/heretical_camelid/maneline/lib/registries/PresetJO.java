@@ -48,60 +48,12 @@ public class PresetJO extends JSONObject {
     static private Map<String,Object> createMapImplementation() {
         return new TreeMap<String,Object>();
     }
-    /*
-    static public PresetJO create(String presetName) {
-        PresetJO createdJO = new PresetJO();
-        ((JSONObject) PresetJO.getSubObject(
-            createdJO, List.of((Object[]) new String[] {"info"})
-        )).put("displayName", presetName);
-        return createdJO;
-    }
-
-    static public PresetJO create(PresetRecord pr) {
-        PresetJO createdJO = create(pr.displayName());
-        // For now, PresetRecord is implemented on top of com.google.gson.JsonObject,
-        // while the current class is based on org.json.JSONObject.
-        // Some time soon I will probably refactor the registry to use org.json framework
-        // but for now we need to translate between the comparable but not equivalent
-        // JSON frameworks.
-        JSONArray nodes = (JSONArray) PresetJO.getSubObject(
-            pr.getPresetJO(),
-            List.of((Object[]) new String[] { "audioGraph", "nodes" })
-        );
-        assert nodes.length() == createdJO.m_audioGraph_nodes.length();
-        for(int i=0; i<nodes.length(); ++i) {
-            JSONObject node = nodes.getJSONObject(i);
-            if(node!=null) {
-                createdJO.addAudioGraphNode(
-                    node.getString("FenderId"),
-                    node.getString("nodeId"),
-                    null, i
-                );
-            }
-        }
-        return createdJO;
-    }
-
-
-    static public PresetJO create(JSONObject rawJO) {
-        PresetJO createdJO = create("");
-        createdJO.put("info", rawJO.getJSONObject("info"));
-        createdJO.put("audioGraph", rawJO.getJSONObject("audioGraph"));
-        return createdJO;
-    }
-*/
 
     protected PresetJO() {
         super();
-        // super(createMapImplementation());
         JSONObject audioGraph = new JSONObject(createMapImplementation());
         audioGraph.put("nodes", new JSONArray(5));
         put("audioGraph", audioGraph);
-        m_audioGraph_nodes = (JSONArray) getSubObject(
-            this,
-            List.of(new Object[]{"audioGraph", "nodes"})
-        );
-        m_audioGraph_nodes.put(5,(JSONObject) null);
         put("info", new JSONObject(createMapImplementation()));
         put("_metadata", new JSONObject(createMapImplementation()));
     }
@@ -112,7 +64,6 @@ public class PresetJO extends JSONObject {
         // assert audioGraph_nodes() != null;
         assert info() != null;
         assert displayName() != null;
-        assert metadata() != null;
     }
 
     public String displayName() {
