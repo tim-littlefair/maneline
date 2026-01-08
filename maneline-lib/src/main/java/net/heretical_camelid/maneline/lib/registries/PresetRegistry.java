@@ -3,7 +3,6 @@ package net.heretical_camelid.maneline.lib.registries;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import net.heretical_camelid.maneline.lib.AbstractMessageProtocolBase;
 import net.heretical_camelid.maneline.lib.FhauLibException;
@@ -28,7 +27,6 @@ import java.util.zip.ZipOutputStream;
 
 public class PresetRegistry implements IPresetResponseReader {
     final static Gson s_gsonCompact = new Gson();
-    final static Gson s_gsonPretty = new GsonBuilder().setPrettyPrinting().create();
     static ZipOutputStream s_outputZipStream = null;
     String m_outputPath;
     HashMap<Integer, PresetRecord> m_records;
@@ -119,7 +117,7 @@ public class PresetRegistry implements IPresetResponseReader {
             MessageDigest md = MessageDigest.getInstance(method);
             md.update(inputString.getBytes(UTF_8));
             String mdHexString = new BigInteger(md.digest()).toString(16);
-            retval = mdHexString.substring(mdHexString.length()-prefixLength, mdHexString.length());
+            retval = mdHexString.substring(mdHexString.length()-prefixLength);
         } catch (NoSuchAlgorithmException e) {
             method = "Object.hashCode()";
             retval = Integer.toHexString(inputString.hashCode()).substring(0, prefixLength);
@@ -140,9 +138,11 @@ public class PresetRegistry implements IPresetResponseReader {
                 s_outputZipStream.write(content.getBytes(UTF_8));
                 s_outputZipStream.closeEntry();
             } else {
-                FileOutputStream fos;
-                fos = new FileOutputStream(rawTargetPath);
-                fos.write(content.getBytes(UTF_8));
+                try (
+                    FileOutputStream fos = new FileOutputStream(rawTargetPath)
+                ) {
+                    fos.write(content.getBytes(UTF_8));
+                }
             }
             return 0;
         } catch (FileNotFoundException e) {

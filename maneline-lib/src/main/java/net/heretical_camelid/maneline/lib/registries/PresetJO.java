@@ -1,7 +1,4 @@
-package net.heretical_camelid.maneline.lib.utilities;
-
-import net.heretical_camelid.maneline.lib.registries.PCS_Node;
-import net.heretical_camelid.maneline.lib.registries.PresetRecord;
+package net.heretical_camelid.maneline.lib.registries;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -30,7 +27,7 @@ public class PresetJO extends JSONObject {
     // Map implementation object (both for the derived class
     // (Java) object itself and for all instances of
     // org.json.JSONObject attached to it, we are able to lock
-    // in stable ordering behavour.
+    // in stable ordering behaviour.
     static private Map<String,Object> createMapImplementation() {
         return new TreeMap<String,Object>();
     }
@@ -60,18 +57,39 @@ public class PresetJO extends JSONObject {
         // Some time soon I will probably refactor the registry to use org.json framework
         // but for now we need to translate between the comparable but not equivalent
         // JSON frameworks.
-        PCS_Node[] nodes = pr.getPCS().audioGraph.nodes;
-        assert nodes.length == createdJO.m_audioGraph_nodes.length();
-        for(int i=0; i<nodes.length; ++i) {
-            PCS_Node node = nodes[i];
+        JSONArray nodes = (JSONArray) PresetJO.getSubObject(
+            pr.getPresetJO(),
+            List.of((Object[]) new String[] { "audioGraph", "nodes" })
+        );
+        assert nodes.length() == createdJO.m_audioGraph_nodes.length();
+        for(int i=0; i<nodes.length(); ++i) {
+            JSONObject node = nodes.getJSONObject(i);
             if(node!=null) {
-                createdJO.addAudioGraphNode(node.FenderId, node.nodeId, null, i);
+                createdJO.addAudioGraphNode(
+                    node.getString("FenderId"),
+                    node.getString("nodeId"),
+                    null, i
+                );
             }
         }
         return createdJO;
     }
 
-    static private Object getSubObject(Object target, List<Object> keySeq) {
+    static public PresetJO create(JSONObject rawJO) {
+        PresetJO createdJO = create("");
+        createdJO.put("info", rawJO.getJSONObject("info"));
+        createdJO.put("audioGraph", rawJO.getJSONObject("audioGraph"));
+        return createdJO;
+    }
+
+    public String displayName() {
+        return (String) getSubObject(
+            this,
+            List.of((Object[]) new String[]{"info", "displayName"})
+        );
+    }
+
+    static Object getSubObject(Object target, List<Object> keySeq) {
         for(Object k: keySeq) {
             _trace(k);
             if(target instanceof JSONObject) {
@@ -164,4 +182,6 @@ public class PresetJO extends JSONObject {
          System.exit(0);
      }
 
+    public void makeCanonical() {
+    }
 }

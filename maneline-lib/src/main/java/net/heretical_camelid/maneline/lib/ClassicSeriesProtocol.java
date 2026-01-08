@@ -5,7 +5,6 @@ import static java.util.Arrays.copyOfRange;
 import net.heretical_camelid.maneline.lib.generated.FUSE_Classic_Preset;
 import net.heretical_camelid.maneline.lib.registries.PresetRecord;
 import net.heretical_camelid.maneline.lib.registries.PresetRegistry;
-import net.heretical_camelid.maneline.lib.utilities.PresetJO;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;

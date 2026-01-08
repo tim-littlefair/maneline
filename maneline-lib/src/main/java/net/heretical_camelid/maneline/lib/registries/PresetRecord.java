@@ -2,13 +2,18 @@ package net.heretical_camelid.maneline.lib.registries;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 public class PresetRecord {
 
     final String m_name;
     final String m_rawDefinition;
-    final PresetCanonicalSerializer m_presetCanonicalSerializer;
+    // final PresetCanonicalSerializer m_presetJO;
+    final PresetJO m_presetJO;
     String m_audioHash = null;
 
     // Function prettyJson() returns a JSON rendering of the preset which is
@@ -49,10 +54,7 @@ public class PresetRecord {
     public PresetRecord(String name, byte[] definitionBytes) {
         m_name = name;
         m_rawDefinition = new String(definitionBytes, StandardCharsets.UTF_8);
-        m_presetCanonicalSerializer = PresetRegistry.s_gsonCompact.fromJson(
-            m_rawDefinition,
-            PresetCanonicalSerializer.class
-        );
+        m_presetJO = PresetJO.create("");
 
         // Presets with different histories (i.e. unmodified firmware presets
         // vs presets imported or modified by Fender Tone) can have JSON
@@ -60,11 +62,11 @@ public class PresetRecord {
         // element ordering.  We run the makeCanonical function to standardize
         // the sort order of elements in order to ensure that presets which are
         // exact equivalants from an audio PoV generate the same hash code.
-        m_presetCanonicalSerializer.makeCanonical();
+        m_presetJO.makeCanonical();
     }
 
     public String displayName() {
-        return m_presetCanonicalSerializer.info.displayName;
+        return m_presetJO.displayName();
     }
 
     public String ampName() {
@@ -73,13 +75,22 @@ public class PresetRecord {
 
     public String moduleName(String whichModule) {
         for (
-            PCS_Node node :
-            m_presetCanonicalSerializer.audioGraph.nodes
+            Object nodeAsObject :
+            (JSONArray) PresetJO.getSubObject(
+                m_presetJO,
+                List.of((Object[]) new String[] {"audioGraph","nodes"})
+            )
         ) {
+            if(nodeAsObject==null) {
+                continue;
+            } else if (nodeAsObject==JSONObject.NULL) {
+                continue;
+            }
+            JSONObject node = (JSONObject) nodeAsObject;
             if(node==null) {
                 return "-";
-            } else if (node.nodeId.equals(whichModule)) {
-                return node.FenderId.
+            } else if (node.getString("nodeId").equals(whichModule)) {
+                return node.getString("FenderId").
                     // LT40S prefix
                     replace("DUBS_", "").
                     // MMP prefix
@@ -135,16 +146,25 @@ public class PresetRecord {
         StringBuilder sb = new StringBuilder();
         boolean insertSeparator = false;
         for (
-            PCS_Node node :
-            m_presetCanonicalSerializer.audioGraph.nodes
+            Object nodeAsObject :
+            (JSONArray) PresetJO.getSubObject(
+                m_presetJO,
+                List.of((Object[]) new String[]{"audioGraph","nodes"})
+            )
         ) {
+            if(nodeAsObject==null) {
+                continue;
+            } else if (nodeAsObject==JSONObject.NULL) {
+                continue;
+            }
+            JSONObject node = (JSONObject) nodeAsObject;
             if(node==null) {
                 continue;
-            } else if(node.FenderId==null) {
-                node.FenderId = "?";
+            } else if(node.getString("FenderId")==null) {
+                node.put("FenderId","?");
             }
-            String nextNodeType = node.nodeId;
-            String nodeName = node.FenderId.replace("DUBS_", "");
+            String nextNodeType = node.getString("nodeId");
+            String nodeName = node.getString("FenderId").replace("DUBS_", "");
             if (!nodeName.equals("Passthru")) {
                 if (insertSeparator) {
                     sb.append(separator);
@@ -156,7 +176,7 @@ public class PresetRecord {
                 }
                 if(levelOfDetails!=EffectsLevelOfDetails.MODULES_ONLY) {
                     sb.append("(");
-                    String paramString = s_dspParamGson.toJson(node.dspUnitParameters);
+                    String paramString = node.getJSONObject("dspUnitParameters").toString();
 
                     // Convert the JSON to a simple comma-separated list
                     paramString = paramString.replaceAll("[{}\"]","");
@@ -178,36 +198,38 @@ public class PresetRecord {
 
     public String shortInfo() {
         StringBuilder sb = new StringBuilder();
+        /*
         if (
-            m_presetCanonicalSerializer.info.author==null ||
-            m_presetCanonicalSerializer.info.author.isEmpty()
+            m_presetJO.info.author==null ||
+            m_presetJO.info.author.isEmpty()
         ) {
             sb.append("no author, ");
         } else {
-            sb.append("author:" + m_presetCanonicalSerializer.info.author + ", ");
+            sb.append("author:" + m_presetJO.info.author + ", ");
         }
         if (
-            m_presetCanonicalSerializer.info.source_id == null ||
-            m_presetCanonicalSerializer.info.source_id.isEmpty()
+            m_presetJO.info.source_id == null ||
+            m_presetJO.info.source_id.isEmpty()
         ) {
             sb.append("no source_id, ");
         } else {
-            sb.append("source_id:" + m_presetCanonicalSerializer.info.source_id + ", ");
+            sb.append("source_id:" + m_presetJO.info.source_id + ", ");
         }
-        sb.append("product_id:" + m_presetCanonicalSerializer.info.product_id + ", ");
-        sb.append("is_factory_default:" + m_presetCanonicalSerializer.info.is_factory_default);
+        sb.append("product_id:" + m_presetJO.info.product_id + ", ");
+        sb.append("is_factory_default:" + m_presetJO.info.is_factory_default);
+         */
 
         return sb.toString();
     }
 
     public String prettyJson() {
         String retval = s_jsonSerializer.toJson(
-            m_presetCanonicalSerializer
+            m_presetJO
         );
         return retval;
     }
 
-    public PresetCanonicalSerializer getPCS() {
-        return m_presetCanonicalSerializer;
+    public PresetJO getPresetJO() {
+        return m_presetJO;
     }
 }

@@ -25,20 +25,21 @@ class DspModuleParam extends JSONObject {
 
 class DspModule extends JSONObject {
     DspModule(String moduleName, Object moduleType) {
-        put("_moduleName", moduleName);
-        put("_moduleType", moduleType);
+        put("FenderId", moduleName);
+        put("nodeId", moduleType);
         TreeMap sortedParamMap = new TreeMap<String, Object>();
-        put("_moduleParams", new JSONObject(sortedParamMap));
+        put("dspParameters", new JSONObject(sortedParamMap));
     }
 }
 public class FUSE_Classic_Preset extends JSONObject {
     private int AMP_POS = 6;
     private int MAX_MODULES = 11;
     public FUSE_Classic_Preset(byte[] presetBytes) {
-        final String moduleName;
+        String moduleName;
         DspModule[] modules = new DspModule[MAX_MODULES];
         if(presetBytes.length==64*8) {
             moduleName = new String(presetBytes,16,48, StandardCharsets.UTF_8);
+            moduleName = moduleName.replace("\u0000","");
             bytesToAmp(
                 Arrays.copyOfRange(presetBytes,64*1,64*2),
                 Arrays.copyOfRange(presetBytes,64*6,64*7),

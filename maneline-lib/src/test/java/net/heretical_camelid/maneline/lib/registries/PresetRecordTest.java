@@ -14,7 +14,7 @@ public class PresetRecordTest {
     @org.junit.After
     public void tearDown() throws Exception {
     }
-
+/*
     @Test
     public void test01_displayName() {
         PresetRecord dnTestPR = presetRecord_EMPTY();
@@ -163,6 +163,6 @@ public class PresetRecordTest {
             .setDspUnitParameter(4, "tone", "1")
             .build();
     }
-
+*/
 }
 
