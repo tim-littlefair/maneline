@@ -2,8 +2,6 @@ package net.heretical_camelid.maneline.lib.registries;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.gson.Gson;
-
 import net.heretical_camelid.maneline.lib.AbstractMessageProtocolBase;
 import net.heretical_camelid.maneline.lib.FhauLibException;
 import net.heretical_camelid.maneline.lib.interfaces.IPresetResponseReader;
@@ -26,7 +24,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 public class PresetRegistry implements IPresetResponseReader {
-    final static Gson s_gsonCompact = new Gson();
     static ZipOutputStream s_outputZipStream = null;
     String m_outputPath;
     HashMap<Integer, PresetRecord> m_records;

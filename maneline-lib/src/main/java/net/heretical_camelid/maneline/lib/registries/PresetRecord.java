@@ -1,7 +1,4 @@
 package net.heretical_camelid.maneline.lib.registries;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -16,41 +13,6 @@ public class PresetRecord {
     final PresetJO m_presetJO;
     String m_audioHash = null;
 
-    // Function prettyJson() returns a JSON rendering of the preset which is
-    // mostly pretty-printed, but the uninteresting 'connections' array node (for
-    // which the effective content never changes) is rendered in a
-    // more compact format with one line for each of the 12 items in the array.
-    // + the pretty serialization is done by s_jsonSerializer; and
-    // + CONNECTION_ITEM_REGEX is used to build s_cxnItemPattern which
-    //   matches the multiline array items and enables them to be compacted.
-    private static final Gson s_jsonSerializer = new GsonBuilder().setPrettyPrinting().create();
-
-    // function effects(...) uses the serializer below to render a single-line list of effect
-    // names and values.  As well as being used to report preset parameters back to the user,
-    // this function is used in composition of the value returned by audioHash() which is
-    // used to determine whether the audio settings of a preset constitute an exact copy
-    // of another preset in the same amp.
-    // There two other parameters which are typed as String in .PCS_DspUnitParameters
-    // (which can only cope with one type per parameter name), but are sometimes returned
-    // from the amp as integer or fixed point numerics.  Before we start sending JSON back
-    // to the amp we probably need to reflect the amp's typing for these, which are:
-    // + tone - usually either 1 or a fixed point positive number less than 1, except for
-    //   the value for the DUBS_VariFuzz stomp module in '60S FUZZ' where it takes the string
-    //   'normal' (when this is numeric, trailing zeroes in the mantissa are sometimes present
-    //   in the copied presets but absent in the original);
-    // + shape - 'sine' for the DUBS_Phaser mod module in 'PHASER_SWIRL', 0 for the
-    //   DUBS_SineTremolo mod module in VINTAGE_TREMOLO.
-    // Two of the other possible parameters in PresetCanonicalSerializer.PCS_DspUnitParameters
-    // take on inconsistent values when a preset is copied to another slot without (intentionally)
-    // introducing any changes.  These four parameters are:
-    // + bypass - boolean, absent in initial presets, false in copied presets;
-    // + bypassType - can be absent, Pre, Post or PostNoPreKill in initial presets, often changes
-    // from absent or Pre to Post, changes from Post to Pre less often.
-    // TODO: Investigate further and implement search and replace to align the serialized values
-    // TODO: to the copied form and to align typing for each parameter exactly to what the
-    // TODO: FenderTone LT Desktop sends to the amp for the same module.
-    static Gson s_dspParamGson = new GsonBuilder().create();
-
     public PresetRecord(PresetJO presetJO, byte[] definitionBytes) {
         m_presetJO = presetJO;
         m_name = presetJO.displayName();
@@ -61,14 +23,6 @@ public class PresetRecord {
         m_name = name;
         m_rawDefinition = new String(definitionBytes, StandardCharsets.UTF_8);
         m_presetJO = new PresetJO(m_rawDefinition);
-
-        // Presets with different histories (i.e. unmodified firmware presets
-        // vs presets imported or modified by Fender Tone) can have JSON
-        // structures which are identical in meaning but different in
-        // element ordering.  We run the makeCanonical function to standardize
-        // the sort order of elements in order to ensure that presets which are
-        // exact equivalants from an audio PoV generate the same hash code.
-        m_presetJO.makeCanonical();
     }
 
     public String displayName() {
@@ -229,13 +183,6 @@ public class PresetRecord {
     }
 
     public String prettyJson() {
-        String retval = s_jsonSerializer.toJson(
-            m_presetJO
-        );
-        return retval;
-    }
-
-    public PresetJO getPresetJO() {
-        return m_presetJO;
+        return m_presetJO.toString(4);
     }
 }

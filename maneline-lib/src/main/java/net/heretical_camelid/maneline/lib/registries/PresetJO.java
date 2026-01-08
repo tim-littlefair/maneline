@@ -92,7 +92,8 @@ public class PresetJO extends JSONObject {
 */
 
     protected PresetJO() {
-        super(createMapImplementation());
+        super();
+        // super(createMapImplementation());
         JSONObject audioGraph = new JSONObject(createMapImplementation());
         audioGraph.put("nodes", new JSONArray(5));
         put("audioGraph", audioGraph);
