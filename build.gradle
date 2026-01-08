@@ -21,10 +21,13 @@ buildscript {
 
         // When AGP imported vulnerable dependencies in the past, explicit
         // non-vulnerable versions of the packages named in alerts
-        // were imported here, allowing the security alerts to be cleared.
+        // were imported here, before AGP, allowing the security alerts to be
+        // cleared.
 
-        // As of AGP 8.13.2 there are no alerts on dependencies so
-        // the explicit version imports have been removed.
+        // As of AGP 8.13.2 the only dependency requiring this treatment is
+        // the following one, notified in
+        // https://github.com/tim-littlefair/maneline/security/dependabot/16
+        classpath 'org.bitbucket.b_c:jose4j:0.9.6'
 
         classpath 'com.android.tools.build:gradle:8.13.2'
 
