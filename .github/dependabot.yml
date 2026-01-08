@@ -9,8 +9,8 @@ updates:
     directories: [ "/", "usb-hid", "lib", "desktop-app", "android-app" ] 
     schedule:
       interval: "weekly"
-  - package-ecosystem: "gradle"
-    directories: [ "/", "usb-hid", "lib", "desktop-app", "android-app" ]
-    schedule:
-      interval: "weekly"
-    target-branch: "dependabot-experiments"
+  # - package-ecosystem: "gradle"
+  #  directories: [ "/", "usb-hid", "lib", "desktop-app", "android-app" ]
+  #  schedule:
+  #    interval: "weekly"
+  #   target-branch: "dependabot-experiments"
