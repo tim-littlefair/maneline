@@ -17,7 +17,7 @@ class AmpDefinitionExporter implements PresetRegistry.Visitor {
         assert pr != null;
         String presetBasename = String.format(
             "%s-%s",
-            pr.displayName().replace(" ", "_"),
+            pr.displayName().strip().replace(" ", "_"),
             pr.audioHash()
         );
 

@@ -49,7 +49,8 @@ function SessionPresets:get_session_presets(session_name)
         preset_row.module4, field_pos = _csv_get_next_field(preset_line,field_pos)
         preset_row.module5, field_pos = _csv_get_next_field(preset_line,field_pos)
         audioHash, field_pos = _csv_get_next_field(preset_line,field_pos)
-        preset_row.filenamePrefix=preset_row.displayName:gsub(" ","_").."-"..audioHash
+        preset_row.filenamePrefix = preset_row.displayName:gsub("%s*$","")
+        preset_row.filenamePrefix = preset_row.filenamePrefix:gsub(" ","_").."-"..audioHash
         table.insert(preset_rows, preset_row)
 
         preset_line = presets_csv:read("*line")
