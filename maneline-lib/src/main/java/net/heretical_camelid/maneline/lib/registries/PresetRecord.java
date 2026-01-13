@@ -1,5 +1,6 @@
 package net.heretical_camelid.maneline.lib.registries;
 import net.heretical_camelid.maneline.lib.presets.FUSE_Classic_Preset;
+import net.heretical_camelid.maneline.lib.presets.PresetBase;
 import net.heretical_camelid.maneline.lib.presets.TONE_LT_Preset;
 
 import org.json.JSONArray;
@@ -14,13 +15,13 @@ public class PresetRecord {
     public static final String COMPANION_APP_TONE_LT_DESKTOP = "tone-usb";
     final String m_name;
     final String m_rawDefinition;
-    // final PresetCanonicalSerializer m_presetJO;
-    final PresetJO m_presetJO;
+    // final PresetCanonicalSerializer m_preset;
+    final PresetBase m_preset;
     String m_audioHash = null;
 
-    public PresetRecord(PresetJO presetJO, byte[] definitionBytes) {
-        m_presetJO = presetJO;
-        m_name = presetJO.displayName();
+    public PresetRecord(PresetBase preset, byte[] definitionBytes) {
+        m_preset = preset;
+        m_name = preset.displayName();
         m_rawDefinition = new String(definitionBytes, StandardCharsets.UTF_8);
     }
 
@@ -28,17 +29,19 @@ public class PresetRecord {
         m_name = name;
         m_rawDefinition = new String(definitionBytes, StandardCharsets.UTF_8);
         if(companionAppName.equals(COMPANION_APP_FUSE)) {
-            m_presetJO = new FUSE_Classic_Preset(definitionBytes);
+            m_preset = new FUSE_Classic_Preset(definitionBytes);
         } else if (companionAppName.equals(COMPANION_APP_TONE_LT_DESKTOP)) {
-            m_presetJO = new TONE_LT_Preset(definitionBytes);
+            m_preset = new TONE_LT_Preset(definitionBytes);
         } else {
-            m_presetJO = new PresetJO(definitionBytes, companionAppName);
-            // assert m_name.equals(m_presetJO.displayName());
+            throw new UnsupportedOperationException(String.format(
+                "No appropriate preset subclass exists for companion app '%s'",
+                companionAppName
+            ));
         }
     }
 
     public String displayName() {
-        return m_presetJO.displayName();
+        return m_preset.displayName();
     }
 
     public String ampName() {
@@ -48,8 +51,8 @@ public class PresetRecord {
     public String moduleName(String whichModule) {
         for (
             Object nodeAsObject :
-            (JSONArray) PresetJO.getSubObject(
-                m_presetJO,
+            (JSONArray) PresetBase.getSubObject(
+                m_preset,
                 List.of((Object[]) new String[] {"audioGraph","nodes"})
             )
         ) {
@@ -102,7 +105,7 @@ public class PresetRecord {
     }
 
     public String exportRawExtension() {
-        return m_presetJO.exportRawExtension();
+        return m_preset.exportRawExtension();
     }
 
     /**
@@ -131,8 +134,8 @@ public class PresetRecord {
         boolean insertSeparator = false;
         for (
             Object nodeAsObject :
-            (JSONArray) PresetJO.getSubObject(
-                m_presetJO,
+            (JSONArray) PresetBase.getSubObject(
+                m_preset,
                 List.of((Object[]) new String[]{"audioGraph","nodes"})
             )
         ) {
@@ -184,29 +187,29 @@ public class PresetRecord {
         StringBuilder sb = new StringBuilder();
         /*
         if (
-            m_presetJO.info.author==null ||
-            m_presetJO.info.author.isEmpty()
+            m_preset.info.author==null ||
+            m_preset.info.author.isEmpty()
         ) {
             sb.append("no author, ");
         } else {
-            sb.append("author:" + m_presetJO.info.author + ", ");
+            sb.append("author:" + m_preset.info.author + ", ");
         }
         if (
-            m_presetJO.info.source_id == null ||
-            m_presetJO.info.source_id.isEmpty()
+            m_preset.info.source_id == null ||
+            m_preset.info.source_id.isEmpty()
         ) {
             sb.append("no source_id, ");
         } else {
-            sb.append("source_id:" + m_presetJO.info.source_id + ", ");
+            sb.append("source_id:" + m_preset.info.source_id + ", ");
         }
-        sb.append("product_id:" + m_presetJO.info.product_id + ", ");
-        sb.append("is_factory_default:" + m_presetJO.info.is_factory_default);
+        sb.append("product_id:" + m_preset.info.product_id + ", ");
+        sb.append("is_factory_default:" + m_preset.info.is_factory_default);
          */
 
         return sb.toString();
     }
 
     public String prettyJson() {
-        return m_presetJO.toString(4);
+        return m_preset.toString(4);
     }
 }

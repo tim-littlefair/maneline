@@ -8,16 +8,12 @@ package net.heretical_camelid.maneline.lib.presets;
 
 import static net.heretical_camelid.maneline.lib.generated.FUSE_Constants._MODULE_NAMES_AND_TYPES;
 
-import net.heretical_camelid.maneline.lib.AbstractMessageProtocolBase;
-import net.heretical_camelid.maneline.lib.registries.PresetJO;
 import net.heretical_camelid.maneline.lib.utilities.Pair;
-
-import org.json.JSONArray;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
-public class FUSE_Classic_Preset extends PresetJO {
+public class FUSE_Classic_Preset extends PresetBase {
     private int AMP_POS = 4;
     private int MAX_MODULES = 10;
     public FUSE_Classic_Preset(byte[] presetBytes) {
