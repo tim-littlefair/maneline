@@ -75,24 +75,18 @@ public class FUSE_Classic_Preset extends PresetBase {
             JSONObject paramsJO = ampModule.getJSONObject("dspUnitParameters");
             for(int i=0; i<22; ++i) {
                 Pair<String, Integer> paramMetadata = _MODULE_PARAMS.get(new Pair(ampId,i));
+                String paramName = paramMetadata.first;
+                int fuseParamType = paramMetadata.second;
                 int paramByteValue = (0xFF&ampBytes1[32+i]);
-                DspModuleParam param = new DspModuleParam(
-                    paramMetadata.first, paramMetadata.second,paramByteValue
-                );
-                switch(paramMetadata.second) {
-                    case 12:
-                        FUSE_Float paramValue = new FUSE_Float(paramByteValue, paramMetadata.second);
-                        paramsJO.put(paramMetadata.first, paramValue.m_value);
-                        break;
-                    default:
-                        paramsJO.put(paramMetadata.first, param);
-                }
+                addParameter(paramsJO, paramName, fuseParamType, paramByteValue);
             }
             modules[AMP_POS] = ampModule;
         } else {
             modules[AMP_POS] = new DspModule("amp"+String.valueOf(ampId), "amp");
         }
     }
+
+
     void bytesToEffect(byte[] effectBytes, DspModule[] modules) {
         assert effectBytes[2]>=6&&effectBytes[2]<=9;
         int effectId = (0xFF&effectBytes[16]) + (0x100*effectBytes[17]);
@@ -103,14 +97,27 @@ public class FUSE_Classic_Preset extends PresetBase {
         Pair<String,String> moduleTypeAndName = _MODULE_NAMES_AND_TYPES.get(effectId);
         if(moduleTypeAndName!=null) {
             assert moduleTypeAndName.first.equals("A")==false;
-            modules[signalChainPos] = new DspModule(
+            DspModule effectModule = new DspModule(
                 moduleTypeAndName.second,
                 jsonModuleType(moduleTypeAndName.first)
             );
+            JSONObject paramsJO = effectModule.getJSONObject("dspUnitParameters");
+            for(int i=0; i<6; ++i) {
+                Pair<String, Integer> paramMetadata = _MODULE_PARAMS.get(new Pair(effectId,i));
+                if(paramMetadata==null) {
+                    continue;
+                }
+                String paramName = paramMetadata.first;
+                int fuseParamType = paramMetadata.second;
+                int paramByteValue = (0xFF&effectBytes[32+i]);
+                addParameter(paramsJO, paramName, fuseParamType, paramByteValue);
+            }
+            modules[signalChainPos] = effectModule;
         } else {
             modules[signalChainPos] = new DspModule(String.valueOf(effectId), "?");
         }
     }
+
 
     static String jsonModuleType(String moduleTypeString) {
         switch(moduleTypeString.charAt(0)) {
@@ -123,8 +130,33 @@ public class FUSE_Classic_Preset extends PresetBase {
         }
     }
 
+    private void addParameter(JSONObject paramsJO, String paramName, int fuseParamType, int paramByteValue ) {
+        switch(fuseParamType) {
+            case 12:
+                FUSE_Float paramValue = new FUSE_Float(paramByteValue, fuseParamType);
+                paramsJO.put(paramName, paramValue.m_value);
+                break;
+            default:
+                paramsJO.put(
+                    paramName,
+                    new DspModuleParam(paramName, fuseParamType, paramByteValue)
+                );
+        }
+    }
+
     static float floatValueFactory(int fuseValueByte, int fuseType) {
-        return Float.valueOf(String.format("%1.3f", (1.0*fuseValueByte)/255.0));
+        final float value;
+        switch(fuseType) {
+
+            // Generic, with exact mapping for 0.5:
+            // 1 -> 0.0, , 128-> 0.5, 255 -> 1.0
+            case 12:
+            case 13:
+            default:
+                value = (float) ((1.0*fuseValueByte)/255.0);
+        }
+        // Quantize the value to 3 decimal places
+        return Float.valueOf(String.format("%1.3f",value));
     }
 }
 
