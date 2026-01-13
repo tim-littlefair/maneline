@@ -15,11 +15,7 @@ class AmpDefinitionExporter implements PresetRegistry.Visitor {
     public void visitRecord(int slotIndex, Object record) {
         PresetRecord pr = (PresetRecord) record;
         assert pr != null;
-        String presetBasename = String.format(
-            "%s-%s",
-            pr.displayName().strip().replace(" ", "_"),
-            pr.audioHash()
-        );
+        String presetBasename = pr.exportBasename();
 
         // The raw export is the preset exactly as it was retrieved from the protocol,
         // i.e.

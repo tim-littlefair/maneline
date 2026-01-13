@@ -81,6 +81,14 @@ public class PresetRecord {
         return m_audioHash;
     }
 
+    public String exportBasename() {
+        return String.format(
+            "%s-%s",
+            displayName().strip().replaceAll("\\W+","_"),
+            audioHash()
+        );
+    }
+
     /**
      * This function generates a string summarizing the
      * DSP unit types of nodes in the audio chain.
