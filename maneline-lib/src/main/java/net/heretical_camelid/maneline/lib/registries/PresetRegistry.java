@@ -175,13 +175,11 @@ public class PresetRegistry implements IPresetResponseReader {
         return m_records.size();
     }
 
-    public void register(int slotIndex, String name, byte[] definition) {
-        // Slots are numbered from 1
-        assert slotIndex >= 0;
+    public void register(int slotIndex, String name, byte[] definition, String companionAppName) {
         // This registry requires a definition
         assert definition != null;
 
-        PresetRecord newRecord = new PresetRecord(name, definition);
+        PresetRecord newRecord = new PresetRecord(name, definition,companionAppName);
         String dsk = PresetRegistry.duplicateSlotKey(newRecord);
         ArrayList<Integer> existingDuplicateSlotList = m_duplicateSlots.get(dsk);
         if(existingDuplicateSlotList==null) {
@@ -407,9 +405,13 @@ public class PresetRegistry implements IPresetResponseReader {
     }
 
     @Override
-    public void notifyPresetResponse(int slotIndex, String presetJson) {
+    public void notifyPresetResponse(int slotIndex, String presetJson, String companionAppName) {
         String presetExtendedName = AbstractMessageProtocolBase.displayName(presetJson);
-        register(slotIndex, presetExtendedName, presetJson.getBytes(StandardCharsets.UTF_8));
+        register(
+            slotIndex, presetExtendedName,
+            presetJson.getBytes(StandardCharsets.UTF_8),
+            companionAppName
+        );
     }
 
     public static interface Visitor {

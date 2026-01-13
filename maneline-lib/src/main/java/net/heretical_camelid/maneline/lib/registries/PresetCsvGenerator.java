@@ -1,7 +1,7 @@
 package net.heretical_camelid.maneline.lib.registries;
 
 class PresetCsvGenerator implements PresetRegistry.Visitor {
-    private static final String DATA_LINE_FORMAT = "%4d,%-16s,%-18s,%-18s,%-18s,%-18s,%-18s,%-9s\n";
+    private static final String DATA_LINE_FORMAT = "%4d,%-20s,%-18s,%-18s,%-18s,%-18s,%-18s,%-9s\n";
     private static final String HEADER_LINE_FORMAT = DATA_LINE_FORMAT.replace("%4d","%4s");
     String m_outputPath;
     StringBuilder m_stringBuilder;

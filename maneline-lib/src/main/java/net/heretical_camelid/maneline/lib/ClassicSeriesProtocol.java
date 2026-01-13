@@ -454,7 +454,8 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
             presetRegistry.register(
                 slotIndex,
                 fcp.displayName(),
-                fcp.toString(4).getBytes(StandardCharsets.UTF_8)
+                fcp.definitionBytes(),
+                PresetRecord.COMPANION_APP_FUSE
             );
         }
         return scStatus;

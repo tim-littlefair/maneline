@@ -149,8 +149,8 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         final PresetRecord[] presetRecord = new PresetRecord[1];
         s_presetResponseReader = new IPresetResponseReader() {
             @Override
-            public void notifyPresetResponse(int slotIndex, String presetJson) {
-                presetRecord[0] = new PresetRecord("",presetJson.getBytes());
+            public void notifyPresetResponse(int slotIndex, String presetJson, String companionAppName) {
+                presetRecord[0] = new PresetRecord("",presetJson.getBytes(),"tone-usb");
                 retval[0] = "currentPresetIndex="+slotIndex;
             }
         };
@@ -410,7 +410,8 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             if(messageId==31) {
                 if (s_presetResponseReader != null) {
                     s_presetResponseReader.notifyPresetResponse(
-                        m_currentPresetIndex, jsonDefinition
+                        m_currentPresetIndex, jsonDefinition,
+                        PresetRecord.COMPANION_APP_TONE_LT_DESKTOP
                     );
                 }
             } else {

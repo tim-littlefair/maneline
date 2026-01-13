@@ -1,4 +1,7 @@
 package net.heretical_camelid.maneline.lib.registries;
+import net.heretical_camelid.maneline.lib.presets.FUSE_Classic_Preset;
+import net.heretical_camelid.maneline.lib.presets.TONE_LT_Preset;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -7,6 +10,8 @@ import java.util.List;
 
 public class PresetRecord {
 
+    public static final String COMPANION_APP_FUSE = "fuse";
+    public static final String COMPANION_APP_TONE_LT_DESKTOP = "tone-usb";
     final String m_name;
     final String m_rawDefinition;
     // final PresetCanonicalSerializer m_presetJO;
@@ -19,10 +24,17 @@ public class PresetRecord {
         m_rawDefinition = new String(definitionBytes, StandardCharsets.UTF_8);
     }
 
-    public PresetRecord(String name, byte[] definitionBytes) {
+    public PresetRecord(String name, byte[] definitionBytes, String companionAppName) {
         m_name = name;
         m_rawDefinition = new String(definitionBytes, StandardCharsets.UTF_8);
-        m_presetJO = new PresetJO(m_rawDefinition);
+        if(companionAppName.equals(COMPANION_APP_FUSE)) {
+            m_presetJO = new FUSE_Classic_Preset(definitionBytes);
+        } else if (companionAppName.equals(COMPANION_APP_TONE_LT_DESKTOP)) {
+            m_presetJO = new TONE_LT_Preset(definitionBytes);
+        } else {
+            m_presetJO = new PresetJO(definitionBytes, companionAppName);
+            // assert m_name.equals(m_presetJO.displayName());
+        }
     }
 
     public String displayName() {
@@ -87,6 +99,10 @@ public class PresetRecord {
             displayName().strip().replaceAll("\\W+","_"),
             audioHash()
         );
+    }
+
+    public String exportRawExtension() {
+        return m_presetJO.exportRawExtension();
     }
 
     /**

@@ -21,17 +21,10 @@ public class FUSE_Classic_Preset extends PresetJO {
     private int AMP_POS = 4;
     private int MAX_MODULES = 10;
     public FUSE_Classic_Preset(byte[] presetBytes) {
-        super();
+        super(presetBytes,"fuse");
         final String presetName;
         DspModule[] modules = new DspModule[MAX_MODULES];
-        JSONArray fuseRawPackets = new JSONArray(8);
         if(presetBytes.length==64*8) {
-            for(int packetSeq=0; packetSeq<8; ++packetSeq) {
-                fuseRawPackets.put(AbstractMessageProtocolBase.bufferToHex2(
-                    Arrays.copyOfRange(presetBytes,64*packetSeq,64*(packetSeq+1)),
-                   ""
-                ));
-            }
             presetName = (
                 new String(presetBytes,16,48, StandardCharsets.UTF_8)
                 .replace("\u0000","")
@@ -59,7 +52,6 @@ public class FUSE_Classic_Preset extends PresetJO {
                 audioGraph_nodes().put(modules[i]);
             }
         }
-        metadata().put("fuseRawPackets", fuseRawPackets);
     }
 
     /** 

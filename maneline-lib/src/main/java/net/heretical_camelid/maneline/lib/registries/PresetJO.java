@@ -1,9 +1,12 @@
 package net.heretical_camelid.maneline.lib.registries;
 
+import net.heretical_camelid.maneline.lib.AbstractMessageProtocolBase;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -49,21 +52,38 @@ public class PresetJO extends JSONObject {
         return new TreeMap<String,Object>();
     }
 
-    protected PresetJO() {
+    protected String m_exportRawExtension = null;
+    final private byte[] m_definitionBytes;
+
+    protected PresetJO(byte[] presetBytes, String companionAppName) {
         super();
+        m_definitionBytes = presetBytes;
+
         JSONObject audioGraph = new JSONObject(createMapImplementation());
         audioGraph.put("nodes", new JSONArray(5));
         put("audioGraph", audioGraph);
         put("info", new JSONObject(createMapImplementation()));
         put("_metadata", new JSONObject(createMapImplementation()));
+
+        JSONArray rawPackets = new JSONArray( 1+ ((presetBytes.length-1)/8));
+        for(int packetSeq=0; packetSeq<rawPackets.length(); ++packetSeq) {
+            rawPackets.put(AbstractMessageProtocolBase.bufferToHex2(
+                Arrays.copyOfRange(presetBytes,64*packetSeq,64*(packetSeq+1)),
+                ""
+            ));
+        }
+        put(String.format("_%s_packets",companionAppName), rawPackets);
+        m_exportRawExtension = String.format(".%s.json",companionAppName);
     }
 
-    protected PresetJO(String presetJson) {
+    protected PresetJO(String presetJson, String companionAppName) {
         super(new JSONObject(presetJson).toMap());
+        m_definitionBytes = presetJson.toString().getBytes();
         assert audioGraph() != null;
         // assert audioGraph_nodes() != null;
         assert info() != null;
         assert displayName() != null;
+        m_exportRawExtension = String.format(".%s.json",companionAppName);
     }
 
     public String displayName() {
@@ -71,6 +91,10 @@ public class PresetJO extends JSONObject {
             this,
             List.of((Object[]) new String[]{"info", "displayName"})
         );
+    }
+
+    public byte[] definitionBytes() {
+        return m_definitionBytes;
     }
 
     protected static Object getSubObject(Object target, List<Object> keySeq) {
@@ -127,18 +151,22 @@ public class PresetJO extends JSONObject {
         m_audioGraph_nodes.put(pos<4?pos:pos+1,node);
     }
 
-    public PresetRecord exportPresetRecord() {
+    /*public PresetRecord exportPresetRecord() {
         return new PresetRecord(
             (String) getSubObject(this, List.of("info", "displayName")),
             this.toString().getBytes(StandardCharsets.UTF_8)
         );
-    }
+    }*/
 
+    public String exportRawExtension() {
+        return m_exportRawExtension;
+    }
     public JSONObject metadata() {
         return getJSONObject("_metadata");
     }
 
     static public void main(String args[]) {
+/*
         PresetJO testPreset1 = (PresetJO) (new PresetJO().put("displayName","testPreset1"));
         System.out.println(testPreset1.toString(4));
         JSONArray nodesArray1 = testPreset1.m_audioGraph_nodes;
@@ -161,7 +189,7 @@ public class PresetJO extends JSONObject {
          List.of("audioGraph","nodes", 2, "FenderId")
         );
         assert ampFenderId.equals("Deluxe65");
-/*
+
         PresetJO testPreset3 = create(testPreset2.exportPresetRecord());
         testPreset3.addAudioGraphNode("Passthru","stomp",null,0);
         testPreset3.addAudioGraphNode("SineTremolo","mod",null,1);

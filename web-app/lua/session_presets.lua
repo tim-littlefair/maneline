@@ -49,8 +49,17 @@ function SessionPresets:get_session_presets(session_name)
         preset_row.module4, field_pos = _csv_get_next_field(preset_line,field_pos)
         preset_row.module5, field_pos = _csv_get_next_field(preset_line,field_pos)
         audioHash, field_pos = _csv_get_next_field(preset_line,field_pos)
-        preset_row.filenamePrefix = preset_row.displayName:gsub("%s*$","")
-        preset_row.filenamePrefix = preset_row.filenamePrefix:gsub(" ","_").."-"..audioHash
+
+        -- The first part of the filename prefix must exactly match the following
+        -- regex transform which appears in Java code at PresetRecord.exportBasename()
+        -- displayName().strip().replaceAll("\\W+","_"),
+        mangledDisplayName = (
+            preset_row.displayName:gsub("^%s+","")
+                                  :gsub("%s+$","")
+                                  :gsub("[^%a%d_]+","_")
+        )
+        preset_row.filenamePrefix = mangledDisplayName.."-"..audioHash
+
         table.insert(preset_rows, preset_row)
 
         preset_line = presets_csv:read("*line")

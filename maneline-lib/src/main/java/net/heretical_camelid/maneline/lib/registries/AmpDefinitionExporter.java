@@ -23,7 +23,7 @@ class AmpDefinitionExporter implements PresetRegistry.Visitor {
         //   retrieved by the getPreset(...) command;
         // + for LT: compact JSON, with order of dictionary keys preserved.
         String presetRawDefinition = pr.m_rawDefinition;
-        String rawTargetPath = m_outputPrefix + "/" + presetBasename + ".raw";
+        String rawTargetPath = m_outputPrefix + "/" + presetBasename + pr.exportRawExtension();
         PresetRegistry.outputToFile(rawTargetPath, presetRawDefinition);
 
         // The pretty export is based on the org.json.JSONObject.toString(4) rendering
