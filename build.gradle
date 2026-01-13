@@ -10,7 +10,7 @@ buildscript {
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
 
-        // Exceptions to this rule have been required in the past when the
+        // Exceptions to this rule will be required in the past when the
         // release version of the package com.android.tools.build:gradle
         // (aka the Android Gradle Plugin, or AGP) has brought in dependencies
         // which triggered security vulnerability alerts from GitHub dependabot.
@@ -19,13 +19,22 @@ buildscript {
         // the Gradle build environment and needs to be included here
         // for the :android-app package to be buildable.
 
-        // When AGP imported vulnerable dependencies in the past, explicit
+        // When AGP attempts to import vulnerable dependencies, explicit
         // non-vulnerable versions of the packages named in alerts
-        // were imported here, before AGP, allowing the security alerts to be
-        // cleared.
+        // should imported here, before AGP.  The import will be resolved
+        // by using the non-vulnerable version, allowing the security alerts
+        // to be cleared.
 
-        // As of AGP 8.13.2 the only dependency requiring this treatment is
-        // the following one, notified in
+        // https://github.com/tim-littlefair/maneline/security/dependabot/3
+        // https://github.com/tim-littlefair/maneline/security/dependabot/4
+        classpath 'org.apache.commons:commons-compress:1.28.0'
+
+        // https://github.com/tim-littlefair/maneline/security/dependabot/14
+        classpath 'org.jdom:jdom2:2.0.6.1'
+
+        // https://github.com/tim-littlefair/maneline/security/dependabot/15
+        classpath 'io.netty:netty-codec-http:4.1.129.Final'
+
         // https://github.com/tim-littlefair/maneline/security/dependabot/16
         classpath 'org.bitbucket.b_c:jose4j:0.9.6'
 
