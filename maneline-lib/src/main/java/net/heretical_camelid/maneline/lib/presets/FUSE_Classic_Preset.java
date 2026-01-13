@@ -7,11 +7,21 @@
 package net.heretical_camelid.maneline.lib.presets;
 
 import static net.heretical_camelid.maneline.lib.generated.FUSE_Constants._MODULE_NAMES_AND_TYPES;
+import static net.heretical_camelid.maneline.lib.generated.FUSE_Constants._MODULE_PARAMS;
 
 import net.heretical_camelid.maneline.lib.utilities.Pair;
 
+import org.json.JSONObject;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+
+class FUSE_Float {
+    final float m_value;
+    FUSE_Float(int byteValue, int fuseType) {
+        m_value = FUSE_Classic_Preset.floatValueFactory(byteValue, fuseType);
+    }
+}
 
 public class FUSE_Classic_Preset extends PresetBase {
     private int AMP_POS = 4;
@@ -61,7 +71,24 @@ public class FUSE_Classic_Preset extends PresetBase {
         Pair<String,String> moduleTypeAndName = _MODULE_NAMES_AND_TYPES.get(ampId);
         if(moduleTypeAndName!=null) {
             assert moduleTypeAndName.first.equals("A");
-            modules[AMP_POS] = new DspModule(moduleTypeAndName.second, "amp");
+            DspModule ampModule = new DspModule(moduleTypeAndName.second, "amp");
+            JSONObject paramsJO = ampModule.getJSONObject("dspUnitParameters");
+            for(int i=0; i<22; ++i) {
+                Pair<String, Integer> paramMetadata = _MODULE_PARAMS.get(new Pair(ampId,i));
+                int paramByteValue = (0xFF&ampBytes1[32+i]);
+                DspModuleParam param = new DspModuleParam(
+                    paramMetadata.first, paramMetadata.second,paramByteValue
+                );
+                switch(paramMetadata.second) {
+                    case 12:
+                        FUSE_Float paramValue = new FUSE_Float(paramByteValue, paramMetadata.second);
+                        paramsJO.put(paramMetadata.first, paramValue.m_value);
+                        break;
+                    default:
+                        paramsJO.put(paramMetadata.first, param);
+                }
+            }
+            modules[AMP_POS] = ampModule;
         } else {
             modules[AMP_POS] = new DspModule("amp"+String.valueOf(ampId), "amp");
         }
@@ -94,6 +121,10 @@ public class FUSE_Classic_Preset extends PresetBase {
             case 'R': return "reverb";
             default: return "?" + moduleTypeString + "?";
         }
+    }
+
+    static float floatValueFactory(int fuseValueByte, int fuseType) {
+        return Float.valueOf(String.format("%1.3f", (1.0*fuseValueByte)/255.0));
     }
 }
 
