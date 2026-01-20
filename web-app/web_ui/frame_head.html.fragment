@@ -22,7 +22,7 @@
 
   <style>
     button {
-      width: 100px;
+      width: 105px;
       height: auto;
     }
     .session_table {

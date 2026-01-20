@@ -17,11 +17,11 @@ function select_preset(i) {
     }, 1000)
 }
 
-function td_inner_html(i, nameLine1, nameLine2) {
+function td_inner_html(i, nameLine) {
     idStr=`0${i}`
     idStr=idStr.substring(idStr.length-2,idStr.length)
     btnId = "preset"+idStr
-    btnText = "preset&nbsp;"+idStr+"<br/>"+nameLine1+"<br/>"+nameLine2
+    btnText = `preset&nbsp;${idStr}<br/><div style="height:40px;">${nameLine}</div>`
     return `<td><button id="${btnId}" onclick="select_preset(${i})" />${btnText}</td>\n`
 }
 
@@ -42,21 +42,15 @@ function populate_table() {
         if(index_into_suite>=suite_from_json.length)
         {
             tbody_inner_html += td_inner_html(
-                0, "NOT IN", "USE"
+                0, "NOT IN USE"
             )
         }
         else
         {
             preset_from_json = suite_from_json.presets[index_into_suite]
-            name1=preset_from_json.presetName.substring(0,8).trim()
-            name2=preset_from_json.presetName.substring(8,16).trim()
-            if(name2=="") {
-                name2="&nbsp;"
-            }
-            tbody_inner_html += td_inner_html(
-                preset_from_json.originSlotIndex,
-                name1,name2
-            )
+            name=preset_from_json.presetName.trim()
+            name=name.replace(/\s+/," ")
+            tbody_inner_html += td_inner_html(preset_from_json.originSlotIndex,name)
         }
         if(col==max_cols-1)
         {
