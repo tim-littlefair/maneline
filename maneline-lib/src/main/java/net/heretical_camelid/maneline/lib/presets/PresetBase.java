@@ -12,14 +12,6 @@ import java.util.TreeMap;
 
 
 public class PresetBase extends JSONObject {
-    protected class DspModuleParam extends JSONObject {
-        public DspModuleParam(String paramName, Object paramType, Object paramValue) {
-            put("_paramName",paramName);
-            put("_paramType",paramType);
-            put("_paramValue",paramValue);
-        }
-    }
-
     protected class DspModule extends JSONObject {
         public DspModule(String moduleName, Object moduleType) {
             put("FenderId", moduleName);

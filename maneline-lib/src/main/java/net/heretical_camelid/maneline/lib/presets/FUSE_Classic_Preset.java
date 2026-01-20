@@ -23,6 +23,14 @@ class FUSE_Float {
     }
 }
 
+class FUSE_ModuleParam extends JSONObject {
+    public FUSE_ModuleParam(int fuseType, int byteValue) {
+        put("_fuseType",fuseType);
+        put("_byteValue",byteValue);
+        put("_fuseValueString", FUSE_Classic_Preset.renderFUSEValue(fuseType, byteValue));
+        put("_jsonValueString", FUSE_Classic_Preset.renderJSONValue(fuseType, byteValue));
+    }
+}
 public class FUSE_Classic_Preset extends PresetBase {
     private int AMP_POS = 4;
     private int MAX_MODULES = 10;
@@ -59,6 +67,15 @@ public class FUSE_Classic_Preset extends PresetBase {
             }
         }
     }
+
+    public static String renderJSONValue(int fuseType, int byteValue) {
+        return "";
+    }
+
+    public static String renderFUSEValue(int fuseType, int byteValue) {
+        return renderJSONValue(fuseType, byteValue);
+    }
+
 
     /** 
      * This function analyzes a sequence of bytes, 
@@ -139,7 +156,7 @@ public class FUSE_Classic_Preset extends PresetBase {
             default:
                 paramsJO.put(
                     paramName,
-                    new DspModuleParam(paramName, fuseParamType, paramByteValue)
+                    new FUSE_ModuleParam(fuseParamType, paramByteValue)
                 );
         }
     }
