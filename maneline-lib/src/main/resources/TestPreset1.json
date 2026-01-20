@@ -1,0 +1,203 @@
+{
+    "_fuse_packets": [],
+    "_metadata": {},
+    "audioGraph": {"nodes": [
+        {
+            "FenderId": "Stomp1",
+            "dspUnitParameters": {
+                "Level": {
+                    "_fuseType": 1,
+                    "_jsonValueString": "",
+                    "_byteValue": 121,
+                    "_fuseValueString": ""
+                },
+                "Tone": {
+                    "_fuseType": 1,
+                    "_jsonValueString": "",
+                    "_byteValue": 140,
+                    "_fuseValueString": ""
+                },
+                "Blend": {
+                    "_fuseType": 18,
+                    "_jsonValueString": "",
+                    "_byteValue": 255,
+                    "_fuseValueString": ""
+                },
+                "Gain": {
+                    "_fuseType": 1,
+                    "_jsonValueString": "",
+                    "_byteValue": 255,
+                    "_fuseValueString": ""
+                }
+            },
+            "nodeId": "stomp"
+        },
+        {
+            "FenderId": "0",
+            "dspUnitParameters": {},
+            "nodeId": "?"
+        },
+        {
+            "FenderId": "Amp1",
+            "dspUnitParameters": {
+                "Bass": 1,
+                "Master Volume": 0.49,
+                "Other_20": {
+                    "_fuseType": 141,
+                    "_jsonValueString": "",
+                    "_byteValue": 0,
+                    "_fuseValueString": ""
+                },
+                "Other_21": {
+                    "_fuseType": 141,
+                    "_jsonValueString": "",
+                    "_byteValue": 1,
+                    "_fuseValueString": ""
+                },
+                "Other_11": 0.502,
+                "Noise Gate": {
+                    "_fuseType": 144,
+                    "_jsonValueString": "",
+                    "_byteValue": 1,
+                    "_fuseValueString": ""
+                },
+                "Noise Gate Thresh": {
+                    "_fuseType": 134,
+                    "_jsonValueString": "",
+                    "_byteValue": 2,
+                    "_fuseValueString": ""
+                },
+                "Gain2": 0.502,
+                "Cab": {
+                    "_fuseType": 142,
+                    "_jsonValueString": "",
+                    "_byteValue": 6,
+                    "_fuseValueString": ""
+                },
+                "Bias": {
+                    "_fuseType": 13,
+                    "_jsonValueString": "",
+                    "_byteValue": 128,
+                    "_fuseValueString": ""
+                },
+                "Middle": 0.624,
+                "Power Supply": {
+                    "_fuseType": 141,
+                    "_jsonValueString": "",
+                    "_byteValue": 9,
+                    "_fuseValueString": ""
+                },
+                "Noise Gate Depth": 0,
+                "Volume": 0.671,
+                "Treble": 0,
+                "Sag": {
+                    "_fuseType": 143,
+                    "_jsonValueString": "",
+                    "_byteValue": 1,
+                    "_fuseValueString": ""
+                },
+                "Presence": 0,
+                "Resonance": 0.502,
+                "Other_12": {
+                    "_fuseType": 141,
+                    "_jsonValueString": "",
+                    "_byteValue": 9,
+                    "_fuseValueString": ""
+                },
+                "Other_13": {
+                    "_fuseType": 141,
+                    "_jsonValueString": "",
+                    "_byteValue": 9,
+                    "_fuseValueString": ""
+                },
+                "Gain": 0.341,
+                "Other_14": {
+                    "_fuseType": 141,
+                    "_jsonValueString": "",
+                    "_byteValue": 9,
+                    "_fuseValueString": ""
+                }
+            },
+            "nodeId": "amp"
+        },
+        {
+            "FenderId": "Delay1",
+            "dspUnitParameters": {
+                "Delay Time": {
+                    "_fuseType": 6,
+                    "_jsonValueString": "",
+                    "_byteValue": 64,
+                    "_fuseValueString": ""
+                },
+                "Level": {
+                    "_fuseType": 1,
+                    "_jsonValueString": "",
+                    "_byteValue": 69,
+                    "_fuseValueString": ""
+                },
+                "Flutter": {
+                    "_fuseType": 1,
+                    "_jsonValueString": "",
+                    "_byteValue": 98,
+                    "_fuseValueString": ""
+                },
+                "Stereo": {
+                    "_fuseType": 1,
+                    "_jsonValueString": "",
+                    "_byteValue": 0,
+                    "_fuseValueString": ""
+                },
+                "Feedback": {
+                    "_fuseType": 1,
+                    "_jsonValueString": "",
+                    "_byteValue": 42,
+                    "_fuseValueString": ""
+                },
+                "Brightness": {
+                    "_fuseType": 1,
+                    "_jsonValueString": "",
+                    "_byteValue": 172,
+                    "_fuseValueString": ""
+                }
+            },
+            "nodeId": "delay"
+        },
+        {
+            "FenderId": "Reverb1",
+            "dspUnitParameters": {
+                "Level": {
+                    "_fuseType": 1,
+                    "_jsonValueString": "",
+                    "_byteValue": 32,
+                    "_fuseValueString": ""
+                },
+                "Diffusion": {
+                    "_fuseType": 1,
+                    "_jsonValueString": "",
+                    "_byteValue": 128,
+                    "_fuseValueString": ""
+                },
+                "Tone": {
+                    "_fuseType": 1,
+                    "_jsonValueString": "",
+                    "_byteValue": 255,
+                    "_fuseValueString": ""
+                },
+                "Decay": {
+                    "_fuseType": 1,
+                    "_jsonValueString": "",
+                    "_byteValue": 72,
+                    "_fuseValueString": ""
+                },
+                "Dwell": {
+                    "_fuseType": 1,
+                    "_jsonValueString": "",
+                    "_byteValue": 171,
+                    "_fuseValueString": ""
+                }
+            },
+            "nodeId": "reverb"
+        }
+    ]},
+    "info": {"displayName": "Preset1"}
+}

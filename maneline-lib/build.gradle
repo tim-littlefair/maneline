@@ -12,6 +12,10 @@ jar {
         from('src/main')
         include(['**/*.json'])
     }
+    sourceSets.test.resources {
+        from('src/test')
+        include(['**/*.json'])
+    }
 }
 
 dependencies {
