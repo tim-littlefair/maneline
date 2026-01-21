@@ -2,18 +2,16 @@ package net.heretical_camelid.maneline.lib.presets;
 
 import static java.util.Arrays.sort;
 
+import net.heretical_camelid.maneline.lib.utilities.ResourceLoader;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.File;
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * DspParameterString is subclassed in order to ensure that the
@@ -53,7 +51,6 @@ class DspParameterFloat {
     }
 }
 
-// All o
 class DspParameter {
     final String m_name;
     final Object m_canonicalValue;
@@ -73,22 +70,135 @@ class DspParameter {
         }
     }
 }
-class DspModule extends LinkedHashMap {
+
+/**
+ * DspModule implements the contract of JSONObject but overrides the
+ * behaviour to guarantee that toString() returns parameters in the
+ * order they were supplied in the ArrayList passed to the
+ * constructor.
+ * Note that instances of this this class are immutable.
+ */
+class DspModule extends JSONObject {
+    enum ModuleType_e {
+        // amplifier simulations
+        amp,
+
+        // Skip two items to align with discriminant bytes in FenderFUSE
+        // on-the-wire protocol
+        MT_NOT_USED_1,MT_NOT_USED_2,
+
+        // effect simulations used in Mustang I v2, Mustang LT40S
+        stomp, mod, reverb, delay,
+
+        // eq (graphic equalizer) effect seems to appear instead of mod in
+        // Rumble LT25 presets,
+        // Haven't yet worked out how this is rendered on-the-wire.
+        eq,
+
+        // utility modules include the "Passthru" module type which reflects
+        // the absence of a module.
+        utility,
+
+        // end marker
+        MT_LIMIT;
+    }
+
+    /**
+     * m_fenderId is the name of the module,
+     */
     final String m_fenderId;
-    final String m_moduleType;
-    DspModule(String fenderId, String moduleType, List<DspParameter> parameters) {
+    /**
+     * m_nodeId identifies the type of the module.
+     * The majority of (non-empty) modules directly attached to the signal chain
+     * are of one of the following types:
+     * "amp", "
+     *
+     */
+    final String m_nodeId;
+
+    final Map<String, Object> m_parameters;
+    DspModule(String fenderId, String nodeId, List<DspParameter> parameters) {
         m_fenderId = fenderId;
-        m_moduleType = moduleType;
+        m_nodeId = nodeId;
+        m_parameters = new LinkedHashMap<String, Object>();
         for(DspParameter p: parameters) {
-            put(p.m_name, p.m_canonicalValue);
-            put(p.m_name+"#details", p.m_valueDetails);
+            if(p.m_canonicalValue instanceof Float) {
+                m_parameters.put(p.m_name, new DspParameterFloat((Float) p.m_canonicalValue));
+            } else if(p.m_canonicalValue instanceof String) {
+                m_parameters.put(p.m_name, new DspParameterString((String) p.m_canonicalValue));
+            } else {
+                m_parameters.put(p.m_name, p.m_canonicalValue);
+            }
+            m_parameters.put(p.m_name+"#details", p.m_valueDetails);
         }
+    }
+
+    @Override
+    public String toString() {
+        return toString(0, false);
+    }
+
+    @Override
+    public String toString(int indent) {
+        return toString(indent, false);
+    }
+
+    public String toString(int indent, boolean withDetails) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("{");
+        String level0Separator = "";
+        String level1Separator = "";
+        String level2Separator = "";
+        if(indent>0) {
+            level0Separator="\n";
+            level1Separator="\n" + String.join("", Collections.nCopies(indent," "));
+            level2Separator="\n" + String.join("", Collections.nCopies(indent*2," "));
+        }
+        sb.append(level1Separator);
+        sb.append("\"FenderId\":" + "\"" + m_fenderId+"\",");
+        sb.append(level1Separator);
+        sb.append("\"nodeId\":"+ "\"" + m_nodeId+ "\",");
+        sb.append(level1Separator);
+        sb.append("\"dspUnitParameters\":{");
+        if(!m_parameters.isEmpty()) {
+            for(String k: m_parameters.keySet()) {
+                Object v = m_parameters.get(k);
+                if(v==null) {
+                    continue;
+                } else if (!k.endsWith("#details") ) {
+                    sb.append(level2Separator);
+                    sb.append("\"" + k + "\":"+ "\"" + v.toString() + "\",");
+                } else if (withDetails) {
+                    sb.append(level2Separator);
+                    sb.append("\"" + k + "\":"+ "\"" + v.toString() + "\",");
+                }
+            }
+            sb.delete(sb.lastIndexOf(","),sb.length());
+            sb.append(level1Separator);
+        }
+        sb.append("}");
+        return sb.toString();
     }
 }
 
 public class SignalChain {
-    String m_name;
-    ArrayList<DspModule> m_modules;
+    ArrayList<DspModule> m_modules = new ArrayList<>();
+
+    public String toString() {
+        return toString(0,false);
+    }
+
+    public String toString(int indent, boolean withDetails) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[");
+        for(DspModule m: m_modules) {
+            sb.append(m.toString(indent, withDetails));
+            sb.append(",");
+        }
+        sb.delete(sb.lastIndexOf(","),sb.length());
+        sb.append("]");
+        return sb.toString();
+    }
 
     public static void main(String args[]) {
         try {
@@ -107,42 +217,42 @@ public class SignalChain {
             assert testFloat0.toFloat() == 0.5F : String.format(
                 "testFloat0.toFloat()=%f", testFloat0.toFloat()
             );
-
-            InputStream testPreset1IS = PresetBase.class.getResourceAsStream("/TestPreset1.json");
-            assert testPreset1IS != null;
-            byte[] jsonBytes = new byte[10240];
-            testPreset1IS.read(jsonBytes);
-            JSONObject testPreset1JO = new JSONObject(jsonBytes);
-            System.out.println(testPreset1JO.toString(1));
-            JSONObject audioGraph1 = testPreset1JO.getJSONObject("audioGraph");
-            JSONArray agNodes1 = audioGraph1.getJSONArray("nodes");
-            for(Object node: agNodes1) {
-                JSONObject moduleJO = (JSONObject) node;
-                String fenderId = moduleJO.getString("FenderId");
-                String nodeId = moduleJO.getString("nodeId");
-                List<DspParameter> params = new ArrayList<DspParameter>();
-                for(String k: moduleJO.keySet()) {
-                    Object v = moduleJO.get(k);
-                    final Object canonicalValue;
-                    final Map<String, Object> valueDetails;
-                    if(v instanceof JSONObject) {
-                        JSONObject vJO = (JSONObject) v;
-                        canonicalValue = vJO.getInt("_byteValue");
-                        valueDetails = vJO.toMap();
-                    } else {
-                        canonicalValue = v;
-                        valueDetails = null;
-                    }
-                    params.add(new DspParameter(k, canonicalValue, valueDetails));
-                }
-            }
-
-            System.exit(0);
         }
-        catch(Exception e) {
+            catch(Exception e) {
             System.err.println(e.getLocalizedMessage());
             System.exit(1);
-
         }
+
+        JSONObject testPreset1JO = ResourceLoader.loadJson("/TestPreset1.json");
+        JSONObject audioGraph1 = testPreset1JO.getJSONObject("audioGraph");
+        JSONArray agNodes1 = audioGraph1.getJSONArray("nodes");
+        SignalChain testSC = new SignalChain();
+        for(Object node: agNodes1) {
+            JSONObject moduleJO = (JSONObject) node;
+            String fenderId = moduleJO.getString("FenderId");
+            String nodeId = moduleJO.getString("nodeId");
+            List<DspParameter> params = new ArrayList<DspParameter>();
+            JSONObject moduleParams = moduleJO.getJSONObject("dspUnitParameters");
+            for(String k: moduleParams.keySet()) {
+                Object v = moduleParams.get(k);
+                final Object canonicalValue;
+                final Map<String, Object> valueDetails;
+                if(v instanceof JSONObject) {
+                    JSONObject vJO = (JSONObject) v;
+                    canonicalValue = vJO.getInt("_byteValue");
+                    valueDetails = vJO.toMap();
+                } else {
+                    canonicalValue = v;
+                    valueDetails = null;
+                }
+                params.add(new DspParameter(k, canonicalValue, valueDetails));
+            }
+            testSC.m_modules.add(new DspModule(fenderId, nodeId, params));
+        }
+        System.out.println(testSC.toString(1,true));
+        System.out.println(testSC.toString(4,false));
+        System.out.println(testSC.toString());
+
+        System.exit(0);
     }
 }
