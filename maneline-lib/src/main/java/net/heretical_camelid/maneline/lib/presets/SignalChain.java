@@ -61,14 +61,6 @@ class DspParameter {
         m_canonicalValue = canonicalValue;
         m_valueDetails = valueDetails;
     }
-
-    String toString(boolean canonicalValueOnly) {
-        if(canonicalValueOnly) {
-            return String.format("\"%s\":%s", m_name, m_canonicalValue);
-        } else {
-            return String.format("\"%s\":%s", m_name, m_valueDetails);
-        }
-    }
 }
 
 /**
@@ -79,6 +71,7 @@ class DspParameter {
  * Note that instances of this this class are immutable.
  */
 class DspModule extends JSONObject {
+/*
     enum ModuleType_e {
         // amplifier simulations
         amp,
@@ -102,6 +95,7 @@ class DspModule extends JSONObject {
         // end marker
         MT_LIMIT;
     }
+ */
 
     /**
      * m_fenderId is the name of the module,
@@ -109,10 +103,31 @@ class DspModule extends JSONObject {
     final String m_fenderId;
     /**
      * m_nodeId identifies the type of the module.
-     * The majority of (non-empty) modules directly attached to the signal chain
-     * are of one of the following types:
-     * "amp", "
      *
+     * The majority of (non-empty) modules directly attached to the signal chain
+     * for presets targetting 'Mustang' branded amps are of one of the following
+     * types:
+     * + "amp", "stomp", "mod", "delay", "reverb"
+     * These terms are drived from the nodeId parameter in the different-but-related
+     * JSON preset formats consumed on-the-wire by post-classic amps in the LT-, GT-,
+     * GTX- and MMP ranges.
+     * There is also a module type "utility" which includes the "Passthru" module
+     * which is supplied as a placeholder in a slot reserved for one of the types
+     * above when there is no module of the type the slot is reserved for.
+     * Presets for Bass-oriented amps with "Rumble" branding in place of "Mustang"
+     * use a module type "eq" (graphic equalizer).
+     * The FendertTONE LT Desktop app enforces that all Mustang LT- presets can only
+     * be configured with a have signal chain of the form "stomp", "mod",
+     * "amp", "delay", "reverb" (all modules except amp are optional),
+     * The Rumble LT-25 presets are all "stomp", "amp", "eq", "delay", "reverb".
+     * The GT-, GTX-, MMP FenderTONE mobile app allows more freedom in ordering the
+     * effects.
+     * The 'classic' amp ranges (Mustang I-V original/v2 and various earlier models
+     * starting with G-DEC3) have a binary format on-the-wire, but use terms
+     * similar to these in the XML-based .fuse file format for saving presets, except
+     * the term "Distortion" was used rather than "mod" (but from the names of the modules
+     * available, the meaning is the same or very similar).
+     * On the classic amps, the order of presets is not locked down as it is on Mustang/Rumble LT.
      */
     final String m_nodeId;
 
@@ -123,13 +138,17 @@ class DspModule extends JSONObject {
         m_parameters = new LinkedHashMap<String, Object>();
         for(DspParameter p: parameters) {
             if(p.m_canonicalValue instanceof Float) {
-                m_parameters.put(p.m_name, new DspParameterFloat((Float) p.m_canonicalValue));
-            } else if(p.m_canonicalValue instanceof String) {
-                m_parameters.put(p.m_name, new DspParameterString((String) p.m_canonicalValue));
+                // before storing, round the value to the precision implied by
+                // DspParameterFloat._FLOAT_FORMAT
+                m_parameters.put(p.m_name, Float.valueOf(
+                    new DspParameterFloat((Float) p.m_canonicalValue).toString())
+                );
             } else {
                 m_parameters.put(p.m_name, p.m_canonicalValue);
             }
-            m_parameters.put(p.m_name+"#details", p.m_valueDetails);
+            if(p.m_valueDetails!=null) {
+                m_parameters.put(p.m_name+"#details", p.m_valueDetails);
+                }
         }
     }
 
@@ -167,17 +186,29 @@ class DspModule extends JSONObject {
                     continue;
                 } else if (!k.endsWith("#details") ) {
                     sb.append(level2Separator);
-                    sb.append("\"" + k + "\":"+ "\"" + v.toString() + "\",");
+                    sb.append("\"" + k + "\":"+ v.toString() + ",");
                 } else if (withDetails) {
                     sb.append(level2Separator);
-                    sb.append("\"" + k + "\":"+ "\"" + v.toString() + "\",");
+                    sb.append("\"" + k + "\":"+ v.toString() + ",");
                 }
             }
             sb.delete(sb.lastIndexOf(","),sb.length());
-            sb.append(level1Separator);
+            sb.append(level2Separator);
         }
         sb.append("}");
+        sb.append(level1Separator);
+        sb.append("}");
         return sb.toString();
+    }
+
+    private void serializeParamValue(Object paramValue, StringBuilder sb, boolean quantizeFloats) {
+        if( (paramValue instanceof Float) && (quantizeFloats==true) ) {
+            sb.append(new DspParameterFloat((Float) paramValue).toString());
+        } else if(paramValue instanceof String) {
+            sb.append(new DspParameterString((String) paramValue).toString());
+        } else {
+            sb.append(paramValue.toString());
+        }
     }
 }
 
