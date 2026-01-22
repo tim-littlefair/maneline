@@ -148,7 +148,7 @@ class DspModule extends JSONObject {
             }
             if(p.m_valueDetails!=null) {
                 m_parameters.put(p.m_name+"#details", p.m_valueDetails);
-                }
+            }
         }
     }
 
@@ -163,21 +163,14 @@ class DspModule extends JSONObject {
     }
 
     public String toString(int indent, boolean withDetails) {
+        Indenter indenter = new Indenter(indent);
         StringBuilder sb = new StringBuilder();
         sb.append("{");
-        String level0Separator = "";
-        String level1Separator = "";
-        String level2Separator = "";
-        if(indent>0) {
-            level0Separator="\n";
-            level1Separator="\n" + String.join("", Collections.nCopies(indent," "));
-            level2Separator="\n" + String.join("", Collections.nCopies(indent*2," "));
-        }
-        sb.append(level1Separator);
+        sb.append(indenter.separatorForLevel(1));
         sb.append("\"FenderId\":" + "\"" + m_fenderId+"\",");
-        sb.append(level1Separator);
+        sb.append(indenter.separatorForLevel(1));
         sb.append("\"nodeId\":"+ "\"" + m_nodeId+ "\",");
-        sb.append(level1Separator);
+        sb.append(indenter.separatorForLevel(1));
         sb.append("\"dspUnitParameters\":{");
         if(!m_parameters.isEmpty()) {
             for(String k: m_parameters.keySet()) {
@@ -185,18 +178,23 @@ class DspModule extends JSONObject {
                 if(v==null) {
                     continue;
                 } else if (!k.endsWith("#details") ) {
-                    sb.append(level2Separator);
-                    sb.append("\"" + k + "\":"+ v.toString() + ",");
+                    sb.append(indenter.separatorForLevel(2));
+                    sb.append("\"" + k + "\":");
+                    serializeParamValue(v,sb,true);
+                    sb.append(",");
                 } else if (withDetails) {
-                    sb.append(level2Separator);
-                    sb.append("\"" + k + "\":"+ v.toString() + ",");
+                    sb.append(indenter.separatorForLevel(2));
+                    sb.append("\"" + k + "\":");
+                    serializeParamValue(v,sb,false);
+                    sb.append(",");
                 }
             }
             sb.delete(sb.lastIndexOf(","),sb.length());
-            sb.append(level2Separator);
+            //sb.append(indenter.separatorForLevel(2));
         }
+        sb.append(indenter.separatorForLevel(1));
         sb.append("}");
-        sb.append(level1Separator);
+        sb.append(indenter.separatorForLevel(0));
         sb.append("}");
         return sb.toString();
     }
@@ -206,8 +204,45 @@ class DspModule extends JSONObject {
             sb.append(new DspParameterFloat((Float) paramValue).toString());
         } else if(paramValue instanceof String) {
             sb.append(new DspParameterString((String) paramValue).toString());
+        } else if(paramValue instanceof Map) {
+            sb.append("{");
+            Map<String,Object> paramValueAsMap = (Map<String,Object>)paramValue;
+            List<String> paramNamesAndValues = new ArrayList<>(paramValueAsMap.size());
+            for(String k: paramValueAsMap.keySet()) {
+                Object v = paramValueAsMap.get(k);
+                sb.append(new DspParameterString(k).toString());
+                sb.append(":");
+                serializeParamValue(v,sb,quantizeFloats);
+                sb.append(",");
+            }
+            sb.replace(sb.lastIndexOf(","),sb.length(),"}");
         } else {
             sb.append(paramValue.toString());
+        }
+    }
+
+    class Indenter {
+        final String m_optNewline;
+        final String m_perLevelPrefix;
+
+        Indenter(int spacesPerLevel) {
+            if(spacesPerLevel==0) {
+                m_optNewline="";
+                m_perLevelPrefix="";
+            } else {
+                m_optNewline = "\n";
+                m_perLevelPrefix=String.join(
+                    "",
+                    Collections.nCopies(spacesPerLevel," ")
+                );
+            }
+        }
+
+        String separatorForLevel(int indentLevel) {
+            return m_optNewline + String.join(
+                "",
+                Collections.nCopies(indentLevel, m_perLevelPrefix)
+            );
         }
     }
 }
