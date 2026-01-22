@@ -7,6 +7,7 @@ import net.heretical_camelid.maneline.lib.utilities.ResourceLoader;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -315,9 +316,16 @@ public class SignalChain {
             }
             testSC.m_modules.add(new DspModule(fenderId, nodeId, params));
         }
-        System.out.println(testSC.toString(1,true));
-        System.out.println(testSC.toString(4,false));
-        System.out.println(testSC.toString());
+        String[] testSCRenderings = new String[] {
+            testSC.toString(1,true),
+            testSC.toString(4,false),
+            testSC.toString()
+        };
+        for(String s: testSCRenderings) {
+            System.out.println(s);
+            JSONArray scArray = new JSONArray(s);
+            assert scArray.length()==5;
+        }
 
         System.exit(0);
     }
