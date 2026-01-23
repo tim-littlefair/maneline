@@ -49,7 +49,7 @@ function populate_table() {
         {
             preset_from_json = suite_from_json.presets[index_into_suite]
             name=preset_from_json.presetName
-            // remove trailing spaces
+            // remove leading and trailing spaces
             name=name.trim()
             // merge multiple internal spaces to single
             name=name.replace(/%s+/," ")
