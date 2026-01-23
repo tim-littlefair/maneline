@@ -48,8 +48,17 @@ function populate_table() {
         else
         {
             preset_from_json = suite_from_json.presets[index_into_suite]
-            name=preset_from_json.presetName.trim()
-            name=name.replace(/\s+/," ")
+            name=preset_from_json.presetName
+            // remove trailing spaces
+            name=name.trim()
+            // merge multiple internal spaces to single
+            name=name.replace(/%s+/," ")
+            // insert Unicode zero width space before groups of internal capitals
+            // this is a hint to suggest to browser renderer that these are
+            // good spots to break if required for layout
+            // (for example MustangIv2 preset "American90sChorus" will break
+            // "Chorus" onto second line).
+            name=name.replace(/([a-z0-9]+)([A-Z]+)/,"$1\u{200b}$2")
             tbody_inner_html += td_inner_html(preset_from_json.originSlotIndex,name)
         }
         if(col==max_cols-1)
