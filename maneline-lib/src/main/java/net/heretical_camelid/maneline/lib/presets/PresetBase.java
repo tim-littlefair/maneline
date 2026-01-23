@@ -12,6 +12,7 @@ import java.util.TreeMap;
 
 
 public class PresetBase extends JSONObject {
+    /*
     protected class DspModule extends JSONObject {
         public DspModule(String moduleName, Object moduleType) {
             put("FenderId", moduleName);
@@ -20,8 +21,7 @@ public class PresetBase extends JSONObject {
             put("dspUnitParameters", new JSONObject(sortedParamMap));
         }
     }
-
-
+    */
 
     // convenient debug utility, should always be no-op for checked in code
     static private void _trace(Object msg) {
