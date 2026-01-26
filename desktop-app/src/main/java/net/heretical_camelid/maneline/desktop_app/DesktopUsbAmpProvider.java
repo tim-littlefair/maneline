@@ -448,10 +448,9 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
             System.out.println("Last error: " + hidDevice.getLastErrorMessage());
             return false;
         } else {
-            m_protocol.startHeartbeatThread();
-            System.out.println();
             m_presetRegistry.dump(m_suiteRegistry);
             System.out.println();
+            m_protocol.startHeartbeatThread();
         }
         return true;
     }
