@@ -85,6 +85,6 @@ public class SlotBasedPresetSuiteExporter implements PresetRegistry.Visitor {
         String jsonForSuite = m_gson.toJson(m_suite);
         String suiteFilename = m_suiteName.replace(" ", "_");
         String targetPath = m_outputPrefix + "/" + suiteFilename + ".preset_suite.json";
-        PresetRegistry.outputToFile(targetPath, jsonForSuite);
+        PresetRegistry.outputToFile(targetPath, jsonForSuite.getBytes());
     }
 }

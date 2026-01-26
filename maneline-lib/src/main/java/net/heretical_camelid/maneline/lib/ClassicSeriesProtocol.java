@@ -1,28 +1,24 @@
 package net.heretical_camelid.maneline.lib;
 
-import static java.util.Arrays.copyOfRange;
-
 import net.heretical_camelid.maneline.lib.presets.FUSE_Classic_Preset;
 import net.heretical_camelid.maneline.lib.registries.PresetRecord;
 import net.heretical_camelid.maneline.lib.registries.PresetRegistry;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collections;
-
 
 /**
  * The class below has been heavily dependent on the following
  * reference document:
- * https://github.com/offa/plug/blob/master/doc/Technicalities.md
+ * <a href="https://github.com/offa/plug/blob/master/doc/Technicalities.md">...</a>
  * doc/Technicalities.md
  */
+@SuppressWarnings({"DefaultLocale", "SingleStatementInBlock"})
 public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
     final boolean m_processResponsesAfterHeartbeat;
 
     final Thread m_heartbeatThread;
     int m_heartbeatsSentSinceLastLog = 0;
-    boolean m_heartbeatStopped = false;
+    boolean m_heartbeatStopped;
 
     int m_minPresetIndex = 1000;
     int m_maxPresetIndex = -1;
@@ -30,7 +26,6 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
     byte[] m_presetDefinitionBuffer = null;
     int m_presetDefinitionPacketsConsumed = 0;
 
-    ArrayList<PresetRecord> m_presetRecords = new ArrayList<>(Collections.nCopies(24,null));
 
     public ClassicSeriesProtocol(
         boolean startHeartbeat,
@@ -74,11 +69,6 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
         firmwareVersionEtc[0] = m_firmwareVersion;
 
         return STATUS_OK;
-    }
-
-    @Override
-    public String getFirmwareVersion() {
-        return m_firmwareVersion;
     }
 
     @Override
@@ -131,13 +121,12 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
         String transactionName = String.format("classicSelectPreset%03d", slotIndex);
         // This function sends the packet described here:
         // https://github.com/offa/plug/blob/master/doc/Technicalities.md#6-choosing-memory-bank
-        int scStatus = sendCommand(
+        return sendCommand(
             String.format("1c:01:01:00:%02x:00:01", slotIndex),
             String.format("request to select preset %d",slotIndex),
             true,
             transactionName
         );
-        return scStatus;
     }
 
     @Override
@@ -156,6 +145,7 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
             commandBytes,responseExpected, commandDescription, transactionName
         );
     }
+    @SuppressWarnings("PointlessBooleanExpression")
     synchronized private int sendCommandBytes(
         byte[] commandBytes, boolean responseExpected,
         String commandDescription, String transactionName
@@ -169,16 +159,14 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
         final int status;
         final int bytesWritten;
         final int bytesRead;
-        ArrayList<String> readPhaseLogMessages = new ArrayList<String>();
+        ArrayList<String> readPhaseLogMessages = new ArrayList<>();
 
         setLogTransactionName(transactionName);
-        if(Thread.currentThread()!=m_heartbeatThread) {
-            loggingRequired = true;
-        } else {
+        //noinspection RedundantIfStatement
+        if (Thread.currentThread() == m_heartbeatThread) {
             loggingRequired = false;
-        }
-        if(loggingRequired) {
-            logAsHex2(commandBytes,"<");
+        } else {
+            loggingRequired = true;
         }
         bytesWritten = m_deviceTransport.write(commandBytes);
         if (bytesWritten < 0) {
@@ -214,6 +202,7 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
                 ));
                 m_heartbeatsSentSinceLastLog = 0;
             }
+            log("Sending command " + commandDescription);
             logAsHex2(commandBytes, "<");
             for(String rplm: readPhaseLogMessages) {
                 log(rplm);
@@ -243,8 +232,7 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
                     }
                 }
                 String[] heartbeatCommand = new String[] {
-                    "1c:03", // TODO: work out what to send
-                    "Classic-series heartbeat"
+                    "1c:03", "Classic-series heartbeat"
                 };
                 sendCommand(
                     heartbeatCommand[0],heartbeatCommand[1],
@@ -252,6 +240,7 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
                     "heartbeatUpdate"
                 );
                 try {
+                    //noinspection BusyWait
                     Thread.sleep(700);
                 }
                 catch (InterruptedException e) {
@@ -297,6 +286,7 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
             // last packet without an needing an additional read and timeout, if/when this is
             // implemented the messageComplete boolean will be set to true.
         }
+        m_presetDefinitionPacketsConsumed=0;
 
         if(loggingRequired==true) {
             for(String rplm: readPhaseLogMessages) {
@@ -309,7 +299,6 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
 
     private void processPacket(ArrayList<String> readPhaseLogMessages, byte[] packet64) {
         String b2hex2 = bufferToHex2(packet64, ">");
-        boolean savePreset = false;
         if (
             (m_firmwareVersion == null) &&
                 b2hex2.startsWith("> [64]: 01 00") &&
@@ -320,7 +309,7 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
                 String.format("Firmware version packet=%s", b2hex2)
             );
         } else if (b2hex2.startsWith("> [64]: 1c 01 04 00")) {
-            int presetIndex = (int) packet64[4];
+            int presetIndex = packet64[4];
             String presetName = new String(packet64, 16, 48);
             presetName = presetName.substring(0, presetName.indexOf(0));
             if( presetIndex<m_minPresetIndex) {
@@ -344,8 +333,8 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
                 logCurrentPresetDetails();
             }
         } else if (b2hex2.startsWith("> [64]: 1c 01 04")) {
-            int dspUnitIndex = (int) packet64[3];
-            int presetSlot = (int) packet64[4];
+            int dspUnitIndex = packet64[3];
+            int presetSlot = packet64[4];
             String dspUnitName = new String(packet64, 16, 48);
             dspUnitName = dspUnitName.substring(0, dspUnitName.indexOf(0));
             readPhaseLogMessages.add(String.format(
@@ -358,10 +347,10 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
                 m_presetDefinitionPacketsConsumed = 1;
             }
         } else if (b2hex2.startsWith("> [64]: 1c 01")) {
-            int presetIndex = (int) packet64[4];
+            int presetIndex = packet64[4];
             String nodeFenderId = null;
             String nodeId = null;
-            int effectSlot=(int) packet64[18];
+            int effectSlot= packet64[18];
             readPhaseLogMessages.add(String.format(
                 "DSP packet type for %s:%s at effectSlot %d: %s: ",
                 nodeId, nodeFenderId, effectSlot, b2hex2
@@ -375,13 +364,13 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
                 );
                 m_presetDefinitionPacketsConsumed += 1;
             }
-            /*
+
             int nodeIndex;
             if(effectSlot<5) {
                 nodeIndex = effectSlot;
             } else {
-                // the amplifier sits between effect slot 4 and effect slot 5
-                // so nodeIndex values assigned to slots 5-8 are
+                // the amplifier sits between effect slot 3 and effect slot 4
+                // so nodeIndex values assigned to slots 4-7 are
                 // one greater than the slot number
                 nodeIndex = effectSlot + 1;
             }
@@ -413,6 +402,7 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
             if (nodeFenderId == null) {
                 nodeFenderId = String.format("%s-%03d", nodeId, ampOrEffectModelId);
             }
+            /*
             if(m_presetDefinitionBuffer!=null) {
                 if(dspPacketType==0) {
                     m_presetRecords.add(
@@ -448,14 +438,11 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
             transactionName
         );
         if(scStatus==STATUS_OK) {
-            FUSE_Classic_Preset fcp = new FUSE_Classic_Preset(m_presetDefinitionBuffer);
-            m_presetDefinitionBuffer = null;
-            m_presetDefinitionPacketsConsumed=0;
+            FUSE_Classic_Preset fcp = FUSE_Classic_Preset.create(m_presetDefinitionBuffer);
             presetRegistry.register(
                 slotIndex,
                 fcp.displayName(),
-                fcp.definitionBytes(),
-                PresetRecord.COMPANION_APP_FUSE
+                new PresetRecord(fcp.displayName(), m_presetDefinitionBuffer, PresetRecord.COMPANION_APP_FUSE)
             );
         }
         return scStatus;

@@ -6,6 +6,7 @@ import com.google.gson.JsonPrimitive;
 import net.heretical_camelid.maneline.lib.interfaces.IDeviceTransport;
 import net.heretical_camelid.maneline.lib.interfaces.ILoggingAgent;
 import net.heretical_camelid.maneline.lib.interfaces.IPresetResponseReader;
+import net.heretical_camelid.maneline.lib.presets.DspModule;
 import net.heretical_camelid.maneline.lib.registries.PresetRecord;
 import net.heretical_camelid.maneline.lib.registries.PresetRegistry;
 
@@ -235,23 +236,15 @@ public abstract class AbstractMessageProtocolBase {
                 "psname2",
                 new JsonPrimitive(currentPresetRecord.displayName().substring(8).strip())
             );
-            presetDetails.add(
-                "psmodule1",
-                new JsonPrimitive(currentPresetRecord.moduleName("stomp"))
-            );
-            presetDetails.add( "psmodule2",
-                new JsonPrimitive(currentPresetRecord.moduleName("mod"))
-            );
-            presetDetails.add( "psmodule3",
-                new JsonPrimitive(currentPresetRecord.moduleName("amp"))
-            );
-            presetDetails.add( "psmodule4",
-                new JsonPrimitive(currentPresetRecord.moduleName("delay"))
-            );
-            presetDetails.add( "psmodule5",
-                new JsonPrimitive(currentPresetRecord.moduleName("reverb"))
-            );
-
+            for(int i=0; i<5; ++i) {
+                DspModule m = currentPresetRecord.m_preset.signalChain().get(i);
+                if(m!=null) {
+                    presetDetails.add(
+                        String.format("psmodule%d",i+1),
+                        new JsonPrimitive(m.m_fenderId)
+                    );
+                }
+            }
             FileOutputStream presetDetailsStream = null;
             try {
                 presetDetailsStream = new FileOutputStream(

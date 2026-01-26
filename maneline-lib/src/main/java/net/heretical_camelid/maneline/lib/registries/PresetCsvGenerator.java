@@ -27,11 +27,11 @@ class PresetCsvGenerator implements PresetRegistry.Visitor {
             DATA_LINE_FORMAT,
             slotIndex,
             prb.displayName(),
-            prb.moduleName("stomp"),
-            prb.moduleName("mod"),
-            prb.moduleName("amp"),
-            prb.moduleName("delay"),
-            prb.moduleName("reverb"),
+            ("stomp"),
+            ("mod"),
+            ("amp"),
+            ("delay"),
+            ("reverb"),
             prb.audioHash()
         ));
     }
@@ -39,7 +39,7 @@ class PresetCsvGenerator implements PresetRegistry.Visitor {
     @Override
     public void visitAfterRecords(PresetRegistry registry) {
         PresetRegistry.outputToFile(
-            m_outputPath, m_stringBuilder.toString()
+            m_outputPath, m_stringBuilder.toString().getBytes()
         );
     }
 }

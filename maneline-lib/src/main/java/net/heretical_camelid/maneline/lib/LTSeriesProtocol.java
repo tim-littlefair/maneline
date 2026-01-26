@@ -1,10 +1,13 @@
 package net.heretical_camelid.maneline.lib;
 
 import net.heretical_camelid.maneline.lib.interfaces.IPresetResponseReader;
+import net.heretical_camelid.maneline.lib.presets.TONE_LT_Preset;
 import net.heretical_camelid.maneline.lib.registries.PresetRegistry;
 import net.heretical_camelid.maneline.lib.registries.PresetRecord;
 import net.heretical_camelid.maneline.lib.utilities.ByteArrayTranslator;
 import net.heretical_camelid.maneline.lib.utilities.RawProtobufUtilities;
+
+import org.json.JSONObject;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -149,12 +152,12 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
         final PresetRecord[] presetRecord = new PresetRecord[1];
         s_presetResponseReader = new IPresetResponseReader() {
             @Override
-            public void notifyPresetResponse(int slotIndex, String presetJson, String companionAppName) {
-                presetRecord[0] = new PresetRecord("",presetJson.getBytes(),"tone-usb");
+            public void notifyPresetResponse(int slotIndex, PresetRecord notifyPresetRecord) {
+                presetRecord[0] = notifyPresetRecord;
                 retval[0] = "currentPresetIndex="+slotIndex;
             }
         };
-        // s_presetResponseReader = null;
+        s_presetResponseReader = null;
         return retval[0];
     }
 
@@ -406,13 +409,17 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
             // for the preset index will be a single byte.
             m_currentPresetIndex = 0xff&assembledResponseMessage[9 + jsonLength + 1];
             // For the moment, we ignore the dirty bit under messageId 32
+            TONE_LT_Preset toneLtPreset = TONE_LT_Preset.create(jsonDefinition.getBytes(StandardCharsets.UTF_8));
+
+            PresetRecord pr = new PresetRecord(
+                toneLtPreset.displayName(),
+                jsonDefinition.getBytes(),
+                PresetRecord.COMPANION_APP_TONE_LT_DESKTOP
+            );
 
             if(messageId==31) {
                 if (s_presetResponseReader != null) {
-                    s_presetResponseReader.notifyPresetResponse(
-                        m_currentPresetIndex, jsonDefinition,
-                        PresetRecord.COMPANION_APP_TONE_LT_DESKTOP
-                    );
+                    s_presetResponseReader.notifyPresetResponse(m_currentPresetIndex, pr);
                 }
             } else {
                 assert messageId==32;

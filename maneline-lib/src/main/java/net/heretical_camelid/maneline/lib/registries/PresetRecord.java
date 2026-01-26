@@ -1,37 +1,37 @@
 package net.heretical_camelid.maneline.lib.registries;
+import net.heretical_camelid.maneline.lib.presets.DspModule;
 import net.heretical_camelid.maneline.lib.presets.FUSE_Classic_Preset;
 import net.heretical_camelid.maneline.lib.presets.PresetBase;
+import net.heretical_camelid.maneline.lib.presets.SignalChain;
 import net.heretical_camelid.maneline.lib.presets.TONE_LT_Preset;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 
 public class PresetRecord {
 
     public static final String COMPANION_APP_FUSE = "fuse";
     public static final String COMPANION_APP_TONE_LT_DESKTOP = "tone-usb";
+    public static final String COMPANION_APP_TONE_MOBILE = "tone-ble";
     final String m_name;
-    final String m_rawDefinition;
-    // final PresetCanonicalSerializer m_preset;
-    final PresetBase m_preset;
+    public final PresetBase m_preset;
     String m_audioHash = null;
-
-    public PresetRecord(PresetBase preset, byte[] definitionBytes) {
-        m_preset = preset;
-        m_name = preset.displayName();
-        m_rawDefinition = new String(definitionBytes, StandardCharsets.UTF_8);
-    }
 
     public PresetRecord(String name, byte[] definitionBytes, String companionAppName) {
         m_name = name;
-        m_rawDefinition = new String(definitionBytes, StandardCharsets.UTF_8);
         if(companionAppName.equals(COMPANION_APP_FUSE)) {
-            m_preset = new FUSE_Classic_Preset(definitionBytes);
+            m_preset = FUSE_Classic_Preset.create(definitionBytes);
         } else if (companionAppName.equals(COMPANION_APP_TONE_LT_DESKTOP)) {
-            m_preset = new TONE_LT_Preset(definitionBytes);
+            m_preset = TONE_LT_Preset.create(definitionBytes);
+        } else if (companionAppName.equals(COMPANION_APP_TONE_MOBILE)) {
+            throw new UnsupportedOperationException("\n".join(
+                "Maneline is not yet interoperable with Mustang Micro Plus, GT-, GTX-, or LTX-",
+                "Support for these models is on the backlog"
+            ));
         } else {
             throw new UnsupportedOperationException(String.format(
                 "No appropriate preset subclass exists for companion app '%s'",
@@ -44,18 +44,17 @@ public class PresetRecord {
         return m_preset.displayName();
     }
 
-    public String ampName() {
-        return moduleName("amp");
+    public String moduleTypeAndName(int i) {
+        DspModule m = m_preset.signalChain().get(i);
+        if(m!=null) {
+            return m.typeAndName();
+        } else {
+            return null;
+        }
     }
-
+/*
     public String moduleName(String whichModule) {
-        for (
-            Object nodeAsObject :
-            (JSONArray) PresetBase.getSubObject(
-                m_preset,
-                List.of((Object[]) new String[] {"audioGraph","nodes"})
-            )
-        ) {
+        for (Object nodeAsObject : m_preset.signalChain()) {
             if(nodeAsObject==null) {
                 continue;
             } else if (nodeAsObject==JSONObject.NULL) {
@@ -64,7 +63,7 @@ public class PresetRecord {
             JSONObject node = (JSONObject) nodeAsObject;
             if(node==null) {
                 return "-";
-            } else if (node.getString("nodeId").equals(whichModule)) {
+            } else if (false && node.getString("nodeId").equals(whichModule)) {
                 return node.getString("FenderId").
                     // LT40S prefix
                     replace("DUBS_", "").
@@ -76,23 +75,15 @@ public class PresetRecord {
         }
         return "";
     }
-
+*/
     public String audioHash() {
         // Calculate on first call and retain for future calls
-        if (m_audioHash != null) {
-            return m_audioHash;
+        if (m_audioHash == null) {
+            // Otherwise we calculate it and store it for future reference.
+            m_audioHash = PresetRegistry.stringHash(
+                m_preset.signalChain().toString(),7
+            );
         }
-
-        // Otherwise we calculate it and store it for future reference.
-        String nodesHash1 = PresetRegistry.stringHash(
-            effects(EffectsLevelOfDetails.MODULES_ONLY), 4
-        );
-
-        String nodesHash2 = PresetRegistry.stringHash(
-            effects(EffectsLevelOfDetails.PARAMETERS_ONLY), 4
-        );
-
-        m_audioHash = String.format("%s-%s", nodesHash1, nodesHash2);
         return m_audioHash;
     }
 
@@ -102,10 +93,6 @@ public class PresetRecord {
             displayName().strip().replaceAll("\\W+","_"),
             audioHash()
         );
-    }
-
-    public String exportRawExtension() {
-        return m_preset.exportRawExtension();
     }
 
     /**
@@ -125,60 +112,37 @@ public class PresetRecord {
                 break;
             case PARAMETERS_ONLY:
             case MODULES_AND_PARAMETERS:
-            // Java needs default: to be confident separator is initialized
             default:
                 separator = "\n";
                 break;
         }
         StringBuilder sb = new StringBuilder();
         boolean insertSeparator = false;
-        for (
-            Object nodeAsObject :
-            (JSONArray) PresetBase.getSubObject(
-                m_preset,
-                List.of((Object[]) new String[]{"audioGraph","nodes"})
-            )
-        ) {
-            if(nodeAsObject==null) {
-                continue;
-            } else if (nodeAsObject==JSONObject.NULL) {
-                continue;
+        for (DspModule dspModule: m_preset.signalChain()) {
+            if(insertSeparator) {
+                sb.append(separator);
             }
-            JSONObject node = (JSONObject) nodeAsObject;
-            if(node==null) {
-                continue;
-            } else if(node.getString("FenderId")==null) {
-                node.put("FenderId","?");
+            sb.append(dspModule.typeAndName());
+            if(levelOfDetails!=EffectsLevelOfDetails.MODULES_ONLY) {
+                sb.append("(");
+                List<String> param_list = new ArrayList<String>();
+                for(String k: dspModule.m_parameters.keySet()) {
+                    if(k.startsWith("bypass")) {
+                        continue;
+                    }
+                    if(k.endsWith("#details")) {
+                        continue;
+                    }
+                    Object v=dspModule.m_parameters.get(k);
+                    if(k==null) {
+                        continue;
+                    }
+                    param_list.add(String.format("%s=%s", k, v));
+                }
+                sb.append(String.join(",",param_list));
+                sb.append(")");
             }
-            String nextNodeType = node.getString("nodeId");
-            String nodeName = node.getString("FenderId").replace("DUBS_", "");
-            if (!nodeName.equals("Passthru")) {
-                if (insertSeparator) {
-                    sb.append(separator);
-                }
-                if(levelOfDetails!=EffectsLevelOfDetails.PARAMETERS_ONLY) {
-                    sb.append(
-                        nextNodeType + ":" + nodeName
-                    );
-                }
-                if(levelOfDetails!=EffectsLevelOfDetails.MODULES_ONLY) {
-                    sb.append("(");
-                    String paramString = node.getJSONObject("dspUnitParameters").toString();
-
-                    // Convert the JSON to a simple comma-separated list
-                    paramString = paramString.replaceAll("[{}\"]","");
-
-                    // the 'bypass' and 'bypassType' parameters don't affect the sound
-                    // so we fiter these out if present
-                    paramString = paramString.replaceAll(",bypass:\\w+","");
-                    paramString = paramString.replaceAll(",bypassType:\\w+","");
-
-                    sb.append(paramString);
-                    sb.append(")");
-                }
-                insertSeparator = true;
-            }
-
+            insertSeparator = true;
         }
         return sb.toString();
     }
@@ -207,9 +171,5 @@ public class PresetRecord {
          */
 
         return sb.toString();
-    }
-
-    public String prettyJson() {
-        return m_preset.toString(4);
     }
 }

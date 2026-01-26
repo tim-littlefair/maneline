@@ -12,7 +12,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -127,18 +126,18 @@ public class PresetRegistry implements IPresetResponseReader {
         return retval;
     }
 
-    public static int outputToFile(String rawTargetPath, String content) {
+    public static int outputToFile(String rawTargetPath, byte[] content) {
         try {
             if(s_outputZipStream !=null) {
                 ZipEntry e = new ZipEntry(rawTargetPath);
                 s_outputZipStream.putNextEntry(e);
-                s_outputZipStream.write(content.getBytes(UTF_8));
+                s_outputZipStream.write(content);
                 s_outputZipStream.closeEntry();
             } else {
                 try (
                     FileOutputStream fos = new FileOutputStream(rawTargetPath)
                 ) {
-                    fos.write(content.getBytes(UTF_8));
+                    fos.write(content);
                 }
             }
             return 0;
@@ -175,20 +174,16 @@ public class PresetRegistry implements IPresetResponseReader {
         return m_records.size();
     }
 
-    public void register(int slotIndex, String name, byte[] definition, String companionAppName) {
-        // This registry requires a definition
-        assert definition != null;
-
-        PresetRecord newRecord = new PresetRecord(name, definition,companionAppName);
-        String dsk = PresetRegistry.duplicateSlotKey(newRecord);
+    public void register(int slotIndex, String name, PresetRecord presetRecord) {
+        String dsk = PresetRegistry.duplicateSlotKey(presetRecord);
         ArrayList<Integer> existingDuplicateSlotList = m_duplicateSlots.get(dsk);
         if(existingDuplicateSlotList==null) {
             ArrayList<Integer> newDuplicateSlotList = new ArrayList<>();
             newDuplicateSlotList.add(slotIndex);
-            m_slotsToRecords.put(slotIndex,newRecord);
-            m_audioHashesToSlots.put(newRecord.audioHash(), slotIndex);
+            m_slotsToRecords.put(slotIndex,presetRecord);
+            m_audioHashesToSlots.put(presetRecord.audioHash(), slotIndex);
             m_duplicateSlots.put(dsk,newDuplicateSlotList);
-            m_records.put(slotIndex, newRecord);
+            m_records.put(slotIndex, presetRecord);
         } else {
             existingDuplicateSlotList.add(Integer.valueOf(slotIndex));
         }
@@ -405,12 +400,10 @@ public class PresetRegistry implements IPresetResponseReader {
     }
 
     @Override
-    public void notifyPresetResponse(int slotIndex, String presetJson, String companionAppName) {
-        String presetExtendedName = AbstractMessageProtocolBase.displayName(presetJson);
+    public void notifyPresetResponse(int slotIndex, PresetRecord pr) {
+        String presetExtendedName = AbstractMessageProtocolBase.displayName(pr.displayName());
         register(
-            slotIndex, presetExtendedName,
-            presetJson.getBytes(StandardCharsets.UTF_8),
-            companionAppName
+            slotIndex, presetExtendedName, pr
         );
     }
 
@@ -421,7 +414,7 @@ public class PresetRegistry implements IPresetResponseReader {
     }
 
     public static class PresetDetailsTableGenerator implements Visitor {
-        private final static String _LINE_FORMAT = "%3d %-16s %-9s %-70s";
+        private final static String _LINE_FORMAT = "%3d %-20s %-9s %-70s";
         PrintStream m_printStream;
 
         public PresetDetailsTableGenerator(PrintStream printStream) {

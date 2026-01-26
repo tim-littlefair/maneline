@@ -11,6 +11,8 @@ import static net.heretical_camelid.maneline.lib.generated.FUSE_Constants._MODUL
 
 import net.heretical_camelid.maneline.lib.utilities.Pair;
 
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,26 +22,24 @@ import java.util.Map;
 
 
 public class FUSE_Classic_Preset extends PresetBase {
-    final private int AMP_POS = 4;
-    private int MAX_MODULES = 9;
-    final SignalChain m_signalChain;
-    public FUSE_Classic_Preset(byte[] presetBytes) {
-        super(presetBytes,"fuse");
+    final static private int AMP_POS = 4;
+    final static private int MAX_MODULES = 9;
+    public static FUSE_Classic_Preset create(byte[] presetBytes) {
         final String presetName;
-        DspModule[] modules = new DspModule[MAX_MODULES];
-        if(presetBytes.length==64*8) {
+        DspModule modules[] = new DspModule[MAX_MODULES];
+        if (presetBytes.length == 64 * 8) {
             presetName = (
-                new String(presetBytes,16,48, StandardCharsets.UTF_8)
-                .replace("\u0000","")
+                new String(presetBytes, 16, 48, StandardCharsets.UTF_8)
+                    .replace("\u0000", "")
             );
             bytesToAmp(
-                Arrays.copyOfRange(presetBytes,64*1,64*2),
-                Arrays.copyOfRange(presetBytes,64*6,64*7),
+                Arrays.copyOfRange(presetBytes, 64 * 1, 64 * 2),
+                Arrays.copyOfRange(presetBytes, 64 * 6, 64 * 7),
                 modules
             );
-            for(int i=2; i<6; ++i) {
+            for (int i = 2; i < 6; ++i) {
                 bytesToEffect(
-                    Arrays.copyOfRange(presetBytes,i*64,(i+1)*64),
+                    Arrays.copyOfRange(presetBytes, i * 64, (i + 1) * 64),
                     modules
                 );
             }
@@ -49,21 +49,12 @@ public class FUSE_Classic_Preset extends PresetBase {
                 presetBytes.length
             ));
         }
-        info().put("displayName",presetName);
-        m_signalChain = new SignalChain();
-        for(int i=0; i<MAX_MODULES; ++i) {
-            if(modules[i]!=null) {
-                m_signalChain.m_modules.add(modules[i]);
-            }
-        }
+        SignalChain signalChain = SignalChain.create(modules);
+        return new FUSE_Classic_Preset(presetName, signalChain, presetBytes);
     }
 
-    public static String renderJSONValue(int fuseType, int byteValue) {
-        return "";
-    }
-
-    public static String renderFUSEValue(int fuseType, int byteValue) {
-        return renderJSONValue(fuseType, byteValue);
+    private FUSE_Classic_Preset(String presetName, SignalChain signalChain, byte[] presetBytes) {
+        super(presetName, signalChain, CompanionAppName_e.FUSE_CLASSIC_USB, presetBytes);
     }
 
     private static String paramCanonicalName(String paramFuseName) {
@@ -77,27 +68,26 @@ public class FUSE_Classic_Preset extends PresetBase {
             // 1 -> 0.0, , 128-> 0.5, 255 -> 1.0
             case 12:
             case 13:
-                canonicalValue = Float.valueOf((-1.0F+fuseValueU8)/255.0F);
+                canonicalValue = (-1.0F+fuseValueU8)/255.0F;
                 break;
 
             default:
-                canonicalValue = Integer.valueOf(fuseValueU8);
+                canonicalValue = fuseValueU8;
         }
         return canonicalValue;
     }
-
-    /** 
+    /**
      * This function analyzes a sequence of bytes, 
      * generates a DspModule/JSONObject and returns 
      * the audio
      */
-    void bytesToAmp(byte[] ampBytes1, byte[] ampBytes2, DspModule[] modules) {
+    static void bytesToAmp(byte[] ampBytes1, byte[] ampBytes2, DspModule[] modules) {
         assert ampBytes1[2]==5;
         int ampId = (0xFF&ampBytes1[16]) + (0x100*ampBytes1[17]);
         Pair<String,String> moduleTypeAndName = _MODULE_NAMES_AND_TYPES.get(ampId);
         if(moduleTypeAndName!=null) {
             assert moduleTypeAndName.first.equals("A");
-            List<DspParameter> parameters = getDspParameters(ampBytes1, ampId);
+            List<DspModule.DspParameter> parameters = getDspParameters(ampBytes1, ampId);
             DspModule ampModule = new DspModule(
                 moduleTypeAndName.second, "amp",
                 parameters
@@ -108,11 +98,11 @@ public class FUSE_Classic_Preset extends PresetBase {
         }
     }
 
-    private static List<DspParameter> getDspParameters(byte[] ampBytes1, int ampId) {
-        List<DspParameter> parameters = new ArrayList<>();
+    private static List<DspModule.DspParameter> getDspParameters(byte[] ampBytes1, int ampId) {
+        List<DspModule.DspParameter> parameters = new ArrayList<>();
         for(int i=0; i<22; ++i) {
             Pair<String, Integer> paramMetadata = _MODULE_PARAMS.get(
-                new Pair<Integer,Integer>(ampId,i)
+                new Pair<>(ampId,i)
             );
             if(paramMetadata==null) {
                 continue;
@@ -124,7 +114,7 @@ public class FUSE_Classic_Preset extends PresetBase {
             fuseDetails.put("_fuseParamName", fuseParamName);
             fuseDetails.put("_fuseParamType", fuseParamType);
             fuseDetails.put("_fuseValueU8", paramValueU8);
-            parameters.add(new DspParameter(
+            parameters.add(new DspModule.DspParameter(
                 paramCanonicalName(fuseParamName),
                 paramCanonicalValue(paramValueU8, fuseParamType),
                 fuseDetails
@@ -134,7 +124,7 @@ public class FUSE_Classic_Preset extends PresetBase {
     }
 
 
-    void bytesToEffect(byte[] effectBytes, DspModule[] modules) {
+    static void bytesToEffect(byte[] effectBytes, DspModule[] modules) {
         assert effectBytes[2]>=6&&effectBytes[2]<=9;
         int effectId = (0xFF&effectBytes[16]) + (0x100*effectBytes[17]);
         int signalChainPos= (0xFF&effectBytes[18]);
@@ -144,7 +134,7 @@ public class FUSE_Classic_Preset extends PresetBase {
         Pair<String,String> moduleTypeAndName = _MODULE_NAMES_AND_TYPES.get(effectId);
         if(moduleTypeAndName!=null) {
             assert moduleTypeAndName.first.equals("A")==false;
-            List<DspParameter> parameters = getDspParameters(effectBytes, effectId);
+            List<DspModule.DspParameter> parameters = getDspParameters(effectBytes, effectId);
             DspModule effectModule = new DspModule(
                 moduleTypeAndName.second,
                 jsonModuleType(moduleTypeAndName.first),
@@ -169,5 +159,61 @@ public class FUSE_Classic_Preset extends PresetBase {
             default: return "?" + moduleTypeString + "?";
         }
     }
+
+    static public void main(String[] args) {
+        final int RAW_PRESET_BUFFER_LENGTH=512;
+        try {
+            FileInputStream fis = new FileInputStream(args[0]);
+            byte[] rawPresetBuffer = new byte[RAW_PRESET_BUFFER_LENGTH];
+            int bytesRead = fis.read(rawPresetBuffer);
+            assert bytesRead==RAW_PRESET_BUFFER_LENGTH;
+            FUSE_Classic_Preset fcp = FUSE_Classic_Preset.create(rawPresetBuffer);
+            System.out.println(fcp.displayName());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+/*
+        PresetBase testPreset1 = (PresetBase) (new PresetBase().put("displayName","testPreset1"));
+        System.out.println(testPreset1.toString(4));
+        JSONArray nodesArray1 = testPreset1.m_audioGraph_nodes;
+        assert nodesArray1 != null;
+        assert nodesArray1.length()==5;
+        for(int i=0; i<nodesArray1.length(); ++i) {
+         assert nodesArray1.isNull(i);
+        }
+
+        PresetBase testPreset2 = (PresetBase) (new PresetBase().put("displayName","testPreset2"));
+        testPreset2.addAudioGraphNode(
+         "Deluxe65", "amp",
+         "{}",
+         2
+        );
+        System.out.println(testPreset2.toString(4));
+        assert testPreset2.m_audioGraph_nodes.length() == 5;
+        String ampFenderId = (String) getSubObject(
+         testPreset2,
+         List.of("audioGraph","nodes", 2, "FenderId")
+        );
+        assert ampFenderId.equals("Deluxe65");
+
+        PresetBase testPreset3 = create(testPreset2.exportPresetRecord());
+        testPreset3.addAudioGraphNode("Passthru","stomp",null,0);
+        testPreset3.addAudioGraphNode("SineTremolo","mod",null,1);
+        testPreset3.addAudioGraphNode("Passthru","delay",null,3);
+        testPreset3.addAudioGraphNode("Passthru","reverb",null,4);
+        System.out.println(testPreset3.toString(4));
+        // The hash below needs to be maintained manually
+        PresetRecord pr3 = testPreset3.exportPresetRecord();
+        String expectedHash = "7b19-14e2";
+        assert pr3.audioHash().equals(expectedHash): String.format(
+         "audioHash mismatch: expected=%s actual=%s",
+         expectedHash, pr3.audioHash()
+        );
+*/
+        System.exit(0);
+    }
+
+
 }
 
