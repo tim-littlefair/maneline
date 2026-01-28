@@ -8,6 +8,57 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+class DspParameterWithDetails {
+    final String m_name;
+    final Object m_canonicalValue;
+    final Map<String,Object> m_valueDetails;
+
+    DspParameterWithDetails(String name, Object canonicalValue, Map<String,Object> valueDetails) {
+        m_name = name;
+        m_canonicalValue = canonicalValue;
+        m_valueDetails = valueDetails;
+    }
+}
+
+/**
+ * DspFloat is subclassed in order to ensure that the
+ * value stored rounded to a consistent number of
+ * decimal places and output with trailing zeros if
+ * necessary to match the storage precision
+ */
+class DspFloat {
+    private static final String _FLOAT_FORMAT = "%.03f";
+    Float m_value;
+    DspFloat(Float value) {
+        m_value = Float.valueOf(String.format(_FLOAT_FORMAT, value));
+    }
+
+    @Override
+    public String toString() {
+        return String.format(_FLOAT_FORMAT, m_value);
+    }
+
+    public Float toFloat() {
+        return m_value;
+    }
+}
+
+/**
+ * DspString is subclassed in order to ensure that the
+ * value is enclosed in double quotes when toString() is invoked.
+ */
+class DspString {
+    String m_value;
+    DspString(String value) {
+        m_value = value;
+    }
+    @Override
+    public String toString() {
+        return String.format("\"%s\"", m_value);
+    }
+}
+
+
 /**
  * DspModule implements the contract of JSONObject but overrides the
  * behaviour to guarantee that toString() returns parameters in the
@@ -16,7 +67,12 @@ import java.util.Map;
  * Note that instances of this this class are immutable.
  */
 public class DspModule extends JSONObject {
-/*
+
+
+
+
+
+    /*
     enum ModuleType_e {
         // amplifier simulations
         amp,
@@ -78,16 +134,17 @@ public class DspModule extends JSONObject {
 
     public final Map<String, Object> m_parameters;
 
-    DspModule(String fenderId, String nodeId, List<DspParameter> parameters) {
+    DspModule(String fenderId, String nodeId, List<DspParameterWithDetails> parameters) {
         m_fenderId = fenderId.replaceAll("\\W+","");
         m_nodeId = nodeId;
         m_parameters = new LinkedHashMap<String, Object>();
-        for (DspParameter p : parameters) {
+        for (DspParameterWithDetails p : parameters) {
             if (p.m_canonicalValue instanceof Float) {
                 // before storing, round the value to the precision implied by
-                // DspParameterFloat._FLOAT_FORMAT
+                // DspFloat._FLOAT_FORMAT
+                System.out.println(p.m_name);
                 m_parameters.put(p.m_name, Float.valueOf(
-                    new DspParameterFloat((Float) p.m_canonicalValue).toString())
+                    new DspFloat((Float) p.m_canonicalValue).toString())
                 );
             } else {
                 m_parameters.put(p.m_name, p.m_canonicalValue);
@@ -151,16 +208,16 @@ public class DspModule extends JSONObject {
 
     private void serializeParamValue(Object paramValue, StringBuilder sb, boolean quantizeFloats) {
         if ((paramValue instanceof Float) && (quantizeFloats == true)) {
-            sb.append(new DspParameterFloat((Float) paramValue).toString());
+            sb.append(new DspFloat((Float) paramValue).toString());
         } else if (paramValue instanceof String) {
-            sb.append(new DspParameterString((String) paramValue).toString());
+            sb.append(new DspString((String) paramValue).toString());
         } else if (paramValue instanceof Map) {
             sb.append("{");
             Map<String, Object> paramValueAsMap = (Map<String, Object>) paramValue;
             List<String> paramNamesAndValues = new ArrayList<>(paramValueAsMap.size());
             for (String k : paramValueAsMap.keySet()) {
                 Object v = paramValueAsMap.get(k);
-                sb.append(new DspParameterString(k).toString());
+                sb.append(new DspString(k).toString());
                 sb.append(":");
                 serializeParamValue(v, sb, quantizeFloats);
                 sb.append(",");
@@ -171,7 +228,7 @@ public class DspModule extends JSONObject {
         }
     }
 
-    class Indenter {
+    private class Indenter {
         final String m_optNewline;
         final String m_perLevelPrefix;
 
@@ -193,56 +250,6 @@ public class DspModule extends JSONObject {
                 "",
                 Collections.nCopies(indentLevel, m_perLevelPrefix)
             );
-        }
-    }
-
-    static class DspParameter {
-        final String m_name;
-        final Object m_canonicalValue;
-        final Map<String,Object> m_valueDetails;
-
-        DspParameter(String name, Object canonicalValue, Map<String,Object> valueDetails) {
-            m_name = name;
-            m_canonicalValue = canonicalValue;
-            m_valueDetails = valueDetails;
-        }
-    }
-
-    /**
-     * DspParameterFloat is subclassed in order to ensure that the
-     * value stored rounded to a consistent number of
-     * decimal places and output with trailing zeros if
-     * necessary to match the storage precision
-     */
-    static class DspParameterFloat {
-        private static final String _FLOAT_FORMAT = "%f";
-        Float m_value;
-        DspParameterFloat(Float value) {
-            m_value = Float.valueOf(String.format(_FLOAT_FORMAT, value));
-        }
-
-        @Override
-        public String toString() {
-            return String.format(_FLOAT_FORMAT, m_value);
-        }
-
-        public Float toFloat() {
-            return m_value;
-        }
-    }
-
-    /**
-     * DspParameterString is subclassed in order to ensure that the
-     * value is enclosed in double quotes when toString() is invoked.
-     */
-    static class DspParameterString {
-        String m_value;
-        DspParameterString(String value) {
-            m_value = value;
-        }
-        @Override
-        public String toString() {
-            return String.format("\"%s\"", m_value);
         }
     }
 }

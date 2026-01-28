@@ -87,7 +87,7 @@ public class FUSE_Classic_Preset extends PresetBase {
         Pair<String,String> moduleTypeAndName = _MODULE_NAMES_AND_TYPES.get(ampId);
         if(moduleTypeAndName!=null) {
             assert moduleTypeAndName.first.equals("A");
-            List<DspModule.DspParameter> parameters = getDspParameters(ampBytes1, ampId);
+            List<DspParameterWithDetails> parameters = getDspParameters(ampBytes1, ampId);
             DspModule ampModule = new DspModule(
                 moduleTypeAndName.second, "amp",
                 parameters
@@ -98,8 +98,8 @@ public class FUSE_Classic_Preset extends PresetBase {
         }
     }
 
-    private static List<DspModule.DspParameter> getDspParameters(byte[] ampBytes1, int ampId) {
-        List<DspModule.DspParameter> parameters = new ArrayList<>();
+    private static List<DspParameterWithDetails> getDspParameters(byte[] ampBytes1, int ampId) {
+        List<DspParameterWithDetails> parameters = new ArrayList<>();
         for(int i=0; i<22; ++i) {
             Pair<String, Integer> paramMetadata = _MODULE_PARAMS.get(
                 new Pair<>(ampId,i)
@@ -114,7 +114,7 @@ public class FUSE_Classic_Preset extends PresetBase {
             fuseDetails.put("_fuseParamName", fuseParamName);
             fuseDetails.put("_fuseParamType", fuseParamType);
             fuseDetails.put("_fuseValueU8", paramValueU8);
-            parameters.add(new DspModule.DspParameter(
+            parameters.add(new DspParameterWithDetails(
                 paramCanonicalName(fuseParamName),
                 paramCanonicalValue(paramValueU8, fuseParamType),
                 fuseDetails
@@ -134,7 +134,7 @@ public class FUSE_Classic_Preset extends PresetBase {
         Pair<String,String> moduleTypeAndName = _MODULE_NAMES_AND_TYPES.get(effectId);
         if(moduleTypeAndName!=null) {
             assert moduleTypeAndName.first.equals("A")==false;
-            List<DspModule.DspParameter> parameters = getDspParameters(effectBytes, effectId);
+            List<DspParameterWithDetails> parameters = getDspParameters(effectBytes, effectId);
             DspModule effectModule = new DspModule(
                 moduleTypeAndName.second,
                 jsonModuleType(moduleTypeAndName.first),

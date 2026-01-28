@@ -43,20 +43,25 @@ public class SignalChain extends ArrayList<DspModule> {
 
     public static void main(String args[]) {
         try {
-            DspModule.DspParameterString testString = new DspModule.DspParameterString("dummy");
+            DspString testString = new DspString("dummy");
+
+            // check that DspString objects are rendered wrapped in double quotes
             assert testString.toString().equals("\"dummy\"") : String.format(
                 "testString.toString()=%s", testString.toString()
             );
 
-            DspModule.DspParameterFloat testFloat0 = new DspModule.DspParameterFloat(0.5F + 0.1e-6F);
-            // Confirm that toString() renders the value to exactly 6 decimal places
-            assert testFloat0.toString().equals("0.500000") : String.format(
+            // check that DspFloat objects truncate to 3 decimal places, both
+            // for string rendering and when the float value is retrieved.
+            DspFloat testFloat0 = new DspFloat(0.5F + 0.1e-6F);
+            assert testFloat0.toString().equals("0.500") : String.format(
                 "testFloat0.toString()=%s", testFloat0.toString()
             );
+
             // Confirm that the stored float variable is rounded to reflect the
-            // string rendering
-            assert testFloat0.toFloat() == 0.5F : String.format(
-                "testFloat0.toFloat()=%f", testFloat0.toFloat()
+            // string rendering to 3 decimal places
+            Float testFloat0Retrieved = testFloat0.toFloat();
+            assert testFloat0Retrieved == 0.5F : String.format(
+                "testFloat0Retrieved=%f", testFloat0Retrieved
             );
         }
             catch(Exception e) {
@@ -72,26 +77,25 @@ public class SignalChain extends ArrayList<DspModule> {
             JSONObject moduleJO = (JSONObject) node;
             String fenderId = moduleJO.getString("FenderId");
             String nodeId = moduleJO.getString("nodeId");
-            List<DspModule.DspParameter> params = new ArrayList<DspModule.DspParameter>();
+            List<DspParameterWithDetails> params = new ArrayList<DspParameterWithDetails>();
             JSONObject moduleParams = moduleJO.getJSONObject("dspUnitParameters");
             for(String k: moduleParams.keySet()) {
                 Object v = moduleParams.get(k);
                 final Object canonicalValue;
                 final Map<String, Object> valueDetails;
-                if(v instanceof JSONObject) {
-                    JSONObject vJO = (JSONObject) v;
-                    canonicalValue = vJO.getInt("_byteValue");
-                    valueDetails = vJO.toMap();
+                if(v instanceof DspParameterWithDetails) {
+                    DspParameterWithDetails vJO = (DspParameterWithDetails) v;
+                    canonicalValue = vJO.m_canonicalValue;
+                    valueDetails = vJO.m_valueDetails;
                 } else {
                     canonicalValue = v;
                     valueDetails = null;
                 }
-                params.add(new DspModule.DspParameter(k, canonicalValue, valueDetails));
+                params.add(new DspParameterWithDetails(k, canonicalValue, valueDetails));
             }
             modules.add(new DspModule(fenderId, nodeId, params));
         }
-        /*
-        SignalChain testSC = new SignalChain(List.of(modules));
+        SignalChain testSC = new SignalChain(modules.toArray(new DspModule[]{}));
         String[] testSCRenderings = new String[] {
             testSC.toString(1,true),
             testSC.toString(4,false),
@@ -102,7 +106,6 @@ public class SignalChain extends ArrayList<DspModule> {
             JSONArray scArray = new JSONArray(s);
             assert scArray.length()==5;
         }
-         */
 
         System.exit(0);
     }

@@ -41,9 +41,9 @@ public class TONE_LT_Preset extends PresetBase {
             assert node instanceof JSONObject;
             JSONObject nodeJO = (JSONObject) node;
             JSONObject paramsJO = nodeJO.getJSONObject("dspUnitParameters");
-            ArrayList<DspModule.DspParameter> params = new ArrayList<>();
+            ArrayList<DspParameterWithDetails> params = new ArrayList<>();
             for (String k : paramsJO.keySet()) {
-                params.add(new DspModule.DspParameter(k, paramsJO.get(k), null));
+                params.add(new DspParameterWithDetails(k, paramsJO.get(k), null));
             }
             DspModule nodeModule = new DspModule(
                 nodeJO.getString("FenderId"),
