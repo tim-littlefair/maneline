@@ -415,7 +415,9 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
     }
 
     public void stopProvider() {
-        m_protocol.doShutdown();
+        if(m_protocol!=null) {
+            m_protocol.doShutdown();
+        }
         m_hidServices.stop();
         m_hidServices.shutdown();
     }
