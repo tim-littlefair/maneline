@@ -163,54 +163,50 @@ public class FUSE_Classic_Preset extends PresetBase {
     static public void main(String[] args) {
         final int RAW_PRESET_BUFFER_LENGTH=512;
         try {
-            FileInputStream fis = new FileInputStream(args[0]);
+            final String rawPresetFilename;
+            if(args.length==0) {
+                rawPresetFilename = "./_work/pigs/Pigs_Can_Fly-FUSE_CLASSIC_USB.raw";
+            } else {
+                rawPresetFilename = args[0];
+            }
+            FileInputStream fis = new FileInputStream(rawPresetFilename);
             byte[] rawPresetBuffer = new byte[RAW_PRESET_BUFFER_LENGTH];
             int bytesRead = fis.read(rawPresetBuffer);
             assert bytesRead==RAW_PRESET_BUFFER_LENGTH;
             FUSE_Classic_Preset fcp = FUSE_Classic_Preset.create(rawPresetBuffer);
-            System.out.println(fcp.displayName());
+            String presetDisplayName = fcp.displayName();
+
+            System.out.println("presetDisplayName: " + presetDisplayName);
+            for(DspModule m: fcp.signalChain()) {
+                System.out.println(
+                    "    " +
+                    m.toString(0,false).replaceAll("\\^","    ")
+                );
+            }
+
+            if(args.length==0) {
+                // Default input file (hardcoded) => we can assert on expected values
+            } else {
+                // Input file supplied by users, we can only dump various outputs for manual checking
+                if(args.length==2) {
+                    // If an extra parameter is supplied it is the index of a single module
+                    // to be dumped with details
+                    int moduleIndex = Integer.valueOf(args[1]);
+                    System.out.println(
+                        fcp.m_signalChain.get(moduleIndex).toString(4,true)
+                    );
+                } else {
+                    // If no extra parameter is supplied, all modules are dumped, without details
+                    assert args.length==1;
+                    for(DspModule m: fcp.m_signalChain) {
+                        System.out.println(m.toString(4, false));
+                    }
+                }
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-/*
-        PresetBase testPreset1 = (PresetBase) (new PresetBase().put("displayName","testPreset1"));
-        System.out.println(testPreset1.toString(4));
-        JSONArray nodesArray1 = testPreset1.m_audioGraph_nodes;
-        assert nodesArray1 != null;
-        assert nodesArray1.length()==5;
-        for(int i=0; i<nodesArray1.length(); ++i) {
-         assert nodesArray1.isNull(i);
-        }
-
-        PresetBase testPreset2 = (PresetBase) (new PresetBase().put("displayName","testPreset2"));
-        testPreset2.addAudioGraphNode(
-         "Deluxe65", "amp",
-         "{}",
-         2
-        );
-        System.out.println(testPreset2.toString(4));
-        assert testPreset2.m_audioGraph_nodes.length() == 5;
-        String ampFenderId = (String) getSubObject(
-         testPreset2,
-         List.of("audioGraph","nodes", 2, "FenderId")
-        );
-        assert ampFenderId.equals("Deluxe65");
-
-        PresetBase testPreset3 = create(testPreset2.exportPresetRecord());
-        testPreset3.addAudioGraphNode("Passthru","stomp",null,0);
-        testPreset3.addAudioGraphNode("SineTremolo","mod",null,1);
-        testPreset3.addAudioGraphNode("Passthru","delay",null,3);
-        testPreset3.addAudioGraphNode("Passthru","reverb",null,4);
-        System.out.println(testPreset3.toString(4));
-        // The hash below needs to be maintained manually
-        PresetRecord pr3 = testPreset3.exportPresetRecord();
-        String expectedHash = "7b19-14e2";
-        assert pr3.audioHash().equals(expectedHash): String.format(
-         "audioHash mismatch: expected=%s actual=%s",
-         expectedHash, pr3.audioHash()
-        );
-*/
         System.exit(0);
     }
 

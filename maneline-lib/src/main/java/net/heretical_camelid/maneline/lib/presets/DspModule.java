@@ -142,7 +142,6 @@ public class DspModule extends JSONObject {
             if (p.m_canonicalValue instanceof Float) {
                 // before storing, round the value to the precision implied by
                 // DspFloat._FLOAT_FORMAT
-                System.out.println(p.m_name);
                 m_parameters.put(p.m_name, Float.valueOf(
                     new DspFloat((Float) p.m_canonicalValue).toString())
                 );
