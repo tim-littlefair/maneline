@@ -57,18 +57,46 @@ public class FUSE_Classic_Preset extends PresetBase {
         super(presetName, signalChain, CompanionAppName_e.FUSE_CLASSIC_USB, presetBytes);
     }
 
-    private static String paramCanonicalName(String paramFuseName) {
-        return paramFuseName.replaceAll("\\W","");
+    private static String canonicalParamName(String fuseParamName, Map<String, Object> fuseDetails) {
+        String retval = fuseParamName.replaceAll("\\W","");
+        retval = retval.substring(0,1).toLowerCase()+retval.substring(1);
+        if(retval.equals(fuseParamName)==false) {
+            fuseDetails.put("_fuseParamName", fuseParamName);
+        }
+        return retval;
     }
 
-    private static Object paramCanonicalValue(int fuseValueU8, int fuseParamType) {
+    private static Object paramCanonicalValue(int fuseValueU8, int fuseParamType, Map<String, Object> fuseDetails) {
         final Object canonicalValue;
         switch(fuseParamType) {
             // Generic, with exact mapping for 0.5:
             // 1 -> 0.0, , 128-> 0.5, 255 -> 1.0
+            case 1:
             case 12:
             case 13:
-                canonicalValue = (-1.0F+fuseValueU8)/255.0F;
+                canonicalValue = (fuseValueU8-1.0F)/254.0F;
+                // record value before canonical format rounds to 3 decimal places
+                fuseDetails.put("_fuseRawFloatValue", canonicalValue);
+                // The physical knobs on the MustangIv2 model, and some of the skeuomorphic UIs
+                // in FenderFUSE for some amps/effects require settings to be entered using a knob
+                // with 9 ticks numbered from 1 to 10.
+                // The LCD UI on the Mustang LT40S also requires selection of values on a 1.0 to
+                // 10.0 range, so it is convenient to have access to a rendering of how a given
+                // raw value is represented on that scale.
+                Float nineTickPos = 1.0F + ((Float) canonicalValue*9);
+                fuseDetails.put(
+                    "_nineTickKnobPos", Float.valueOf(String.format("%.01f",nineTickPos))
+                );
+                break;
+
+            case 144:
+                // Noise gate state
+                canonicalValue = getEnumerationValue(
+                    new String[]{
+                        "off", "low", "medium", "high", "extreme"
+                    },
+                    fuseValueU8,fuseDetails,17
+                );
                 break;
 
             default:
@@ -76,6 +104,18 @@ public class FUSE_Classic_Preset extends PresetBase {
         }
         return canonicalValue;
     }
+
+    private static Object getEnumerationValue(String[] enumValueStrings, int fuseValueU8, Map<String, Object> fuseDetails, int nullIndicatorIndex) {
+        if (fuseValueU8 == nullIndicatorIndex) {
+            return null;
+        } else if (fuseValueU8 >= enumValueStrings.length) {
+            fuseDetails.put("_fuseException", "enum value out of range");
+            return null;
+        } else {
+            return enumValueStrings[fuseValueU8];
+        }
+    }
+
     /**
      * This function analyzes a sequence of bytes, 
      * generates a DspModule/JSONObject and returns 
@@ -108,15 +148,28 @@ public class FUSE_Classic_Preset extends PresetBase {
                 continue;
             }
             Map<String, Object> fuseDetails = new LinkedHashMap<>();
-            String fuseParamName = paramMetadata.first;
+            String fuseName = paramMetadata.first;
+            String canonicalName = canonicalParamName(fuseName, fuseDetails);
             int fuseParamType = paramMetadata.second;
-            int paramValueU8 = 0xFF& ampBytes1[32+i];
-            fuseDetails.put("_fuseParamName", fuseParamName);
+            int paramValueU8 = 0xFF&ampBytes1[32+i];
+            int paramValueU16single = paramValueU8 << 8;
+            int paramValueU16double = paramValueU8 + paramValueU16single;
+            fuseDetails.put("_fuseParamIndex", i);
             fuseDetails.put("_fuseParamType", fuseParamType);
             fuseDetails.put("_fuseValueU8", paramValueU8);
+            if(i<12) {
+                // The XML-based .fuse file format contains 16 bit parameter
+                // values for parameters 0-11.
+                // Mostly these are equal to the 8-bit on the wire values
+                // left-shifted 8 bits but sometimes the 8-bit value
+                // is repeated in the low order byte.
+                // It is convenient to have these to values available to compare
+                fuseDetails.put("_fuseValueU16a", paramValueU16single);
+                fuseDetails.put("_fuseValueU16b", paramValueU16double);
+            }
             parameters.add(new DspParameterWithDetails(
-                paramCanonicalName(fuseParamName),
-                paramCanonicalValue(paramValueU8, fuseParamType),
+                canonicalName,
+                paramCanonicalValue(paramValueU8, fuseParamType, fuseDetails),
                 fuseDetails
             ));
         }
