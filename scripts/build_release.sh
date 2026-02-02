@@ -7,7 +7,7 @@ set -e
 # https://forums.balena.io/t/problems-doing-a-balena-push-free-tier/374797/10
 # pushing using the balena CLI is sometimes unreliable for this project so the
 # legacy git method is supported as an alternative.
-push_method=balena_cli
+push_method=git
 
 git restore build.gradle
 git restore deployment/balena/*/balena.yml
@@ -129,7 +129,7 @@ echo Building deployment root at $balenaFakerootDir
 if [ "$push_method" = "git" ]
 then
   echo Before clone
-  git clone --depth=1 gh_tim_littlefair@git.balena-cloud.com:gh_tim_littlefair/muddy-hail.git $balenaFakerootDir
+  git clone --depth=1 gh_tim_littlefair@git.balena-cloud.com:gh_tim_littlefair/maneline-staging.git $balenaFakerootDir
   echo After clone
   for f_or_d in $(ls -1 $balenaFakerootDir)
   do
@@ -172,9 +172,9 @@ if [ "$1" = "--muddy-hail" ]
 then
   deploy_fleet=muddy-hail
   shift
-elif [ "$1" = "--fhau-staging" ]
+elif [ "$1" = "--maneline-staging" ]
 then
-  deploy_fleet=fhau-staging
+  deploy_fleet=maneline-staging
   shift
 elif [ "$1" = "--fhau-ci-32bit" ]
 then
@@ -193,7 +193,7 @@ else
     # extra_push_flags="--detached --nolive"
     shift
   else
-    deploy_fleet=fhau-staging
+    deploy_fleet=maneline-staging
   fi
 fi
 echo Will deploy to $deploy_fleet
@@ -204,9 +204,9 @@ then
   extra_push_flags="$extra_push_flags $*"
   push_cmd="balena push $extra_push_flags --source $balenaFakerootDir gh_tim_littlefair/$deploy_fleet"
   $push_cmd
-elif [ ! "$deploy_fleet" = "muddy-hail" ]
+elif [ ! "$deploy_fleet" = "maneline-staging" ]
   then
-  echo "The only push method available for fleets other than muddy-hail is 'balena_cli'"
+  echo "The only push method available for fleets other than maneline-staging is 'balena_cli'"
   exit 1
 else
   echo Deploying using git
