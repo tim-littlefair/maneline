@@ -10,7 +10,9 @@ import org.json.JSONObject;
 public class TONE_LT_Preset extends PresetBase {
 
     public static TONE_LT_Preset create(byte[] presetBytes) {
-        JSONObject ltJO = new JSONObject(presetBytes);
+        // System.out.println(new String(presetBytes));
+        JSONObject ltJO = new JSONObject(new String(presetBytes));
+        // System.out.println(ltJO.toString(4));
         String presetName = ltJO.getJSONObject("info").getString("displayName");
         JSONArray connectionsJA = ltJO.getJSONObject("audioGraph").getJSONArray("connections");
         Map<String,String> connectionsMap = new TreeMap<>();

@@ -7,19 +7,19 @@ set -e
 # https://forums.balena.io/t/problems-doing-a-balena-push-free-tier/374797/10
 # pushing using the balena CLI is sometimes unreliable for this project so the
 # legacy git method is supported as an alternative.
-push_method=git
+push_method=balena_cli
 
 git restore build.gradle
 git restore deployment/balena/*/balena.yml
 
-if [ "$1" = "--beta" ]
+if [ "$1" = "--alph" ]
 then
-  releaseLevel=beta
-  shift
-else
   # shortening 'alpha' to 'alph' is deliberate
   # for real estate reasons
   releaseLevel=alph
+  shift
+else
+  releaseLevel=beta
 fi
 
 
@@ -107,6 +107,8 @@ else
   exit 1
 fi
 
+
+
 balenaFakerootDir=_work/balena_fakeroot-$buildString
 if [ "$1" = "--remove-stale-fakeroot" ]
 then
@@ -124,6 +126,37 @@ else
   echo Please delete it manually or include flag --remove-stale-fakeroot if you want to repeat a prior build.
   exit 1
 fi
+
+# Which device/fleet/git repo should be the deploy target
+extra_push_flags=""
+
+echo "$1" | grep "192.168"
+if [ "$?" = "0" ]
+  then
+    # IP address of a device, hopefully in local mode
+    deploy_fleet=$1
+    push_method=balena_cli
+    # extra_push_flags="--detached --nolive"
+    shift
+  else
+if [ "$1" = "--maneline-staging" ]
+then
+  deploy_fleet=maneline-staging
+  shift
+elif [ "$1" = "--fhau-ci-32bit" ]
+then
+  deploy_fleet=fhau-ci-32bit
+  shift
+elif [ "$1" = "--maneline-rpi-any" ]
+then
+  deploy_fleet=maneline-rpi-any
+  shift
+else
+    deploy_fleet=maneline-staging
+    push_method=git
+  fi
+fi
+echo Will deploy to $deploy_fleet
 
 echo Building deployment root at $balenaFakerootDir
 if [ "$push_method" = "git" ]
@@ -166,37 +199,6 @@ cat deployment/balena/compose-no-browser/balena.yml | \
   > $balenaFakerootDir/balena.yml
 echo Files copied to $balenaFakerootDir
 
-# Which device/fleet should be the deploy target
-extra_push_flags=""
-if [ "$1" = "--muddy-hail" ]
-then
-  deploy_fleet=muddy-hail
-  shift
-elif [ "$1" = "--maneline-staging" ]
-then
-  deploy_fleet=maneline-staging
-  shift
-elif [ "$1" = "--fhau-ci-32bit" ]
-then
-  deploy_fleet=fhau-ci-32bit
-  shift
-elif [ "$1" = "--maneline-rpi-any" ]
-then
-  deploy_fleet=maneline-rpi-any
-  shift
-else
-  echo "$1" | grep "192.168"
-  if [ "$?" = "0" ]
-  then
-    # IP address of a device, hopefully in local mode
-    deploy_fleet=$1
-    # extra_push_flags="--detached --nolive"
-    shift
-  else
-    deploy_fleet=maneline-staging
-  fi
-fi
-echo Will deploy to $deploy_fleet
 
 if [ "$push_method" = "balena_cli" ]
 then
