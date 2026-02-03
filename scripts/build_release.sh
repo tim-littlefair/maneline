@@ -107,8 +107,6 @@ else
   exit 1
 fi
 
-
-
 balenaFakerootDir=_work/balena_fakeroot-$buildString
 if [ "$1" = "--remove-stale-fakeroot" ]
 then
@@ -116,8 +114,8 @@ then
   if [ -d $balenaFakerootDir ]
   then
     echo Removing stale directory $balenaFakerootDir
-    rm -rf $balenaFakerootDir
-    echo Stale directory removed
+    rm -rf $balenaFakerootDir || true
+    echo Stale directory removed if present
   else
     echo No stale directory found at $balenaFakerootDir
   fi
@@ -126,20 +124,19 @@ else
   echo Please delete it manually or include flag --remove-stale-fakeroot if you want to repeat a prior build.
   exit 1
 fi
+echo Fakeroot processing done
 
-# Which device/fleet/git repo should be the deploy target
 extra_push_flags=""
 
-echo "$1" | grep "192.168"
-if [ "$?" = "0" ]
-  then
-    # IP address of a device, hopefully in local mode
-    deploy_fleet=$1
-    push_method=balena_cli
-    # extra_push_flags="--detached --nolive"
-    shift
-  else
-if [ "$1" = "--maneline-staging" ]
+# Which device/fleet/git repo should be the deploy target
+if [ ! -z "$(echo $1 | grep '192.168')" ]
+then
+  # IP address of a device, hopefully in local mode
+  deploy_fleet=$1
+  push_method=balena_cli
+  extra_push_flags="--detached --nolive"
+  shift
+elif [ "$1" = "--maneline-staging" ]
 then
   deploy_fleet=maneline-staging
   shift
@@ -152,11 +149,10 @@ then
   deploy_fleet=maneline-rpi-any
   shift
 else
-    deploy_fleet=maneline-staging
-    push_method=git
-  fi
+  deploy_fleet=maneline-staging
+  push_method=git
 fi
-echo Will deploy to $deploy_fleet
+echo Will deploy to $deploy_fleet using $push_method
 
 echo Building deployment root at $balenaFakerootDir
 if [ "$push_method" = "git" ]
