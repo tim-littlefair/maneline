@@ -236,7 +236,7 @@ public abstract class AbstractMessageProtocolBase {
                 "psname2",
                 new JsonPrimitive(currentPresetRecord.displayName().substring(8).strip())
             );
-            for(int i=0; i<5; ++i) {
+            for(int i=0; i<currentPresetRecord.m_preset.signalChain().size(); ++i) {
                 DspModule m = currentPresetRecord.m_preset.signalChain().get(i);
                 if(m!=null) {
                     presetDetails.add(

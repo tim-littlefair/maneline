@@ -26,7 +26,9 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
     byte[] m_presetDefinitionBuffer = null;
     int m_presetDefinitionPacketsConsumed = 0;
 
+    boolean m_logCurrentPresetNextHeartbeat;
 
+    boolean m_doingInitialPresetRead;
     public ClassicSeriesProtocol(
         boolean startHeartbeat,
         boolean processResponsesAfterHeartbeat
@@ -41,6 +43,8 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
         m_heartbeatStopped = !startHeartbeat;
         m_heartbeatThread = new HeartbeatThread();
         m_heartbeatThread.setName("Classic-device-heartbeat");
+        m_logCurrentPresetNextHeartbeat = true;
+        m_doingInitialPresetRead = true;
     }
 
     @Override
@@ -92,6 +96,7 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
             }
         }
         s_presetResponseReader = null;
+        m_doingInitialPresetRead = false;
         return scStatus;
     }
 
@@ -292,6 +297,7 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
             for(String rplm: readPhaseLogMessages) {
                 log(rplm);
             }
+            logCurrentPresetDetails();
         }
 
         return STATUS_OK;
@@ -316,7 +322,7 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
                 m_minPresetIndex = presetIndex;
             } else if( presetIndex>m_maxPresetIndex) {
                 m_maxPresetIndex = presetIndex;
-            } else if (m_presetDefinitionBuffer!=null) {
+            } else if (m_presetDefinitionBuffer!=null && m_doingInitialPresetRead) {
                 readPhaseLogMessages.add(String.format(
                     "Packet containing name '%s' for preset %d (populating)=%s",
                     presetName, presetIndex, b2hex2
@@ -365,6 +371,7 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
                 m_presetDefinitionPacketsConsumed += 1;
             }
 
+
             int nodeIndex;
             if(effectSlot<5) {
                 nodeIndex = effectSlot;
@@ -395,6 +402,12 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
                     nodeId = "reverb";
                     break;
 
+                case 0x0d:
+                    nodeId = String.format("?dspType-%02x?", dspPacketType);
+                    nodeIndex = -1;
+                    logCurrentPresetDetails();
+                    break;
+
                 default:
                     nodeId = String.format("?dspType-%02x?", dspPacketType);
                     nodeIndex = -1;
@@ -418,7 +431,11 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
              */
         } else if (b2hex2.startsWith("> [64]: 00 00 1c")) {
             // with MustangIv2 firmware 2.1, this is an empty response to a heartbeat
-            // it can be ignored
+            // it can be ignored unless the preset has changed
+            if(m_logCurrentPresetNextHeartbeat) {
+                logCurrentPresetDetails();
+                m_logCurrentPresetNextHeartbeat=false;
+            }
         } else {
             readPhaseLogMessages.add(
                 String.format("Unclassifed packet=%s", b2hex2)
