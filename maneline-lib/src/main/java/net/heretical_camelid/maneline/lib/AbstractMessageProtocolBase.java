@@ -207,7 +207,7 @@ public abstract class AbstractMessageProtocolBase {
                 PresetRecord.EffectsLevelOfDetails.MODULES_AND_PARAMETERS
             );
             m_currentPresetDetails = String.format(
-                "Preset info: name=%s (slot=%02d)\nAudio graph:\n%s",
+                "Preset info: name=%s (slot=%02d)\nSignal Chain:\n%s",
                 displayName,m_currentPresetIndex,effectDetails
             );
             log(m_currentPresetDetails);

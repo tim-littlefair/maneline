@@ -417,14 +417,10 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
                 PresetRecord.COMPANION_APP_TONE_LT_DESKTOP
             );
 
-            if(messageId==31) {
-                if (s_presetResponseReader != null) {
-                    s_presetResponseReader.notifyPresetResponse(m_currentPresetIndex, pr);
-                }
-            } else {
-                assert messageId==32;
-                logCurrentPresetDetails();
+            if (s_presetResponseReader != null) {
+                s_presetResponseReader.notifyPresetResponse(m_currentPresetIndex, pr);
             }
+            logCurrentPresetDetails();
 
             // This response is received up to 60 times so we don't log it
         } else if (messageId==200) {

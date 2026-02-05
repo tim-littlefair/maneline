@@ -1,5 +1,7 @@
 package net.heretical_camelid.maneline.lib.presets;
 
+import net.heretical_camelid.maneline.lib.generated.TONE_Constants;
+
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -102,6 +104,9 @@ public class DspModule extends JSONObject {
      * m_fenderId is the name of the module,
      */
     public final String m_fenderId;
+    public final String m_genericName;
+    public final boolean m_isPassthru;
+
     /**
      * m_nodeId identifies the type of the module.
      * <p>
@@ -136,6 +141,14 @@ public class DspModule extends JSONObject {
 
     DspModule(String fenderId, String nodeId, List<DspParameterWithDetails> parameters) {
         m_fenderId = fenderId.replaceAll("\\W+","");
+        m_genericName = TONE_Constants.fenderIdToGenericModuleName(m_fenderId);
+        if(m_genericName.equals("Passthru")) {
+            m_isPassthru = true;
+        } else if(m_genericName.equals("Unknown")) {
+            m_isPassthru = true;
+        } else {
+            m_isPassthru = false;
+        }
         m_nodeId = nodeId;
         m_parameters = new LinkedHashMap<String, Object>();
         for (DspParameterWithDetails p : parameters) {
@@ -202,7 +215,7 @@ public class DspModule extends JSONObject {
     }
 
     public String typeAndName() {
-        return String.join(":",m_nodeId, m_fenderId);
+        return String.join(":",m_nodeId, m_genericName);
     }
 
     private void serializeParamValue(Object paramValue, StringBuilder sb, boolean quantizeFloats) {

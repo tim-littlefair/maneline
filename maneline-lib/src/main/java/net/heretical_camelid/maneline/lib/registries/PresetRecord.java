@@ -119,6 +119,9 @@ public class PresetRecord {
         StringBuilder sb = new StringBuilder();
         boolean insertSeparator = false;
         for (DspModule dspModule: m_preset.signalChain()) {
+            if(dspModule.m_isPassthru) {
+                continue;
+            }
             if(insertSeparator) {
                 sb.append(separator);
             }
