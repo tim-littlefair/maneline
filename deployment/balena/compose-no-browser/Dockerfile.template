@@ -95,13 +95,13 @@ FROM platform-layer AS web-app
 COPY ./lua ./lua
 COPY ./web_ui ./web_ui
 COPY ./lcd_ui ./lcd_ui
-COPY ./epaper_ui ./epaper_ui
 COPY ./jar ./jar
 
 # Disable e-paper support for now
 # Might need to implement systemd running to get the behaviour
 # we want (i.e displaying out of service message before going down)
 # ref: https://docs.balena.io/learn/more/masterclasses/services-masterclass/#5-running-systemd-in-a-service
+# COPY ./epaper_ui ./epaper_ui
 # RUN sh ./epaper_ui/epaper_support_install.sh
 
 COPY run.sh $WORKDIR

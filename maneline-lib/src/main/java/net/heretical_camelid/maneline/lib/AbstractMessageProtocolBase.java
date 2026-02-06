@@ -241,7 +241,7 @@ public abstract class AbstractMessageProtocolBase {
                 if(m!=null) {
                     presetDetails.add(
                         String.format("psmodule%d",i+1),
-                        new JsonPrimitive(m.m_fenderId)
+                        new JsonPrimitive(m.m_genericName)
                     );
                 }
             }

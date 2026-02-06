@@ -133,7 +133,7 @@ if [ ! -z "$(echo $1 | grep '192.168')" ]
 then
   # IP address of a device, hopefully in local mode
   deploy_fleet=$1
-  push_method=balena_cli
+  push_method=balena_cli_local
   extra_push_flags="--detached --nolive"
   shift
 elif [ "$1" = "--maneline-staging" ]
@@ -177,16 +177,23 @@ cp --recursive --force web-app/lua $balenaFakerootDir
 cp --recursive --force web-app/run.sh $balenaFakerootDir
 cp --recursive --force web-app/web_ui $balenaFakerootDir
 cp --recursive --force web-app/lcd_ui $balenaFakerootDir
-cp --recursive --force web-app/epaper_ui $balenaFakerootDir
-if [ ! -f _work/E-Paper_code.zip ]
+
+# The ePaper UI is presently not in use
+epaper_enabled=false
+if [ "$epaper_enabled" = "true" ]
 then
-  wget --output-document=_work/E-Paper_code.zip https://files.waveshare.com/upload/7/71/E-Paper_code.zip
+  cp --recursive --force web-app/epaper_ui $balenaFakerootDir
+  if [ ! -f _work/E-Paper_code.zip ]
+  then
+    wget --output-document=_work/E-Paper_code.zip https://files.waveshare.com/upload/7/71/E-Paper_code.zip
+  fi
+  unzip -qq -o _work/E-Paper_code.zip 'RaspberryPi_JetsonNano/python/lib/**'
+  unzip -qq -o _work/E-Paper_code.zip 'RaspberryPi_JetsonNano/python/pic/Font.ttc'
+  mv RaspberryPi_JetsonNano/python/lib $balenaFakerootDir/epaper_ui/lib
+  mv RaspberryPi_JetsonNano/python/pic $balenaFakerootDir/epaper_ui/pic
+  rm -rf RaspberryPi_JetsonNano
 fi
-unzip -qq -o _work/E-Paper_code.zip 'RaspberryPi_JetsonNano/python/lib/**'
-unzip -qq -o _work/E-Paper_code.zip 'RaspberryPi_JetsonNano/python/pic/Font.ttc'
-mv RaspberryPi_JetsonNano/python/lib $balenaFakerootDir/epaper_ui/lib
-mv RaspberryPi_JetsonNano/python/pic $balenaFakerootDir/epaper_ui/pic
-rm -rf RaspberryPi_JetsonNano
+# end of disabled ePaper UI
 
 cp --recursive --force desktop-app/build/libs $balenaFakerootDir/jar
 cat deployment/balena/compose-no-browser/balena.yml | \
@@ -201,6 +208,12 @@ then
   echo Remaining arguments: $*
   extra_push_flags="$extra_push_flags $*"
   push_cmd="balena push $extra_push_flags --source $balenaFakerootDir gh_tim_littlefair/$deploy_fleet"
+  $push_cmd
+elif [ "$push_method" = "balena_cli_local" ]
+then
+  echo Remaining arguments: $*
+  extra_push_flags="$extra_push_flags $*"
+  push_cmd="balena push $extra_push_flags --source $balenaFakerootDir $deploy_fleet"
   $push_cmd
 elif [ ! "$deploy_fleet" = "maneline-staging" ]
   then

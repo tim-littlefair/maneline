@@ -419,10 +419,9 @@ public class LTSeriesProtocol extends AbstractMessageProtocolBase {
 
             if (s_presetResponseReader != null) {
                 s_presetResponseReader.notifyPresetResponse(m_currentPresetIndex, pr);
+            } else {
+                logCurrentPresetDetails();
             }
-            logCurrentPresetDetails();
-
-            // This response is received up to 60 times so we don't log it
         } else if (messageId==200) {
             // This is a response of type UnsupportedMessageStatus
             assert messagePbType == 2;
