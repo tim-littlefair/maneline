@@ -7,14 +7,43 @@ java {
     targetCompatibility = JavaVersion.VERSION_11
 }
 
+// /*
+configurations {
+    consumable("filteredRuntimeClasspath") {
+        canBeResolved = true
+        canBeDeclared = true
+        extendsFrom(runtimeClasspath)
+    }
+}
+// */
+
 jar {
     manifest {
         attributes "Main-Class" : 'net.heretical_camelid.maneline.desktop_app.CommandLineInterface'
         attributes "Implementation-Version" : "$rootProject.ext.versionName"
     }
-    from {
-        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+
+    doFirst {
+        from(
+            configurations.runtimeClasspath.collect {
+                it.isDirectory() ?
+                    it
+                    :
+                    zipTree(it).matching {
+                        exclude 'com/sun/jna/aix-*/**'
+                        exclude 'com/sun/jna/*bsd-*/**'
+                        exclude 'com/sun/jna/sunos-*/**'
+                        exclude 'com/sun/jna/win32*/**'
+                    }
+            }
+        )
     }
+    /*
+    {
+       //exclude(group: 'com/sun/jna', module: 'aix-ppc')
+        // exclude(group: 'com/sun/jna', module: 'aix-ppc')
+    }
+     */
     from('..') {
         include "LICENSE"
         include "assets/copyright_and_warranty.txt"
@@ -23,7 +52,6 @@ jar {
         include "assets/dtcli_interactive_help.txt"
         include "assets/50-fhau.rules"
     }
-
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     dependsOn(':maneline-lib:jar')
 }
