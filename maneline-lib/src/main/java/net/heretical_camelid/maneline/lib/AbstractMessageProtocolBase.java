@@ -262,4 +262,3 @@ public abstract class AbstractMessageProtocolBase {
         }
     }
 }
-

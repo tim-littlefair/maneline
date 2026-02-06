@@ -1,5 +1,7 @@
 #!/bin/bash
 
+import os
+
 exit_wait_sleep_length=2
 
 # We pass $start_dir to the lua process and it
@@ -43,6 +45,8 @@ echo cli jar path=$(pwd)/$cli_jar
 # the GPIO-attached LCD if there is one
 if [ "$(whoami)" = "root" ]
 then
+  rm amp-details.json
+  rm preset-details.json
   python3 lcd_ui/manage_lcd_ui.py . --fb-both &
   lcd_ui_manager_pid=$!
   echo LCD being managed by process $lcd_ui_manager_pid
@@ -79,6 +83,8 @@ do
     if [ "$cli_exit_status" = "101" ]
     then
         echo Restart of CLI process due to user request
+        rm amp-details.json
+        rm preset-details.json
     else
         break
     fi

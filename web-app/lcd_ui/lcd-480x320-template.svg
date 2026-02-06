@@ -58,7 +58,7 @@
         style="font-size:13px;fill:#a11">
       <tspan
           x="10.0"
-          y="190.0">firmware @fwversion</tspan>
+          y="190.0">@fwversion</tspan>
     </text>
     <image
         href="@qrcode_data_uri"

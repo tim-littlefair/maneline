@@ -402,7 +402,13 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
             }
             ampDetails.add("swversion", new JsonPrimitive(manelineAppVersion));
             ampDetails.add("ampname", new JsonPrimitive(fmicDevice.getProduct()));
-            ampDetails.add("fwversion", new JsonPrimitive(m_firmwareVersion));
+            if(!m_firmwareVersion.isEmpty()) {
+                ampDetails.add(
+                    "fwversion", new JsonPrimitive("firmware " + m_firmwareVersion)
+                );
+            } else {
+                ampDetails.add("fwversion", new JsonPrimitive(""));
+            }
             FileOutputStream ampDetailsStream = null;
             ampDetailsStream = new FileOutputStream("./amp-details.json");
             ampDetailsStream.write(ampDetails.toString().getBytes());

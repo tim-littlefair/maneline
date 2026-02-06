@@ -92,8 +92,21 @@ class PresetUpdatedHandler(PatternMatchingEventHandler):
 
 
 def update_lcd_ui(run_dir, ipaddr, display_method):
-    device_details = json.load(open(os.path.join(run_dir, "amp-details.json")))
-    preset_details = json.load(open(os.path.join(run_dir, "preset-details.json")))
+    device_details = None
+    try:
+        device_details = json.load(open(os.path.join(run_dir, "amp-details.json")))
+    except:
+        device_details = json.loads("""{
+            "swversion":"","ampname":"","fwversion":""
+        }""")
+    preset_details = None
+    try:
+        preset_details = json.load(open(os.path.join(run_dir, "preset-details.json")))
+    except:
+        preset_details = json.loads("""{
+                "psslot":"","psname1":"...","psname2":"",
+                "psmodule1":"","psmodule2":"","psmodule3":"","psmodule4":"","psmodule5":""
+        }""")
     icon_data_uri = generate_icon_data_uri()
     qrcode_data_uri = generate_qrcode_data_uri(ipaddr)
     svg_fn=generate_svg(
