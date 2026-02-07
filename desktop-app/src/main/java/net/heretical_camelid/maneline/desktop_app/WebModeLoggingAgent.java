@@ -13,8 +13,7 @@ import java.util.Objects;
 import org.slf4j.LoggerFactory;
 import org.slf4j.spi.LoggingEventBuilder;
 import org.slf4j.MDC;
-import org.slf4j.Logger;
-//import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.Logger;
 import ch.qos.logback.core.FileAppender;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -23,7 +22,7 @@ class WebModeLogUtility {
     final Logger m_logger;
     final FileAppender m_appender;
     WebModeLogUtility(String loggerNamePrefix) {
-        m_logger = LoggerFactory.getLogger(loggerNamePrefix+"_LOGGER");
+        m_logger = (Logger) LoggerFactory.getLogger(loggerNamePrefix+"_LOGGER");
         m_appender = (FileAppender)((ch.qos.logback.classic.Logger) m_logger).getAppender(
             loggerNamePrefix+"_APPENDER"
         );

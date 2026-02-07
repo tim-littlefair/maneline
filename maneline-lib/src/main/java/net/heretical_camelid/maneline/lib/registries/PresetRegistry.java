@@ -201,24 +201,6 @@ public class PresetRegistry implements IPresetResponseReader {
         acceptVisitor(new PresetDetailsTableGenerator(printStream));
     }
 
-    private SlotBasedPresetSuiteExporter createSuite(
-        String outputPrefix, String suiteName, Integer... desiredSlotIndexes
-    ) {
-        if(desiredSlotIndexes.length==0) {
-            return null;
-        }
-        List<Integer> dsiList = new ArrayList<Integer>(List.of(desiredSlotIndexes));
-        m_suiteNumber++;
-        if(m_slotsNotExportedYet!=null) {
-            m_slotsNotExportedYet.removeAll(dsiList);
-        }
-        return new SlotBasedPresetSuiteExporter(
-            outputPrefix,
-            String.format("%02d-%s", m_suiteNumber, suiteName),
-            dsiList.stream().toArray(Integer[]::new)
-        );
-    }
-
     public void dump(SuiteRegistry suiteRegistry) {
         generatePresetDetails(System.out);
         if(m_outputPath != null) {
@@ -262,26 +244,9 @@ public class PresetRegistry implements IPresetResponseReader {
                     createSuite(suitePathPrefix, "Heavy", 2, 7, 11, 14, 16, 28),
                     createSuite(suitePathPrefix, "Trippy", 15, 18, 21, 24, 29),
                     */
-
-                    // We also create a JSON file in the suite format 
-                    // containing all presets.
-                    // Note that SBPSE interprets an empty list of 
-                    // presets as "include all".
-                    new SlotBasedPresetSuiteExporter(
-                        outputPathBase, "all-presets"
-                    )
                 }
             );
-            for(SlotBasedPresetSuiteExporter suiteExporter: suiteExporters) {
-                if(suiteExporter!=null) {
-                    acceptVisitor(suiteExporter);
-                    suiteRegistry.m_suites.add(new SuiteRecord(
-                        suiteExporter.m_suiteName, suiteExporter.m_presetRecords
-                    ));
-                }
-            }
 
-            // We also create a JSON file containing presets 1-30
             System.out.println();
             suiteRegistry.dump();
             System.out.println();

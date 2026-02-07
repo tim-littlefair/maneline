@@ -1,8 +1,5 @@
 package net.heretical_camelid.maneline.desktop_app;
 
-//import static net.heretical_camelid.maneline.lib.AbstractMessageProtocolBase.bufferToHex2;
-//import static net.heretical_camelid.maneline.lib.AbstractMessageProtocolBase.logAsHex2;
-
 import static net.heretical_camelid.maneline.lib.AbstractMessageProtocolBase.bufferToHex2;
 
 import net.heretical_camelid.maneline.lib.AbstractMessageProtocolBase;
@@ -20,6 +17,7 @@ import org.hid4java.HidServicesListener;
 import org.hid4java.HidServicesSpecification;
 import org.hid4java.ScanMode;
 import org.hid4java.event.HidServicesEvent;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -30,9 +28,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.Set;
-
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 
 import net.heretical_camelid.maneline.lib.registries.SlotBasedPresetSuiteExporter;
 
@@ -395,19 +390,19 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
         // which the LCD UI can consume to display the maneline software
         // version and details of maneline the connected amp
         try {
-            JsonObject ampDetails = new JsonObject();
+            JSONObject ampDetails = new JSONObject();
             String manelineAppVersion = getClass().getPackage().getImplementationVersion();
             if(manelineAppVersion==null) {
                 manelineAppVersion="unknown";
             }
-            ampDetails.add("swversion", new JsonPrimitive(manelineAppVersion));
-            ampDetails.add("ampname", new JsonPrimitive(fmicDevice.getProduct()));
+            ampDetails.put("swversion", manelineAppVersion);
+            ampDetails.put("ampname", fmicDevice.getProduct());
             if(!m_firmwareVersion.isEmpty()) {
-                ampDetails.add(
-                    "fwversion", new JsonPrimitive("firmware " + m_firmwareVersion)
+                ampDetails.put(
+                    "fwversion", "firmware " + m_firmwareVersion
                 );
             } else {
-                ampDetails.add("fwversion", new JsonPrimitive(""));
+                ampDetails.put("fwversion", "");
             }
             FileOutputStream ampDetailsStream = null;
             ampDetailsStream = new FileOutputStream("./amp-details.json");
@@ -438,15 +433,6 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
         int startupStatus = m_protocol.doStartup(firmwareVersionEtc);
         m_firmwareVersion = m_protocol.getFirmwareVersion();
         saveAmpDetailsJson(hidDevice);
-
-        // The desktop app is used to generate curated suites of presets.
-        // notify the relevant class in the library of the product name,
-        // serial number and firmware version so that the source can
-        // be documented.
-        SlotBasedPresetSuiteExporter.setSourceDeviceDetails(String.format(
-            "%s running firmware %s",
-            hidDevice.getProduct(), m_firmwareVersion
-        ));
 
         System.out.println("Requesting presets - should take about 5 seconds");
         int presetNamesStatus = m_protocol.getPresetNamesList(m_presetRegistry);

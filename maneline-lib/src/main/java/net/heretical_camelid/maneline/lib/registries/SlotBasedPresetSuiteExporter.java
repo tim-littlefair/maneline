@@ -1,16 +1,26 @@
 package net.heretical_camelid.maneline.lib.registries;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-public class SlotBasedPresetSuiteExporter implements PresetRegistry.Visitor {
 
+public class SlotBasedPresetSuiteExporter implements PresetRegistry.Visitor {
+    @Override
+    public void visitBeforeRecords(PresetRegistry registry) {
+
+    }
+
+    @Override
+    public void visitRecord(int slotIndex, Object record) {
+
+    }
+
+    @Override
+    public void visitAfterRecords(PresetRegistry registry) {
+
+    }
+/*
     static final Gson m_gson = new GsonBuilder().setPrettyPrinting().create();
 
     static String s_sourceDeviceDetails = null;
@@ -87,4 +97,5 @@ public class SlotBasedPresetSuiteExporter implements PresetRegistry.Visitor {
         String targetPath = m_outputPrefix + "/" + suiteFilename + ".preset_suite.json";
         PresetRegistry.outputToFile(targetPath, jsonForSuite.getBytes());
     }
+*/
 }

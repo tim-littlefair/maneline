@@ -7,7 +7,7 @@ java {
     targetCompatibility = JavaVersion.VERSION_11
 }
 
-// /*
+/*
 configurations {
     consumable("filteredRuntimeClasspath") {
         canBeResolved = true
@@ -15,7 +15,7 @@ configurations {
         extendsFrom(runtimeClasspath)
     }
 }
-// */
+*/
 
 jar {
     manifest {
@@ -29,12 +29,41 @@ jar {
                 it.isDirectory() ?
                     it
                     :
-                    zipTree(it).matching {
-                        exclude 'com/sun/jna/aix-*/**'
-                        exclude 'com/sun/jna/*bsd-*/**'
-                        exclude 'com/sun/jna/sunos-*/**'
-                        exclude 'com/sun/jna/win32*/**'
+                    zipTree(it)
+                    // /*
+                    .matching {
+                        include 'net/heretical_camelid/maneline/lib/**'
+
+                        include 'ch/qos/**'
+                        include 'com/fasterxml/**'
+                        include 'net/logstash/**'
+                        include 'org/hid4java/**'
+                        include 'org/json/**'
+                        include 'org/slf4j/**'
+                        include 'tools/jackson/core/**'
+                        include 'tools/jackson/databind/**'
+
+                        include 'module-info.class'
+                        include 'resources/**'
+                        include 'logback.xml'
+                        include 'META-INF/**'
+
+                        include 'linux-amd64/**'
+                        include 'linux-x86-64/**'
+                        include 'linux-aarch64/**'
+                        include 'darwin-x86-64/**'
+
+                        include 'com/sun/jna/ptr/**'
+                        include 'com/sun/jna/internal/**'
+                        include 'com/sun/jna/linux-x86-64/**'
+                        include 'com/sun/jna/linux-aarch64/**'
+                        include 'com/sun/jna/darwin-x86-64/**'
+                        include 'com/sun/jna/*.class'
+
+                        // exclude 'tools/**'
+                        // include 'tools/jackson/databind/**'
                     }
+                    // */
             }
         )
     }
@@ -66,7 +95,7 @@ dependencies {
     implementation 'net.logstash.logback:logstash-logback-encoder:9.0'
     implementation 'net.java.dev.jna:jna:5.18.1'
     implementation 'org.hid4java:hid4java:0.8.0'
-    implementation 'com.google.code.gson:gson:2.13.2'
+    implementation 'org.json:json:20251224'
 
     // implementation 'org.sputnikdev.bluetooth-manager-tinyb:1.3.3'
     // implementation 'org.sputnikdev.bluetooth-manager:1.5.3'

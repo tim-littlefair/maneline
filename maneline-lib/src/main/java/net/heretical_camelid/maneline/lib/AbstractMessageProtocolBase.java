@@ -1,14 +1,6 @@
 package net.heretical_camelid.maneline.lib;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 
-import net.heretical_camelid.maneline.lib.interfaces.IDeviceTransport;
-import net.heretical_camelid.maneline.lib.interfaces.ILoggingAgent;
-import net.heretical_camelid.maneline.lib.interfaces.IPresetResponseReader;
-import net.heretical_camelid.maneline.lib.presets.DspModule;
-import net.heretical_camelid.maneline.lib.registries.PresetRecord;
-import net.heretical_camelid.maneline.lib.registries.PresetRegistry;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -18,6 +10,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.json.JSONObject;
+
+import net.heretical_camelid.maneline.lib.interfaces.IDeviceTransport;
+import net.heretical_camelid.maneline.lib.interfaces.ILoggingAgent;
+import net.heretical_camelid.maneline.lib.interfaces.IPresetResponseReader;
+import net.heretical_camelid.maneline.lib.presets.DspModule;
+import net.heretical_camelid.maneline.lib.registries.PresetRecord;
+import net.heretical_camelid.maneline.lib.registries.PresetRegistry;
 
 enum ModalContext_e {
     MC_INITIAL,
@@ -223,25 +224,25 @@ public abstract class AbstractMessageProtocolBase {
             }
             HashMap<String,String > lcdAttributes = new HashMap<String,String>();
 
-            JsonObject presetDetails = new JsonObject();
-            presetDetails.add(
+            JSONObject presetDetails = new JSONObject();
+            presetDetails.put(
                 "psslot",
-                new JsonPrimitive(String.format("%02d",m_currentPresetIndex))
+                String.format("%02d",m_currentPresetIndex)
             );
-            presetDetails.add(
+            presetDetails.put(
                 "psname1",
-                new JsonPrimitive(currentPresetRecord.displayName().substring(0,8).strip())
+                currentPresetRecord.displayName().substring(0,8).strip()
             );
-            presetDetails.add(
+            presetDetails.put(
                 "psname2",
-                new JsonPrimitive(currentPresetRecord.displayName().substring(8).strip())
+                currentPresetRecord.displayName().substring(8).strip()
             );
             for(int i=0; i<currentPresetRecord.m_preset.signalChain().size(); ++i) {
                 DspModule m = currentPresetRecord.m_preset.signalChain().get(i);
                 if(m!=null) {
-                    presetDetails.add(
+                    presetDetails.put(
                         String.format("psmodule%d",i+1),
-                        new JsonPrimitive(m.m_genericName)
+                        m.m_genericName
                     );
                 }
             }
