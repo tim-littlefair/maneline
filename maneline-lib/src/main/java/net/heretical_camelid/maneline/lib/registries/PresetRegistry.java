@@ -244,9 +244,24 @@ public class PresetRegistry implements IPresetResponseReader {
                     createSuite(suitePathPrefix, "Heavy", 2, 7, 11, 14, 16, 28),
                     createSuite(suitePathPrefix, "Trippy", 15, 18, 21, 24, 29),
                     */
+
+                    // We also create a JSON file in the suite format
+                    // containing all presets.
+                    // Note that SBPSE interprets an empty list of
+                    // presets as "include all".
+                    new SlotBasedPresetSuiteExporter(
+                        outputPathBase, "all-presets"
+                    )
                 }
             );
-
+            for(SlotBasedPresetSuiteExporter suiteExporter: suiteExporters) {
+                if(suiteExporter!=null) {
+                    acceptVisitor(suiteExporter);
+                    suiteRegistry.m_suites.add(new SuiteRecord(
+                        suiteExporter.m_suiteName, suiteExporter.m_presetRecords
+                    ));
+                }
+            }
             System.out.println();
             suiteRegistry.dump();
             System.out.println();

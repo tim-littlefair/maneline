@@ -1,27 +1,14 @@
 package net.heretical_camelid.maneline.lib.registries;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
 
 public class SlotBasedPresetSuiteExporter implements PresetRegistry.Visitor {
-    @Override
-    public void visitBeforeRecords(PresetRegistry registry) {
-
-    }
-
-    @Override
-    public void visitRecord(int slotIndex, Object record) {
-
-    }
-
-    @Override
-    public void visitAfterRecords(PresetRegistry registry) {
-
-    }
-/*
-    static final Gson m_gson = new GsonBuilder().setPrettyPrinting().create();
 
     static String s_sourceDeviceDetails = null;
 
@@ -35,7 +22,7 @@ public class SlotBasedPresetSuiteExporter implements PresetRegistry.Visitor {
 
     final List<Integer> m_desiredSlotIndexes;
 
-    JsonObject m_suite;
+    JSONObject m_suite;
 
     HashMap<Integer,PresetRecord> m_presetRecords;
 
@@ -45,9 +32,9 @@ public class SlotBasedPresetSuiteExporter implements PresetRegistry.Visitor {
         m_outputPrefix = outputPrefix;
         m_suiteName = suiteName;
         m_desiredSlotIndexes = Arrays.asList(desiredSlotIndexes);
-        m_suite = new JsonObject();
-        m_suite.addProperty("suiteName", suiteName);
-        m_suite.add("presets", new JsonArray());
+        m_suite = new JSONObject();
+        m_suite.put("suiteName", suiteName);
+        m_suite.put("presets", new JSONArray());
         m_presetRecords = new HashMap<>();
     }
 
@@ -63,28 +50,28 @@ public class SlotBasedPresetSuiteExporter implements PresetRegistry.Visitor {
             m_desiredSlotIndexes.contains(slotIndex) || 
             m_desiredSlotIndexes.size()==0
         ) {
-            JsonObject presetObject = new JsonObject();
+            JSONObject presetObject = new JSONObject();
             // TODO: get rid of originSlotIndex when Lua has a
             // lookup based on hash and name
             // Until then, this only works if the slot index on
             // the target is the same as the slot index when the
             // suite was created
-            presetObject.addProperty("originSlotIndex", slotIndex);
-            presetObject.addProperty("presetName", fjpr.m_name);
-            presetObject.addProperty("audioHash", fjpr.audioHash());
-            presetObject.addProperty("effectsSummary", fjpr.effects(
+            presetObject.put("originSlotIndex", slotIndex);
+            presetObject.put("presetName", fjpr.m_name);
+            presetObject.put("audioHash", fjpr.audioHash());
+            presetObject.put("effectsSummary", fjpr.effects(
                 PresetRecord.EffectsLevelOfDetails.MODULES_ONLY
             ));
-            presetObject.addProperty("effectsDetails", fjpr.effects(
+            presetObject.put("effectsDetails", fjpr.effects(
                 PresetRecord.EffectsLevelOfDetails.MODULES_AND_PARAMETERS
             ));
-            presetObject.addProperty("shortInfo", fjpr.shortInfo());
+            presetObject.put("shortInfo", fjpr.shortInfo());
             if (s_sourceDeviceDetails != null) {
-                presetObject.addProperty(
+                presetObject.put(
                     "originDevice",s_sourceDeviceDetails+" slot "+ slotIndex
                 );
             }
-            m_suite.getAsJsonArray("presets").add(presetObject);
+            m_suite.getJSONArray("presets").put(presetObject);
             m_presetRecords.put(slotIndex,fjpr);
         }
 
@@ -92,10 +79,9 @@ public class SlotBasedPresetSuiteExporter implements PresetRegistry.Visitor {
 
     @Override
     public void visitAfterRecords(PresetRegistry registry) {
-        String jsonForSuite = m_gson.toJson(m_suite);
+        String jsonForSuite = m_suite.toString(4);
         String suiteFilename = m_suiteName.replace(" ", "_");
         String targetPath = m_outputPrefix + "/" + suiteFilename + ".preset_suite.json";
         PresetRegistry.outputToFile(targetPath, jsonForSuite.getBytes());
     }
-*/
 }
