@@ -15,7 +15,7 @@
             <level>INFO</level>
         </filter>
         <encoder>
-            <pattern>%msg%n</pattern>
+            <pattern>%msg%ncaller{1..4}%n</pattern>
         </encoder>
     </appender>
 
