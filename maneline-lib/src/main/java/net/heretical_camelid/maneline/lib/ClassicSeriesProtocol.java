@@ -166,7 +166,6 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
         final int bytesRead;
         ArrayList<String> readPhaseLogMessages = new ArrayList<>();
 
-        setLogTransactionName(transactionName);
         //noinspection RedundantIfStatement
         if (Thread.currentThread() == m_heartbeatThread) {
             loggingRequired = false;
@@ -201,13 +200,14 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
         }
 
         if (loggingRequired == true) {
+            setLogTransactionName(transactionName);
             if (m_heartbeatsSentSinceLastLog > 0) {
                 log(String.format(
                     "%d heartbeats sent since last message logged", m_heartbeatsSentSinceLastLog
                 ));
                 m_heartbeatsSentSinceLastLog = 0;
             }
-            log("Sending command " + commandDescription);
+            log("Sent command " + commandDescription);
             logAsHex2(commandBytes, "<");
             for(String rplm: readPhaseLogMessages) {
                 log(rplm);
@@ -219,11 +219,12 @@ public class ClassicSeriesProtocol extends AbstractMessageProtocolBase {
                     m_deviceTransport.getLastErrorMessage()
                 ));
             }
+            setLogTransactionName(null);
+        } else {
             if(Thread.currentThread()==m_heartbeatThread) {
                 ++m_heartbeatsSentSinceLastLog;
             }
         }
-        setLogTransactionName(null);
         return status;
     }
 
