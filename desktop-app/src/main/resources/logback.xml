@@ -26,7 +26,7 @@
             <level>DEBUG</level>
         </filter>
         <encoder>
-            <pattern>%msg%n</pattern>
+            <pattern>%n%msg%n%caller{1..4}%n</pattern>
         </encoder>
     </appender>
 

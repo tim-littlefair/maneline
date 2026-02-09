@@ -42,7 +42,6 @@ class WebModeLogUtility {
 
     WebModeLogUtility(String loggerNamePrefix) {
         m_logger = (Logger) LoggerFactory.getLogger(loggerNamePrefix+"_LOGGER");
-        // m_appender = WebModeLoggingAgent.s_appenders.get(loggerNamePrefix+"_APPENDER");
         m_appender = (FileAppender) m_logger.getAppender(loggerNamePrefix+"_APPENDER");
     }
 
@@ -70,12 +69,6 @@ public class WebModeLoggingAgent extends LoggingAgentBase {
     static void setSessionNameStatic(String sessionName) {
         assert s_instance != null;
         s_instance.setSessionName(sessionName);
-        // SLF4JBridgeHandler.install();
-        try (InputStream is = WebModeLoggingAgent.class.getClassLoader().getResourceAsStream("logging.properties")) {
-            LogManager.getLogManager().readConfiguration(is);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
         new File(sessionName + "/txns").mkdir();
         m_sessionLU.openNewLogFile(String.format(

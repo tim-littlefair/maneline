@@ -30,19 +30,18 @@ jar {
                     it
                     :
                     zipTree(it)
-                    // /*
                     .matching {
                         include 'net/heretical_camelid/maneline/lib/**'
 
                         include 'ch/qos/**'
                         include 'com/fasterxml/**'
-                        include 'net/logstash/**'
-                        include 'org/apache/**'
+                        // include 'net/logstash/**'
+                        // include 'org/apache/**'
                         include 'org/hid4java/**'
                         include 'org/json/**'
                         include 'org/slf4j/**'
-                        include 'tools/jackson/core/**'
-                        include 'tools/jackson/databind/**'
+                        // include 'tools/jackson/core/**'
+                        // include 'tools/jackson/databind/**'
 
                         include 'module-info.class'
                         include 'resources/**'
@@ -61,7 +60,7 @@ jar {
                         include 'com/sun/jna/darwin-x86-64/**'
                         include 'com/sun/jna/*.class'
 
-                        exclude 'tools/**'
+                        // exclude 'tools/**'
                         // include 'tools/jackson/databind/**'
                     }
                     // */
