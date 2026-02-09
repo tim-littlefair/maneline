@@ -14,16 +14,8 @@
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>INFO</level>
         </filter>
-        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-            <includeMdc>false</includeMdc>
-            <includeContext>false</includeContext>
-            <timestampPattern>yy-MM-dd'T'HH:mm:ss.SSS</timestampPattern>
-            <fieldNames>
-                <!--timestamp>[ignore]</timestamp-->
-                <version>[ignore]</version>
-                <logger>[ignore]</logger>
-                <levelValue>[ignore]</levelValue>
-            </fieldNames>
+        <encoder>
+            <pattern>%msg%n</pattern>
         </encoder>
     </appender>
 
@@ -33,18 +25,8 @@
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>DEBUG</level>
         </filter>
-        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-            <includeMdc>false</includeMdc>
-            <includeContext>false</includeContext>
-            <timestampPattern>yy-MM-dd'T'HH:mm:ss.SSS</timestampPattern>
-            <fieldNames>
-                <!--timestamp>[ignore]</timestamp-->
-                <version>[ignore]</version>
-                <logger>[ignore]</logger>
-                <levelValue>[ignore]</levelValue>
-                <level>[ignore]</level>
-                <thread>[ignore]</thread>
-            </fieldNames>
+        <encoder>
+            <pattern>%msg%n</pattern>
         </encoder>
     </appender>
 
