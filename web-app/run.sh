@@ -1,7 +1,5 @@
 #!/bin/bash
 
-import os
-
 exit_wait_sleep_length=2
 
 # We pass $start_dir to the lua process and it
