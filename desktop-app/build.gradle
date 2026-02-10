@@ -7,15 +7,6 @@ java {
     targetCompatibility = JavaVersion.VERSION_11
 }
 
-/*
-configurations {
-    consumable("filteredRuntimeClasspath") {
-        canBeResolved = true
-        canBeDeclared = true
-        extendsFrom(runtimeClasspath)
-    }
-}
-*/
 
 jar {
     manifest {
@@ -34,15 +25,9 @@ jar {
                         include 'net/heretical_camelid/maneline/lib/**'
 
                         include 'ch/qos/**'
-                        include 'com/fasterxml/**'
-                        // include 'net/logstash/**'
-                        // include 'org/apache/**'
                         include 'org/hid4java/**'
                         include 'org/json/**'
                         include 'org/slf4j/**'
-                        // include 'tools/jackson/core/**'
-                        // include 'tools/jackson/databind/**'
-
                         include 'module-info.class'
                         include 'resources/**'
                         include 'logback.xml'
@@ -59,20 +44,10 @@ jar {
                         include 'com/sun/jna/linux-aarch64/**'
                         include 'com/sun/jna/darwin-x86-64/**'
                         include 'com/sun/jna/*.class'
-
-                        // exclude 'tools/**'
-                        // include 'tools/jackson/databind/**'
                     }
-                    // */
             }
         )
     }
-    /*
-    {
-       //exclude(group: 'com/sun/jna', module: 'aix-ppc')
-        // exclude(group: 'com/sun/jna', module: 'aix-ppc')
-    }
-     */
     from('..') {
         include "LICENSE"
         include "assets/copyright_and_warranty.txt"
@@ -94,18 +69,5 @@ dependencies {
     implementation 'net.java.dev.jna:jna:5.18.1'
     implementation 'org.hid4java:hid4java:0.8.0'
     implementation 'org.json:json:20251224'
-    implementation 'ch.qos.logback:logback-classic:1.5.27'
-
-    // implementation 'org.slf4j:slf4j-log4j12:2.0.17'
-    //implementation 'org.slf4j:slf4j-reload4j:2.0.17'
-    // implementation 'org.slf4j:jul-to-slf4j:2.0.17'
-    //implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.25.3'
-    //implementation 'net.logstash.logback:logstash-logback-encoder:9.0'
-
-    // implementation 'org.sputnikdev.bluetooth-manager-tinyb:1.3.3'
-    // implementation 'org.sputnikdev.bluetooth-manager:1.5.3'
-    // implementation 'org.sputnikdev:org.eclipse.smarthome.binding.bluetooth.transport.tinyb:1.1.3'
-    // implementation 'org.sputnikdev:bluetooth-gatt-parser:1.9.4'
-    // implementation 'org.sputnikdev:bluetooth-utils:1.14'
-
+    implementation 'ch.qos.logback:logback-classic:1.5.29'
 }

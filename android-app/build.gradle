@@ -43,28 +43,9 @@ dependencies {
     implementation project(':maneline-lib')
     implementation project(':usb-hid')
 
-    // The following transitive dependencies have been made explicit against
-    // specific versions in order to address GitHub dependabot issues raised
-    // against the outdated default versions of these libraries imported by
-    // via the normal transitive dependency process.
-    /*
-    androidTestImplementation 'org.jsoup:jsoup:1.21.2'
-    androidTestImplementation 'io.netty:netty-common:4.1.125.Final'
-    androidTestImplementation 'io.netty:netty-handler:4.1.125.Final'
-    androidTestImplementation 'io.netty:netty-codec-http:4.1.124.Final'
-    androidTestImplementation 'io.netty:netty-codec-http2:4.1.124.Final'
-    androidTestImplementation 'org.apache.commons:commons-compress:1.28.0'
-    implementation "org.apache.commons:commons-lang3:3.18.0"
-    implementation "org.apache.commons:commons-collections4:4.5.0"
-    implementation "commons-io:commons-io:2.20.0"
-    androidTestImplementation 'com.google.guava:guava:33.4.8-android'
-    androidTestImplementation 'com.google.protobuf:protobuf-kotlin:4.32.0'
-    androidTestImplementation 'com.google.protobuf:protobuf-java:4.32.0'
-     */
-
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.google.android.material:material:1.13.0'
-    implementation 'androidx.compose.material:material:1.10.1'
+    implementation 'androidx.compose.material:material:1.10.2'
     implementation 'androidx.appcompat:appcompat:1.7.1'
     implementation "androidx.constraintlayout:constraintlayout:2.2.1"
     implementation "androidx.constraintlayout:constraintlayout-compose:1.1.1"
