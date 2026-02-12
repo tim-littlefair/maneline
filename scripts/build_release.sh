@@ -126,13 +126,17 @@ then
   extra_push_flags="--detached --nolive"
   shift
 elif [ ! -z "$(echo $1 | grep '@git.balena-cloud.com')" ]
+then
   deploy_fleet=$1
   push_method=git
   shift
-else
+elif [ ! -z "$1" ]
+then
   deploy_fleet=$1
   shift
   extra_push_flags=$*
+else
+  deploy_fleet=maneline-staging
 fi
 echo Will deploy to $deploy_fleet using $push_method
 
