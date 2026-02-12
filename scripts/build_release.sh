@@ -12,17 +12,6 @@ push_method=balena_cli
 git restore build.gradle
 git restore deployment/balena/*/balena.yml
 
-if [ "$1" = "--alph" ]
-then
-  # shortening 'alpha' to 'alph' is deliberate
-  # for real estate reasons
-  releaseLevel=alph
-  shift
-else
-  releaseLevel=beta
-fi
-
-
 # This script is run by Jenkins, which is expected to have set
 # the three string parameters RELEASE_VERSION_{MAJOR,MINOR,PATCH}
 # into environment variables for the run, and is also expected
@@ -93,7 +82,7 @@ else
   shift
 fi
 
-if [ "0" = "0" ] && [ -f ~/.balena/token ]
+if [ -f ~/.balena/token ]
 then
   echo Balena already logged in
 elif [ ! -z "$BALENA_TOKEN" ]
@@ -136,21 +125,14 @@ then
   push_method=balena_cli_local
   extra_push_flags="--detached --nolive"
   shift
-elif [ "$1" = "--maneline-staging" ]
-then
-  deploy_fleet=maneline-staging
-  shift
-elif [ "$1" = "--fhau-ci-32bit" ]
-then
-  deploy_fleet=fhau-ci-32bit
-  shift
-elif [ "$1" = "--maneline-rpi-any" ]
-then
-  deploy_fleet=maneline-rpi-any
+elif [ ! -z "$(echo $1 | grep '@git.balena-cloud.com')" ]
+  deploy_fleet=$1
+  push_method=git
   shift
 else
-  deploy_fleet=maneline-staging
-  push_method=git
+  deploy_fleet=$1
+  shift
+  extra_push_flags=$*
 fi
 echo Will deploy to $deploy_fleet using $push_method
 
@@ -158,7 +140,7 @@ echo Building deployment root at $balenaFakerootDir
 if [ "$push_method" = "git" ]
 then
   echo Before clone
-  git clone --depth=1 gh_tim_littlefair@git.balena-cloud.com:gh_tim_littlefair/maneline-staging.git $balenaFakerootDir
+  git clone --depth=1 $deploy_fleet $balenaFakerootDir
   echo After clone
   for f_or_d in $(ls -1 $balenaFakerootDir)
   do
@@ -169,7 +151,6 @@ then
 else
   mkdir -p "$balenaFakerootDir"
 fi
-
 
 cp deployment/balena/compose-no-browser/docker-compose.yml $balenaFakerootDir
 cp deployment/balena/compose-no-browser/Dockerfile.template $balenaFakerootDir

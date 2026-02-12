@@ -1,0 +1,9 @@
+*.jar binary -delta
+*.png binary -delta
+*.woff binary -delta
+*.woff2 binary -delta
+*.ttf binary -delta
+*.eot binary -delta
+
+
+
