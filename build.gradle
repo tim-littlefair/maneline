@@ -68,8 +68,8 @@ allprojects {
 // sprintf("%d%02d%02d0%04d",major,minor,patch,build)
 // NB Major must have format %d not %02d to avoid interpretation
 // as octal.
-ext.versionCode=9999
-ext.versionName="0.0.0"
+ext.versionCode=3000070
+ext.versionName="0.3.0+0070"
 
 tasks.register('warrantyAndCopyrightFiles',Copy) {
     from 'assets'

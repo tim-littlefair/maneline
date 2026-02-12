@@ -23,7 +23,7 @@ export gitHash=$(git rev-parse HEAD | cut -c 1-7)
 export gitUncleanFileCount=$(git diff --name-only | wc -l)
 export buildId=$(printf "%04d" "$BUILD_ID")
 
-export buildString="$releaseString+$releaseLevel$buildId"
+export buildString="$releaseString+beta$buildId"
 if [ "$gitUncleanFileCount" = "0" ]
 then
   export buildGitRef="#$gitHash"
