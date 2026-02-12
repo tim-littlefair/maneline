@@ -224,7 +224,4 @@ $buildGitRef"
   echo Push done
 fi
 
-if [ ! -z "$*" ]
-then
-    echo Unexpected command args: $*
-fi
+
