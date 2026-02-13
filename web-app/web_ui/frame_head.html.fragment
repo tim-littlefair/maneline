@@ -7,6 +7,20 @@
   <meta name="description" content="">
   <meta name="author" content="Tim Littlefair">
 
+  <!--
+    - The meta tag on the next line directs
+    - the browser to refresh the page once
+    - every 6 hours (i.e. every 14400 seconds).
+    - Hopefully, under normal usage this
+    - behaviour is near enough to 'never refresh'
+    - to avoid causing inconvenience (either to
+    - the CPU or the user viewing the UI).
+    - The 14400 parameter can be substituted
+    - when rendering pages which do require require
+    - auto-refresh (e.g. the area which displays
+    - the current preset).
+    -->
+  <meta http_equiv='refresh' content='14400'/>
 
   <!--
   Prevent Chrome etc from wasting memory/CPU doing prefetches of session zip files

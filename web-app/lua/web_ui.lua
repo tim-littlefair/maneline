@@ -36,13 +36,30 @@ end
 
 function build_cds_html(startup_messages)
     header_text = file_text("web_ui/frame_head.html.fragment")
+
+    -- frame_head.html.fragment includes a meta tag which
+    -- directs the browser to auto-refresh the page every
+    -- 14400 seconds (6 hours).
+    -- The logic below can substitute the frequency parameter
+    -- to ensure that more frequent auto-refreshes are done
+    -- for this page so that signal chain updates are shown
+    -- in a timely way without requiring a manual refresh.
+    -- Unfortunately on MustangIv2, enabling the more frequent
+    -- refreshes causes the heartbeat process to return exceptions,
+    -- so automatic refreshes are effectively disabled until
+    -- this problem is investigated and resolved.
+    header_text = ( string.gsub(
+        header_text,
+        "<meta http_equiv='refresh' content='14400'/>",
+        "<meta http-equiv='refresh' content='14399'/>"
+    ) )
     body_text = file_text("web_ui/cds_body.html.fragment")
     if(header_text and body_text)
     then
-        return string.gsub(
+        return ( string.gsub(
             header_text .. body_text,
             "%%MESSAGES_STRING%%",startup_messages
-        )
+        ) )
     else
         return startup_messages
     end
