@@ -153,7 +153,7 @@ function Web_UI:build_session_presets_html(session_name)
         for _,p in ipairs(session_presets)
         do
             preset_row_data = {}
-            table.insert(preset_row_data, p.filenamePrefix)
+            table.insert(preset_row_data, ( p.filenamePrefix:gsub("%s+","") ))
             table.insert(preset_row_data, p.slot)
             table.insert(preset_row_data, p.displayName)
             table.insert(preset_row_data, p.module1)
