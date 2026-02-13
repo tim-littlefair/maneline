@@ -27,7 +27,8 @@ function _csv_get_next_field(line,field_start_pos)
         field_value = line:sub(field_start_pos,#line)
         next_field_pos=nil
     end
-    return field_value, next_field_pos
+    -- Strip trailing space which is only present to make CSV columns line up
+    return (field_value:gsub("%s+$","")), next_field_pos
 end
 
 function SessionPresets:get_session_presets(session_name)
