@@ -28,7 +28,7 @@ import java.util.Map;
 public class FUSE_Classic_Preset extends PresetBase {
     final static private int AMP_POS = 4;
     final static private int MAX_MODULES = 9;
-    private JSONObject m_fuseJO;
+    private final JSONObject m_fuseJO;
     static private JSONArray s_conversionLog = null;
 
     public static FUSE_Classic_Preset create(byte[] presetBytes) {
@@ -50,7 +50,7 @@ public class FUSE_Classic_Preset extends PresetBase {
         for (int i = 2; i < 6; ++i) {
             bytesToEffect(
                 Arrays.copyOfRange(presetBytes, i * 64, (i + 1) * 64),
-                modules
+                modules, i
             );
         }
 
@@ -67,10 +67,13 @@ public class FUSE_Classic_Preset extends PresetBase {
         m_fuseJO = new JSONObject();
         JSONArray rawBytesFrames = new JSONArray();
         for(int i=0; i<8; ++i) {
-            rawBytesFrames.put(hexForRange(presetBytes,64*i,64*(i+1)));
+            rawBytesFrames.put(
+                "frame" + i + ": " + hexForRange(presetBytes,64*i,64*(i+1))
+            );
         }
         m_fuseJO.put("rawBytes",rawBytesFrames);
         m_fuseJO.put("conversionLog", s_conversionLog);
+        m_fuseJO.put("detailedSignalChain", new JSONArray(signalChain.toString(0,true)));
     }
 
     private static String canonicalParamName(String fuseParamName, Map<String, Object> fuseDetails) {
@@ -145,16 +148,16 @@ public class FUSE_Classic_Preset extends PresetBase {
                 "Processing amp with id=%d name=%s",
                 ampId, moduleTypeAndName.second
             ));
-            s_conversionLog.put("ampFrame1: " + hexForRange(ampBytes1,0,64));
-            s_conversionLog.put("ampFrame6: " + hexForRange(ampBytes6,0,64));
-            s_conversionLog.put(hexForRange(ampBytes6,0,64));
+            s_conversionLog.put("frame1: " +hexForRange(ampBytes1,0,64));
+            s_conversionLog.put("frame6: " + hexForRange(ampBytes6,0,64));
             List<DspParameterWithDetails> parameters = getDspParameters(ampBytes1, ampId);
             DspModule ampModule = new DspModule(
                 moduleTypeAndName.second, "amp",
                 parameters
             );
-            s_conversionLog.put("dspModule: " + ampModule.toString());
             modules[AMP_POS] = ampModule;
+            JSONObject ampModuleObject = new JSONObject(ampModule.toString());
+            s_conversionLog.put(ampModuleObject);
         } else {
             modules[AMP_POS] = null;
         }
@@ -199,7 +202,7 @@ public class FUSE_Classic_Preset extends PresetBase {
     }
 
 
-    static void bytesToEffect(byte[] effectBytes, DspModule[] modules) {
+    static void bytesToEffect(byte[] effectBytes, DspModule[] modules, int frameIndex) {
         assert effectBytes[2]>=6&&effectBytes[2]<=9;
         int effectId = (0xFF&effectBytes[16]) + (0x100*effectBytes[17]);
         int signalChainPos= (0xFF&effectBytes[18]);
@@ -213,18 +216,22 @@ public class FUSE_Classic_Preset extends PresetBase {
                 "Processing effect with id=%d type=%s name=%s",
                 effectId, moduleTypeAndName.first, moduleTypeAndName.second
             ));
-            s_conversionLog.put("effectFrameX: " + hexForRange(effectBytes,0,64));
+            s_conversionLog.put("frame" + frameIndex + ": " + hexForRange(effectBytes,0,64));
             List<DspParameterWithDetails> parameters = getDspParameters(effectBytes, effectId);
             DspModule effectModule = new DspModule(
                 moduleTypeAndName.second,
                 jsonModuleType(moduleTypeAndName.first),
                 parameters
             );
-            s_conversionLog.put("dspModule: " + effectModule.toString());
             modules[signalChainPos] = effectModule;
-
+            JSONObject effectModuleObject = new JSONObject(effectModule.toString());
+            s_conversionLog.put(effectModuleObject);
         } else {
             modules[signalChainPos] = null;
+            s_conversionLog.put(String.format(
+                "No effect found for effectId=%d in frame%d",
+                effectId, frameIndex
+            ));
         }
     }
 
