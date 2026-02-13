@@ -9,7 +9,11 @@ package net.heretical_camelid.maneline.lib.presets;
 import static net.heretical_camelid.maneline.lib.generated.FUSE_Constants._MODULE_NAMES_AND_TYPES;
 import static net.heretical_camelid.maneline.lib.generated.FUSE_Constants._MODULE_PARAMS;
 
+import net.heretical_camelid.maneline.lib.utilities.ByteArrayTranslator;
 import net.heretical_camelid.maneline.lib.utilities.Pair;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -24,37 +28,49 @@ import java.util.Map;
 public class FUSE_Classic_Preset extends PresetBase {
     final static private int AMP_POS = 4;
     final static private int MAX_MODULES = 9;
+    private JSONObject m_fuseJO;
+    static private JSONArray s_conversionLog = null;
+
     public static FUSE_Classic_Preset create(byte[] presetBytes) {
+        assert s_conversionLog == null;
+        s_conversionLog = new JSONArray();
         final String presetName;
         DspModule modules[] = new DspModule[MAX_MODULES];
-        if (presetBytes.length == 64 * 8) {
-            presetName = (
-                new String(presetBytes, 16, 48, StandardCharsets.UTF_8)
-                    .replace("\u0000", "")
-            );
-            bytesToAmp(
-                Arrays.copyOfRange(presetBytes, 64 * 1, 64 * 2),
-                Arrays.copyOfRange(presetBytes, 64 * 6, 64 * 7),
+        assert presetBytes.length == 64 * 8;
+
+        presetName = (
+            new String(presetBytes, 16, 48, StandardCharsets.UTF_8)
+                .replace("\u0000", "")
+        );
+        bytesToAmp(
+            Arrays.copyOfRange(presetBytes, 64 * 1, 64 * 2),
+            Arrays.copyOfRange(presetBytes, 64 * 6, 64 * 7),
+            modules
+        );
+        for (int i = 2; i < 6; ++i) {
+            bytesToEffect(
+                Arrays.copyOfRange(presetBytes, i * 64, (i + 1) * 64),
                 modules
             );
-            for (int i = 2; i < 6; ++i) {
-                bytesToEffect(
-                    Arrays.copyOfRange(presetBytes, i * 64, (i + 1) * 64),
-                    modules
-                );
-            }
-        } else {
-            throw new UnsupportedOperationException(String.format(
-                "FUSE preset cannot be created for buffer of %d bytes",
-                presetBytes.length
-            ));
         }
+
         SignalChain signalChain = SignalChain.create(modules);
-        return new FUSE_Classic_Preset(presetName, signalChain, presetBytes);
+        FUSE_Classic_Preset newInstance = new FUSE_Classic_Preset(
+            presetName, signalChain, presetBytes
+        );
+        s_conversionLog = null;
+        return newInstance;
     }
 
     private FUSE_Classic_Preset(String presetName, SignalChain signalChain, byte[] presetBytes) {
         super(presetName, signalChain, CompanionAppName_e.FUSE_CLASSIC_USB, presetBytes);
+        m_fuseJO = new JSONObject();
+        JSONArray rawBytesFrames = new JSONArray();
+        for(int i=0; i<8; ++i) {
+            rawBytesFrames.put(hexForRange(presetBytes,64*i,64*(i+1)));
+        }
+        m_fuseJO.put("rawBytes",rawBytesFrames);
+        m_fuseJO.put("conversionLog", s_conversionLog);
     }
 
     private static String canonicalParamName(String fuseParamName, Map<String, Object> fuseDetails) {
@@ -117,21 +133,27 @@ public class FUSE_Classic_Preset extends PresetBase {
     }
 
     /**
-     * This function analyzes a sequence of bytes, 
-     * generates a DspModule/JSONObject and returns 
-     * the audio
+     * Parameters of the amp's DspModule object are in frames 1 and 6
      */
-    static void bytesToAmp(byte[] ampBytes1, byte[] ampBytes2, DspModule[] modules) {
+    static void bytesToAmp(byte[] ampBytes1, byte[] ampBytes6, DspModule[] modules) {
         assert ampBytes1[2]==5;
         int ampId = (0xFF&ampBytes1[16]) + (0x100*ampBytes1[17]);
         Pair<String,String> moduleTypeAndName = _MODULE_NAMES_AND_TYPES.get(ampId);
         if(moduleTypeAndName!=null) {
             assert moduleTypeAndName.first.equals("A");
+            s_conversionLog.put(String.format(
+                "Processing amp with id=%d name=%s",
+                ampId, moduleTypeAndName.second
+            ));
+            s_conversionLog.put("ampFrame1: " + hexForRange(ampBytes1,0,64));
+            s_conversionLog.put("ampFrame6: " + hexForRange(ampBytes6,0,64));
+            s_conversionLog.put(hexForRange(ampBytes6,0,64));
             List<DspParameterWithDetails> parameters = getDspParameters(ampBytes1, ampId);
             DspModule ampModule = new DspModule(
                 moduleTypeAndName.second, "amp",
                 parameters
             );
+            s_conversionLog.put("dspModule: " + ampModule.toString());
             modules[AMP_POS] = ampModule;
         } else {
             modules[AMP_POS] = null;
@@ -187,13 +209,18 @@ public class FUSE_Classic_Preset extends PresetBase {
         Pair<String,String> moduleTypeAndName = _MODULE_NAMES_AND_TYPES.get(effectId);
         if(moduleTypeAndName!=null) {
             assert moduleTypeAndName.first.equals("A")==false;
+            s_conversionLog.put(String.format(
+                "Processing effect with id=%d type=%s name=%s",
+                effectId, moduleTypeAndName.first, moduleTypeAndName.second
+            ));
+            s_conversionLog.put("effectFrameX: " + hexForRange(effectBytes,0,64));
             List<DspParameterWithDetails> parameters = getDspParameters(effectBytes, effectId);
             DspModule effectModule = new DspModule(
                 moduleTypeAndName.second,
                 jsonModuleType(moduleTypeAndName.first),
                 parameters
             );
-
+            s_conversionLog.put("dspModule: " + effectModule.toString());
             modules[signalChainPos] = effectModule;
 
         } else {
@@ -201,6 +228,10 @@ public class FUSE_Classic_Preset extends PresetBase {
         }
     }
 
+    @Override
+    public String modelSpecificJson() {
+        return m_fuseJO.toString();
+    }
 
     static String jsonModuleType(String moduleTypeString) {
         switch(moduleTypeString.charAt(0)) {
@@ -263,6 +294,9 @@ public class FUSE_Classic_Preset extends PresetBase {
         System.exit(0);
     }
 
+    static String hexForRange(byte[] byteArray, int startIndex, int endIndex) {
+        return ByteArrayTranslator.bytesToHex(Arrays.copyOfRange(byteArray, startIndex, endIndex));
+    }
 
 }
 

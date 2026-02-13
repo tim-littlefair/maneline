@@ -3,6 +3,8 @@ package net.heretical_camelid.maneline.lib.presets;
 
 import net.heretical_camelid.maneline.lib.registries.PresetRegistry;
 
+import java.nio.charset.StandardCharsets;
+
 abstract public class PresetBase {
 
     protected enum CompanionAppName_e {
@@ -41,53 +43,20 @@ abstract public class PresetBase {
         return m_signalChain;
     }
 
+    public String modelSpecificJson() {
+        // FenderTONE variants for LT, MMP, and other post-2016 models
+        // all use JSON-based on-the-wire formats so this definition will
+        // do for them.
+        // This will need to be overridden for the models which
+        // work FenderFUSE (Mustang I-V v1 and v2 and others).
+        return new String(m_definitionBytes, StandardCharsets.UTF_8);
+    }
+
     public void export(String exportDirPath, String exportBasename) {
-        String rawTargetPath = exportDirPath + "/" + exportBasename + "." + m_companionAppName + ".raw";
-        PresetRegistry.outputToFile(rawTargetPath, m_definitionBytes);
+        String rawTargetPath = exportDirPath + "/" + exportBasename + "." + m_companionAppName + ".json";
+        PresetRegistry.outputToFile(rawTargetPath, modelSpecificJson().getBytes());
         String canonicalJson = signalChain().toString(4, false);
         String canonicalPath = exportDirPath + "/" + exportBasename + ".json";
         PresetRegistry.outputToFile(canonicalPath, canonicalJson.getBytes());
-    }
-
-    static public void main(String[] args) {
-/*
-        PresetBase testPreset1 = (PresetBase) (new PresetBase().put("displayName","testPreset1"));
-        System.out.println(testPreset1.toString(4));
-        JSONArray nodesArray1 = testPreset1.m_audioGraph_nodes;
-        assert nodesArray1 != null;
-        assert nodesArray1.length()==5;
-        for(int i=0; i<nodesArray1.length(); ++i) {
-         assert nodesArray1.isNull(i);
-        }
-
-        PresetBase testPreset2 = (PresetBase) (new PresetBase().put("displayName","testPreset2"));
-        testPreset2.addAudioGraphNode(
-         "Deluxe65", "amp",
-         "{}",
-         2
-        );
-        System.out.println(testPreset2.toString(4));
-        assert testPreset2.m_audioGraph_nodes.length() == 5;
-        String ampFenderId = (String) getSubObject(
-         testPreset2,
-         List.of("audioGraph","nodes", 2, "FenderId")
-        );
-        assert ampFenderId.equals("Deluxe65");
-
-        PresetBase testPreset3 = create(testPreset2.exportPresetRecord());
-        testPreset3.addAudioGraphNode("Passthru","stomp",null,0);
-        testPreset3.addAudioGraphNode("SineTremolo","mod",null,1);
-        testPreset3.addAudioGraphNode("Passthru","delay",null,3);
-        testPreset3.addAudioGraphNode("Passthru","reverb",null,4);
-        System.out.println(testPreset3.toString(4));
-        // The hash below needs to be maintained manually
-        PresetRecord pr3 = testPreset3.exportPresetRecord();
-        String expectedHash = "7b19-14e2";
-        assert pr3.audioHash().equals(expectedHash): String.format(
-         "audioHash mismatch: expected=%s actual=%s",
-         expectedHash, pr3.audioHash()
-        );
-*/
-        System.exit(0);
     }
 }
