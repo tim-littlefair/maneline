@@ -84,7 +84,7 @@ public class AudioRecorder {
                         "line '%s' matches %d groups (expected 4)",
                         line, lineMatcher.groupCount()
                     );
-                    if(lineMatcher.group(3).equals(productName)) {
+                    if(lineMatcher.group(3).contains(productName)) {
                         deviceCandidates.add(String.format(
                             "hw:CARD=%s,DEV=%s",
                             lineMatcher.group(2), lineMatcher.group(4)
@@ -112,13 +112,21 @@ public class AudioRecorder {
         }
     }
 
-    public boolean beginRecording(String deviceName, String recordedFilename, StringBuilder userMessagesSB) {
+    public boolean beginRecording(
+        String deviceName, String codec, String recordedFilename, StringBuilder userMessagesSB
+    ) {
         if(m_recordProcess!=null) {
             userMessagesSB.append("A recording is already in progress");
             return false;
         }
         ProcessBuilder recordPB = new ProcessBuilder(
-            "ffmpeg", "-f", "alsa", "-i", deviceName, "-acodec", "flac", recordedFilename
+            "ffmpeg", "-f", "alsa", "-i", deviceName, "-acodec", codec, recordedFilename
+            // ... OR to record directly to FLAC ...
+            // "ffmpeg", "-f", "alsa", "-i", deviceName, "-acodec", "flac", recordedFilename
+            // ... OR to add macOS support, implement check that ffmpeg is on path
+            // (probably as part of a Homebrew installation) and use the following page
+            // as a reference to detecting the device and setting up the right parameters
+            // https://apple.stackexchange.com/questions/326388/terminal-command-to-record-audio-through-macbook-microphone
         );
         try {
             m_recordProcess = recordPB.start();
@@ -132,7 +140,7 @@ public class AudioRecorder {
 
     private boolean endRecording(StringBuilder userMessagesSB) {
         if(m_recordProcess==null) {
-            userMessagesSB.append("A recording is already in progress");
+            userMessagesSB.append("There is no recording in progress");
             return false;
         }
         m_recordProcess.destroy();
@@ -187,74 +195,96 @@ public class AudioRecorder {
     // reason: Nominal recording ended by hardware exception
 
     public static void main(String[] args) {
-        AudioRecorder ar = new AudioRecorder("_work", null);
-        StringBuilder findSB = new StringBuilder();
+        AudioRecorder ar = new AudioRecorder(".", null);
         if(args.length==0 || args[0].equals("--usage")) {
-            System.out.println(String.join("\n", new String[]{
-                "scripts/run_class_main.sh desktop_app.AudioRecorder { <device_name> { <recording_basename> { <limit_mins> } } }",
-                "+ <device_name> is the name of the device to be used for audio capture,",
-                "  if not present, the program will emit the current usage message.",
-                "+ <recording_basename> is the basename of a file which will receive the recording.",
-                "  The file will be in .flac form, with 48000 PCM samples per second, 2 channels,",
-                "  sample values will be signed 16 bit integers, the .flac extension will be added ",
-                "  to the basename supplied unless that suffix is already present.",
-                "  if not present, the program will attempt to detect the device identified by ",
-                "  <device_name> but will not attempt a recording.",
-                "+ <limit_mins> is a numeric limit on the number of minutes the recording will run for",
-                "  unless cancelled using ctrl-C.",
-                "  if not present, the recording will run for a default length of 60 minutes or until",
-                "  cancelled using ctrl-C."
-            }));
+            printUsage();
             System.exit(1);
         }
 
         // If we get to here there is at least one parameter, which will be the
         // audio capture device name.
-        String acd = ar.findPCM(args[0],findSB);
-        System.out.println(String.format("findPCM returned %s",acd));
-        System.out.println(String.format("findPCM user messages: \n%s\n", findSB.toString()));
-        if(acd==null) {
-            System.err.println("No audio capture device found for device_name '%s'");
-            System.exit(2);
-        }
-        if(args.length==1) {
-            // No more parameters => no attempt to record
-            System.exit(3);
+        String recording_fname = args[0];
+        final String codec;
+        if(recording_fname.endsWith(".flac")) {
+            codec = "flac";
+        } else if(recording_fname.endsWith(".wav")) {
+            codec = "pcm_s16le";
+        } else {
+            codec = "pcm_s16le";
+            recording_fname += ".wav";
         }
 
-        final String recording_fname;
-        if(!args[1].toLowerCase(Locale.ROOT).endsWith(".flac")) {
-            recording_fname = args[1] + ".flac";
+        final String acd;
+        StringBuilder findSB = new StringBuilder();
+        final String productNameToFind;
+        if(args.length>=2) {
+            productNameToFind=args[1];
         } else {
-            recording_fname = args[1];
+            productNameToFind="Mustang";
         }
+        acd = ar.findPCM("Mustang", findSB);
+        System.out.println(String.format("findPCM returned %s", acd));
+        System.out.println(String.format("findPCM user messages: \n%s\n", findSB.toString()));
+        if (acd == null) {
+            System.err.println(String.format(
+                "No audio capture device found for device_name '%s'",
+                productNameToFind
+            ));
+            System.exit(2);
+        }
+
         int limit_mins = MAX_RECORD_MINUTES;
         if(args.length==3) {
-            try {
-                limit_mins = Integer.parseInt(args[2]);
-            } catch (NumberFormatException e) {
-                System.err.println(String.format(
-                    "Could not convert '%s' to integer for parameter limit_mins"
-                ));
-                System.exit(4);
+            if (args.length == 3) {
+                try {
+                    limit_mins = Integer.parseInt(args[2]);
+                } catch (NumberFormatException e) {
+                    System.err.println(String.format(
+                        "Could not convert '%s' to integer for parameter limit_mins"
+                    ));
+                    System.exit(4);
+                }
             }
+        } else if (args.length>3) {
+            printUsage();
         }
 
         // If we get to this point, we have:
-        // + an audio capture device,
         // + a target filename and
+        // + an audio capture device,
         // + a limit on duration
+        System.out.println(String.format(
+            "Recording to file %s with codec %s, max_duration=%d mins",
+            recording_fname, codec, limit_mins
+        ));
         StringBuilder recordSB = new StringBuilder();
-        ar.beginRecording(acd, recording_fname, recordSB);
+        long recordingLimitTimeMsAfterEpoch = System.currentTimeMillis()+limit_mins * 60 * 1000;
+        ar.beginRecording(acd, codec, recording_fname, recordSB);
         try {
-            Thread.sleep(limit_mins * 60 * 1000);
+            ar.m_recordProcess.waitFor(limit_mins, TimeUnit.MINUTES);
             recordSB.append(String.format("Recording ended due to limit"));
         } catch (InterruptedException e) {
             recordSB.append(String.format("Recording ended InterruptedException"));
+            ar.m_recordProcess.destroyForcibly();
         }
         ar.endRecording(recordSB);
-
     }
 
-
+    private static void printUsage() {
+        System.out.println(String.join("\n", new String[]{
+            "scripts/run_class_main.sh desktop_app.AudioRecorder { <recording_basename> { <device_name> { <limit_mins> } } }",
+            "+ <recording_basename> is the basename of a file which will receive the recording.",
+            "  The file will be in .flac form, with 48000 PCM samples per second, 2 channels,",
+            "  sample values will be signed 16 bit integers, the .flac extension will be added ",
+            "  to the basename supplied unless that suffix is already present.",
+            "  if not present, the program will emit the current usage message.",
+            "+ <device_name> is the name of the device to be used for audio capture,",
+            "  if not present, the program will attempt to detect a single device with the " +
+            "  string 'Mustang' in its name",
+            "+ <limit_mins> is a numeric limit on the number of minutes the recording will run for",
+            "  unless cancelled using ctrl-C or a signal (SIGTERM, SIGINT, SIGABRT).",
+            "  if not present, the recording will run for a default length of 60 minutes or until",
+            "  cancelled using ctrl-C or a signal."
+        }));
+    }
 }
