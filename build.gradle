@@ -10,24 +10,34 @@ buildscript {
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
 
-        // Exceptions to this rule will be required in the past when the
-        // release version of the package com.android.tools.build:gradle
-        // (aka the Android Gradle Plugin, or AGP) has brought in dependencies
-        // which triggered security vulnerability alerts from GitHub dependabot.
+        // Exceptions to this rule are often required when the release version
+        // of the package com.android.tools.build:gradle (aka the Android
+        // Gradle Plugin, or AGP) brings in dependencies which trigger
+        // security vulnerability alerts from GitHub dependabot.
 
         // AGP is not an application dependency, it adds Android support to
-        // the Gradle build environment and needs to be included here
-        // for the :android-app package to be buildable.
+        // the Gradle build environment as soon as the Gradle closure named
+        // 'android' is encountered in android-app/build.gradle.  As this
+        // closure is processed before the dependencies closure in
+        // android-app/build.gradle, it is only possible to override
+        // vulnerable dependency versions by including the secure version
+        // dependencies here in the outer build.gradle of the project.
 
-        // When AGP attempts to import vulnerable dependencies, explicit
-        // non-vulnerable versions of the packages named in alerts
-        // should imported here, before AGP.  The import will be resolved
-        // by using the non-vulnerable version, allowing the security alerts
-        // to be cleared.
+        // It will be necessary to experiment with order of items in this
+        // section to get all transitive dependencies encountered in the right
+        // order to clear as many dependabot alerts as possible.
+
+        // Clearing 100% of dependabot alerts may not always be possible.
+
+        // https://github.com/tim-littlefair/maneline/security/dependabot/19
+        classpath 'org.apache.commons:commons-lang3:3.20.0'
 
         // https://github.com/tim-littlefair/maneline/security/dependabot/3
         // https://github.com/tim-littlefair/maneline/security/dependabot/4
         classpath 'org.apache.commons:commons-compress:1.28.0'
+
+        // https://github.com/tim-littlefair/maneline/security/dependabot/18
+        classpath 'org.apache.httpcomponents:httpclient:4.5.14'
 
         // https://github.com/tim-littlefair/maneline/security/dependabot/14
         classpath 'org.jdom:jdom2:2.0.6.1'
@@ -38,13 +48,7 @@ buildscript {
         // https://github.com/tim-littlefair/maneline/security/dependabot/16
         classpath 'org.bitbucket.b_c:jose4j:0.9.6'
 
-        // https://github.com/tim-littlefair/maneline/security/dependabot/18
-        classpath 'org.apache.httpcomponents:httpclient:4.5.14'
-
-        // https://github.com/tim-littlefair/maneline/security/dependabot/19
-        classpath 'org.apache.commons:commons-lang3:3.20.0'
-
-        classpath 'com.android.tools.build:gradle:9.0.0'
+        classpath 'com.android.tools.build:gradle:9.0.1'
 
     }
 }
