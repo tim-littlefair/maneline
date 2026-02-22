@@ -23,12 +23,14 @@ export gitHash=$(git rev-parse HEAD | cut -c 1-7)
 export gitUncleanFileCount=$(git diff --name-only | wc -l)
 export buildId=$(printf "%04d" "$BUILD_ID")
 
-export buildString="$releaseString+beta$buildId"
-if [ "$gitUncleanFileCount" = "0" ]
+if [ "$gitUncleanFileCount" = "0" ] && [ "$buildId" = "9001" ]
 then
+  export buildString="$releaseString"
   export buildGitRef="#$gitHash"
+  export buildString="$buildString.$gitHash"
 else
-  # buildGitRef will include the basenames of the files which are 
+  export buildString="$releaseString+beta$buildId"
+  # buildGitRef will include the basenames of the files which are
   # dirty relative to the commit identified by gitHash
   gitUncleanFileList=$(basename -a $(git diff --name-only))
   # Wrapping the command with 'echo' collapses newlines in 
