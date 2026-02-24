@@ -91,7 +91,7 @@ The SDK (re)build process will take approximately 30-40 minutes.
 If the rebuild succeeds the last few lines of the output should look something like this:
 
 ```
-
+ 
 TBD
 
 ```
