@@ -91,8 +91,19 @@ The SDK (re)build process will take approximately 30-40 minutes.
 If the rebuild succeeds the last few lines of the output should look something like this:
 
 ```
+Installed packages:
+  Path                                     | Version | Description                             | Location                                
+  -------                                  | ------- | -------                                 | -------                                 
+  build-tools;35.0.0                       | 35.0.0  | Android SDK Build-Tools 35              | build-tools/35.0.0                      
+  build-tools;36.0.0                       | 36.0.0  | Android SDK Build-Tools 36              | build-tools/36.0.0                      
+  emulator                                 | 36.4.9  | Android Emulator                        | emulator                                
+  platform-tools                           | 36.0.2  | Android SDK Platform-Tools              | platform-tools                          
+  platforms;android-36                     | 2       | Android SDK Platform 36                 | platforms/android-36                    
+  sources;android-36                       | 1       | Sources for Android 36                  | sources/android-36                      
+  system-images;android-35;aosp_atd;x86_64 | 1       | AOSP ATD Intel x86_64 Atom System Image | system-images/android-35/aosp_atd/x86_64
 
-TBD
+Downloading https://services.gradle.org/distributions/gradle-9.3.1-bin.zip
+.............10%.............20%.............30%.............40%.............50%.............60%.............70%.............80%.............90%.............100%
 
 ```
 
