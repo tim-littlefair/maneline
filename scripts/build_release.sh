@@ -42,6 +42,20 @@ then
 else
   export buildString="$releaseString"
   export buildGitRef="#$gitHash"
+  release_tag=release-$releaseString
+
+  echo Validating conditions for release
+  set +e
+  diff_stats=$(git diff --shortstat $release_tag 2>&1)
+  if [ ! -z "$diff_stats" ]
+  then
+    echo "Can't make a release until label release-$releaseString is applied and matches build tree"
+    echo -e "$diff_stats"
+    echo Release validation failed
+    exit 2
+  fi
+  set -e
+  echo Release validation completed
 fi
 
 # Android releases require a numeric version code, which must increase
