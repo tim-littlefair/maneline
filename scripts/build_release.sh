@@ -23,12 +23,10 @@ export gitHash=$(git rev-parse HEAD | cut -c 1-7)
 export gitUncleanFileCount=$(git diff --name-only | wc -l)
 export buildId=$(printf "%04d" "$BUILD_ID")
 
-if [ "$gitUncleanFileCount" = "0" ] && [ "$buildId" = "9001" ]
+if [ ! "$buildId" = "9001" ]
 then
-  export buildString="$releaseString"
-  export buildGitRef="#$gitHash"
-  export buildString="$buildString.$gitHash"
-else
+  # 9001 is an indicator value passed to scripts/version_env.sh
+  # to signify a final release build
   export buildString="$releaseString+beta$buildId"
   # buildGitRef will include the basenames of the files which are
   # dirty relative to the commit identified by gitHash
@@ -37,6 +35,13 @@ else
   # $gitUncleanFileList to spaces
   export buildGitRef=$(echo "#$gitHash" + changes to: $gitUncleanFileList)
   export buildString="$buildString.$gitHash.$gitUncleanFileCount"
+elif [ ! "$gitUncleanFileCount" = "0" ]
+then
+  echo "Can't do a release build with local modified files"
+  exit 1
+else
+  export buildString="$releaseString"
+  export buildGitRef="#$gitHash"
 fi
 
 # Android releases require a numeric version code, which must increase
