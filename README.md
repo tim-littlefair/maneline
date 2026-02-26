@@ -17,6 +17,20 @@ The following Youtube videos introduce the application:
 
 [![Maneline build process](http://img.youtube.com/vi/AtbllsGwlEw/0.jpg)](http://www.youtube.com/watch?v=AtbllsGwlEw "Maneline build process")
 
+## Building and deploying
+
+The third of the three YouTube videos linked in the section above shows how to set up the 
+development environment for this project on Linux or macOS, and run the application up
+in the development host.
+
+The application is also designed to be deployed onto 64-bit Raspberry Pi devices using
+the deployment infrastructure provided by [balena.io](https://balena.io).  If you have 
+an account on balenaCloud, you should be able to deploy the application to your own 
+fleet of devices using the following button:
+
+[![balena deploy button](https://www.balena.io/deploy.svg)](https://dashboard.balena-cloud.com/deploy?repoUrl=https://hub.balena.io/organizations/gh_tim_littlefair/apps/maneline)
+
+
 ## More information
 
 There is a roadmap for this project [in the wiki](https://github.com/tim-littlefair/maneline/wiki/Roadmap)
