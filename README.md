@@ -24,12 +24,14 @@ development environment for this project on Linux or macOS, and run the applicat
 in the development host.
 
 The application is also designed to be deployed onto 64-bit Raspberry Pi devices using
-the deployment infrastructure provided by [balena.io](https://balena.io).  If you have 
-an account on balenaCloud, you should be able to deploy the application to your own 
-fleet of devices using the following button:
+the deployment infrastructure provided by [balena.io](https://balena.io).  
+
+[//]: # (If you have an account on balenaCloud, you should be able to deploy the application to)
+[//]: # (your own fleet of devices using the following button:)
 
 [![balena deploy button](https://www.balena.io/deploy.svg)](https://dashboard.balena-cloud.com/deploy?repoUrl=https://hub.balena.io/organizations/gh_tim_littlefair/apps/maneline)
 
+TBD: More information on how Balena deployment works.
 
 ## More information
 
