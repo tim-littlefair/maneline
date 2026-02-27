@@ -162,20 +162,7 @@ fi
 echo Will deploy to $deploy_fleet using $push_method
 
 echo Building deployment root at $balenaFakerootDir
-if [ "$push_method" = "git" ]
-then
-  echo Before clone
-  git clone --depth=1 $deploy_fleet $balenaFakerootDir
-  echo After clone
-  for f_or_d in $(ls -1 $balenaFakerootDir)
-  do
-    git -C $balenaFakerootDir rm -r $f_or_d
-  done
-  echo After deletion
-  git -C $balenaFakerootDir status
-else
-  mkdir -p "$balenaFakerootDir"
-fi
+mkdir -p "$balenaFakerootDir"
 
 cp deployment/balena/compose-no-browser/docker-compose.yml $balenaFakerootDir
 cp deployment/balena/compose-no-browser/Dockerfile.template $balenaFakerootDir
@@ -207,7 +194,7 @@ cat deployment/balena/compose-no-browser/balena.yml | \
   sed -e "s/%GITREF%/$buildGitRef/" \
   > $balenaFakerootDir/balena.yml
 echo Files copied to $balenaFakerootDir
-
+sh -c "cd $balenaFakerootDir && zip -r ../maneline-$buildString.zip ."
 
 if [ "$push_method" = "balena_cli" ]
 then
@@ -226,23 +213,8 @@ elif [ ! "$deploy_fleet" = "maneline-staging" ]
   echo "The only push method available for fleets other than maneline-staging is 'balena_cli'"
   exit 1
 else
-  echo Deploying using git
-  echo Fetching and pulling
-  git -C $balenaFakerootDir fetch
-  git -C $balenaFakerootDir pull
-  echo Adding
-  for f_or_d in $(ls -1 $balenaFakerootDir)
-  do
-    git -C $balenaFakerootDir add $f_or_d
-  done
-  git -C $balenaFakerootDir status
-  echo Committing
-  git -C $balenaFakerootDir commit -m "Deploying using legacy git method for release $buildString
-
-$buildGitRef"
-  echo Pushing
-  git -C $balenaFakerootDir push
-  echo Push done
+  echo Invalid options
+  exit 1
 fi
 
 
