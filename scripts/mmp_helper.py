@@ -1,9 +1,19 @@
 import asyncio
+import sys
+
 import bleak
 
 async def main(device):
-    async with bleak.BleakClient(device) as client:
+    async with bleak.BleakClient(device, pair=True) as client:
         print(client.name)
+        print(device.details)
+        print(device.details.keys())
+        for i in device.details['props'].get('UUIDs'):
+            try:
+                desc = await client.read_gatt_descriptor(i)
+                print(f"descriptor {i}: {desc}")
+            except:
+                print(sys.exc_info())
         print("Services found: ", len(client.services.descriptors))
         for d in client.services.descriptors:
             print("Service", d)
@@ -14,6 +24,7 @@ def detection_callback(device,adv_data):
         print(device)
         print(device.details)
         print(adv_data)
+
 async def main2():
     device = await bleak.BleakScanner.find_device_by_name(
         "Mustang Micro Plus",
@@ -22,11 +33,17 @@ async def main2():
     print("Device found by scanner:", device)
     await main(device)
 
-asyncio.run(main2())
+async def main3():
+    devices = await bleak.BleakScanner.discover(detection_callback=detection_callback)
+    for d in devices:
+        if d.name=="Mustang Micro Plus":
+            print(d)
+            client = bleak.BleakClient(d, pair=True,timeout=20)
+            await client.connect()
+            print(client.is_connected)
+            print("Services: ", client.services.services)
+            print("Characteristics: ", client.services.characteristics)
+            await client.disconnect()
 
+asyncio.run(main3())
 
-"""
- ['00001101-0000-1000-8000-00805f9b34fb', '0000110b-0000-1000-8000-00805f9b34fb', '0000110d-0000-1000-8000-00805f9b34fb', '00001200-0000-1000-8000-00805f9b34fb', '00001800-0000-1000-8000-00805f9b34fb', '90559580-b707-11ee-acb1-7b7e30f1af54']
- ['00001101-0000-1000-8000-00805f9b34fb', '0000110b-0000-1000-8000-00805f9b34fb', '0000110d-0000-1000-8000-00805f9b34fb', '00001200-0000-1000-8000-00805f9b34fb', '00001800-0000-1000-8000-00805f9b34fb', '90559580-b707-11ee-acb1-7b7e30f1af54']
-
-"""
