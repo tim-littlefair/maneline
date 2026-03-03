@@ -3,6 +3,9 @@ import sys
 
 import bleak
 
+# grep -n -e mtu -e 'tion_client":' -e 'btatt.opcode"' -e 'btatt.handle"' -e 'btatt.value": "3'  _work/25088_151405-153116_AWST.json | more
+
+
 async def main(device):
     async with bleak.BleakClient(device, pair=True) as client:
         print(client.name)
@@ -48,6 +51,8 @@ def resolve_services(device, client, advert):
             client.service.characteristics[0x1b] = mmp_request_characteristic
             client.characteristics[0x1b] = mmp_request_characteristic
 
+def response_callback(_charid, data):
+    print(bytes.hex(data))
 
 async def main3():
     devices_and_adverts = await bleak.BleakScanner.discover(
@@ -64,12 +69,25 @@ async def main3():
             break
 
     if client:
-        await client.connect()
-        print(client.is_connected)
-        # resolve_services(d, client, a)
-        print("Services: ", client.services.services)
-        print("Characteristics: ", client.services.characteristics)
-        await client.disconnect()
+        try:
+            await client.connect()
+            print(client.is_connected)
+            if client.backend_id == bleak.backends.BleakBackend.BLUEZ_DBUS:
+                await client._backend._acquire_mtu()  # type: ignore
+            print("MTU:", client.mtu_size)
+
+            # resolve_services(d, client, a)
+            print("Services: ", client.services.services)
+            print("Characteristics: ", client.services.characteristics)
+            print("Descriptors: ", client.services.descriptors)
+            request_handle = 0x001b
+            response_handle = 0x0017
+            await client.start_notify("1017adcc-dcbc-4387-a59f-2546b2ea5bb0", response_callback)
+            # first_read_bytes = await client.read_gatt_char("1017adcc-dcbc-4387-a59f-2546b2ea5bb0")
+            # print(bytes.hex(first_read_bytes))
+            await client.disconnect()
+        except:
+            print(sys.exc_info())
 
 asyncio.run(main3())
 
