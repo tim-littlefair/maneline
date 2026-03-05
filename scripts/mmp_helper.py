@@ -7,6 +7,10 @@ import bleak
 
 # grep -n -e mtu -e 'tion_client":' -e 'btatt.opcode"' -e 'btatt.handle"' -e 'btatt.value": "3'  _work/25088_151405-153116_AWST.json | more
 
+UUID128_MMP_CONTROL_SERVICE = "90559580-b707-11ee-acb1-7b7e30f1af54"
+UUID128_MMP_REQUEST_CHARACTERISTIC = "820a7e34-4e0a-4f90-8520-04ebce35a3a1"
+UUID128_MMP_RESPONSE_CHARACTERISTIC = "1017adcc-dcbc-4387-a59f-2546b2ea5bb0",
+
 
 def detection_callback(device,adv_data):
     global service_uuids
@@ -74,7 +78,8 @@ async def main4():
     mmp_response_service_handle = 0x0017
     mmp_response_ccc_handle = 0x0018
     mmp_response_read_handle = 0x00a
-    #mmp_response_ccc = await client.read_gatt_descriptor(mmp_response_ccc_handle)
+
+    mmp_response_ccc = await client.read_gatt_descriptor(mmp_response_ccc_handle)
     #print("MMP response CCC: ", mmp_response_ccc)
     time.sleep(2.0)
     # """
