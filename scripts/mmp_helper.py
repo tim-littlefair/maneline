@@ -5,13 +5,13 @@ import traceback
 
 import bleak
 
-# grep -n -e mtu -e 'tion_client":' -e 'btatt.opcode"' -e 'btatt.handle"' -e 'btatt.value": "3'  _work/25088_151405-153116_AWST.json | more
-
 UUID128_MMP_CONTROL_SERVICE = "90559580-b707-11ee-acb1-7b7e30f1af54"
 UUID128_MMP_REQUEST_CHARACTERISTIC = "820a7e34-4e0a-4f90-8520-04ebce35a3a1"
 UUID128_MMP_RESPONSE_CHARACTERISTIC = "1017adcc-dcbc-4387-a59f-2546b2ea5bb0",
+UUID128_MMP_RESPONSE_CHARACTERISTIC2 = "1017adccdcbc4387a59f2546b2ea5bb0",
+UUID16_TYPE_2800 = "2800"
 UUID16_TYPE_2802 = "2802"
-
+UUID16_TYPE_2902 = "2902"
 
 def detection_callback(device,adv_data):
     global service_uuids
@@ -64,6 +64,37 @@ def dump(client):
                 print(f"    dsc: {d}")
     print(client)
 
+async def do_start_notify(client):
+    """
+    17751:          "bthci_acl.src.name": "JA",
+    17763:          "btatt.opcode": "0x12",
+    17769:          "btatt.handle": "0x0018",
+    17771:            "btatt.service_uuid128": "90:55:95:80:b7:07:11:ee:ac:b1:7b:7e:30:f1:af:54",
+    17772:            "btatt.characteristic_uuid128": "10:17:ad:cc:dc:bc:43:87:a5:9f:25:46:b2:ea:5b:b0",
+    17773:            "btatt.uuid16": "0x2902"
+    17775:          "btatt.characteristic_configuration_client": "0x0001",
+    17904:          "bthci_acl.src.name": "Mustang Micro Plus",
+    17916:          "btatt.opcode": "0x13",
+    17922:          "btatt.handle": "0x0018",
+    17924:            "btatt.service_uuid128": "90:55:95:80:b7:07:11:ee:ac:b1:7b:7e:30:f1:af:54",
+    17925:            "btatt.characteristic_uuid128": "10:17:ad:cc:dc:bc:43:87:a5:9f:25:46:b2:ea:5b:b0",
+    17926:            "btatt.uuid16": "0x2902"
+
+    17969:          "bthci_acl.src.name": "Mustang Micro Plus",
+    17981:          "btatt.opcode": "0x1b",
+    17987:          "btatt.handle": "0x0017",
+    17989:            "btatt.service_uuid128": "90:55:95:80:b7:07:11:ee:ac:b1:7b:7e:30:f1:af:54",
+    17990:            "btatt.uuid128": "10:17:ad:cc:dc:bc:43:87:a5:9f:25:46:b2:ea:5b:b0"
+    17992:          "btatt.value": "35:00:41:04:0b:4e:00:0f:9c:00:05:0b:27:00:0f:9b:00:04:09:a1:01:0f:32:01:05:0b:4b:00:0f:98:00:04:09:4b:00:51:31:7d:7d:5d:7d:92:06:79:69:66:69:61:62:6c:65:74:03:00:05:08:04:f7:06:80:49:64:22:3a:22:2
+    2:7d:7d"
+    """
+    start_notify_outcome = await client.start_notify(
+        client.services.characteristics.get(0x17),q
+        # UUID128_MMP_RESPONSE_CHARACTERISTIC2,
+        response_callback,
+        bluez=bleak.args.bluez.BlueZNotifyArgs(use_start_notify=True)
+    )
+    print("start_notify outcome: ", start_notify_outcome)
 
 async def main4():
     device = await bleak.BleakScanner.find_device_by_name("Mustang Micro Plus")
@@ -78,13 +109,50 @@ async def main4():
             # disconnected_callback=handle_disconnect,
             pair=True,
     )
-    print(client.is_connected)
     if client.is_connected is False:
+        print("Waiting to connect")
         await client.connect()
     print(client.is_connected)
-    dump(client)
-    print(client.is_connected)
-    time.sleep(10.0)
+
+    # dump(client)
+
+    await asyncio.sleep(0.1)
+    await do_start_notify(client)
+    await asyncio.sleep(10.0)
+
+
+    """
+    Service/Characteristic discovery (difficult to reproduce exactly)
+    13444:          "bthci_acl.src.name": "JA",
+    13456:          "btatt.opcode": "0x10",
+    13464:          "btatt.uuid16": "0x2800"
+    13992:          "bthci_acl.src.name": "Mustang Micro Plus",
+    14004:          "btatt.opcode": "0x11",
+    14012:            "btatt.handle": "0x0001",
+    14014:            "btatt.uuid16": "0x1801"
+    14017:            "btatt.handle": "0x0007",
+    14019:              "btatt.service_uuid16": "0x1801"
+    14022:            "btatt.uuid16": "0x1800"
+    14024:          "btatt.uuid16": "0x2800",
+    """
+
+    """
+    14066:          "bthci_acl.src.name": "JA",
+    14078:          "btatt.opcode": "0x10",
+    14086:          "btatt.uuid16": "0x2800"
+    14250:          "bthci_acl.src.name": "Mustang Micro Plus",
+    14262:          "btatt.opcode": "0x11",
+    14270:            "btatt.handle": "0x000c",
+    14272:              "btatt.service_uuid16": "0x1800"
+    14275:            "btatt.uuid128": "a5:a5:00:5b:02:00:23:9b:e1:11:02:d1:00:11:00:00"
+    14278:            "btatt.handle": "0x0015",
+    14280:              "btatt.service_uuid128": "00:00:11:00:d1:02:11:e1:9b:23:00:02:5b:00:a5:a5"
+    14283:            "btatt.uuid128": "54:af:f1:30:7e:7b:b1:ac:ee:11:07:b7:80:95:55:90"
+    14285:          "btatt.uuid16": "0x2800",
+    """
+    response1 = client.services.get_characteristic(UUID16_TYPE_2800)
+    print(response1)
+
     try:
         await client.read_gatt_char(UUID16_TYPE_2802)
     except bleak.BleakCharacteristicNotFoundError:
@@ -95,8 +163,10 @@ async def main4():
     #    client.services.characteristics[22], response_callback
     #)
     # print("MMP response CCC: ", mmp_response_ccc)
-    time.sleep(10.0)
     # """
+
+    print("Waiting for responses")
+    await asyncio.sleep(10.0)
     await client.disconnect()
     print("finally")
 
@@ -130,6 +200,7 @@ python.venv) tim@tim-OptiPlex-7450-AIO:~/github/maneline$ grep -n -e src.name -e
 14019:              "btatt.service_uuid16": "0x1801"
 14022:            "btatt.uuid16": "0x1800"
 14024:          "btatt.uuid16": "0x2800",
+
 14066:          "bthci_acl.src.name": "JA",
 14078:          "btatt.opcode": "0x10",
 14086:          "btatt.uuid16": "0x2800"
@@ -142,6 +213,7 @@ python.venv) tim@tim-OptiPlex-7450-AIO:~/github/maneline$ grep -n -e src.name -e
 14280:              "btatt.service_uuid128": "00:00:11:00:d1:02:11:e1:9b:23:00:02:5b:00:a5:a5"
 14283:            "btatt.uuid128": "54:af:f1:30:7e:7b:b1:ac:ee:11:07:b7:80:95:55:90"
 14285:          "btatt.uuid16": "0x2800",
+
 14327:          "bthci_acl.src.name": "JA",
 14339:          "btatt.opcode": "0x08",
 14347:          "btatt.uuid16": "0x2802"
@@ -150,6 +222,7 @@ python.venv) tim@tim-OptiPlex-7450-AIO:~/github/maneline$ grep -n -e src.name -e
 14450:          "btatt.handle": "0x0001",
 14452:            "btatt.uuid16": "0x1801"
 14455:          "btatt.uuid16": "0x2802"
+
 14496:          "bthci_acl.src.name": "JA",
 14508:          "btatt.opcode": "0x08",
 14516:          "btatt.uuid16": "0x2803"
@@ -170,6 +243,7 @@ python.venv) tim@tim-OptiPlex-7450-AIO:~/github/maneline$ grep -n -e src.name -e
 14658:              "btatt.characteristic_uuid16": "0x2a05"
 14660:            "btatt.uuid16": "0x2b29"
 14662:          "btatt.uuid16": "0x2803",
+
 14704:          "bthci_acl.src.name": "JA",
 14716:          "btatt.opcode": "0x08",
 14724:          "btatt.uuid16": "0x2803"
@@ -179,6 +253,7 @@ python.venv) tim@tim-OptiPlex-7450-AIO:~/github/maneline$ grep -n -e src.name -e
 14936:            "btatt.service_uuid16": "0x1801",
 14937:            "btatt.uuid16": "0x2b29"
 14940:          "btatt.uuid16": "0x2803"
+
 14981:          "bthci_acl.src.name": "JA",
 14993:          "btatt.opcode": "0x04",
 15079:          "bthci_acl.src.name": "Mustang Micro Plus",
@@ -188,6 +263,7 @@ python.venv) tim@tim-OptiPlex-7450-AIO:~/github/maneline$ grep -n -e src.name -e
 15101:              "btatt.service_uuid16": "0x1801",
 15102:              "btatt.characteristic_uuid16": "0x2a05"
 15104:            "btatt.uuid16": "0x2902"
+
 15147:          "bthci_acl.src.name": "JA",
 15159:          "btatt.opcode": "0x08",
 15167:          "btatt.uuid16": "0x2802"
@@ -196,6 +272,7 @@ python.venv) tim@tim-OptiPlex-7450-AIO:~/github/maneline$ grep -n -e src.name -e
 15270:          "btatt.handle": "0x0007",
 15272:            "btatt.uuid16": "0x1800"
 15275:          "btatt.uuid16": "0x2802"
+
 15316:          "bthci_acl.src.name": "JA",
 15328:          "btatt.opcode": "0x08",
 15336:          "btatt.uuid16": "0x2803"
@@ -225,6 +302,7 @@ python.venv) tim@tim-OptiPlex-7450-AIO:~/github/maneline$ grep -n -e src.name -e
 15649:            "btatt.service_uuid16": "0x1800",
 15650:            "btatt.uuid16": "0x2a01"
 15653:          "btatt.uuid16": "0x2803"
+
 15694:          "bthci_acl.src.name": "JA",
 15706:          "btatt.opcode": "0x08",
 15714:          "btatt.uuid16": "0x2802"
@@ -233,6 +311,7 @@ python.venv) tim@tim-OptiPlex-7450-AIO:~/github/maneline$ grep -n -e src.name -e
 15817:          "btatt.handle": "0x000c",
 15819:            "btatt.uuid128": "00:00:11:00:d1:02:11:e1:9b:23:00:02:5b:00:a5:a5"
 15822:          "btatt.uuid16": "0x2802"
+
 15863:          "bthci_acl.src.name": "JA",
 15875:          "btatt.opcode": "0x08",
 15883:          "btatt.uuid16": "0x2803"
@@ -261,6 +340,7 @@ python.venv) tim@tim-OptiPlex-7450-AIO:~/github/maneline$ grep -n -e src.name -e
 16050:              "btatt.characteristic_uuid128": "00:00:11:02:d1:02:11:e1:9b:23:00:02:5b:00:a5:a5"
 16052:            "btatt.uuid128": "a5:a5:00:5b:02:00:23:9b:e1:11:02:d1:03:11:00:00"
 16054:          "btatt.uuid16": "0x2803",
+
 16096:          "bthci_acl.src.name": "JA",
 16108:          "btatt.opcode": "0x08",
 16116:          "btatt.uuid16": "0x2803"
@@ -270,6 +350,7 @@ python.venv) tim@tim-OptiPlex-7450-AIO:~/github/maneline$ grep -n -e src.name -e
 16221:            "btatt.service_uuid128": "00:00:11:00:d1:02:11:e1:9b:23:00:02:5b:00:a5:a5",
 16222:            "btatt.uuid128": "00:00:11:03:d1:02:11:e1:9b:23:00:02:5b:00:a5:a5"
 16225:          "btatt.uuid16": "0x2803"
+
 16266:          "bthci_acl.src.name": "JA",
 16278:          "btatt.opcode": "0x04",
 16364:          "bthci_acl.src.name": "Mustang Micro Plus",
@@ -288,6 +369,7 @@ python.venv) tim@tim-OptiPlex-7450-AIO:~/github/maneline$ grep -n -e src.name -e
 16552:              "btatt.service_uuid128": "00:00:11:00:d1:02:11:e1:9b:23:00:02:5b:00:a5:a5",
 16553:              "btatt.characteristic_uuid128": "00:00:11:03:d1:02:11:e1:9b:23:00:02:5b:00:a5:a5"
 16555:            "btatt.uuid16": "0x2902"
+
 16598:          "bthci_acl.src.name": "JA",
 16610:          "btatt.opcode": "0x08",
 16618:          "btatt.uuid16": "0x2802"
@@ -296,6 +378,7 @@ python.venv) tim@tim-OptiPlex-7450-AIO:~/github/maneline$ grep -n -e src.name -e
 16721:          "btatt.handle": "0x0015",
 16723:            "btatt.uuid128": "90:55:95:80:b7:07:11:ee:ac:b1:7b:7e:30:f1:af:54"
 16726:          "btatt.uuid16": "0x2802"
+
 16767:          "bthci_acl.src.name": "JA",
 16779:          "btatt.opcode": "0x08",
 16787:          "btatt.uuid16": "0x2803"
@@ -316,6 +399,7 @@ python.venv) tim@tim-OptiPlex-7450-AIO:~/github/maneline$ grep -n -e src.name -e
 16929:              "btatt.characteristic_uuid128": "10:17:ad:cc:dc:bc:43:87:a5:9f:25:46:b2:ea:5b:b0"
 16931:            "btatt.uuid128": "a1:a3:35:ce:eb:04:20:85:90:4f:0a:4e:34:7e:0a:82"
 16933:          "btatt.uuid16": "0x2803",
+
 16975:          "bthci_acl.src.name": "JA",
 16987:          "btatt.opcode": "0x08",
 16995:          "btatt.uuid16": "0x2803"
@@ -325,6 +409,7 @@ python.venv) tim@tim-OptiPlex-7450-AIO:~/github/maneline$ grep -n -e src.name -e
 17100:            "btatt.service_uuid128": "90:55:95:80:b7:07:11:ee:ac:b1:7b:7e:30:f1:af:54",
 17101:            "btatt.uuid128": "82:0a:7e:34:4e:0a:4f:90:85:20:04:eb:ce:35:a3:a1"
 17104:          "btatt.uuid16": "0x2803"
+
 17145:          "bthci_acl.src.name": "JA",
 17157:          "btatt.opcode": "0x04",
 17243:          "bthci_acl.src.name": "Mustang Micro Plus",
@@ -338,6 +423,7 @@ python.venv) tim@tim-OptiPlex-7450-AIO:~/github/maneline$ grep -n -e src.name -e
 17273:              "btatt.service_uuid128": "90:55:95:80:b7:07:11:ee:ac:b1:7b:7e:30:f1:af:54",
 17274:              "btatt.characteristic_uuid128": "10:17:ad:cc:dc:bc:43:87:a5:9f:25:46:b2:ea:5b:b0"
 17276:            "btatt.uuid16": "0x2901"
+
 17319:          "bthci_acl.src.name": "JA",
 17331:          "btatt.opcode": "0x04",
 17417:          "bthci_acl.src.name": "Mustang Micro Plus",
@@ -351,6 +437,7 @@ python.venv) tim@tim-OptiPlex-7450-AIO:~/github/maneline$ grep -n -e src.name -e
 17447:              "btatt.service_uuid128": "90:55:95:80:b7:07:11:ee:ac:b1:7b:7e:30:f1:af:54",
 17448:              "btatt.characteristic_uuid128": "82:0a:7e:34:4e:0a:4f:90:85:20:04:eb:ce:35:a3:a1"
 17450:            "btatt.uuid16": "0x2901"
+
 17493:          "bthci_acl.src.name": "JA",
 17505:          "btatt.opcode": "0x04",
 17591:          "bthci_acl.src.name": "Mustang Micro Plus",
@@ -358,6 +445,7 @@ python.venv) tim@tim-OptiPlex-7450-AIO:~/github/maneline$ grep -n -e src.name -e
 17615:          "btatt.handle": "0x001e",
 17617:            "btatt.service_uuid128": "90:55:95:80:b7:07:11:ee:ac:b1:7b:7e:30:f1:af:54",
 17618:            "btatt.characteristic_uuid128": "82:0a:7e:34:4e:0a:4f:90:85:20:04:eb:ce:35:a3:a1"
+
 17751:          "bthci_acl.src.name": "JA",
 17763:          "btatt.opcode": "0x12",
 17769:          "btatt.handle": "0x0018",
@@ -371,6 +459,7 @@ python.venv) tim@tim-OptiPlex-7450-AIO:~/github/maneline$ grep -n -e src.name -e
 17924:            "btatt.service_uuid128": "90:55:95:80:b7:07:11:ee:ac:b1:7b:7e:30:f1:af:54",
 17925:            "btatt.characteristic_uuid128": "10:17:ad:cc:dc:bc:43:87:a5:9f:25:46:b2:ea:5b:b0",
 17926:            "btatt.uuid16": "0x2902"
+
 17969:          "bthci_acl.src.name": "Mustang Micro Plus",
 17981:          "btatt.opcode": "0x1b",
 17987:          "btatt.handle": "0x0017",
@@ -378,6 +467,7 @@ python.venv) tim@tim-OptiPlex-7450-AIO:~/github/maneline$ grep -n -e src.name -e
 17990:            "btatt.uuid128": "10:17:ad:cc:dc:bc:43:87:a5:9f:25:46:b2:ea:5b:b0"
 17992:          "btatt.value": "35:00:41:04:0b:4e:00:0f:9c:00:05:0b:27:00:0f:9b:00:04:09:a1:01:0f:32:01:05:0b:4b:00:0f:98:00:04:09:4b:00:51:31:7d:7d:5d:7d:92:06:79:69:66:69:61:62:6c:65:74:03:00:05:08:04:f7:06:80:49:64:22:3a:22:2
 2:7d:7d"
+
 18033:          "bthci_acl.src.name": "JA",
 18045:          "btatt.opcode": "0x52",
 18051:          "btatt.handle": "0x001b",
@@ -390,30 +480,35 @@ python.venv) tim@tim-OptiPlex-7450-AIO:~/github/maneline$ grep -n -e src.name -e
 18117:            "btatt.service_uuid128": "90:55:95:80:b7:07:11:ee:ac:b1:7b:7e:30:f1:af:54",
 18118:            "btatt.uuid128": "82:0a:7e:34:4e:0a:4f:90:85:20:04:eb:ce:35:a3:a1"
 18120:          "btatt.value": "35:00:04:0a:02:3a:00"
+
 18237:          "bthci_acl.src.name": "JA",
 18249:          "btatt.opcode": "0x52",
 18255:          "btatt.handle": "0x001b",
 18257:            "btatt.service_uuid128": "90:55:95:80:b7:07:11:ee:ac:b1:7b:7e:30:f1:af:54",
 18258:            "btatt.uuid128": "82:0a:7e:34:4e:0a:4f:90:85:20:04:eb:ce:35:a3:a1"
 18260:          "btatt.value": "35:00:04:0a:02:72:00"
+
 18301:          "bthci_acl.src.name": "JA",
 18313:          "btatt.opcode": "0x52",
 18319:          "btatt.handle": "0x001b",
 18321:            "btatt.service_uuid128": "90:55:95:80:b7:07:11:ee:ac:b1:7b:7e:30:f1:af:54",
 18322:            "btatt.uuid128": "82:0a:7e:34:4e:0a:4f:90:85:20:04:eb:ce:35:a3:a1"
 18324:          "btatt.value": "35:00:06:0a:04:22:02:08:01"
+
 18441:          "bthci_acl.src.name": "JA",
 18453:          "btatt.opcode": "0x52",
 18459:          "btatt.handle": "0x001b",
 18461:            "btatt.service_uuid128": "90:55:95:80:b7:07:11:ee:ac:b1:7b:7e:30:f1:af:54",
 18462:            "btatt.uuid128": "82:0a:7e:34:4e:0a:4f:90:85:20:04:eb:ce:35:a3:a1"
 18464:          "btatt.value": "35:00:05:0a:03:b2:01:00"
+
 18543:          "bthci_acl.src.name": "Mustang Micro Plus",
 18555:          "btatt.opcode": "0x1b",
 18561:          "btatt.handle": "0x0017",
 18563:            "btatt.service_uuid128": "90:55:95:80:b7:07:11:ee:ac:b1:7b:7e:30:f1:af:54",
 18564:            "btatt.uuid128": "10:17:ad:cc:dc:bc:43:87:a5:9f:25:46:b2:ea:5b:b0"
 18566:          "btatt.value": "35:00:0e:12:0c:08:02:32:08:0a:06:31:2e:30:2e:32:39"
+
 18607:          "bthci_acl.src.name": "JA",
 18619:          "btatt.opcode": "0x52",
 18625:          "btatt.handle": "0x001b",
