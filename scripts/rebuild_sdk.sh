@@ -218,6 +218,9 @@ build_pyvenv_for_moonshine_wrangler() {
     python3.12 -m venv python.venv
     PYTHON_VENV=$sdk_absdir/python.venv
     $PYTHON_VENV/bin/pip install -r ../moonshine-wrangler/requirements.txt
+    # Experimental script scripts/mmp_helper.py requires a BLE python library
+    # called bleak
+    $PYTHON_VENV/bin/pip install bleak
   fi
 }
 ## Latest versions of the key packages
