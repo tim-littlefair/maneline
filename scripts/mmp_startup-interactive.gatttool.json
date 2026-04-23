@@ -1,0 +1,50 @@
+{
+  "connection": [
+    { "send": "--primary", "expect_text": "90559580-b707-11ee-acb1-7b7e30f1af54" },
+    { "xsend": "--mtu=0x80", "expect_text": "MTU was exchanged successfully 128" },
+    { "xsend": "--sec-level=low" }
+  ],
+  "gatt-connect": [
+    { "send": "connect", "expect_text": "onnected" }
+  ],
+  "gatt-preamble-1": [
+    { "send": "--char-read --uuid=0x2800 --start=0x0001 --end=0xffff", "expect_text": "handle: 0x0007" },
+    { "send": "--char-read --uuid=0x2800 --start=0x000c --end=0xffff", "expect_text": "handle: 0x000c" },
+    { "send": "--char-read --uuid=0x2802 --start=0x0001 --end=0x0006", "expect_text": "No attribute found" },
+    { "send": "--char-read --uuid=0x2803 --start=0x0001 --end=0x0006", "expect_text": "handle: 0x0005" },
+    { "send": "--char-read --uuid=0x2803 --start=0x0006 --end=0x0006", "expect_text": "No attribute found" },
+    { "send": "--char-desc --start=0x0004 --end=0x0004", "expect_text": "handle = 0x0004" }
+  ],
+  "gatt-preamble-2": [
+    { "send": "--char-read --uuid=0x2802 --start=0x0007 --end=0x000b"},
+    { "send": "--char-read --uuid=0x2803 --start=0x0007 --end=0x000b"},
+    { "send": "--char-read --uuid=0x2803 --start=0x000b --end=0x000b"},
+    { "send": "--char-read --uuid=0x2802 --start=0x000c --end=0x0014"},
+    { "send": "--char-read --uuid=0x2803 --start=0x000c --end=0x0014"},
+    { "send": "--char-read --uuid=0x2803 --start=0x0013 --end=0x0014"},
+    { "send": "--char-desc --start=0x0011 --end=0x0011"},
+    { "send": "--char-desc --start=0x0014 --end=0x0014"}
+  ],
+  "gatt-preamble-3": [
+    { "send": "--char-read --uuid=0x2802 --start=0x0015 --end=0xffff"},
+    { "send": "--char-read --uuid=0x2803 --start=0x0015 --end=0xffff"},
+    { "send": "--char-read --uuid=0x2803 --start=0x001b --end=0xffff"},
+    { "send": "--char-desc --start=0x0018 --end=0x0019"},
+    { "send": "--char-desc --start=0x001c --end=0xffff"},
+    { "send": "--char-desc --start=0x001e --end=0xffff"}
+  ],
+  "gatt-preamble-4": [
+    { "send": "--char-write --handle=0x0018 --value=0x0100"},
+    { "send": "--char-write --handle=0x001b --value=0x3500021a00"},
+    { "send": "--char-write --handle=0x001b --value=0x3500040a023a00"},
+    { "send": "--char-write --handle=0x001b --value=0x3500040a027200"},
+    { "send": "--char-write --handle=0x001b --value=0x3500060a0422020801"},
+    { "send": "--char-write --handle=0x001b --value=0x3500050a03ca0100"},
+    { "send": "--char-write-req --handle=0x001b --value=0x3500041a020801"},
+    { "send": "--char-read --handle=0x0017"}
+  ],
+  "shutdown": [
+    { "send": "disconnect" }
+  ]
+}
+

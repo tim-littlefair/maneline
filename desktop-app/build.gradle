@@ -17,34 +17,44 @@ jar {
     doFirst {
         from(
             configurations.runtimeClasspath.collect {
-                it.isDirectory() ?
-                    it
-                    :
-                    zipTree(it)
-                    .matching {
-                        include 'net/heretical_camelid/maneline/lib/**'
+                it.isDirectory()
+                ?
+                it : zipTree(it).matching {
+                    include 'META-INF/**'
+                    exclude 'META-INF/*.SF'
+                    exclude 'META-INF/*.DSA'
+                    exclude 'META-INF/*.RSA'
+                    include 'net/heretical_camelid/maneline/lib/**'
 
-                        include 'ch/qos/**'
-                        include 'org/hid4java/**'
-                        include 'org/json/**'
-                        include 'org/slf4j/**'
-                        include 'module-info.class'
-                        include 'resources/**'
-                        include 'logback.xml'
-                        include 'META-INF/**'
+                    include 'ch/qos/**'
+                    include 'org/hid4java/**'
+                    include 'org/json/**'
+                    include 'org/slf4j/**'
+                    include 'module-info.class'
+                    include 'resources/**'
+                    include 'logback.xml'
 
-                        include 'linux-amd64/**'
-                        include 'linux-x86-64/**'
-                        include 'linux-aarch64/**'
-                        include 'darwin-x86-64/**'
+                    include 'linux-amd64/**'
+                    include 'linux-x86-64/**'
+                    include 'linux-aarch64/**'
+                    include 'darwin-x86-64/**'
 
-                        include 'com/sun/jna/ptr/**'
-                        include 'com/sun/jna/internal/**'
-                        include 'com/sun/jna/linux-x86-64/**'
-                        include 'com/sun/jna/linux-aarch64/**'
-                        include 'com/sun/jna/darwin-x86-64/**'
-                        include 'com/sun/jna/*.class'
-                    }
+                    include 'com/sun/jna/ptr/**'
+                    include 'com/sun/jna/internal/**'
+                    include 'com/sun/jna/linux-x86-64/**'
+                    include 'com/sun/jna/linux-aarch64/**'
+                    include 'com/sun/jna/darwin-x86-64/**'
+                    include 'com/sun/jna/*.class'
+
+                    include 'com/github/hypfvieh/**'
+                    include 'org/freedesktop/**'
+                    include 'com/kohlschutter/junixsocket/**'
+                    include 'org/bluez/**'
+
+                    include 'tinyb/**'
+                    include 'org/sputnikdev/**'
+                    include 'native/linux/x86_64/**'
+                }
             }
         )
     }
@@ -69,5 +79,30 @@ dependencies {
     implementation 'net.java.dev.jna:jna:5.18.1'
     implementation 'org.hid4java:hid4java:0.8.0'
     implementation 'org.json:json:20251224'
-    implementation 'ch.qos.logback:logback-classic:1.5.29'
+    implementation 'ch.qos.logback:logback-classic:1.5.32'
+
+    implementation 'org.sputnikdev:bluetooth-manager-tinyb:1.3.3'
+
+    implementation 'com.github.hypfvieh:dbus-java-parent:5.2.0'
+    implementation 'com.github.hypfvieh:bluez-dbus:0.3.2'
+    implementation 'com.github.hypfvieh:java-utils-extended:1.0.7'
+    implementation 'com.github.hypfvieh:dbus-java-transport-native-unixsocket:5.2.0'
+    // implementation 'com.github.hypfvieh:dbus-java-transport-tcp:5.2.0'
+    // implementation 'com.github.hypfvieh:dbus-java-transport-jnr-unixsocket:5.2.0'
+
+    // Attempting to build with the following dependency fails with a line like:
+    // Cannot expand ZIP ' ... .gradle/caches/ ... 381fa8a95b/junixsocket-core-2.10.1.pom'
+    // implementation 'com.github.hypfvieh:dbus-java-transport-junixsocket:5.2.0'
+    // This appears to be an issue with the way junixsocket-core is packaged -
+    // it results in a .pom file only in the Gradle cache.
+    // junit-socket-core exists to bring in the following mandatory dependencies:
+    // implementation 'com.kohlschutter.junixsocket:junixsocket-common:2.10.1'
+    // implementation 'com.kohlschutter.junixsocket:junixsocket-native-common:2.10.1'
+    // plus some other optional ones
+    // if hypfvieh's d-j-t-junitsocket depended directly on the two mandatory
+    // items only, the problem might not occur.
+
+    // implementation 'org.sputnikdev:bluetooth-manager:1.5.3'
+    // implementation 'tinyb:tinyb:1.0.100'
+    // implementation 'intel-iot-devkit:tinyb:0.5.1'
 }
