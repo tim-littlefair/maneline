@@ -7,9 +7,34 @@
 
 usage() {
   echo 'Usage: $0 { record_method_switch } recording_name'
-  echo 'If record_method_switch is present it must be either --maneline or --arecord'
+  echo 'If record_method_switch is present it must be one of:'
+  echo '    --maneline'
+  echo '    --ffmpeg'
+  echo ' or --arecord'
   echo 'If record_method_switch is not present it defaults to --maneline behaviour'
   exit 1
+}
+
+ffmpeg_start() {
+  if [ ! "$(uname)" = "Linux" ]
+  then
+    echo This mode of recording presently only supported on Linux
+    exit 2
+  fi
+
+  proc_card_line=$(grep Mustang /proc/asound/cards | head -1)
+  if [ -z "$proc_card_line" ]
+  then
+    echo No Mustang device found
+    exit 3
+  fi
+  card_number_string=$(echo $proc_card_line|cut -c1-2)
+  card_number=$(($card_number_string))
+  device_name=hw:$card_number,0
+  echo Detected card details: $proc_card_line
+  echo Recording from device $device_name
+  arecord --quiet --device="$device_name" --channels=2 --format=S16_LE --rate=48000 > $1 &
+  record_pid=$!
 }
 
 maneline_audiorecorder_start() {
@@ -51,6 +76,7 @@ linux_arecord_start() {
   arecord --quiet --device="$device_name" --channels=2 --format=S16_LE --rate=48000 > $1 &
   record_pid=$!
 }
+
 
 if [ "$1" = "--maneline" ]
 then
