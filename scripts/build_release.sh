@@ -23,18 +23,39 @@ export gitHash=$(git rev-parse HEAD | cut -c 1-7)
 export gitUncleanFileCount=$(git diff --name-only | wc -l)
 export buildId=$(printf "%04d" "$BUILD_ID")
 
-export buildString="$releaseString+beta$buildId"
-if [ "$gitUncleanFileCount" = "0" ]
+if [ ! "$buildId" = "9001" ]
 then
-  export buildGitRef="#$gitHash"
-else
-  # buildGitRef will include the basenames of the files which are 
+  # 9001 is an indicator value passed to scripts/version_env.sh
+  # to signify a final release build
+  export buildString="$releaseString+beta$buildId"
+  # buildGitRef will include the basenames of the files which are
   # dirty relative to the commit identified by gitHash
   gitUncleanFileList=$(basename -a $(git diff --name-only))
   # Wrapping the command with 'echo' collapses newlines in 
   # $gitUncleanFileList to spaces
   export buildGitRef=$(echo "#$gitHash" + changes to: $gitUncleanFileList)
   export buildString="$buildString.$gitHash.$gitUncleanFileCount"
+elif [ ! "$gitUncleanFileCount" = "0" ]
+then
+  echo "Can't do a release build with local modified files"
+  exit 1
+else
+  export buildString="$releaseString"
+  export buildGitRef="#$gitHash"
+  release_tag=release-$releaseString
+
+  echo Validating conditions for release
+  set +e
+  diff_stats=$(git diff --shortstat $release_tag 2>&1)
+  if [ ! -z "$diff_stats" ]
+  then
+    echo "Can't make a release until label release-$releaseString is applied and matches build tree"
+    echo -e "$diff_stats"
+    echo Release validation failed
+    exit 2
+  fi
+  set -e
+  echo Release validation completed
 fi
 
 # Android releases require a numeric version code, which must increase
@@ -141,20 +162,7 @@ fi
 echo Will deploy to $deploy_fleet using $push_method
 
 echo Building deployment root at $balenaFakerootDir
-if [ "$push_method" = "git" ]
-then
-  echo Before clone
-  git clone --depth=1 $deploy_fleet $balenaFakerootDir
-  echo After clone
-  for f_or_d in $(ls -1 $balenaFakerootDir)
-  do
-    git -C $balenaFakerootDir rm -r $f_or_d
-  done
-  echo After deletion
-  git -C $balenaFakerootDir status
-else
-  mkdir -p "$balenaFakerootDir"
-fi
+mkdir -p "$balenaFakerootDir"
 
 cp deployment/balena/compose-no-browser/docker-compose.yml $balenaFakerootDir
 cp deployment/balena/compose-no-browser/Dockerfile.template $balenaFakerootDir
@@ -186,7 +194,7 @@ cat deployment/balena/compose-no-browser/balena.yml | \
   sed -e "s/%GITREF%/$buildGitRef/" \
   > $balenaFakerootDir/balena.yml
 echo Files copied to $balenaFakerootDir
-
+sh -c "cd $balenaFakerootDir && zip -r ../maneline-$buildString.zip ."
 
 if [ "$push_method" = "balena_cli" ]
 then
@@ -205,23 +213,8 @@ elif [ ! "$deploy_fleet" = "maneline-staging" ]
   echo "The only push method available for fleets other than maneline-staging is 'balena_cli'"
   exit 1
 else
-  echo Deploying using git
-  echo Fetching and pulling
-  git -C $balenaFakerootDir fetch
-  git -C $balenaFakerootDir pull
-  echo Adding
-  for f_or_d in $(ls -1 $balenaFakerootDir)
-  do
-    git -C $balenaFakerootDir add $f_or_d
-  done
-  git -C $balenaFakerootDir status
-  echo Committing
-  git -C $balenaFakerootDir commit -m "Deploying using legacy git method for release $buildString
-
-$buildGitRef"
-  echo Pushing
-  git -C $balenaFakerootDir push
-  echo Push done
+  echo Invalid options
+  exit 1
 fi
 
 
