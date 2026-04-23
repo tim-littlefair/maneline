@@ -1,33 +1,38 @@
 connect
-mtu 128
-sec-level high
-char-read-uuid 2800 1 ffff
-char-read-uuid 2800 c ffff
-char-read-uuid 2802 1 6
-char-read-uuid 2803 1 6
-char-read-uuid 2803 6 6
-char-desc 4 4
-char-read-uuid 2802 7 b
-char-read-uuid 2803 7 b
-char-read-uuid 2803 b b
-char-read-uuid 2802 c 14
-char-read-uuid 2803 c 14
-char-read-uuid 2803 13 14
-char-desc 11 11
-char-desc 14 14
-char-read-uuid 2802 15 ffff
-char-read-uuid 2803 15 ffff
-char-read-uuid 2803 1b ffff
-char-desc 18 19
-char-desc 1c ffff
-char-desc 1e ffff
+primary
+characteristics
+char-desc
+char-read-hnd 18
+disconnect
+exit
+
+char-write-req 18 0002
+char-write-cmd 1a 1a00
 char-write-req 18 0001
+char-write-req 18 1a00
+char-write-req 18 0a023a00
+char-write-req 18 0001
+char-write-req 1a 1a00
+char-write-req 18 0001
+char-read-hnd 17
+
+char-write-cmd 1b 1a00
+char-write-cmd 1b 0a023a00
+char-write-cmd 1b 0a027200
+char-write-cmd 1b 0a0422020801
+char-write-cmd 1b 0a03ca0100
+char-write-cmd 1b 1a020801
+
 char-write-cmd 1b 3500021a00
 char-write-cmd 1b 3500040a023a00
 char-write-cmd 1b 3500040a027200
 char-write-cmd 1b 3500060a0422020801
 char-write-cmd 1b 3500050a03ca0100
-char-write-cmd 1b 3500041a020801
+
+char-write-cmd 1b 1a020801
+
 char-read-hnd 17
-disconnect
-exit
+char-read-hnd 18
+char-write-req 18 0001
+char-read-hnd 18
+char-read-hnd 18

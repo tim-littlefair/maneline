@@ -4,6 +4,9 @@
     { "xsend": "--mtu=0x80", "expect_text": "MTU was exchanged successfully 128" },
     { "xsend": "--sec-level=low" }
   ],
+  "gatt-connect": [
+    { "send": "connect", "expect_text": "onnected" }
+  ],
   "gatt-preamble-1": [
     { "send": "--char-read --uuid=0x2800 --start=0x0001 --end=0xffff", "expect_text": "handle: 0x0007" },
     { "send": "--char-read --uuid=0x2800 --start=0x000c --end=0xffff", "expect_text": "handle: 0x000c" },
