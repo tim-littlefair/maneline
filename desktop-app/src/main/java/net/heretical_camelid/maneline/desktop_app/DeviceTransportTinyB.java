@@ -73,8 +73,6 @@ public class DeviceTransportTinyB
         mgr.addManagerListener(theTransport);
         mgr.addAdapterDiscoveryListener(theTransport);
         mgr.addDeviceDiscoveryListener(theTransport);
-        DeviceGovernor dg = mgr.getDeviceGovernor(new URL("/XX:XX:XX:XX:XX:XX/84:17:15:2B:4E:7E"));
-        System.out.println(dg.getResolvedServices());
         mgr.start(true);
         String targetDeviceAddress = "";
         try {
@@ -82,6 +80,11 @@ public class DeviceTransportTinyB
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+        for(DiscoveredAdapter ba: mgr.getDiscoveredAdapters()) {
+            System.out.println(ba.getURL());
+        }
+        DeviceGovernor dg = mgr.getDeviceGovernor(new URL("tinyb:/E4:70:B8:4D:F6:1F/84:17:15:2B:4E:7E"));
+        System.out.println(dg.getResolvedServices());
         mgr.dispose();
         System.exit(0);
     }
