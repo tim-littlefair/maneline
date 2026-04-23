@@ -31,6 +31,8 @@ find _work -name $(basename $class_java_src|sed -e 's^java^class^') -ls
 shift
 
 jar_dir=$(dirname $jar_file)
-unzip -o -d $jar_dir $jar_file native/linux/x86_64/*.so
+# The next line was required when attempting to integrate tinyb
+# Not required now that it is no longer built.
+# unzip -o -d $jar_dir $jar_file native/linux/x86_64/*.so
 jni_path_arg="-Djava.library.path=$jar_dir/native/linux/x86_64"
 java -ea -cp ./_work:$jar_file $jni_path_arg $class "$@"

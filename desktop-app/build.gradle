@@ -48,12 +48,16 @@ jar {
 
                     include 'com/github/hypfvieh/**'
                     include 'org/freedesktop/**'
-                    include 'com/kohlschutter/junixsocket/**'
                     include 'org/bluez/**'
 
+                    /*
+                    Paths for dependencies which have been used
+                    in the past but may not be required or useful
+                    include 'com/kohlschutter/junixsocket/**'
                     include 'tinyb/**'
                     include 'org/sputnikdev/**'
                     include 'native/linux/x86_64/**'
+                    */
                 }
             }
         )
@@ -81,18 +85,21 @@ dependencies {
     implementation 'org.json:json:20251224'
     implementation 'ch.qos.logback:logback-classic:1.5.32'
 
-    implementation 'org.sputnikdev:bluetooth-manager-tinyb:1.3.3'
-
     implementation 'com.github.hypfvieh:dbus-java-parent:5.2.0'
     implementation 'com.github.hypfvieh:bluez-dbus:0.3.2'
     implementation 'com.github.hypfvieh:java-utils-extended:1.0.7'
     implementation 'com.github.hypfvieh:dbus-java-transport-native-unixsocket:5.2.0'
+
+    // dbus-java-transport-native-unixsocket seems to work OK, but the
+    // following are alternate transports we could enable if problems
+    // are found later
     // implementation 'com.github.hypfvieh:dbus-java-transport-tcp:5.2.0'
     // implementation 'com.github.hypfvieh:dbus-java-transport-jnr-unixsocket:5.2.0'
-
-    // Attempting to build with the following dependency fails with a line like:
-    // Cannot expand ZIP ' ... .gradle/caches/ ... 381fa8a95b/junixsocket-core-2.10.1.pom'
     // implementation 'com.github.hypfvieh:dbus-java-transport-junixsocket:5.2.0'
+
+    // Attempting to build with the dbus-java-transport-junixsocket alternate
+    // transport fails with a line like:
+    // Cannot expand ZIP ' ... .gradle/caches/ ... 381fa8a95b/junixsocket-core-2.10.1.pom'
     // This appears to be an issue with the way junixsocket-core is packaged -
     // it results in a .pom file only in the Gradle cache.
     // junit-socket-core exists to bring in the following mandatory dependencies:
@@ -102,6 +109,7 @@ dependencies {
     // if hypfvieh's d-j-t-junitsocket depended directly on the two mandatory
     // items only, the problem might not occur.
 
+    // implementation 'org.sputnikdev:bluetooth-manager-tinyb:1.3.3'
     // implementation 'org.sputnikdev:bluetooth-manager:1.5.3'
     // implementation 'tinyb:tinyb:1.0.100'
     // implementation 'intel-iot-devkit:tinyb:0.5.1'
