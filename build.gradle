@@ -43,10 +43,13 @@ buildscript {
         classpath 'org.jdom:jdom2:2.0.6.1'
 
         // https://github.com/tim-littlefair/maneline/security/dependabot/15
-        classpath 'io.netty:netty-codec-http:4.2.10.Final'
+        classpath 'io.netty:netty-codec-http:4.1.132.Final'
 
         // https://github.com/tim-littlefair/maneline/security/dependabot/16
         classpath 'org.bitbucket.b_c:jose4j:0.9.6'
+
+        // https://github.com/tim-littlefair/maneline/security/dependabot/21
+        classpath 'io.netty:netty-codec-http2:4.1.132.Final'
 
         classpath 'com.android.tools.build:gradle:9.2.0'
 
