@@ -1,0 +1,38 @@
+connect
+primary
+characteristics
+char-desc
+char-read-hnd 18
+disconnect
+exit
+
+char-write-req 18 0002
+char-write-cmd 1a 1a00
+char-write-req 18 0001
+char-write-req 18 1a00
+char-write-req 18 0a023a00
+char-write-req 18 0001
+char-write-req 1a 1a00
+char-write-req 18 0001
+char-read-hnd 17
+
+char-write-cmd 1b 1a00
+char-write-cmd 1b 0a023a00
+char-write-cmd 1b 0a027200
+char-write-cmd 1b 0a0422020801
+char-write-cmd 1b 0a03ca0100
+char-write-cmd 1b 1a020801
+
+char-write-cmd 1b 3500021a00
+char-write-cmd 1b 3500040a023a00
+char-write-cmd 1b 3500040a027200
+char-write-cmd 1b 3500060a0422020801
+char-write-cmd 1b 3500050a03ca0100
+
+char-write-cmd 1b 1a020801
+
+char-read-hnd 17
+char-read-hnd 18
+char-write-req 18 0001
+char-read-hnd 18
+char-read-hnd 18
