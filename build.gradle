@@ -48,6 +48,9 @@ buildscript {
         // https://github.com/tim-littlefair/maneline/security/dependabot/14
         classpath 'org.jdom:jdom2:2.0.6.1'
 
+        // https://github.com/tim-littlefair/maneline/security/dependabot/16
+        classpath 'org.bitbucket.b_c:jose4j:0.9.6'
+
         // Ideally, keep this aligned to the lastest value here:
         // https://maven.google.com/web/index.html?q=com.android.tools.#com.android.tools.build:gradle
         classpath 'com.android.tools.build:gradle:9.2.0'
