@@ -15,7 +15,7 @@ updates:
     directories: [ "scripts" ]
 
   # TL: Below this point add non-default branches which are currently WIP
-  - package-ecosystem: "x-gradle
+  - package-ecosystem: "gradle"
     directories: [ "/", "usb-hid", "lib", "desktop-app", "android-app" ]
     schedule:
       interval: "weekly"
