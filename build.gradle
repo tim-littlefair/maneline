@@ -48,8 +48,9 @@ buildscript {
         // https://github.com/tim-littlefair/maneline/security/dependabot/14
         classpath 'org.jdom:jdom2:2.0.6.1'
 
-        // Ideally, keep this aligned to the value in ./gradle/wrapper/gradle-wrapper.properties
-        classpath 'com.android.tools.build:gradle:9.4.1'
+        // Ideally, keep this aligned to the lastest value here:
+        // https://maven.google.com/web/index.html?q=com.android.tools.#com.android.tools.build:gradle
+        classpath 'com.android.tools.build:gradle:9.2.0'
 
     }
 }
