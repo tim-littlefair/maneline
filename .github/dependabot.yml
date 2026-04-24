@@ -9,8 +9,14 @@ updates:
     directories: [ "/", "usb-hid", "lib", "desktop-app", "android-app" ] 
     schedule:
       interval: "weekly"
+  - package-ecosystem: "pip"
+    schedule:
+      interval: "weekly"
+    directories: [ "scripts" ]
+
+  # TL: Below this point add non-default branches which are currently WIP
   - package-ecosystem: "gradle"
     directories: [ "/", "usb-hid", "lib", "desktop-app", "android-app" ]
     schedule:
       interval: "weekly"
-      target-branch: "dependabot-experiments"
+      target-branch: "260423-bluez_dbus"
