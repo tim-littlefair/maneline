@@ -1,13 +1,23 @@
-// Initial version based on:
+// The initial version of this file was based on:
 // https://github.com/masato-ka/bluez-dbus-sample/blob/master/src/main/java/ka/masato/bluz_sample/App.java
 package net.heretical_camelid.maneline.desktop_app;
 
 // import net.heretical_camelid.maneline.lib.interfaces.IDeviceTransport;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HexFormat;
 import java.util.List;
+import java.util.Map;
+
+import org.bluez.exceptions.BluezFailedException;
+import org.bluez.exceptions.BluezInProgressException;
+import org.bluez.exceptions.BluezInvalidValueLengthException;
+import org.bluez.exceptions.BluezNotAuthorizedException;
+import org.bluez.exceptions.BluezNotConnectedException;
+import org.bluez.exceptions.BluezNotPermittedException;
+import org.bluez.exceptions.BluezNotSupportedException;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.exceptions.DBusExecutionException;
 
@@ -16,85 +26,104 @@ import com.github.hypfvieh.bluetooth.wrapper.BluetoothAdapter;
 import com.github.hypfvieh.bluetooth.wrapper.BluetoothDevice;
 import com.github.hypfvieh.bluetooth.wrapper.BluetoothGattCharacteristic;
 import com.github.hypfvieh.bluetooth.wrapper.BluetoothGattService;
+import com.github.hypfvieh.bluetooth.DiscoveryFilter;
+import com.github.hypfvieh.bluetooth.DiscoveryTransport;
 
-
-    /*
-    @Override
-    public int read(byte[] packetBuffer) {
-        return 0;
-    }
-
-    @Override
-    public int write(byte[] commandBytes) {
-        return 0;
-    }
-
-    @Override
-    public String getLastErrorMessage() {
-        return "";
-    }
-
-    static boolean running = true;
-
-    static void printDevice(BluetoothDevice device) {
-        System.out.print("Address = " + device.getAddress());
-        System.out.print(" Name = " + device.getName());
-        System.out.print(" Connected = " + device.getConnected());
-        System.out.println();
-    }
-
-    static {
-        try {
-            System.loadLibrary("tinyb");
-            System.loadLibrary("javatinyb");
-        } catch (UnsatisfiedLinkError var1) {
-            System.err.println("Native code library failed to load.\n" + var1);
-        }
-    }
-*/
 
 public class DeviceTransportBluezDbus
     // implements IDeviceTransport
 {
+    public final static String FENDERTONE_SERVICE_UUID = "90559580-b707-11ee-acb1-7b7e30f1af54";
+    public final static String FENDERTONE_HOGP_SEND_UUID = "820a7e34-4e0a-4f90-8520-04ebce35a3a1";
+    public final static String FENDERTONE_HOGP_NTFY_UUID = "1017adcc-dcbc-4387-a59f-2546b2ea5bb0";
+
     public static void main( String[] args ) throws InterruptedException, IOException {
         DeviceManager deviceManager = null;
         try {
             deviceManager = DeviceManager.createInstance(false);
         } catch (DBusException e1) {
-            System.out.println("failed create instance caused by D-BUS.");
+            System.err.println("Failed to create device manager");
             System.exit(-101);
         }
 
         List<BluetoothAdapter> result = deviceManager.getAdapters();
         BluetoothAdapter bluetoothAdaptor = result.get(0);
-        System.out.println("-----------------HCI Interface---------------------");
-        result.stream().map(e -> e.getDeviceName()).forEach(System.out::println);
-        System.out.println("-----------------Scan BLE Device---------------------");
-        bluetoothAdaptor.startDiscovery();
-        Thread.sleep(5000);
-        bluetoothAdaptor.stopDiscovery();
-        System.out.println("-----------------Result BLE Device----------------");
-        List<BluetoothDevice> devicies = deviceManager.getDevices();
-        devicies.stream().map(e -> e.getName()).forEach(System.out::println);
-        BufferedReader buffredReader = new BufferedReader(new InputStreamReader(System.in));
-        System.out.print("Choose device:");
-        String deviceName = buffredReader.readLine();
-        System.out.println("-----------------Characteristics----------------");
-        for (BluetoothDevice bluetoothDevice : devicies) {
-            if (bluetoothDevice.getName().equals(deviceName)) {
-                try {
-                    bluetoothDevice.connect();
-                    bluetoothDevice.refreshGattServices();
-                    List<BluetoothGattService> servicies = bluetoothDevice.getGattServices();
-                    for (BluetoothGattService service : servicies) {
-                        List<BluetoothGattCharacteristic> characteristics = service.getGattCharacteristics();
-                        characteristics.stream().map(e -> e.getUuid()).forEach(System.out::println);
-                    }
-                } catch (DBusExecutionException e) {
-                    System.out.println("FailedConnection");
-                    e.printStackTrace();
+
+        try {
+            Map<DiscoveryFilter, Object> mmpFilter = new HashMap<DiscoveryFilter, Object>();
+            mmpFilter.put(DiscoveryFilter.Transport, DiscoveryTransport.LE);
+            mmpFilter.put(DiscoveryFilter.UUIDs, new String[] { FENDERTONE_SERVICE_UUID });
+            deviceManager.setScanFilter(mmpFilter);
+        } catch (DBusException e1) {
+            System.err.println("Failed to set Bluetooth filter: " + e1.getMessage());
+            System.exit(-102);
+        }
+        deviceManager.findBtDevicesByIntrospection(bluetoothAdaptor);
+
+        List<BluetoothDevice> devices = deviceManager.getDevices();
+        BluetoothDevice mmpDevice;
+        List<String> rejectedDeviceNames = new ArrayList<String>();
+        if(devices.size()==1) {
+            mmpDevice = devices.get(0);
+        } else if(devices.size()==0) {
+            mmpDevice = null;
+        } else {
+            mmpDevice = null;
+            for(BluetoothDevice btDevice: devices) {
+                String candidateDeviceName = btDevice.getName();
+                if (candidateDeviceName.equals("Mustang Micro Plus")) {
+                    mmpDevice = btDevice;
+                    break;
+                } else {
+                    rejectedDeviceNames.add(candidateDeviceName);
                 }
             }
+        }
+        if(mmpDevice == null) {
+            System.err.println(
+                "Failed to find MMP device, candidates were: " +
+                String.join(", ", rejectedDeviceNames)
+            );
+            System.exit(-103);
+        }
+        try {
+            mmpDevice.connect();
+        } catch (DBusExecutionException e) {
+            System.out.println("FailedConnection");
+            e.printStackTrace();
+        }
+
+        mmpDevice.refreshGattServices();
+        List<BluetoothGattService> services = mmpDevice.getGattServices();
+        for (BluetoothGattService service : services) {
+            System.out.println("Service: " + service.getUuid());
+            List<BluetoothGattCharacteristic> characteristics = service.getGattCharacteristics();
+            characteristics.stream().map(e -> e.getUuid()).forEach(System.out::println);
+        }
+        BluetoothGattService mmpFendertoneService = mmpDevice.getGattServiceByUuid(FENDERTONE_SERVICE_UUID);
+        BluetoothGattCharacteristic sendChr = mmpFendertoneService.getGattCharacteristicByUuid(FENDERTONE_HOGP_SEND_UUID);
+        BluetoothGattCharacteristic notifyChr = mmpFendertoneService.getGattCharacteristicByUuid(FENDERTONE_HOGP_NTFY_UUID);
+        System.out.println(sendChr.toString());
+        System.out.println(notifyChr.toString());
+        try {
+            notifyChr.startNotify();
+        } catch (DBusException e2) {
+            System.err.println("Failed to start notifying: " + e2.getMessage());
+            System.exit(-104);
+        }
+        try {
+            sendChr.writeValue(HexFormat.of().parseHex("3500050a03c20100"),null);
+            Thread.sleep(2000);
+            sendChr.writeValue(HexFormat.of().parseHex("3500040a023a00"),null);
+            Thread.sleep(2000);
+            // sendChr.writeValue(HexFormat.of().parseHex("3500040a027200"),null);
+            Thread.sleep(100);
+            System.out.println("Writes done");
+
+            Thread.sleep(10000);
+        } catch (DBusException e3) {
+            System.err.println("Failed to start notifying: " + e3.getMessage());
+            System.exit(-105);
         }
     }
 }
