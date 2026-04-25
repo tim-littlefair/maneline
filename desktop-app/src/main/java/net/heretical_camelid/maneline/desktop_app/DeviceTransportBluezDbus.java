@@ -18,6 +18,7 @@ import org.bluez.exceptions.BluezNotAuthorizedException;
 import org.bluez.exceptions.BluezNotConnectedException;
 import org.bluez.exceptions.BluezNotPermittedException;
 import org.bluez.exceptions.BluezNotSupportedException;
+import org.freedesktop.dbus.connections.base.DBusBoundPropertyHandler;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.exceptions.DBusExecutionException;
 
@@ -29,34 +30,76 @@ import com.github.hypfvieh.bluetooth.wrapper.BluetoothGattService;
 import com.github.hypfvieh.bluetooth.DiscoveryFilter;
 import com.github.hypfvieh.bluetooth.DiscoveryTransport;
 
+import org.freedesktop.dbus.handlers.AbstractPropertiesChangedHandler;
+import org.freedesktop.dbus.handlers.AbstractSignalHandlerBase;
+import org.freedesktop.dbus.interfaces.DBusInterface;
+import org.freedesktop.dbus.interfaces.Properties;
+import org.freedesktop.dbus.messages.DBusSignal;
+import org.freedesktop.dbus.messages.MethodCall;
+import org.freedesktop.dbus.types.UInt16;
 
+class DBusSignalHandler extends AbstractSignalHandlerBase<DBusSignal> {
+    @Override
+    public void handle(org.freedesktop.dbus.messages.DBusSignal _signal) {
+        System.out.println("?:" + _signal);
+    }
+
+    @Override
+    public Class<org.freedesktop.dbus.messages.DBusSignal> getImplementationClass() {
+        if(1==1) {
+            return org.freedesktop.dbus.messages.DBusSignal.class;
+        } else {
+            return org.freedesktop.dbus.messages.DBusSignal.class;
+        }
+        // return DBusSignal.class;
+    }
+}
+
+class GattPropertyChangeHandler extends AbstractPropertiesChangedHandler {
+    @Override
+    public void handle(Properties.PropertiesChanged _signal) {
+        if(_signal.getInterfaceName().startsWith("org.bluez")) {
+            System.out.println("?:" + _signal);
+        }
+    }
+}
 public class DeviceTransportBluezDbus
+    extends AbstractPropertiesChangedHandler
     // implements IDeviceTransport
 {
     public final static String FENDERTONE_SERVICE_UUID = "90559580-b707-11ee-acb1-7b7e30f1af54";
     public final static String FENDERTONE_HOGP_SEND_UUID = "820a7e34-4e0a-4f90-8520-04ebce35a3a1";
     public final static String FENDERTONE_HOGP_NTFY_UUID = "1017adcc-dcbc-4387-a59f-2546b2ea5bb0";
 
+    final BluetoothGattCharacteristic m_sendChr;
+    final BluetoothGattCharacteristic m_notifyChr;
+
+
+
     public static void main( String[] args ) throws InterruptedException, IOException {
+
+        MethodCall.setDefaultTimeout(30000);
         DeviceManager deviceManager = null;
         try {
             deviceManager = DeviceManager.createInstance(false);
-        } catch (DBusException e1) {
-            System.err.println("Failed to create device manager");
+        } catch (DBusException e) {
+            System.err.println("Failed to create device manager: " + e.getMessage());
             System.exit(-101);
         }
+
+
 
         List<BluetoothAdapter> result = deviceManager.getAdapters();
         BluetoothAdapter bluetoothAdaptor = result.get(0);
 
         try {
             Map<DiscoveryFilter, Object> mmpFilter = new HashMap<DiscoveryFilter, Object>();
-            mmpFilter.put(DiscoveryFilter.Transport, DiscoveryTransport.LE);
+            // mmpFilter.put(DiscoveryFilter.Transport, DiscoveryTransport.LE);
             mmpFilter.put(DiscoveryFilter.UUIDs, new String[] { FENDERTONE_SERVICE_UUID });
             deviceManager.setScanFilter(mmpFilter);
-        } catch (DBusException e1) {
-            System.err.println("Failed to set Bluetooth filter: " + e1.getMessage());
-            System.exit(-102);
+        } catch (DBusException e) {
+            System.err.println("Failed to set Bluetooth filter: " + e.getMessage());
+            System.exit(-103);
         }
         deviceManager.findBtDevicesByIntrospection(bluetoothAdaptor);
 
@@ -89,8 +132,9 @@ public class DeviceTransportBluezDbus
         try {
             mmpDevice.connect();
         } catch (DBusExecutionException e) {
-            System.out.println("FailedConnection");
+            System.out.println("FailedConnection " + e.getMessage());
             e.printStackTrace();
+            System.exit(-104);
         }
 
         mmpDevice.refreshGattServices();
@@ -103,28 +147,53 @@ public class DeviceTransportBluezDbus
         BluetoothGattService mmpFendertoneService = mmpDevice.getGattServiceByUuid(FENDERTONE_SERVICE_UUID);
         BluetoothGattCharacteristic sendChr = mmpFendertoneService.getGattCharacteristicByUuid(FENDERTONE_HOGP_SEND_UUID);
         BluetoothGattCharacteristic notifyChr = mmpFendertoneService.getGattCharacteristicByUuid(FENDERTONE_HOGP_NTFY_UUID);
-        System.out.println(sendChr.toString());
-        System.out.println(notifyChr.toString());
+        System.out.println(sendChr.toString() + String.join(",",sendChr.getFlags()));
+        System.out.println(notifyChr.toString() + String.join(",",notifyChr.getFlags()));
+        DeviceTransportBluezDbus theTransport = new DeviceTransportBluezDbus(sendChr, notifyChr);
+        try {
+            deviceManager.registerPropertyHandler(theTransport);
+        } catch (DBusException e) {
+            System.err.println("Failed to register signal handler: " + e.getMessage());
+            System.exit(-102);
+        }
+
         try {
             notifyChr.startNotify();
-        } catch (DBusException e2) {
-            System.err.println("Failed to start notifying: " + e2.getMessage());
-            System.exit(-104);
-        }
-        try {
-            sendChr.writeValue(HexFormat.of().parseHex("3500050a03c20100"),null);
-            Thread.sleep(2000);
-            sendChr.writeValue(HexFormat.of().parseHex("3500040a023a00"),null);
-            Thread.sleep(2000);
-            // sendChr.writeValue(HexFormat.of().parseHex("3500040a027200"),null);
-            Thread.sleep(100);
-            System.out.println("Writes done");
-
-            Thread.sleep(10000);
-        } catch (DBusException e3) {
-            System.err.println("Failed to start notifying: " + e3.getMessage());
+        } catch (DBusException e) {
+            System.err.println("Failed to start notifying: " + e.getMessage());
             System.exit(-105);
         }
+        try {
+            theTransport.send("3500050a03c20100", "request");
+            theTransport.send("3500040a023a00", "request");
+            theTransport.send("3500040a027200", "command");
+            System.out.println("Writes done");
+            Thread.sleep(10000);
+        } catch (DBusException e3) {
+            System.err.println("Failed initial sends: " + e3.getMessage());
+            System.exit(-106);
+        }
+    }
+
+    public DeviceTransportBluezDbus(
+        BluetoothGattCharacteristic sendChr, BluetoothGattCharacteristic notifyChr
+    ) {
+        m_sendChr = sendChr;
+        m_notifyChr = notifyChr;
+    }
+
+    @Override
+    public void handle(Properties.PropertiesChanged _signal) {
+        if(_signal.getInterfaceName().startsWith("org.bluez")) {
+            System.out.println("?:" + _signal);
+        }
+    }
+
+    public void send(String bytesAsHex, String writeType) throws DBusException {
+        Map<String,Object> writeOptions = new HashMap<>();
+        writeOptions.put("offset",new UInt16(0));
+        writeOptions.put( "type", writeType);
+        m_sendChr.writeValue(HexFormat.of().parseHex(bytesAsHex),writeOptions);
     }
 }
 
