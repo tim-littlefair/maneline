@@ -20,10 +20,12 @@ jar {
                 it.isDirectory()
                 ?
                 it : zipTree(it).matching {
+
                     include 'META-INF/**'
                     exclude 'META-INF/*.SF'
                     exclude 'META-INF/*.DSA'
                     exclude 'META-INF/*.RSA'
+
                     include 'net/heretical_camelid/maneline/lib/**'
 
                     include 'ch/qos/**'
@@ -49,6 +51,10 @@ jar {
                     include 'com/github/hypfvieh/**'
                     include 'org/freedesktop/**'
                     include 'org/bluez/**'
+                    include 'com/kohlschutter/**'
+                    include 'org/newsclub/**'
+
+                    include '**'
 
                     /*
                     Paths for dependencies which have been used
@@ -88,7 +94,11 @@ dependencies {
     implementation 'com.github.hypfvieh:dbus-java-parent:5.2.0'
     implementation 'com.github.hypfvieh:bluez-dbus:0.3.2'
     implementation 'com.github.hypfvieh:java-utils-extended:1.0.7'
-    implementation 'com.github.hypfvieh:dbus-java-transport-native-unixsocket:5.2.0'
+    implementation ('com.github.hypfvieh:dbus-java-transport-junixsocket:5.2.0') {
+        exclude group: 'com.kohlschutter.junixsocket', module: 'junixsocket-core'
+    }
+    implementation 'com.kohlschutter.junixsocket:junixsocket-common:2.10.1'
+    implementation 'com.kohlschutter.junixsocket:junixsocket-native-common:2.10.1'
 
     // dbus-java-transport-native-unixsocket seems to work OK, but the
     // following are alternate transports we could enable if problems
@@ -103,8 +113,6 @@ dependencies {
     // This appears to be an issue with the way junixsocket-core is packaged -
     // it results in a .pom file only in the Gradle cache.
     // junit-socket-core exists to bring in the following mandatory dependencies:
-    // implementation 'com.kohlschutter.junixsocket:junixsocket-common:2.10.1'
-    // implementation 'com.kohlschutter.junixsocket:junixsocket-native-common:2.10.1'
     // plus some other optional ones
     // if hypfvieh's d-j-t-junitsocket depended directly on the two mandatory
     // items only, the problem might not occur.

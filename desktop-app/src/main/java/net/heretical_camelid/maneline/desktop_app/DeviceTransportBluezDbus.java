@@ -18,7 +18,9 @@ import org.bluez.exceptions.BluezNotAuthorizedException;
 import org.bluez.exceptions.BluezNotConnectedException;
 import org.bluez.exceptions.BluezNotPermittedException;
 import org.bluez.exceptions.BluezNotSupportedException;
+import org.freedesktop.dbus.DBusMap;
 import org.freedesktop.dbus.connections.base.DBusBoundPropertyHandler;
+import org.freedesktop.dbus.errors.NoReply;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.exceptions.DBusExecutionException;
 
@@ -33,29 +35,78 @@ import com.github.hypfvieh.bluetooth.DiscoveryTransport;
 import org.freedesktop.dbus.handlers.AbstractPropertiesChangedHandler;
 import org.freedesktop.dbus.handlers.AbstractSignalHandlerBase;
 import org.freedesktop.dbus.interfaces.DBusInterface;
+import org.freedesktop.dbus.interfaces.DBusSigHandler;
 import org.freedesktop.dbus.interfaces.Properties;
 import org.freedesktop.dbus.messages.DBusSignal;
 import org.freedesktop.dbus.messages.MethodCall;
 import org.freedesktop.dbus.types.UInt16;
 
-class DBusSignalHandler extends AbstractSignalHandlerBase<DBusSignal> {
-    @Override
-    public void handle(org.freedesktop.dbus.messages.DBusSignal _signal) {
-        System.out.println("?:" + _signal);
-    }
+class ReceiverHeartbeat
+    extends Thread
+    implements Runnable, DBusSigHandler<Properties.PropertiesChanged>
+{
+    static final UInt16 HEARTBEAT_PERIOD_MS = new UInt16(5000);
+    static ReceiverHeartbeat s_instance = null;
+    static DeviceTransportBluezDbus s_transport = null;
+    static boolean s_shouldStop = false;
+    static boolean s_hasStopped = false;
 
-    @Override
-    public Class<org.freedesktop.dbus.messages.DBusSignal> getImplementationClass() {
-        if(1==1) {
-            return org.freedesktop.dbus.messages.DBusSignal.class;
-        } else {
-            return org.freedesktop.dbus.messages.DBusSignal.class;
+    private ReceiverHeartbeat() { }
+    static ReceiverHeartbeat startUp(
+            DeviceManager deviceManager,
+            DeviceTransportBluezDbus theTransport,
+            BluetoothGattCharacteristic notifyChr
+    ) {
+        assert s_instance == null;
+        assert s_shouldStop == false;
+        s_instance = new ReceiverHeartbeat();
+        s_transport = theTransport;
+        s_transport.registerForNotifications(deviceManager, theTransport, notifyChr);
+        s_instance.run();
+        return s_instance;
+    }
+    static void requestStop() {
+        assert s_instance != null;
+        s_shouldStop = true;
+        int numSleeps = 0;
+        int maxSleeps = 100;
+        while(true) {
+            if(s_hasStopped) {
+                break;
+            } else if(numSleeps==maxSleeps) {
+                System.err.println("Deadlock!");
+                break;
+            }
+            ++numSleeps;
         }
-        // return DBusSignal.class;
     }
-}
 
-class GattPropertyChangeHandler extends AbstractPropertiesChangedHandler {
+    @Override
+    public void run() {
+        while(s_shouldStop==false) {
+            Long nextHeartbeatTime = System.currentTimeMillis() + Long.valueOf(HEARTBEAT_PERIOD_MS.toString());
+            try {
+                while(System.currentTimeMillis()<nextHeartbeatTime) {
+                    byte[] chunk = s_transport.receive(HEARTBEAT_PERIOD_MS);
+                    System.out.println("Chunk: " + HexFormat.of().formatHex(chunk));
+                }
+            } catch (NoReply e) {
+                System.err.println("Receive timed out");
+            } catch (DBusExecutionException e) {
+                System.err.println("DBusExecutionException: " + e);
+            } catch (DBusException e) {
+                System.err.println("DBusException: " + e);
+                System.exit(-108);
+            }
+            try {
+                s_transport.send("3500050a03c20100","request");
+            } catch (DBusException e) {
+                System.err.println("Receive timed out");
+                System.exit(-108);
+            }
+        }
+        s_hasStopped = true;
+    }
     @Override
     public void handle(Properties.PropertiesChanged _signal) {
         if(_signal.getInterfaceName().startsWith("org.bluez")) {
@@ -71,6 +122,7 @@ public class DeviceTransportBluezDbus
     public final static String FENDERTONE_HOGP_SEND_UUID = "820a7e34-4e0a-4f90-8520-04ebce35a3a1";
     public final static String FENDERTONE_HOGP_NTFY_UUID = "1017adcc-dcbc-4387-a59f-2546b2ea5bb0";
 
+    final BluetoothDevice m_device;
     final BluetoothGattCharacteristic m_sendChr;
     final BluetoothGattCharacteristic m_notifyChr;
 
@@ -87,8 +139,6 @@ public class DeviceTransportBluezDbus
             System.exit(-101);
         }
 
-
-
         List<BluetoothAdapter> result = deviceManager.getAdapters();
         BluetoothAdapter bluetoothAdaptor = result.get(0);
 
@@ -101,17 +151,17 @@ public class DeviceTransportBluezDbus
             System.err.println("Failed to set Bluetooth filter: " + e.getMessage());
             System.exit(-103);
         }
-        deviceManager.findBtDevicesByIntrospection(bluetoothAdaptor);
-
-        List<BluetoothDevice> devices = deviceManager.getDevices();
-        BluetoothDevice mmpDevice;
+        List<BluetoothDevice> devices = deviceManager.scanForBluetoothDevices(5000);
+        BluetoothDevice mmpDevice = null;
         List<String> rejectedDeviceNames = new ArrayList<String>();
         if(devices.size()==1) {
+            System.out.println("Only 1 device matches");
             mmpDevice = devices.get(0);
         } else if(devices.size()==0) {
+            System.err.println("No devices found");
             mmpDevice = null;
+            System.exit(-103);
         } else {
-            mmpDevice = null;
             for(BluetoothDevice btDevice: devices) {
                 String candidateDeviceName = btDevice.getName();
                 if (candidateDeviceName.equals("Mustang Micro Plus")) {
@@ -121,20 +171,21 @@ public class DeviceTransportBluezDbus
                     rejectedDeviceNames.add(candidateDeviceName);
                 }
             }
-        }
-        if(mmpDevice == null) {
-            System.err.println(
-                "Failed to find MMP device, candidates were: " +
-                String.join(", ", rejectedDeviceNames)
-            );
-            System.exit(-103);
+            if(rejectedDeviceNames.size() == devices.size() ) {
+                System.err.println(
+                    "Failed to find MMP device, candidates were: " +
+                        String.join(", ", rejectedDeviceNames)
+                );
+                mmpDevice = null;
+                System.exit(-104);
+            }
         }
         try {
             mmpDevice.connect();
         } catch (DBusExecutionException e) {
             System.out.println("FailedConnection " + e.getMessage());
             e.printStackTrace();
-            System.exit(-104);
+            System.exit(-105);
         }
 
         mmpDevice.refreshGattServices();
@@ -149,35 +200,53 @@ public class DeviceTransportBluezDbus
         BluetoothGattCharacteristic notifyChr = mmpFendertoneService.getGattCharacteristicByUuid(FENDERTONE_HOGP_NTFY_UUID);
         System.out.println(sendChr.toString() + String.join(",",sendChr.getFlags()));
         System.out.println(notifyChr.toString() + String.join(",",notifyChr.getFlags()));
-        DeviceTransportBluezDbus theTransport = new DeviceTransportBluezDbus(sendChr, notifyChr);
-        try {
-            deviceManager.registerPropertyHandler(theTransport);
-        } catch (DBusException e) {
-            System.err.println("Failed to register signal handler: " + e.getMessage());
-            System.exit(-102);
-        }
 
+        DeviceTransportBluezDbus theTransport = new DeviceTransportBluezDbus(
+            mmpDevice, sendChr, notifyChr
+        );
+        ReceiverHeartbeat.startUp(deviceManager, theTransport, notifyChr);
         try {
-            notifyChr.startNotify();
-        } catch (DBusException e) {
-            System.err.println("Failed to start notifying: " + e.getMessage());
-            System.exit(-105);
-        }
-        try {
+            theTransport.send("35000201a00", "request");
             theTransport.send("3500050a03c20100", "request");
             theTransport.send("3500040a023a00", "request");
             theTransport.send("3500040a027200", "command");
             System.out.println("Writes done");
-            Thread.sleep(10000);
+            for(int i=0; i<20; ++i) {
+                System.out.println(".");
+                Thread.sleep(1000);
+            }
+            ReceiverHeartbeat.requestStop();
         } catch (DBusException e3) {
             System.err.println("Failed initial sends: " + e3.getMessage());
+            System.exit(-108);
+        }
+    }
+
+    static void registerForNotifications(
+        DeviceManager deviceManager,
+        DeviceTransportBluezDbus theTransport,
+        BluetoothGattCharacteristic notifyChr
+    ) {
+        try {
+            deviceManager.registerPropertyHandler(theTransport);
+        } catch (DBusException e) {
+            System.err.println("Failed to register signal handler: " + e.getMessage());
             System.exit(-106);
+        }
+        try {
+            notifyChr.startNotify();
+        } catch (DBusException e) {
+            System.err.println("Failed to start notifying: " + e.getMessage());
+            System.exit(-107);
         }
     }
 
     public DeviceTransportBluezDbus(
-        BluetoothGattCharacteristic sendChr, BluetoothGattCharacteristic notifyChr
+        BluetoothDevice device,
+        BluetoothGattCharacteristic sendChr,
+        BluetoothGattCharacteristic notifyChr
     ) {
+        m_device = device;
         m_sendChr = sendChr;
         m_notifyChr = notifyChr;
     }
@@ -192,8 +261,17 @@ public class DeviceTransportBluezDbus
     public void send(String bytesAsHex, String writeType) throws DBusException {
         Map<String,Object> writeOptions = new HashMap<>();
         writeOptions.put("offset",new UInt16(0));
+        //writeOptions.put("mtu",new UInt16(128));
         writeOptions.put( "type", writeType);
         m_sendChr.writeValue(HexFormat.of().parseHex(bytesAsHex),writeOptions);
+    }
+
+    public byte[] receive(UInt16 timeout) throws DBusException, NoReply {
+        Map<String,Object> readOptions = new HashMap<>();
+        readOptions.put("offset",new UInt16(0));
+        //readOptions.put("mtu",new UInt16(128));
+        //readOptions.put("timeout",timeout);
+        return m_notifyChr.readValue(readOptions);
     }
 }
 
