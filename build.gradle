@@ -30,10 +30,10 @@ buildscript {
         // Clearing 100% of dependabot alerts may not always be possible.
 
         // https://github.com/tim-littlefair/maneline/security/dependabot/15
-        classpath 'io.netty:netty-codec-http:4.1.132.Final'
+        classpath 'io.netty:netty-codec-http:4.2.12.Final'
 
         // https://github.com/tim-littlefair/maneline/security/dependabot/21
-        classpath 'io.netty:netty-codec-http2:4.1.132.Final'
+        classpath 'io.netty:netty-codec-http2:4.2.12.Final'
 
         // https://github.com/tim-littlefair/maneline/security/dependabot/19
         classpath 'org.apache.commons:commons-lang3:3.20.0'
