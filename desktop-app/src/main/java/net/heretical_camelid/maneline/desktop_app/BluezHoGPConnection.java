@@ -12,9 +12,17 @@ import org.freedesktop.dbus.errors.NoReply;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.handlers.AbstractPropertiesChangedHandler;
 import org.freedesktop.dbus.interfaces.Properties;
+import org.freedesktop.dbus.transport.junixsocket.JUnixSocketSocketProvider;
 import org.freedesktop.dbus.types.UInt16;
 import org.freedesktop.dbus.types.Variant;
+import org.newsclub.net.unix.FileDescriptorCast;
 
+import java.io.DataInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.Map;
@@ -25,8 +33,11 @@ public class BluezHoGPConnection extends AbstractPropertiesChangedHandler {
     final BluetoothGattCharacteristic m_sendChr;
     final BluetoothGattCharacteristic m_notifyChr;
 
-    FileDescriptor m_notifyFD = null;
+    final JUnixSocketSocketProvider m_socketProvider;
+
+    FileDescriptor m_notifyDebusFD = null;
     private UInt16 m_mtu = null;
+    private DataInputStream m_notifyInputStream;
 
     public BluezHoGPConnection(
         BluetoothDevice device, String service_uuid, String send_uuid, String notify_uuid
@@ -37,6 +48,7 @@ public class BluezHoGPConnection extends AbstractPropertiesChangedHandler {
         m_notifyChr = m_service.getGattCharacteristicByUuid(notify_uuid);
         System.out.println(m_sendChr.toString() + String.join(",",m_sendChr.getFlags()));
         System.out.println(m_notifyChr.toString() + String.join(",",m_notifyChr.getFlags()));
+        m_socketProvider = new JUnixSocketSocketProvider();
     }
 
     public void registerForNotifications(DeviceManager deviceManager) {
@@ -64,13 +76,12 @@ public class BluezHoGPConnection extends AbstractPropertiesChangedHandler {
         try {
             System.out.println("acquireNotify");
             Map<String,Variant<?>> acquireOptions = new HashMap<>();
-            Tuple tuple = m_notifyChr.getRawGattCharacteristic().AcquireNotify(acquireOptions);
-            System.out.println("Tuple: " + tuple.toString());
-            TwoTuple<FileDescriptor, UInt16> fd_mtu = (TwoTuple<FileDescriptor, UInt16>) tuple;
+            TwoTuple<FileDescriptor, UInt16> fd_mtu = m_notifyChr.getRawGattCharacteristic().AcquireNotify(acquireOptions);
             assert fd_mtu != null;
-            m_notifyFD = fd_mtu.getFirstValue();
+            FileDescriptor dbusFD = fd_mtu.getFirstValue();
             m_mtu = fd_mtu.getSecondValue();
-
+            java.io.FileDescriptor jiFD = dbusFD.toJavaFileDescriptor(m_socketProvider);
+            m_notifyInputStream = new DataInputStream(new FileInputStream(jiFD));
         } catch (DBusException e) {
             System.err.println("Failed to acquire notify fd: " + e.getMessage());
             System.exit(-113);
@@ -93,16 +104,21 @@ public class BluezHoGPConnection extends AbstractPropertiesChangedHandler {
     }
 
     public byte[] receive(UInt16 timeout) throws DBusException, NoReply, InterruptedException {
-        if(m_notifyFD == null) {
+        if(m_notifyDebusFD == null) {
             Map<String, Object> readOptions = new HashMap<>();
             readOptions.put("offset", new UInt16(0));
             //readOptions.put("mtu",new UInt16(128));
             readOptions.put("timeout", timeout);
             return m_notifyChr.readValue(readOptions);
         } else {
-            Thread.sleep(250);
-            System.out.println("read-after-acquire TBD");
-            return new byte[] { };
+            byte[] buffer = new byte[m_mtu.intValue()];
+            try {
+                m_notifyInputStream.read(buffer);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            System.out.println(HexFormat.of().formatHex(buffer));
+            return buffer;
         }
     }
 }
