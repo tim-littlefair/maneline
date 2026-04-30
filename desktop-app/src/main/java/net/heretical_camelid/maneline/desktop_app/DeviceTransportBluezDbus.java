@@ -65,28 +65,42 @@ class ReceiverHeartbeat
         }
     }
 
+    public static void requestInterrupt() {
+        if(s_instance!=null) {
+            s_instance.interrupt();
+        }
+    }
+
     @Override
     public void run() {
         while(s_shouldStop==false) {
-            Long nextHeartbeatTime = System.currentTimeMillis() + Long.valueOf(HEARTBEAT_PERIOD_MS.toString());
             try {
-                while(System.currentTimeMillis()<nextHeartbeatTime) {
-                    byte[] chunk = s_connection.receive(HEARTBEAT_PERIOD_MS);
-                    System.out.println("Chunk: " + HexFormat.of().formatHex(chunk));
+                Long nextHeartbeatTime = System.currentTimeMillis() + Long.valueOf(HEARTBEAT_PERIOD_MS.toString());
+                try {
+                    while(System.currentTimeMillis()<nextHeartbeatTime) {
+                        byte[] chunk = s_connection.receive(HEARTBEAT_PERIOD_MS);
+                        System.out.println("Chunk: " + HexFormat.of().formatHex(chunk));
+                        if(chunk.length==0) {
+                            break;
+                        }
+                        Thread.sleep(nextHeartbeatTime-System.currentTimeMillis());
+                    }
+                } catch (NoReply e) {
+                    System.err.println("Receive timed out");
+                } catch (DBusExecutionException e) {
+                    System.err.println("DBusExecutionException: " + e);
+                } catch (DBusException e) {
+                    System.err.println("DBusException: " + e);
+                    System.exit(-108);
                 }
-            } catch (NoReply e) {
-                System.err.println("Receive timed out");
-            } catch (DBusExecutionException e) {
-                System.err.println("DBusExecutionException: " + e);
-            } catch (DBusException e) {
-                System.err.println("DBusException: " + e);
-                System.exit(-108);
-            }
-            try {
-                s_connection.send("3500050a03c20100","command");
-                System.out.println("#");
-            } catch (DBusException e) {
-                System.err.println("Hearbeat send failed: " + e);
+                try {
+                    s_connection.send("3500050a03c20100","command");
+                    System.out.println("#");
+                } catch (DBusException e) {
+                    System.err.println("Hearbeat send failed: " + e);
+                }
+            } catch (InterruptedException e) {
+                // Do nothing
             }
         }
         s_hasStopped = true;
@@ -106,7 +120,7 @@ public class DeviceTransportBluezDbus {
     public final static String FENDERTONE_HOGP_NTFY_UUID = "1017adcc-dcbc-4387-a59f-2546b2ea5bb0";
 
     public static void main( String[] args ) throws InterruptedException, IOException {
-        MethodCall.setDefaultTimeout(3000);
+        MethodCall.setDefaultTimeout(8000);
         DeviceManager deviceManager = null;
         try {
             deviceManager = DeviceManager.createInstance(false);
@@ -172,17 +186,17 @@ public class DeviceTransportBluezDbus {
             e.printStackTrace();
             System.exit(-105);
         }
-
         DeviceTransportBluezDbus theTransport = new DeviceTransportBluezDbus(mmpDevice);
         try {
             //theTransport.startNotify();
             //theTransport.registerForNotifications(deviceManager);
-            theTransport.send("35000201a0", "request");
-            theTransport.send("3500050a03c20100", "request");
-            // theTransport.send("3500040a023a00", "request");
+            theTransport.acquireNotify();
+            theTransport.send("35000201a0", "command");
+            theTransport.send("3500050a03c20100", "command");
+            theTransport.send("3500040a023a00", "command");
             System.out.println("Initial writes done");
-            ReceiverHeartbeat.startUp(theTransport.m_connection);
             theTransport.send("3500040a027200", "command");
+            ReceiverHeartbeat.startUp(theTransport.m_connection);
             for(int i=0; i<20; ++i) {
                 System.out.println(".");
                 Thread.sleep(1000);
@@ -211,10 +225,14 @@ public class DeviceTransportBluezDbus {
         m_connection.registerForNotifications(deviceManager);
     }
 
+    public void acquireNotify() {
+        m_connection.acquireNotify();
+    }
     public void startNotify() {
         m_connection.startNotify();
     }
     public void send(String bytesAsHex, String writeType) throws DBusException {
+        ReceiverHeartbeat.requestInterrupt();
         m_connection.send(bytesAsHex, writeType);
     }
 
