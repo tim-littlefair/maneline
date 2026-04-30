@@ -28,7 +28,7 @@ class ReceiverHeartbeat
     extends Thread
     implements Runnable, DBusSigHandler<Properties.PropertiesChanged>
 {
-    static final UInt16 HEARTBEAT_PERIOD_MS = new UInt16(100);
+    static final UInt16 HEARTBEAT_PERIOD_MS = new UInt16(500);
     static ReceiverHeartbeat s_instance = null;
     static boolean s_shouldStop = false;
     static boolean s_hasStopped = false;
@@ -66,7 +66,11 @@ class ReceiverHeartbeat
     }
 
     public static void requestInterrupt() {
-        if(s_instance!=null) {
+        if (s_instance == null) {
+            // Don't interrupt until heartbeat has started
+        } else if (s_instance.threadId() == Thread.currentThread().threadId()) {
+            // Heartbeat thread should not interrupt itself
+        } else {
             s_instance.interrupt();
         }
     }
@@ -188,9 +192,9 @@ public class DeviceTransportBluezDbus {
         }
         DeviceTransportBluezDbus theTransport = new DeviceTransportBluezDbus(mmpDevice);
         try {
+            theTransport.acquireNotify();
             //theTransport.startNotify();
             //theTransport.registerForNotifications(deviceManager);
-            theTransport.acquireNotify();
             theTransport.send("35000201a0", "command");
             theTransport.send("3500050a03c20100", "command");
             theTransport.send("3500040a023a00", "command");
@@ -236,7 +240,7 @@ public class DeviceTransportBluezDbus {
         m_connection.send(bytesAsHex, writeType);
     }
 
-    public byte[] receive(UInt16 timeout) throws DBusException, NoReply {
+    public byte[] receive(UInt16 timeout) throws DBusException, NoReply, InterruptedException {
         return m_connection.receive(timeout);
     }
 }

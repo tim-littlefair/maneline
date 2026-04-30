@@ -92,7 +92,7 @@ public class BluezHoGPConnection extends AbstractPropertiesChangedHandler {
         m_sendChr.writeValue(HexFormat.of().parseHex(bytesAsHex),writeOptions);
     }
 
-    public byte[] receive(UInt16 timeout) throws DBusException, NoReply {
+    public byte[] receive(UInt16 timeout) throws DBusException, NoReply, InterruptedException {
         if(m_notifyFD == null) {
             Map<String, Object> readOptions = new HashMap<>();
             readOptions.put("offset", new UInt16(0));
@@ -100,12 +100,8 @@ public class BluezHoGPConnection extends AbstractPropertiesChangedHandler {
             readOptions.put("timeout", timeout);
             return m_notifyChr.readValue(readOptions);
         } else {
+            Thread.sleep(250);
             System.out.println("read-after-acquire TBD");
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
             return new byte[] { };
         }
     }
