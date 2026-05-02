@@ -3,6 +3,7 @@ package net.heretical_camelid.maneline.desktop_app;
 import com.github.hypfvieh.bluetooth.DeviceManager;
 import com.github.hypfvieh.bluetooth.wrapper.BluetoothDevice;
 import com.github.hypfvieh.bluetooth.wrapper.BluetoothGattCharacteristic;
+import com.github.hypfvieh.bluetooth.wrapper.BluetoothGattDescriptor;
 import com.github.hypfvieh.bluetooth.wrapper.BluetoothGattService;
 
 import org.bluez.datatypes.TwoTuple;
@@ -28,10 +29,12 @@ import java.util.HexFormat;
 import java.util.Map;
 
 public class BluezHoGPConnection extends AbstractPropertiesChangedHandler {
+    public final static String CCCD_UUID = "00002902-0000-1000-8000-00805f9b34fb";
+
     final BluetoothDevice m_device;
     final BluetoothGattService m_service;
-    final BluetoothGattCharacteristic m_sendChr;
-    final BluetoothGattCharacteristic m_notifyChr;
+    BluetoothGattCharacteristic m_sendChr = null;
+    BluetoothGattCharacteristic m_notifyChr = null;
 
     final JUnixSocketSocketProvider m_socketProvider;
 
@@ -39,16 +42,24 @@ public class BluezHoGPConnection extends AbstractPropertiesChangedHandler {
     private UInt16 m_mtu = null;
     private DataInputStream m_notifyInputStream;
 
-    public BluezHoGPConnection(
-        BluetoothDevice device, String service_uuid, String send_uuid, String notify_uuid
-    ) {
+    public BluezHoGPConnection(BluetoothDevice device, String service_uuid) {
         m_device = device;
         m_service = m_device.getGattServiceByUuid(service_uuid);
-        m_sendChr = m_service.getGattCharacteristicByUuid(send_uuid);
-        m_notifyChr = m_service.getGattCharacteristicByUuid(notify_uuid);
-        System.out.println(m_sendChr.toString() + String.join(",",m_sendChr.getFlags()));
-        System.out.println(m_notifyChr.toString() + String.join(",",m_notifyChr.getFlags()));
         m_socketProvider = new JUnixSocketSocketProvider();
+        for(BluetoothGattCharacteristic chr: m_service.getGattCharacteristics()) {
+            if(chr.getFlags().contains("notify")) {
+                m_notifyChr = chr;
+                /*
+                for(BluetoothGattDescriptor dsc: m_notifyChr.getGattDescriptors()) {
+                    System.out.println(dsc.getUuid());
+                }
+                 */
+            } else if(chr.getFlags().contains("write")) {
+                m_sendChr = chr;
+            }
+        }
+        assert m_notifyChr != null;
+        assert m_sendChr != null;
     }
 
     public void registerForNotifications(DeviceManager deviceManager) {
@@ -74,7 +85,13 @@ public class BluezHoGPConnection extends AbstractPropertiesChangedHandler {
 
     public void acquireNotify() {
         try {
+            /*
+            BluetoothGattDescriptor m_notifyCccd = m_notifyChr.getGattDescriptorByUuid(CCCD_UUID);
+            System.out.println(m_notifyCccd.getFlags());
+            Map<String,Object> cccdWriteOptions = new HashMap<>();
+            m_notifyCccd.writeValue(new byte[] { 0x01, 0x00 }, cccdWriteOptions);
             System.out.println("acquireNotify");
+             */
             Map<String,Variant<?>> acquireOptions = new HashMap<>();
             TwoTuple<FileDescriptor, UInt16> fd_mtu = m_notifyChr.getRawGattCharacteristic().AcquireNotify(acquireOptions);
             assert fd_mtu != null;
@@ -111,13 +128,13 @@ public class BluezHoGPConnection extends AbstractPropertiesChangedHandler {
             readOptions.put("timeout", timeout);
             return m_notifyChr.readValue(readOptions);
         } else {
-            byte[] buffer = new byte[m_mtu.intValue()];
+            byte[] buffer = new byte[m_mtu.intValue()-120];
             try {
                 m_notifyInputStream.read(buffer);
+                System.out.println("received " + HexFormat.of().formatHex(buffer));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            System.out.println(HexFormat.of().formatHex(buffer));
             return buffer;
         }
     }

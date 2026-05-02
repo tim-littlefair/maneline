@@ -68,7 +68,7 @@ class ReceiverHeartbeat
     public static void requestInterrupt() {
         if (s_instance == null) {
             // Don't interrupt until heartbeat has started
-        } else if (s_instance.threadId() == Thread.currentThread().threadId()) {
+        } else if (s_instance.getId() == Thread.currentThread().getId()) {
             // Heartbeat thread should not interrupt itself
         } else {
             s_instance.interrupt();
@@ -173,6 +173,13 @@ public class DeviceTransportBluezDbus {
             }
         }
         assert mmpDevice != null;
+        try {
+            mmpDevice.connect();
+        } catch (DBusExecutionException e) {
+            System.out.println("FailedConnection " + e.getMessage());
+            e.printStackTrace();
+            System.exit(-105);
+        }
         for(int i = 0; i<3; ++i) {
             mmpDevice.refreshGattServices();
             if(mmpDevice.isServicesResolved()) {
@@ -181,20 +188,14 @@ public class DeviceTransportBluezDbus {
                 break;
             } else {
                 System.out.println("Still resolving services");
+                Thread.sleep(1000);
             }
-        }
-        try {
-            mmpDevice.connect();
-        } catch (DBusExecutionException e) {
-            System.out.println("FailedConnection " + e.getMessage());
-            e.printStackTrace();
-            System.exit(-105);
         }
         DeviceTransportBluezDbus theTransport = new DeviceTransportBluezDbus(mmpDevice);
         try {
-            theTransport.acquireNotify();
+            //theTransport.acquireNotify();
             //theTransport.startNotify();
-            //theTransport.registerForNotifications(deviceManager);
+            theTransport.registerForNotifications(deviceManager);
             theTransport.send("35000201a0", "command");
             theTransport.send("3500050a03c20100", "command");
             theTransport.send("3500040a023a00", "command");
@@ -217,12 +218,7 @@ public class DeviceTransportBluezDbus {
     public DeviceTransportBluezDbus(
         BluetoothDevice device
     ) {
-        m_connection = new BluezHoGPConnection(
-            device,
-            FENDERTONE_SERVICE_UUID,
-            FENDERTONE_HOGP_SEND_UUID,
-            FENDERTONE_HOGP_NTFY_UUID
-        );
+        m_connection = new BluezHoGPConnection(device, FENDERTONE_SERVICE_UUID);
     }
 
     public void registerForNotifications(DeviceManager deviceManager) {
