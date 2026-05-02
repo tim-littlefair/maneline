@@ -3,8 +3,8 @@ plugins {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = rootProject.ext.javaSourceCompatibility
+    targetCompatibility = rootProject.ext.javaTargetCompatibility
 }
 
 
@@ -94,31 +94,32 @@ dependencies {
     implementation 'com.github.hypfvieh:dbus-java-parent:5.2.0'
     implementation 'com.github.hypfvieh:bluez-dbus:0.3.2'
     implementation 'com.github.hypfvieh:java-utils-extended:1.0.7'
+
+    // Start of dependencies related to junixsocket transport option
+    // Note that transitive dependencies on junixsocket-core are poisonous,
+    // with a gradle error related to packages which are published on MavenCentral
+    // as a .pom file only with no accompanying .jar file.
+    // Because of this, we need to exclude junixsocket-core for every package
+    // which has it listed in its pom.xml.
+
+    // It is possible to run a self-test of junixsocket features using the followign command line:
+    // java -cp desktop-app/build/libs/maneline-cli-0.0.0.jar org.newsclub.net.unix.selftest.nativeimage.Main
+
     implementation ('com.github.hypfvieh:dbus-java-transport-junixsocket:5.2.0') {
+        exclude group: 'com.kohlschutter.junixsocket', module: 'junixsocket-core'
+    }
+    implementation ('com.kohlschutter.junixsocket:junixsocket-selftest-native-image:2.10.1') {
+        exclude group: 'com.kohlschutter.junixsocket', module: 'junixsocket-core'
+    }
+    implementation ('com.kohlschutter.junixsocket:junixsocket-vsock:2.10.1') {
+        exclude group: 'com.kohlschutter.junixsocket', module: 'junixsocket-core'
+    }
+    implementation ('com.kohlschutter.junixsocket:junixsocket-tipc:2.10.1') {
         exclude group: 'com.kohlschutter.junixsocket', module: 'junixsocket-core'
     }
     implementation 'com.kohlschutter.junixsocket:junixsocket-common:2.10.1'
     implementation 'com.kohlschutter.junixsocket:junixsocket-native-common:2.10.1'
+    implementation 'com.kohlschutter.junixsocket:junixsocket-native-common:2.10.1'
 
-    // dbus-java-transport-native-unixsocket seems to work OK, but the
-    // following are alternate transports we could enable if problems
-    // are found later
-    // implementation 'com.github.hypfvieh:dbus-java-transport-tcp:5.2.0'
-    // implementation 'com.github.hypfvieh:dbus-java-transport-jnr-unixsocket:5.2.0'
-    // implementation 'com.github.hypfvieh:dbus-java-transport-junixsocket:5.2.0'
-
-    // Attempting to build with the dbus-java-transport-junixsocket alternate
-    // transport fails with a line like:
-    // Cannot expand ZIP ' ... .gradle/caches/ ... 381fa8a95b/junixsocket-core-2.10.1.pom'
-    // This appears to be an issue with the way junixsocket-core is packaged -
-    // it results in a .pom file only in the Gradle cache.
-    // junit-socket-core exists to bring in the following mandatory dependencies:
-    // plus some other optional ones
-    // if hypfvieh's d-j-t-junitsocket depended directly on the two mandatory
-    // items only, the problem might not occur.
-
-    // implementation 'org.sputnikdev:bluetooth-manager-tinyb:1.3.3'
-    // implementation 'org.sputnikdev:bluetooth-manager:1.5.3'
-    // implementation 'tinyb:tinyb:1.0.100'
-    // implementation 'intel-iot-devkit:tinyb:0.5.1'
+    // end of material related to junixsocket transport
 }

@@ -3,13 +3,11 @@ apply plugin: 'com.android.application'
 android {
     compileSdk = 36
     defaultConfig {
+        targetSdkVersion 36
+        minSdkVersion 27
         applicationId "net.heretical_camelid.maneline.android_app"
-        minSdkVersion 25
         versionCode rootProject.ext.versionCode
         versionName rootProject.ext.versionName
-    }
-    defaultConfig {
-        targetSdkVersion 36
         def buildTime = new Date()
         buildConfigField "String", "BUILD_TIME", "\"${buildTime.format('yyyy-MM-dd HH:mm:ss')}\""
     }
@@ -21,8 +19,8 @@ android {
     }
     namespace = "net.heretical_camelid.maneline.android_app"
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility = rootProject.ext.javaSourceCompatibility
+        targetCompatibility = rootProject.ext.javaTargetCompatibility
     }
     buildFeatures {
         android.buildFeatures.buildConfig = true
