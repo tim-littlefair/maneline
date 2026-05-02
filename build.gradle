@@ -82,6 +82,11 @@ allprojects {
 ext.versionCode=9999
 ext.versionName="0.0.0"
 
+// Adopt consistent java versions across all subprojects
+ext.javaSourceCompatibility = JavaVersion.VERSION_11
+ext.javaTargetCompatibility = JavaVersion.VERSION_11
+
+
 tasks.register('warrantyAndCopyrightFiles',Copy) {
     from 'assets'
     include 'copyright_and_warrranty.txt'
