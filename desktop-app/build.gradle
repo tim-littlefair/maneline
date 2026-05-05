@@ -2,6 +2,15 @@ plugins {
     id 'java'
 }
 
+repositories {
+    maven {
+        url = uri("https://jitpack.io")
+        content {
+            includeGroup "com.github.weliem.blessed-bluez"
+        }
+    }
+}
+
 java {
     sourceCompatibility = rootProject.ext.javaSourceCompatibility
     targetCompatibility = rootProject.ext.javaTargetCompatibility
@@ -122,4 +131,9 @@ dependencies {
     implementation 'com.kohlschutter.junixsocket:junixsocket-native-common:2.10.1'
 
     // end of material related to junixsocket transport
+
+    // Declarations related to alternative wrapper library
+    // https://github.com/weliem/blessed-bluez
+    implementation 'com.github.weliem.blessed-bluez:blessed:0.64'
+    implementation 'org.jetbrains:annotations:26.1.0'
 }
