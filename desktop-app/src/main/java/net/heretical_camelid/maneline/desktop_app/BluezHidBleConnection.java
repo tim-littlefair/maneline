@@ -2,6 +2,7 @@ package net.heretical_camelid.maneline.desktop_app;
 
 import com.github.hypfvieh.bluetooth.DeviceManager;
 import com.github.hypfvieh.bluetooth.DiscoveryFilter;
+import com.github.hypfvieh.bluetooth.DiscoveryTransport;
 import com.github.hypfvieh.bluetooth.wrapper.BluetoothAdapter;
 import com.github.hypfvieh.bluetooth.wrapper.BluetoothDevice;
 import com.github.hypfvieh.bluetooth.wrapper.BluetoothGattCharacteristic;
@@ -33,7 +34,7 @@ class ReceiverHeartbeat
     extends Thread
     implements Runnable, DBusSigHandler<Properties.PropertiesChanged>
 {
-    static final UInt16 HEARTBEAT_PERIOD_MS = new UInt16(500);
+    static final int HEARTBEAT_PERIOD_MS = 500;
     static ReceiverHeartbeat s_instance = null;
     static boolean s_shouldStop = false;
     static boolean s_hasStopped = false;
@@ -73,6 +74,10 @@ class ReceiverHeartbeat
         }
     }
 
+    // This function uses Thread.getId() which is deprecated in preference
+    // to Thread.getThreadId() which is not because the latter is not available
+    // at JavaVersion.VERSION_11 which is (presently) our preferred language baseline
+    @SuppressWarnings("deprecation")
     public static void requestInterrupt() {
         if (s_instance == null) {
             // Don't interrupt until heartbeat has started
@@ -87,7 +92,7 @@ class ReceiverHeartbeat
     public void run() {
         while(s_shouldStop==false) {
             try {
-                Long nextHeartbeatTime = System.currentTimeMillis() + Long.valueOf(HEARTBEAT_PERIOD_MS.toString());
+                Long nextHeartbeatTime = System.currentTimeMillis() + HEARTBEAT_PERIOD_MS;
                 try {
                     while(System.currentTimeMillis()<nextHeartbeatTime) {
                         byte[] chunk = s_connection.receive(HEARTBEAT_PERIOD_MS);
@@ -140,11 +145,10 @@ public class BluezHidBleConnection extends AbstractPropertiesChangedHandler {
     private UInt16 m_mtu = null;
     private DataInputStream m_notifyInputStream;
 
-    public static BluezHidBleConnection build(String service_uuid) {
+    public static BluezHidBleConnection build(String service_uuid, int defaultTimeoutMsec) {
         m_deviceManager = null;
-        BluetoothAdapter bluetoothAdaptor = null;
         BluetoothDevice mmpDevice = null;
-        MethodCall.setDefaultTimeout(8000);
+        MethodCall.setDefaultTimeout(defaultTimeoutMsec);
         try {
             m_deviceManager = DeviceManager.createInstance(false);
         } catch (DBusException e) {
@@ -152,10 +156,9 @@ public class BluezHidBleConnection extends AbstractPropertiesChangedHandler {
             System.exit(-101);
         }
         List<BluetoothAdapter> result = m_deviceManager.getAdapters();
-        bluetoothAdaptor = result.get(0);
         try {
             Map<DiscoveryFilter, Object> mmpFilter = new HashMap<DiscoveryFilter, Object>();
-            // mmpFilter.put(DiscoveryFilter.Transport, DiscoveryTransport.LE);
+            mmpFilter.put(DiscoveryFilter.Transport, DiscoveryTransport.LE);
             mmpFilter.put(DiscoveryFilter.UUIDs, new String[] { service_uuid });
             m_deviceManager.setScanFilter(mmpFilter);
         } catch (DBusException e) {
@@ -190,6 +193,7 @@ public class BluezHidBleConnection extends AbstractPropertiesChangedHandler {
             }
         }
         assert mmpDevice != null;
+        System.out.println(mmpDevice);
         return new BluezHidBleConnection(mmpDevice, service_uuid);
     }
 
@@ -200,11 +204,6 @@ public class BluezHidBleConnection extends AbstractPropertiesChangedHandler {
         for(BluetoothGattCharacteristic chr: m_service.getGattCharacteristics()) {
             if(chr.getFlags().contains("notify")) {
                 m_notifyChr = chr;
-                /*
-                for(BluetoothGattDescriptor dsc: m_notifyChr.getGattDescriptors()) {
-                    System.out.println(dsc.getUuid());
-                }
-                 */
             } else if(chr.getFlags().contains("write")) {
                 m_sendChr = chr;
             }
@@ -215,28 +214,38 @@ public class BluezHidBleConnection extends AbstractPropertiesChangedHandler {
 
     public void doConnect() {
         try {
-            m_device.connect();
+            if(m_device.isConnected()==false) {
+                m_device.connect();
+            }
+            if(m_device.isPaired()==false) {
+                boolean pairingOutcome = m_device.pair();
+                System.out.println(String.format(
+                    "Pairing required, outcome: " + pairingOutcome
+                ));
+            } else {
+                System.out.println("Already paired");
+            }
         } catch (DBusExecutionException e) {
             System.out.println("FailedConnection " + e.getMessage());
             e.printStackTrace();
             System.exit(-105);
         }
-        for(int i = 0; i<3; ++i) {
+        for(int i = 0; i<12; ++i) {
+            assert m_device.isConnected(): String.format("disconnected");
             m_device.refreshGattServices();
             if(m_device.isServicesResolved()) {
-                System.out.println("All services resolved");
-                System.out.println(m_device.getGattServices());
                 break;
             } else {
                 System.out.println("Still resolving services");
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(2000);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
             }
         }
-
+        assert m_device.isConnected(): String.format("disconnected");
+        System.out.println(m_device.getGattServices());
     }
 
     public void startHeartbeat(String heartbeatMessageHex) {
@@ -300,12 +309,12 @@ public class BluezHidBleConnection extends AbstractPropertiesChangedHandler {
         m_sendChr.writeValue(HexFormat.of().parseHex(bytesAsHex),writeOptions);
     }
 
-    public byte[] receive(UInt16 timeout) {
+    public byte[] receive(int timeout) {
         if(m_notifyDebusFD == null) {
             Map<String, Object> readOptions = new HashMap<>();
             readOptions.put("offset", new UInt16(0));
             //readOptions.put("mtu",new UInt16(128));
-            readOptions.put("timeout", timeout);
+            readOptions.put("timeout", new UInt16(timeout));
             try {
                 return m_notifyChr.readValue(readOptions);
             }

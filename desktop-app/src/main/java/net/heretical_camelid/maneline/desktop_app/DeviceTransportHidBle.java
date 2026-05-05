@@ -15,16 +15,12 @@ public class DeviceTransportHidBle {
 
     final private BluezHidBleConnection m_connection;
     public DeviceTransportHidBle() {
-        m_connection = BluezHidBleConnection.build(FENDERTONE_SERVICE_UUID);
+        m_connection = BluezHidBleConnection.build(FENDERTONE_SERVICE_UUID,15000);
         m_connection.doConnect();
     }
 
     public void registerForNotifications() {
         m_connection.registerForNotifications();
-    }
-
-    public void startHeartbeat(String heartbeatMessageHex) {
-        m_connection.startHeartbeat(heartbeatMessageHex);
     }
 
     public void acquireNotify() {
@@ -33,12 +29,17 @@ public class DeviceTransportHidBle {
     public void startNotify() {
         m_connection.startNotify();
     }
+    public void startHeartbeat(String heartbeatMessageHex) {
+        m_connection.startHeartbeat(heartbeatMessageHex);
+    }
+
+
     public void send(String bytesAsHex, String writeType) throws DBusException {
         ReceiverHeartbeat.requestInterrupt();
         m_connection.send(bytesAsHex, writeType);
     }
 
-    public byte[] receive(UInt16 timeout) {
+    public byte[] receive(int timeout) {
         return m_connection.receive(timeout);
     }
 
@@ -46,12 +47,12 @@ public class DeviceTransportHidBle {
 
         DeviceTransportHidBle theTransport = new DeviceTransportHidBle();
         try {
+            //theTransport.registerForNotifications();
             //theTransport.acquireNotify();
             //theTransport.startNotify();
-            theTransport.registerForNotifications();
-            theTransport.send("35000201a0", "command");
-            theTransport.send("3500050a03c20100", "command");
-            theTransport.send("3500040a023a00", "command");
+            //theTransport.send("3500050a03c20100", "command");
+            theTransport.send("35000201a0", "request");
+            theTransport.send("3500040a023a00", "request");
             System.out.println("Initial writes done");
             theTransport.send("3500040a027200", "command");
             theTransport.startHeartbeat("3500050a03c20100");
