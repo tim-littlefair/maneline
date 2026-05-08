@@ -54,7 +54,10 @@ class ReceiverHeartbeat
         return s_instance;
     }
     static void requestStop() {
-        assert s_instance != null;
+        if(s_instance==null) {
+            // heartbeat was not started
+            return;
+        }
         s_shouldStop = true;
         int numSleeps = 0;
         int maxSleeps = 100;
@@ -94,6 +97,14 @@ class ReceiverHeartbeat
             try {
                 Long nextHeartbeatTime = System.currentTimeMillis() + HEARTBEAT_PERIOD_MS;
                 try {
+                    s_connection.send(s_heartbeatMessageHex,"command");
+                    System.out.println("#");
+                } catch (DBusException e) {
+                    System.err.println("Hearbeat send failed: " + e);
+                }
+                Thread.sleep(System.currentTimeMillis()+nextHeartbeatTime);
+                try {
+                    /*
                     while(System.currentTimeMillis()<nextHeartbeatTime) {
                         byte[] chunk = s_connection.receive(HEARTBEAT_PERIOD_MS);
                         if(chunk==null) {
@@ -104,18 +115,13 @@ class ReceiverHeartbeat
                         System.out.println("Chunk: " + HexFormat.of().formatHex(chunk));
                         Thread.sleep(nextHeartbeatTime-System.currentTimeMillis());
                     }
+                     */
                 } catch (NoReply e) {
                     System.err.println("Receive timed out");
                 } catch (DBusExecutionException e) {
                     System.err.println("DBusExecutionException: " + e);
                 }
 
-                try {
-                    s_connection.send(s_heartbeatMessageHex,"command");
-                    System.out.println("#");
-                } catch (DBusException e) {
-                    System.err.println("Hearbeat send failed: " + e);
-                }
             } catch (InterruptedException e) {
                 // Do nothing
             }
@@ -145,10 +151,10 @@ public class BluezHidBleConnection extends AbstractPropertiesChangedHandler {
     private UInt16 m_mtu = null;
     private DataInputStream m_notifyInputStream;
 
-    public static BluezHidBleConnection build(String service_uuid, int defaultTimeoutMsec) {
+    public static BluezHidBleConnection build(String service_uuid, int bluezTimeoutMs) {
         m_deviceManager = null;
         BluetoothDevice mmpDevice = null;
-        MethodCall.setDefaultTimeout(defaultTimeoutMsec);
+        MethodCall.setDefaultTimeout(bluezTimeoutMs);
         try {
             m_deviceManager = DeviceManager.createInstance(false);
         } catch (DBusException e) {

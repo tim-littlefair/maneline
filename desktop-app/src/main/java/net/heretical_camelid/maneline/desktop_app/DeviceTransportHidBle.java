@@ -54,8 +54,8 @@ public class DeviceTransportHidBle {
             theTransport.send("35000201a0", "request");
             theTransport.send("3500040a023a00", "request");
             System.out.println("Initial writes done");
+            // theTransport.startHeartbeat("3500050a03c20100");
             theTransport.send("3500040a027200", "command");
-            theTransport.startHeartbeat("3500050a03c20100");
             for(int i=0; i<20; ++i) {
                 System.out.println(".");
                 Thread.sleep(1000);
