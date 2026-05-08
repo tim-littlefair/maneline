@@ -118,21 +118,22 @@ else
 fi
 
 balenaFakerootDir=_work/balena_fakeroot-$buildString
-if [ "$1" = "--remove-stale-fakeroot" ]
+if [ ! "$1" = "--no-remove-stale-fakeroot" ]
 then
-  shift
   if [ -d $balenaFakerootDir ]
   then
     echo Removing stale directory $balenaFakerootDir
     rm -rf $balenaFakerootDir || true
     echo Stale directory removed if present
-  else
-    echo No stale directory found at $balenaFakerootDir
   fi
 else
-  echo $balenaFakerootDir already exists.
-  echo Please delete it manually or include flag --remove-stale-fakeroot if you want to repeat a prior build.
-  exit 1
+  shift
+  if [ -d $balenaFakerootDir ]
+  then
+    echo $balenaFakerootDir already exists.
+    echo Please delete it manually build.
+    exit 1
+  fi
 fi
 echo Fakeroot processing done
 
