@@ -19,4 +19,4 @@ updates:
     directories: [ "/", "usb-hid", "lib", "desktop-app", "android-app" ]
     schedule:
       interval: "weekly"
-      target-branch: "260423-bluez_dbus"
+      target-branch: "260507-before_fruk"
