@@ -2,13 +2,15 @@
 
 buildscript {
     repositories {
-        google()
         mavenCentral()
         gradlePluginPortal()
+        google()
     }
     dependencies {
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
+
+        /*
 
         // Exceptions to this rule are often required when the release version
         // of the package com.android.tools.build:gradle (aka the Android
@@ -53,10 +55,12 @@ buildscript {
 
         // https://github.com/tim-littlefair/maneline/security/dependabot/22
         classpath 'org.bouncycastle:bcprov-jdk18on:1.84'
+        */
 
         // Ideally, keep this aligned to the lastest value here:
         // https://maven.google.com/web/index.html?q=com.android.tools.#com.android.tools.build:gradle
         classpath 'com.android.tools.build:gradle:9.2.1'
+
     }
 }
 
