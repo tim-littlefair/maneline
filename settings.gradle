@@ -2,6 +2,6 @@ plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
 }
 include ':maneline-lib'
-include ':usb-hid'
 include ':desktop-app'
-include ':android-app'
+// include ':usb-hid'
+// include ':android-app'

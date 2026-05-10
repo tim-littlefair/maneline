@@ -59,7 +59,7 @@ buildscript {
 
         // Ideally, keep this aligned to the lastest value here:
         // https://maven.google.com/web/index.html?q=com.android.tools.#com.android.tools.build:gradle
-        classpath 'com.android.tools.build:gradle:9.2.1'
+        // classpath 'com.android.tools.build:gradle:9.2.1'
 
     }
 }
