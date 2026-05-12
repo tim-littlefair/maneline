@@ -1,5 +1,5 @@
 #! /bin/bash
-# prepare_maneline_sdkcard.sh
+# prepare_maneline_sdcard.sh
 
 usage() {
     cat <<+
@@ -62,11 +62,11 @@ verify_balena_cli() {
 
 }
 get_os() {
-    if [ -r $CACHE_DIR/$1.img ]
+    if [ -r $CACHE_DIR/$balena_device_type.img ]
     then
         echo cached copy of OS found - will be used
     else
-        balena os download $1 -o $CACHE_DIR/$1.img
+        balena os download $balena_device_type -o $CACHE_DIR/$balena_device_type.img
         if [ "$?" != "0" ]
         then
             echo "\nfailed to download OS\n"
@@ -74,7 +74,7 @@ get_os() {
             exit 3
         fi
     fi
-    cp -f $CACHE_DIR/$1.img $WORKING_IMAGE_PATH
+    cp -f $CACHE_DIR/$balena_device_type.img $WORKING_IMAGE_PATH
     if [ "$?" = "0" ]
     then
         echo "working copy of image created"
@@ -180,7 +180,8 @@ psk=$2
         echo "\nfailed to configure OS\n"
         exit 4
     fi
-    balena preload $WORKING_IMAGE_PATH --fleet gh_tim_littlefair/maneline-fleet
+    balena preload $WORKING_IMAGE_PATH --fleet gh_tim_littlefair/maneline-fleet \
+        --commit current
     if [ "$?" = "0" ]
     then
         echo "preloaded application"
@@ -192,24 +193,19 @@ psk=$2
 }
 
 install_overlay() {
-    if [ -f $CACHE_DIR/waveshare35a-overlay.dtbo ]
-    then
-        echo cached copy of DTBO found - will be used
-    else
-        tar xzvf ./lcd-driver/LCD-show-180331.tar.gz \
-            LCD-show/waveshare35a-overlay.dtb --to-stdout > $CACHE_DIR/waveshare35a-overlay.dtbo
-        echo DTBO file unpacked
-    fi
-
     partition1_params=$(fdisk -l $WORKING_IMAGE_PATH | sed -e 's/*//' | grep img1)
     start_sector=$(echo $partition1_params | ( read a b c d e f g h; echo $b ))
     sector_count=$(echo $partition1_params | ( read a b c d e f g h; echo $d ))
     sudo mount -t vfat \
         -o loop,rw,offset=$(($start_sector*512)),sizelimit=$(($sector_count*512)) \
         $WORKING_IMAGE_PATH $MOUNT_DIR
-    sudo cp $CACHE_DIR/waveshare35a-overlay.dtbo $MOUNT_DIR/overlays
+    sudo cp lcd-driver/tft35a.dtbo $MOUNT_DIR/overlays
+    sudo cp lcd-driver/config.txt $MOUNT_DIR
+    sleep 1
+    sudo sync ; sudo sync
+    sleep 1
     sudo umount $MOUNT_DIR
-    mv -f $WORKING_IMAGE_PATH $OUTPUT_DIR
+    mv -f $WORKING_IMAGE_PATH $OUTPUT_IMAGE_PATH
 }
 
 flash_to_sdcard() {
@@ -218,9 +214,9 @@ flash_to_sdcard() {
     if [ "$?" = "0" ]
     then
         echo "flashing to $drive"
-        balena os initialize $WORKING_IMAGE_PATH --type $balena_device_type --drive $drive
+        balena os initialize $OUTPUT_IMAGE_PATH --type $balena_device_type --drive $drive
     else
-        echo "\n$drive not present - manually flash using $WORKING_IMAGE_PATH\n"
+        echo "\n$drive not present - manually flash using $OUTPUT_IMAGE_PATH\n"
         exit 0
     fi
 }
@@ -258,14 +254,18 @@ do
 done
 
 WORKING_IMAGE_PATH=/tmp/maneline-$balena_device_type.img
-if [ -f $WORKING_IMAGE_PATH ]
-then
-    rm -f $WORKING_IMAGE_PATH
-fi
+OUTPUT_IMAGE_PATH=$OUTPUT_DIR/maneline-$balena_device_type.img
+for f in $WORKING_IMAGE_PATH $OUTPUT_IMAGE_PATH
+do
+    if [ -f $f ]
+    then
+        rm -f $f
+    fi
+done
 
 verify_linux_sudo_access
 verify_balena_cli
-get_os $balena_device_type
+get_os
 configure_os
 install_overlay
 flash_to_sdcard
