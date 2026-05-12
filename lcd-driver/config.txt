@@ -1,0 +1,9 @@
+dtparam=i2c_arm=on
+dtparam=spi=on
+dtparam=audio=on
+avoid_warnings=1
+disable_overscan=1
+disable_splash=1
+enable_uart=0
+gpu_mem=16
+dtoverlay=tft35a:rotate=270

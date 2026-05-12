@@ -98,7 +98,7 @@ type=wifi
 [wifi]
 hidden=true
 mode=infrastructure
-ssid=$1
+ssid=$wifi_ssid
 
 [ipv4]
 method=auto
@@ -110,7 +110,7 @@ method=auto
 [wifi-security]
 auth-alg=open
 key-mgmt=wpa-psk
-psk=$2
+psk=$wifi_password
 +
     elif [ "--hotspot" = "$opt_hotspot_switch" ]
     then
@@ -131,14 +131,14 @@ mac-address-blacklist=
 mac-address-randomization=0
 mode=ap
 seen-bssids=
-ssid=$1
+ssid=$wifi_ssid
 
 [wifi-security]
 group=
 key-mgmt=wpa-psk
 pairwise=
 proto=rsn
-psk=$2
+psk=$wifi_password
 
 [ipv4]
 dns-search=
@@ -159,7 +159,7 @@ method=auto
 [wifi-security]
 auth-alg=open
 key-mgmt=wpa-psk
-psk=$2
+psk=$wifi_password
 +
     else
         echo "\nUnexpected value '$opt_hotspot_switch' for optional hotspot switch\n"
@@ -211,13 +211,16 @@ install_overlay() {
 flash_to_sdcard() {
     drive=/dev/mmcblk0
     balena util available-drives | grep $drive > /dev/null
+    flashing_cmd="balena os initialize $OUTPUT_IMAGE_PATH --type $balena_device_type --drive $drive"
     if [ "$?" = "0" ]
     then
         echo "flashing to $drive"
-        balena os initialize $OUTPUT_IMAGE_PATH --type $balena_device_type --drive $drive
+        $flashing_cmd
+        echo Additional SD cards can be initialized using the following command:
+        echo $flashing_cmd
     else
-        echo "\n$drive not present - manually flash using $OUTPUT_IMAGE_PATH\n"
-        exit 0
+        echo "\n$drive not present - manually flash using the following command:"
+        echo $flashing_cmd
     fi
 }
 
@@ -253,8 +256,8 @@ do
     fi
 done
 
-WORKING_IMAGE_PATH=/tmp/maneline-$balena_device_type.img
-OUTPUT_IMAGE_PATH=$OUTPUT_DIR/maneline-$balena_device_type.img
+WORKING_IMAGE_PATH=/tmp/maneline-$wifi_ssid-$balena_device_type.img
+OUTPUT_IMAGE_PATH=$OUTPUT_DIR/maneline-$wifi_ssid-$balena_device_type.img
 for f in $WORKING_IMAGE_PATH $OUTPUT_IMAGE_PATH
 do
     if [ -f $f ]
@@ -269,6 +272,8 @@ get_os
 configure_os
 install_overlay
 flash_to_sdcard
+
+exit 0
 
 
 
