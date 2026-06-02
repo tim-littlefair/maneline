@@ -171,11 +171,11 @@ set_java_home () {
 
 build_lua () {
   _dir=$1
-  _make_target=$2
+  _lua_make_target=$2
 
   echo Building $_dir
   cd $_dir
-  make $lua_make_target
+  make $_lua_make_target
   mkdir bin
   mv src/lua src/luac bin
   cd ..
@@ -232,6 +232,9 @@ android_cltools_version=13114758
 osname=$(uname -s)
 if [ "$osname" = "Linux" ]
 then
+  #TODO: avoid sudo here
+  sudo apt install lib32z1-dev
+
   jdk21_url=https://download.java.net/java/GA/jdk21.0.2/f2283984656d49d69e91c558476027ac/13/GPL/openjdk-21.0.2_linux-x64_bin.tar.gz
   jdk25_url=https://download.java.net/java/GA/jdk25/bd75d5f9689641da8e1daabeccb5528b/36/GPL/openjdk-25_linux-x64_bin.tar.gz
   balena_cli_url=https://github.com/balena-io/balena-cli/releases/download/$balena_version/balena-cli-$balena_version-linux-x64-standalone.tar.gz
