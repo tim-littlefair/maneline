@@ -98,7 +98,7 @@ dependencies {
     implementation 'net.java.dev.jna:jna:5.18.1'
     implementation 'org.hid4java:hid4java:0.8.0'
     implementation 'org.json:json:20260522'
-    implementation 'ch.qos.logback:logback-classic:1.5.32'
+    implementation 'ch.qos.logback:logback-classic:1.5.34'
 
     implementation 'com.github.hypfvieh:dbus-java-parent:5.2.0'
     implementation 'com.github.hypfvieh:bluez-dbus:0.3.2'
