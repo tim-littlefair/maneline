@@ -117,8 +117,9 @@ configure_wifi_1() {
         wifi_cxn_1=/tmp/balena-wifi-01
         cat balena-sdcard/balena-wifi-01 | \
             sed -e "s/%ml_ssid_1%/$ml_ssid_1/" | \
-            sed -e "s/%ml_pswd_1%/$ml_pswd_1/" |\
+            sed -e "s/%ml_pswd_1%/$ml_pswd_1/" \
         > $wifi_cxn_1
+        cat $wifi_cxn_1
     else
         wifi_cxn_1=""
     fi
@@ -130,8 +131,9 @@ configure_wifi_hs() {
         wifi_cxn_hs=/tmp/balena-hotspot
         cat balena-sdcard/balena-hotspot | \
             sed -e "s/%ml_ssid_hs%/$ml_ssid_hs/" | \
-            sed -e "s/%ml_pswd_hs%/$ml_pswd_hs/" |\
+            sed -e "s/%ml_pswd_hs%/$ml_pswd_hs/" \
         > $wifi_cxn_hs
+        cat $wifi_cxn_hs
     else
         wifi_cxn_hs=""
     fi
@@ -151,7 +153,8 @@ install_overlay_and_connections() {
     do
         if [ ! -z "$c" ]
         then
-            sudo mv $c $MOUNT_DIR/system-connections
+            sudo cp $c $MOUNT_DIR/system-connections
+            rm $c
         fi
     done
 
