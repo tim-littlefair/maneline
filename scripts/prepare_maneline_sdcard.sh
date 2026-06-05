@@ -33,204 +33,18 @@ changes required can be applied.
 +
 }
 
-verify_linux_sudo_access() {
-    uname | grep -i Linux > /dev/null
-    if [ "$?" != "0" ]
-    then
-        echo "\nThis script only runs on Linux\n"
-        usage
-        exit 1
-    fi
-
-    sudo echo "sudo access verified"
-    if [ "$?" != "0" ]
-    then
-        echo "\nsudo access verification failed\n"
-        usage
-        exit 2
-    fi
-}
-
-verify_balena_cli() {
-    which balena > /dev/null
-    if [ "$?" != "0" ]
-    then
-        echo "\nbalena CLI executable not found\n"
-        usage
-        exit 3
-    fi
-
-}
-get_os() {
-    if [ -r $CACHE_DIR/$balena_device_type.img ]
-    then
-        echo cached copy of OS found - will be used
-    else
-        balena os download $balena_device_type -o $CACHE_DIR/$balena_device_type.img
-        if [ "$?" != "0" ]
-        then
-            echo "\nfailed to download OS\n"
-            usage
-            exit 3
-        fi
-    fi
-    cp -f $CACHE_DIR/$balena_device_type.img $WORKING_IMAGE_PATH
-    if [ "$?" = "0" ]
-    then
-        echo "working copy of image created"
-    else
-        echo "\nfailed to copy OS\n"
-        usage
-        exit 3
-    fi
-}
-
-configure_os() {
-    # args: ssid password { hotspot }
-    if [ -z "$opt_hotspot_switch" ]
-    then
-        cxn_fname=/tmp/local-wifi
-        cat > $cxn_fname <<+
-[connection]
-id=local-wifi
-type=wifi
-
-[wifi]
-hidden=true
-mode=infrastructure
-ssid=$wifi_ssid
-
-[ipv4]
-method=auto
-
-[ipv6]
-addr-gen-mode=stable-privacy
-method=auto
-
-[wifi-security]
-auth-alg=open
-key-mgmt=wpa-psk
-psk=$wifi_password
-+
-    elif [ "--hotspot" = "$opt_hotspot_switch" ]
-    then
-        cxn_fname=/tmp/balena-hotspot
-        cat > $cxn_fname <<+
-[connection]
-id=balena-hotspot
-uuid=36060c57-aebd-4ccf-aba4-ef75121b5f77
-type=wifi
-autoconnect=true
-interface-name=wlan0
-permissions=
-secondaries=
-
-[wifi]
-band=bg
-mac-address-blacklist=
-mac-address-randomization=0
-mode=ap
-seen-bssids=
-ssid=$wifi_ssid
-
-[wifi-security]
-group=
-key-mgmt=wpa-psk
-pairwise=
-proto=rsn
-psk=$wifi_password
-
-[ipv4]
-dns-search=
-method=shared
-
-[ipv6]
-addr-gen-mode=stable-privacy
-dns-search=
-method=auto
-
-[ipv4]
-method=auto
-
-[ipv6]
-addr-gen-mode=stable-privacy
-method=auto
-
-[wifi-security]
-auth-alg=open
-key-mgmt=wpa-psk
-psk=$wifi_password
-+
-    else
-        echo "\nUnexpected value '$opt_hotspot_switch' for optional hotspot switch\n"
-        exit 4
-    fi
-    balena os configure $WORKING_IMAGE_PATH \
-        --fleet gh_tim_littlefair/maneline-fleet \
-        --device-type $balena_device_type \
-        --config-network ethernet \
-        --system-connection $cxn_fname \
-        --dev
-    config_outcome=$?
-    rm $cxn_fname
-    if [ "$config_outcome" = "0" ]
-    then
-        echo "OS image configured"
-    else
-        echo "\nfailed to configure OS\n"
-        exit 4
-    fi
-    balena preload $WORKING_IMAGE_PATH --fleet gh_tim_littlefair/maneline-fleet \
-        --commit current
-    if [ "$?" = "0" ]
-    then
-        echo "preloaded application"
-    else
-        echo "\nfailed to preload application\n"
-        exit 5
-    fi
-
-}
-
-install_overlay() {
-    partition1_params=$(fdisk -l $WORKING_IMAGE_PATH | sed -e 's/*//' | grep img1)
-    start_sector=$(echo $partition1_params | ( read a b c d e f g h; echo $b ))
-    sector_count=$(echo $partition1_params | ( read a b c d e f g h; echo $d ))
-    sudo mount -t vfat \
-        -o loop,rw,offset=$(($start_sector*512)),sizelimit=$(($sector_count*512)) \
-        $WORKING_IMAGE_PATH $MOUNT_DIR
-    sudo cp lcd-driver/tft35a.dtbo $MOUNT_DIR/overlays
-    sudo cp lcd-driver/config.txt $MOUNT_DIR
-    sleep 1
-    sudo sync ; sudo sync
-    sleep 1
-    sudo umount $MOUNT_DIR
-    mv -f $WORKING_IMAGE_PATH $OUTPUT_IMAGE_PATH
-}
-
-flash_to_sdcard() {
-    drive=/dev/mmcblk0
-    balena util available-drives | grep $drive > /dev/null
-    flashing_cmd="balena os initialize $OUTPUT_IMAGE_PATH --type $balena_device_type --drive $drive"
-    if [ "$?" = "0" ]
-    then
-        echo "flashing to $drive"
-        $flashing_cmd
-        echo Additional SD cards can be initialized using the following command:
-        echo $flashing_cmd
-    else
-        echo "\n$drive not present - manually flash using the following command:"
-        echo $flashing_cmd
-    fi
-}
+. balena-sdcard/balena_sdcard_functions.sh
 
 balena_device_type=$1
-wifi_ssid=$2
-wifi_password=$3
-opt_hotspot_switch=$4
 
+if [ -z "$ml_ssid_1$ml_ssid_hs" ]
+then
+	wifi_ssid=$2
+	wifi_password=$3
+	opt_hotspot_switch=$4
+fi
 
-if [ -z "$balena_device_type" ] || [ -z "$wifi_ssid" ] || [ -z "$wifi_password" ]
+if [ -z "$balena_device_type" ] 
 then
     usage
     exit 91
@@ -270,7 +84,9 @@ verify_linux_sudo_access
 verify_balena_cli
 get_os
 configure_os
-install_overlay
+configure_wifi_1
+configure_wifi_hs
+install_overlay_and_connections
 flash_to_sdcard
 
 exit 0

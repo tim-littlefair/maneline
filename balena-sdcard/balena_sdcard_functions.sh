@@ -87,85 +87,12 @@ get_os() {
 }
 
 configure_os() {
-    # args: ssid password { hotspot }
-    if [ ! -z "wifi_ssid_local" ]
-    then
-        cxn_fname=/tmp/local-wifi
-        cat > $cxn_fname <<+
-[connection]
-id=local-wifi
-priority=1
-type=wifi
-
-[wifi]
-hidden=true
-mode=infrastructure
-ssid=$wifi_ssid_local
-
-[ipv4]
-method=auto
-
-[ipv6]
-method=disabled
-
-[wifi-security]
-auth-alg=open
-key-mgmt=wpa-psk
-psk=$wifi_password_local
-+
     balena os configure $WORKING_IMAGE_PATH \
-        --fleet gh_tim_littlefair/maneline-fleet \
+        --fleet gh_tim_littlefair/maneline-staging \
         --device-type $balena_device_type \
         --config-network ethernet \
-        --system-connection $cxn_fname \
         --dev
-fi
-
-if [ ! -z "$wifi_ssid_hs" ]
-    then
-        cxn_fname=/tmp/balena-hotspot
-        cat > $cxn_fname <<+
-[connection]
-id=balena-hotspot
-priority=2
-uuid=36060c57-aebd-4ccf-aba4-ef75121b5f77
-type=wifi
-autoconnect=true
-interface-name=wlan0
-permissions=
-secondaries=
-
-[wifi]
-band=bg
-mac-address-blacklist=
-mac-address-randomization=0
-mode=ap
-seen-bssids=
-ssid=$wifi_ssid_hs
-
-[wifi-security]
-group=
-key-mgmt=wpa-psk
-pairwise=
-proto=rsn
-psk=$wifi_password_hs
-
-[ipv4]
-method=auto
-
-[ipv6]
-method=disabled
-+
-    balena os configure $WORKING_IMAGE_PATH \
-        --fleet gh_tim_littlefair/maneline-fleet \
-        --device-type $balena_device_type \
-        --config-network ethernet \
-        --system-connection $cxn_fname \
-        --dev
-
-fi
     config_outcome=$?
-    rm $cxn_fname
     if [ "$config_outcome" = "0" ]
     then
         echo "OS image configured"
@@ -173,7 +100,7 @@ fi
         echo "\nfailed to configure OS\n"
         exit 4
     fi
-    balena preload $WORKING_IMAGE_PATH --fleet gh_tim_littlefair/maneline-fleet \
+    balena preload $WORKING_IMAGE_PATH --fleet gh_tim_littlefair/maneline-staging \
         --commit current
     if [ "$?" = "0" ]
     then
@@ -182,18 +109,52 @@ fi
         echo "\nfailed to preload application\n"
         exit 5
     fi
-
 }
 
-install_overlay() {
+configure_wifi_1() {
+    if [ ! -z "$ml_ssid_1" ]
+    then
+        wifi_cxn_1=/tmp/balena-wifi-01
+        cat balena-sdcard/balena-wifi-01 | \
+            sed -e "s/%ml_ssid_1%/$ml_ssid_1/" | \
+            sed -e "s/%ml_pswd_1%/$ml_pswd_1/" |\
+        > $wifi_cxn_1
+    else
+        wifi_cxn_1=""
+    fi
+}
+
+configure_wifi_hs() {
+    if [ ! -z "$ml_ssid_hs" ]
+    then
+        wifi_cxn_hs=/tmp/balena-hotspot
+        cat balena-sdcard/balena-hotspot | \
+            sed -e "s/%ml_ssid_hs%/$ml_ssid_hs/" | \
+            sed -e "s/%ml_pswd_hs%/$ml_pswd_hs/" |\
+        > $wifi_cxn_hs
+    else
+        wifi_cxn_hs=""
+    fi
+}
+
+install_overlay_and_connections() {
     partition1_params=$(fdisk -l $WORKING_IMAGE_PATH | sed -e 's/*//' | grep img1)
     start_sector=$(echo $partition1_params | ( read a b c d e f g h; echo $b ))
     sector_count=$(echo $partition1_params | ( read a b c d e f g h; echo $d ))
     sudo mount -t vfat \
         -o loop,rw,offset=$(($start_sector*512)),sizelimit=$(($sector_count*512)) \
         $WORKING_IMAGE_PATH $MOUNT_DIR
-    sudo cp lcd-driver/tft35a.dtbo $MOUNT_DIR/overlays
-    sudo cp lcd-driver/config.txt $MOUNT_DIR
+    sudo cp balena-sdcard/tft35a.dtbo $MOUNT_DIR/overlays
+    sudo cp balena-sdcard/config.txt $MOUNT_DIR
+
+    for c in "$wifi_cxn_1" "$wifi_cxn_hs" 
+    do
+        if [ ! -z "$c" ]
+        then
+            sudo mv $c $MOUNT_DIR/system-connections
+        fi
+    done
+
     sleep 1
     sudo sync ; sudo sync
     sleep 1
@@ -202,7 +163,7 @@ install_overlay() {
 }
 
 flash_to_sdcard() {
-    drive=/dev/mmcblk0
+    drive=/dev/sdb
     balena util available-drives | grep $drive > /dev/null
     flashing_cmd="balena os initialize $OUTPUT_IMAGE_PATH --type $balena_device_type --drive $drive"
     if [ "$?" = "0" ]
@@ -223,69 +184,5 @@ then
     usage
     exit 91
 fi
-
-if [ "$2" = "--env_ssids" ]
-then
-    wifi_ssid_hs=$WIFI_SSID_HS
-    wifi_password_hs=$WIFI_PASSWORD_HS
-    wifi_ssid_local=$WIFI_SSID_LOCAL
-    wifi_password_local=$WIFI_PASSWORD_LOCAL
-else
-    if [ -z "$4" ]
-    then
-       opt_hotspot_switch=$4
-       wifi_ssid_hs=$2
-       wifi_password_hs=$3
-    else
-        wifi_ssid_local=$2
-        wifi_password_local=$3
-    fi
-fi
-
-
-
-CACHE_DIR=_work/cache
-OUTPUT_DIR=_work/output
-MOUNT_DIR=_work/mount
-for d in $CACHE_DIR $OUTPUT_DIR $MOUNT_DIR
-do
-    if [ -d "$d" ]
-    then
-        echo $(basename $d) directory found
-    else
-        mkdir -p $d
-        if [ "$?" = "0" ]
-        then
-            echo $(basename $d) directory created at $d
-        else
-            echo "\nfailed to create $(basename $d) directory at $d\n"
-            exit 92
-        fi
-    fi
-done
-
-WORKING_IMAGE_PATH=/tmp/maneline-$wifi_ssid-$balena_device_type.img
-OUTPUT_IMAGE_PATH=$OUTPUT_DIR/maneline-$wifi_ssid-$balena_device_type.img
-for f in $WORKING_IMAGE_PATH $OUTPUT_IMAGE_PATH
-do
-    if [ -f $f ]
-    then
-        rm -f $f
-    fi
-done
-
-verify_linux_sudo_access
-verify_balena_cli
-get_os
-configure_os
-install_overlay
-flash_to_sdcard
-
-exit 0
-
-
-
-
-
 
 
