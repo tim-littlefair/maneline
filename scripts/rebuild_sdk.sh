@@ -264,7 +264,7 @@ set_java_home jdk-21.0.2
 download_and_unpack $lua51_url "tar xzvf"
 download_and_unpack $lua54_url "tar xzvf"
 download_and_unpack $luarocks_url "tar xzvf"
-build_lua lua-5.1.5 linux
+build_lua lua-5.1.5 $lua_make_target
 build_lua lua-5.4.8 all
 build_luarocks luarocks-3.12.2 lua-5.1.5
 build_luarocks luarocks-3.12.2 lua-5.4.8
