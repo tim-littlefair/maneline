@@ -101,7 +101,7 @@ dependencies {
     implementation 'ch.qos.logback:logback-classic:1.5.32'
 
     implementation 'com.github.hypfvieh:dbus-java-parent:5.2.0'
-    implementation 'com.github.hypfvieh:bluez-dbus:0.3.2'
+    implementation 'com.github.hypfvieh:bluez-dbus:0.3.4'
     implementation 'com.github.hypfvieh:java-utils-extended:1.0.7'
 
     // Start of dependencies related to junixsocket transport option
