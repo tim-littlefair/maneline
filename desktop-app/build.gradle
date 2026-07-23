@@ -95,7 +95,7 @@ base {
 
 dependencies {
     implementation project(':maneline-lib') 
-    implementation 'net.java.dev.jna:jna:5.18.1'
+    implementation 'net.java.dev.jna:jna:5.19.0'
     implementation 'org.hid4java:hid4java:0.8.0'
     implementation 'org.json:json:20260522'
     implementation 'ch.qos.logback:logback-classic:1.5.32'
