@@ -209,25 +209,21 @@ build_luarocks () {
 build_pyvenv_for_moonshine_wrangler() {
   # maneline does not presently use Python directly but sister project
   # moonshine-wrangler (reverse engineering, documentation and code
-  # generation, including generating source files for maneline) does.
-  # If the SDK is being installed alongside moonshine-wrangler
-  # sandbox create a virtual environment pre-populated with the required
+  # generation, including generating source files for maneline) does
+  # => create a virtual environment pre-populated with the required
   # packages.
-  if [ -f ../moonshine-wrangler/requirements.txt ]
-  then
-    python3.12 -m venv python.venv
-    PYTHON_VENV=$sdk_absdir/python.venv
-    $PYTHON_VENV/bin/pip install -r ../moonshine-wrangler/requirements.txt
-    # Experimental script scripts/mmp_helper.py requires a BLE python library
-    # called bleak
-    $PYTHON_VENV/bin/pip install bleak
-  fi
+  python3.14 -m venv python.venv
+  PYTHON_VENV=$sdk_absdir/python.venv
+  $PYTHON_VENV/bin/pip install flake8 pycodestyle pytest requests sphinx
+  # Experimental script scripts/mmp_helper.py requires a BLE python library
+  # called bleak
+  $PYTHON_VENV/bin/pip install bleak
 }
 ## Latest versions of the key packages
 
 # from https://docs.balena.io/reference/balena-cli/latest/
-balena_version=v25.1.3
-android_cltools_version=13114758
+balena_version=v25.2.7
+android_cltools_version=15859902
 
 osname=$(uname -s)
 if [ "$osname" = "Linux" ]
@@ -236,16 +232,16 @@ then
   sudo apt install lib32z1-dev
 
   jdk21_url=https://download.java.net/java/GA/jdk21.0.2/f2283984656d49d69e91c558476027ac/13/GPL/openjdk-21.0.2_linux-x64_bin.tar.gz
-  jdk25_url=https://download.java.net/java/GA/jdk25/bd75d5f9689641da8e1daabeccb5528b/36/GPL/openjdk-25_linux-x64_bin.tar.gz
-  balena_cli_url=https://github.com/balena-io/balena-cli/releases/download/$balena_version/balena-cli-$balena_version-linux-x64-standalone.tar.gz
+  jdk25_url=https://download.oracle.com/java/25/latest/jdk-25_linux-x64_bin.tar.gz
+  balena_cli_url=https://github.com/balena-io/balena-cli/releases/download/${balena_version}/balena-cli-${balena_version}-linux-x64-standalone.tar.gz
   android_cltools_url=https://dl.google.com/android/repository/commandlinetools-linux-${android_cltools_version}_latest.zip
   lua_make_target=linux
 elif [ "$osname" = "Darwin" ]
 then
   # For now, Intel binaries are preferred to those for Apple Silicon
   jdk21_url=https://download.java.net/java/GA/jdk21.0.2/f2283984656d49d69e91c558476027ac/13/GPL/openjdk-21.0.2_macos-x64_bin.tar.gz
-  jdk25_url=https://download.java.net/java/GA/jdk25/bd75d5f9689641da8e1daabeccb5528b/36/GPL/openjdk-25_macos-x64_bin.tar.gz
-  balena_cli_url=https://github.com/balena-io/balena-cli/releases/download/$balena_version/balena-cli-$balena_version-macOS-x64-standalone.tar.gz
+  jdk25_url=https://download.oracle.com/java/25/latest/jdk-25_macos-x64_bin.tar.gz
+  balena_cli_url=https://github.com/balena-io/balena-cli/releases/download/${balena_version}/balena-cli-${balena_version}-macOS-x64-standalone.tar.gz
   android_cltools_url=https://dl.google.com/android/repository/commandlinetools-mac-${android_cltools_version}_latest.zip
   lua_make_target=macosx
 fi

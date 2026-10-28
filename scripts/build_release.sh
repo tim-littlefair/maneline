@@ -17,6 +17,12 @@ git restore deployment/balena/*/balena.yml
 # into environment variables for the run, and is also expected
 # to have defined an environment variable BUILD_ID containing
 # Jenkins' own run number for this build.
+if [ -z "$BUILD_ID" ] || [ -z "$RELEASE_VERSION_MAJOR" ]
+then
+    echo 'BUILD_ID and/or RELEASE_VERSION_* environment variables not defined' 
+    echo 'run "source ./scripts/version_env.sh [vmajor] [vminor] [vpatch] [build_id]"'
+    exit 1
+fi
 
 export releaseString=$RELEASE_VERSION_MAJOR.$RELEASE_VERSION_MINOR.$RELEASE_VERSION_PATCH
 export gitHash=$(git rev-parse HEAD | cut -c 1-7)
@@ -84,11 +90,12 @@ if [ "$1" = "--do-gradle-build" ]
 then
   sed -e "s/0.0.0/$buildString/" -i build.gradle
   sed -e "s/9999/$buildAndroidVersionCode/" -i build.gradle
-  ./gradlew clean build :android-app:bundleRelease
+  ./gradlew clean build
+  # ./gradlew :android-app:bundleRelease
   git restore build.gradle
   echo Gradle products:
   ls -l desktop-app/build/libs
-  ls -l android-app/build/outputs/apk/*/*.apk
+  #ls -l android-app/build/outputs/apk/*/*.apk
 
   #jarsigner -keystore $jkspath \
   #    ./android-app/build/outputs/bundle/release/androidFHAU-$versionBuildString-release.aab \
