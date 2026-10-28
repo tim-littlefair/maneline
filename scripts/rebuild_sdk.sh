@@ -255,7 +255,7 @@ luarocks_url=https://luarocks.org/releases/luarocks-3.12.2.tar.gz
 
 download_and_unpack $jdk21_url "tar xzvf"
 download_and_unpack $jdk25_url "tar xzvf"
-set_java_home jdk-21.0.2
+set_java_home jdk-25.0.5.0.3
 
 download_and_unpack $lua51_url "tar xzvf"
 download_and_unpack $lua54_url "tar xzvf"

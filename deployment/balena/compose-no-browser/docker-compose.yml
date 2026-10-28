@@ -34,8 +34,6 @@ services:
     privileged: true
     labels:
       - io.balena.features.supervisor-api=1
-    ports:
-      - 8080
     environment:
       - UDEV=1
     devices:

@@ -48,17 +48,9 @@
 # "fhau-cli: no matching manifest for linux/arm64/v8 in the manifest list entries"
 # FROM eclipse-temurin:17-jdk-alpine-3.21
 
-# When we try to run the FHAU CLI using OpenJDK 21 it
-# fails with the following as the first error line preceding the stack trace:
-# "Exception in thread "main" org.hid4java.HidException: Hidapi did not initialise: com/sun/jna/FromNativeContext"
-# This is believed to be related to an incompatibility between the aarch64 builds of the native libraries packaged 
-# in the hid4java gradle dependency and OpenJDK 21.
-# FROM eclipse-temurin:21
-
-# The current default eclipse-temurin image for OpenJDK 17 as at 30/06/2026
-# (built on top of Ubuntu 24.04.2 LTS)
+# The current default eclipse-temurin image for OpenJDK 25 as at 28/10/2026
 # has been tested and works - but is not lightweight
-FROM eclipse-temurin:17 AS platform-layer
+FROM eclipse-temurin:25 AS platform-layer
 
 WORKDIR /home/maneline
 
