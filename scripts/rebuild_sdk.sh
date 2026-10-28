@@ -129,7 +129,7 @@ cd $sdk_absdir
 # command line or in WSL), but this script does not
 # and will not attempt to do this.
 
-# Development presently standardises on JDK 21, using
+# Development presently standardises on JDK 25, using
 # Oracle's openjdk archive at
 # https://jdk.java.net/archive/
 # under the GPLv2+classpath exception license conditions.
@@ -231,7 +231,6 @@ then
   #TODO: avoid sudo here
   sudo apt install lib32z1-dev
 
-  jdk21_url=https://download.java.net/java/GA/jdk21.0.2/f2283984656d49d69e91c558476027ac/13/GPL/openjdk-21.0.2_linux-x64_bin.tar.gz
   jdk25_url=https://download.oracle.com/java/25/latest/jdk-25_linux-x64_bin.tar.gz
   balena_cli_url=https://github.com/balena-io/balena-cli/releases/download/${balena_version}/balena-cli-${balena_version}-linux-x64-standalone.tar.gz
   android_cltools_url=https://dl.google.com/android/repository/commandlinetools-linux-${android_cltools_version}_latest.zip
@@ -239,7 +238,6 @@ then
 elif [ "$osname" = "Darwin" ]
 then
   # For now, Intel binaries are preferred to those for Apple Silicon
-  jdk21_url=https://download.java.net/java/GA/jdk21.0.2/f2283984656d49d69e91c558476027ac/13/GPL/openjdk-21.0.2_macos-x64_bin.tar.gz
   jdk25_url=https://download.oracle.com/java/25/latest/jdk-25_macos-x64_bin.tar.gz
   balena_cli_url=https://github.com/balena-io/balena-cli/releases/download/${balena_version}/balena-cli-${balena_version}-macOS-x64-standalone.tar.gz
   android_cltools_url=https://dl.google.com/android/repository/commandlinetools-mac-${android_cltools_version}_latest.zip
@@ -253,7 +251,6 @@ lua54_url=https://www.lua.org/ftp/lua-5.4.8.tar.gz
 luarocks_url=https://luarocks.org/releases/luarocks-3.12.2.tar.gz
 
 
-download_and_unpack $jdk21_url "tar xzvf"
 download_and_unpack $jdk25_url "tar xzvf"
 set_java_home jdk-25.0.5.0.3
 
