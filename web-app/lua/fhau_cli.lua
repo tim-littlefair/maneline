@@ -47,7 +47,7 @@ function Fhau:manage_session_dirs(number_to_retain)
                 print(
                     "Retaining "..dir..
                     " and created "..session_zip..
-                    " with status "..zip_status
+                    " with status "..to_string(zip_status)
                 )
             else
                 print("Retaining "..dir.." and "..session_zip)

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-exit_wait_sleep_length=2
+exit_wait_sleep_length=600
 
 # We pass $start_dir to the lua process and it
 # does an lfs.chdir() to that directory
@@ -68,7 +68,7 @@ do
 
     # The lua process started on the next line will be the
     # parent process for the Java CLI session
-    lua ./run.lua "$start_dir"
+    lua5.4 ./run.lua "$start_dir" | tee $start_dir/run.lua.log 2>&1
     cli_exit_status=$?
 
     if [ -f $exit_status_file ]

@@ -63,25 +63,31 @@ RUN cat /etc/apt/sources.list.d/ubuntu.sources
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends --no-install-suggests apt-utils
 RUN apt-get install -y --no-install-recommends --no-install-suggests readline-common git wget
+RUN apt-get install -y --no-install-recommends --no-install-suggests gcc 
 
-# The web server glue which binds the web-ui to the CLI FHAU application is implemented in Lua
-RUN apt-get install -y --no-install-recommends --no-install-suggests lua5.1 \
-    lua-socket lua-filesystem lua-sec lua-zlib lua-cjson lua-cqueues lua-logging
-# I'd prefer the supply chain depended only on apt, but for
-# the moment the pegasus web server is used so we need luarocks
-# and the build-time apt dependencies for pegasus
-RUN apt-get install -y --no-install-recommends --no-install-suggests luarocks gcc liblz-dev zlib1g-dev
-RUN luarocks install pegasus
 
 # iproute2 is required to get the IP address of the device
 # zint is used to generate a 2D barcode with the URL of the webserver from the IP address
 # librsvg2-bin, optipng, fbi and fbset are used to render the barcode into SVG's for
 # displaying on the optional LCD UI
-# python3 and the python3- packages are used to render the barcode for displaying on the
-# optional e-paper UI
 RUN apt-get install -y --no-install-recommends --no-install-suggests \
     iproute2 zint librsvg2-bin optipng fbi fbset \
     python3 python3-pil python3-numpy python3-spidev python3-gpiozero python3-lgpio python3-watchdog
+
+# It is useful to have a vi app while experimenting
+RUN apt-get install -y --no-install-recommends --no-install-suggests vim
+
+# The web server glue which binds the web-ui to the CLI FHAU application is implemented in Lua
+RUN apt-get install -y --no-install-recommends --no-install-suggests lua5.4 liblua5.4-dev \
+    lua-socket lua-filesystem lua-sec lua-zlib lua-cjson lua-cqueues lua-logging
+# I'd prefer the supply chain depended only on apt, but for
+# the moment the pegasus web server is used so we need luarocks
+# and the build-time apt dependencies for pegasus
+RUN apt-get install -y --no-install-recommends --no-install-suggests luarocks 
+RUN apt-get install -y --no-install-recommends --no-install-suggests liblz-dev zlib1g-dev
+RUN luarocks install --lua-version 5.4 pegasus
+
+RUN echo "require('pegasus')" | lua5.4 
 
 FROM platform-layer AS web-app
 COPY ./lua ./lua
