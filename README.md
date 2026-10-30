@@ -35,6 +35,10 @@ TBD: More information on how Balena deployment works.
 
 ## More information
 
+Experimental [Mustang Micro Plus Bluetooth control on macOS](docs/MUSTANG_MICRO_PLUS_MACOS.md)
+is available as a standalone Python controller for reading and switching presets.
+It is not yet integrated into the web UI.
+
 There is a roadmap for this project [in the wiki](https://github.com/tim-littlefair/maneline/wiki/Roadmap)
 An earlier version of this README.md file (with a lot more detail, some of which 
 may now be out of date), is available to read 
