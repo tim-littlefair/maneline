@@ -11,6 +11,10 @@ SERVICE = '90559580-b707-11ee-acb1-7b7e30f1af54'
 REQUEST = '820a7e34-4e0a-4f90-8520-04ebce35a3a1'
 RESPONSE = '1017adcc-dcbc-4387-a59f-2546b2ea5bb0'
 NAME = 'Mustang Micro Plus'
+# Firmware 1.1.11 stops sending notifications with one-second keep-alives.
+# Keep a margin below the 500 ms interval used by the original BLE experiment.
+KEEPALIVE_INTERVAL = 0.25
+KEEPALIVE = bytes.fromhex('3500050a03c20100')
 
 
 def varint(value):
@@ -112,6 +116,7 @@ class Controller:
         self.names = []
         self.changed = asyncio.Event()
         self.failure = None
+        self.write_lock = asyncio.Lock()
 
     def record(self, direction, data):
         if self.log:
@@ -150,7 +155,17 @@ class Controller:
         if characteristic is None:
             raise RuntimeError('Micro Plus control characteristic was not found')
         response = 'write-without-response' not in characteristic.properties
-        await self.client.write_gatt_char(characteristic, data, response=response)
+        async with self.write_lock:
+            await self.client.write_gatt_char(characteristic, data, response=response)
+
+    async def initialize(self):
+        # Read-only handshake from the checked-in Android Tone captures.
+        for hex_data in ('3500021a00', '3500040a023a00', '3500040a027200',
+                         '3500060a0422020801', '3500050a03b20100',
+                         '3500050a03ca0100', '3500041a020801'):
+            await self.send(bytes.fromhex(hex_data))
+            await asyncio.sleep(0.15)
+        await self.wait_for(lambda: self.slot is not None and bool(self.names))
 
     async def wait_for(self, predicate, timeout=8):
         async with asyncio.timeout(timeout):
@@ -167,8 +182,9 @@ class Controller:
                 if self.slot and self.slot <= len(self.names) else None}
 
     async def switch(self, slot):
+        command = select_preset(slot)
         self.slot = None
-        await self.send(select_preset(slot))
+        await self.send(command)
         await self.wait_for(lambda: self.slot == slot)
         return self.status()
 
@@ -204,13 +220,7 @@ async def run(args):
             print('Connected to Mustang Micro Plus', file=sys.stderr, flush=True)
             controller = Controller(client, log)
             await client.start_notify(RESPONSE, controller.notify)
-            # Handshake from mmp_helper.py.disabled and mmp_startup.gatttool.json.
-            for hex_data in ('3500021a00', '3500040a023a00', '3500040a027200',
-                             '3500060a0422020801', '3500050a03b20100',
-                             '3500050a03ca0100', '3500041a020801'):
-                await controller.send(bytes.fromhex(hex_data))
-                await asyncio.sleep(0.15)
-            await controller.wait_for(lambda: controller.slot is not None)
+            await controller.initialize()
             if args.command == 'presets':
                 await controller.wait_for(lambda: bool(controller.names))
                 print(json.dumps([{'preset': i + 1, 'name': name}
