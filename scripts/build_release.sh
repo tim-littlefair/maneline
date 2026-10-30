@@ -153,7 +153,7 @@ then
   deploy_fleet=$1
   push_method=balena_cli_local
   extra_push_flags="--detached --nolive"
-  balena device ssh 9f513e2.local "balena-engine container stop maneline-web_1_1_10ca12e1ea5e" || true
+  balena device ssh 9f513e2.local "balena-engine container stop maneline-web" || true
   shift
 elif [ ! -z "$(echo $1 | grep '@git.balena-cloud.com')" ]
 then

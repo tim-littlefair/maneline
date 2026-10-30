@@ -246,7 +246,6 @@ fi
 
 # Lua is downloaded as source - same on both architectures
 # (but in either case C/C++/autoconf build tools will be required)
-lua51_url=https://www.lua.org/ftp/lua-5.1.5.tar.gz
 lua54_url=https://www.lua.org/ftp/lua-5.4.9.tar.gz
 luarocks_url=https://luarocks.org/releases/luarocks-3.13.0.tar.gz
 
@@ -254,12 +253,10 @@ luarocks_url=https://luarocks.org/releases/luarocks-3.13.0.tar.gz
 download_and_unpack $jdk25_url "tar xzvf"
 set_java_home jdk-25.0.5.0.3
 
-download_and_unpack $lua51_url "tar xzvf"
 download_and_unpack $lua54_url "tar xzvf"
 download_and_unpack $luarocks_url "tar xzvf"
 build_lua lua-5.4.9 $lua_make_target
 build_lua lua-5.4.9 all
-build_luarocks luarocks-3.13.0 lua-5.1.5
 build_luarocks luarocks-3.13.0 lua-5.5.1
 
 export LUA_HOME=$sdk_absdir/lua-5.4.9

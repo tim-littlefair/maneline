@@ -1,6 +1,6 @@
 #!/bin/bash
 
-exit_wait_sleep_length=600
+exit_wait_sleep_length=5
 
 # We pass $start_dir to the lua process and it
 # does an lfs.chdir() to that directory
