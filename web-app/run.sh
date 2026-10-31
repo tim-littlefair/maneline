@@ -68,7 +68,7 @@ do
 
     # The lua process started on the next line will be the
     # parent process for the Java CLI session
-    lua5.4 ./run.lua "$start_dir" | tee $start_dir/run.lua.log 2>&1
+    lua ./run.lua "$start_dir" | tee $start_dir/run.lua.log 2>&1
     cli_exit_status=$?
 
     if [ -f $exit_status_file ]

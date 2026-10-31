@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 if [ ! "$0" = "scripts/rebuild_sdk.sh" ]
 then
     echo "This script should be run from the base directory of the repository."
@@ -176,8 +178,11 @@ build_lua () {
   echo Building $_dir
   cd $_dir
   make $_lua_make_target
-  mkdir bin
-  mv src/lua src/luac bin
+  if [ ! -d bin ]
+  then
+    mkdir bin
+    mv src/lua src/luac bin    
+  fi
   cd ..
   echo $_dir built
 }
@@ -200,7 +205,7 @@ build_luarocks () {
     luasec luasocket lualogging luafilesystem lua-cjson cqueues \
     mimetypes lzlib pegasus
   do
-    $_luadir/bin/luarocks install $p
+    $_luadir/bin/luarocks install $p $luarocks_dir_args
   done
   cd ..
   echo $_dir for $luadir built
@@ -240,8 +245,11 @@ then
   # For now, Intel binaries are preferred to those for Apple Silicon
   jdk25_url=https://download.oracle.com/java/25/latest/jdk-25_macos-x64_bin.tar.gz
   balena_cli_url=https://github.com/balena-io/balena-cli/releases/download/${balena_version}/balena-cli-${balena_version}-macOS-x64-standalone.tar.gz
-  android_cltools_url=https://dl.google.com/android/repository/commandlinetools-mac-${android_cltools_version}_latest.zip
+  android_cltools_url=https://dl.google.com/android/repository/commandlinetools-mac_x86_64-${android_cltools_version}_latest.zip
   lua_make_target=macosx
+  # luasec and cqueues require additional arguments to find the openssl/openssl3
+  # installations provided by macports.org
+  luarocks_dir_args="OPENSSL_DIR=/opt/local CRYPTO_DIR=/opt/local"
 fi
 
 # Lua is downloaded as source - same on both architectures
@@ -257,7 +265,7 @@ download_and_unpack $lua54_url "tar xzvf"
 download_and_unpack $luarocks_url "tar xzvf"
 build_lua lua-5.4.9 $lua_make_target
 build_lua lua-5.4.9 all
-build_luarocks luarocks-3.13.0 lua-5.5.1
+build_luarocks luarocks-3.13.0 lua-5.4.9
 
 export LUA_HOME=$sdk_absdir/lua-5.4.9
 export LUA_PATH="$LUA_HOME/share/lua/5.4/?.lua;$LUA_HOME/share/lua/5.4/?/init.lua;;"
