@@ -15,7 +15,7 @@ from mmp_web import dispatch, HTTPError
 class HTTPTests(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
         self.session = MicroPlusSession()
-        self.headers = {'host': 'localhost:8080', 'origin': 'http://localhost:8080',
+        self.headers = {'host': 'localhost:8081', 'origin': 'http://localhost:8081',
                         'content-type': 'application/json'}
 
     async def test_status_never_returns_old_presets_when_disconnected(self):
