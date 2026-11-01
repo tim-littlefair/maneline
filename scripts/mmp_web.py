@@ -120,7 +120,7 @@ async def run(args):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--port', type=int, default=8080)
+    parser.add_argument('--port', type=int, default=8081)
     parser.add_argument('--device')
     parser.add_argument('--log', default='_work/mmp-web.jsonl')
     parser.add_argument('--allow-host', action='append', default=[],
