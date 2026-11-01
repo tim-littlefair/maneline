@@ -4,9 +4,6 @@
 
 allowRemediationCommits:
   individual: true
-
-allowRemediationCommits:
-  individual: true
   thirdParty: true  
 
 require:
