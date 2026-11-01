@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mustang Micro Plus · Maneline</title>
+  <link rel="stylesheet" href="/web_ui/_static/css/theme.css">
+  <link rel="stylesheet" href="/web_ui/_static/style-font.css">
+  <link rel="icon" href="/web_ui/_static/maneline-icon-512x512.png">
+  <style>
+    body { margin: 0; }
+    main { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+    header { display: flex; align-items: center; gap: 18px; margin-bottom: 30px; }
+    header img { width: 64px; height: 64px; }
+    h1 { margin: 0; } header p { margin: 4px 0 0; }
+    #current { font-size: 24px; margin: 12px 0 24px; min-height: 36px; }
+    #connection { margin: 0; }
+    #message { min-height: 24px; margin-top: 12px; }
+    #message.error { color: #a32222; }
+    label { display: block; margin-bottom: 6px; }
+    #filter { width: 100%; max-width: 400px; margin-bottom: 20px; }
+    #presets { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+    #presets button { min-height: 78px; padding: 12px; text-align: left;
+      font: inherit; cursor: pointer; border: 1px solid #aaa; background: #fff; color: #333; }
+    #presets button[aria-pressed="true"] { border: 2px solid #24769f; background: #eaf5fa; }
+    #presets button:focus-visible { outline: 3px solid #24769f; outline-offset: 3px; }
+    #presets button:disabled { opacity: .55; cursor: wait; }
+    #presets span { display: block; font-size: 13px; color: #555; margin-bottom: 4px; }
+    #presets strong { overflow-wrap: anywhere; }
+    .hint { color: #555; }
+  </style>
+  <script src="/web_ui/_static/micro-plus.js" defer></script>
+</head>
+<body class="wy-body-for-nav">
+<main>
+  <header>
+    <img src="/web_ui/_static/maneline-icon-512x512.png" alt="">
+    <div><h1>Mustang Micro Plus</h1><p>Maneline</p></div>
+  </header>
+  <section aria-label="Bluetooth connection">
+    <p id="connection" role="status">Connecting to your Micro Plus…</p>
+    <p id="current" aria-live="polite">Reading the current preset…</p>
+  </section>
+  <section aria-labelledby="presets-title">
+    <h2 id="presets-title">Presets</h2>
+    <p class="hint">Choose a preset. Switching does not change your saved preset settings.</p>
+    <label for="filter">Find a preset by name or number</label>
+    <input id="filter" type="search" placeholder="Search presets" autocomplete="off">
+    <div id="presets" aria-busy="true"></div>
+    <p id="empty" hidden>No presets match your search.</p>
+    <p id="message" role="status" aria-live="polite"></p>
+  </section>
+</main>
+</body>
+</html>

@@ -1,5 +1,16 @@
 #!/bin/bash
 
+if [ "$1" = "--micro-plus" ]; then
+    shift
+    micro_python=${MANELINE_PYTHON:-$(pwd)/_work/mmp-venv/bin/python}
+    if [ ! -x "$micro_python" ]; then
+        echo 'Set MANELINE_PYTHON to a Python 3.11+ interpreter with Bleak installed.' >&2
+        echo 'See docs/MUSTANG_MICRO_PLUS_MACOS.md for setup.' >&2
+        exit 1
+    fi
+    exec "$micro_python" "$(pwd)/scripts/mmp_web.py" "$@"
+fi
+
 rundir=$(pwd)/_work/webhome
 
 if [ "$1" = "--clean" ]
