@@ -102,3 +102,53 @@ _work/mmp-venv/bin/python -m unittest discover -s scripts/tests -v
 Tests cover captured packets, fragmented names, invalid input, acknowledgement
 requirements, keep-alives during pending switches, clearing disconnected state,
 HTTP validation, same-origin writes and static-file access restrictions.
+
+## Further observations
+
+These were seen on 1–2 November 2026 with the same amplifier and firmware (1.1.11),
+while editing presets over the same Bluetooth connection. Only reading and switching
+are implemented here.
+
+**Replies and button presses.** Field 1 of a message from the amp says why it was
+sent. A reply to a request has 1 or 2 there; the captured switch confirmation has 1,
+and the replies to the startup reads below have 2. A message the amp sends because
+someone pressed one of its buttons leaves the field out. This matches the response
+types in Fender's message definitions for the Mustang LT amps (unsolicited 0, not the
+last reply 1, last reply 2), although the Micro Plus numbers its messages differently.
+
+**Startup requests.** The read-only startup sequence asks for these, by the number
+inside field 1 of each request. "Reply" is the number inside field 2 of the answer.
+
+| Request | Reply | What it is |
+| --- | --- | --- |
+| 7 | 6 | Firmware version, as text (`1.1.11`) |
+| 14 | 12 | Names of the 100 presets |
+| 4 | 4 | The current preset's settings, as compressed JSON |
+| 22 | 18 | A float, -6.0, then the number 1. Possibly a gain; not known |
+| 25 | 19 | The EQ setting chosen with the amp's EQ buttons, counted from 0 for EQ1 Flat |
+| 24 | none | The heartbeat |
+
+Request 26, with the same content as reply 19 (`0801 10nn`, or just `0801` for Flat),
+sets the EQ, and the amp answers with reply 19. Pressing the EQ buttons sends reply 19
+unasked. Pressing TAP changes the delay's time setting, which arrives as a changed
+parameter.
+
+**Trying unknown requests is risky.** One of the amp's error codes is "factory restore
+in progress", so some request number restores the factory state, and which one is not
+known. Back up the presets before sending anything new.
+
+**The amp's Bluetooth can stop answering.** Twice the amp stopped answering every
+request while the link still looked connected; once it happened after a browser tab had
+been idle in the background for half an hour. Its buttons and sound kept working. After
+disconnecting, a scan no longer found it, until it was switched off and on. If an
+unconfirmed switch leads to "Micro Plus not found" while the amp is on, that is the
+likely cause.
+
+**After switching the amp off and on**, the first preset switch got no answer once, and
+reconnecting finished it, about 10 seconds in all. Later switches were quick.
+
+**Before experimenting**, see Fender's user guide (pages 7–8) for the power light's
+colours and the button combinations at power-on: PRESET minus starts a firmware update
+over USB, MODIFY minus with SAVE resets the amp to factory settings and forgets paired
+devices, and SAVE with TAP resets presets 1–80. Slow green flashing is normal: the
+battery is over half full and no USB cable is connected.
