@@ -56,7 +56,9 @@ class MicroPlusSession:
                     and (self.device_id is None or d.address == self.device_id),
                     service_uuids=[SERVICE], timeout=10)
                 if device is None:
-                    raise RuntimeError('Micro Plus not found. Turn it on and close Fender Tone on other devices.')
+                    raise RuntimeError('Micro Plus not found. Turn it on and close Fender Tone on other devices. '
+                                       'If it is already on, switch it off and on again: its Bluetooth can '
+                                       'stop answering while the amp itself keeps working.')
                 # Pin the first selected device across reconnects.
                 self.device_id = device.address
                 async with BleakClient(device, disconnected_callback=lambda _: self.reset.set()) as client:

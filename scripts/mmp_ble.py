@@ -205,7 +205,8 @@ async def run(args):
                       if advert.local_name == NAME or device.name == NAME]
     if not candidates:
         raise RuntimeError('Micro Plus was not found. Turn it on, close Fender Tone on '
-                           'other devices, and try again with the Micro Plus nearby.')
+                           'other devices, and try again with the Micro Plus nearby. If it is '
+                           'already on, switch it off and on again.')
     if args.command == 'scan':
         print(json.dumps([{'name': d.name, 'id': d.address} for d in candidates]))
         return
