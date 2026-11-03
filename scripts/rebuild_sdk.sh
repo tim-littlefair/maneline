@@ -309,7 +309,7 @@ export LUA_PATH LUA_CPATH
 
 if [ ! -z "$PYTHON_VENV" ]
 then
-  source $PYTHON_VENV/bin/activate
+  . $PYTHON_VENV/bin/activate
 fi
 
 +
