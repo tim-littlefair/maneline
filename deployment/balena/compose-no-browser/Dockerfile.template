@@ -62,7 +62,7 @@ RUN cat /etc/apt/sources.list.d/ubuntu.sources
 
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends --no-install-suggests apt-utils
-RUN apt-get install -y --no-install-recommends --no-install-suggests readline-common git wget
+RUN apt-get install -y --no-install-recommends --no-install-suggests readline-common git wget curl
 RUN apt-get install -y --no-install-recommends --no-install-suggests gcc 
 
 
