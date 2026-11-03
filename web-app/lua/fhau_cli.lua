@@ -44,11 +44,14 @@ function Fhau:manage_session_dirs(number_to_retain)
                 zip_status = os.execute(
                     "cd "..dir.." && zip -r ../"..session_zip.." . && cd .."
                 )
-                print(
-                    "Retaining "..dir..
-                    " and created "..session_zip..
-                    " with status "..to_string(zip_status)
-                )
+                if zip_status
+                then
+                    print(
+                        "Retaining "..dir..
+                        " and created "..session_zip..
+                        " with status "..tostring(zip_status)
+                    )
+                end
             else
                 print("Retaining "..dir.." and "..session_zip)
             end
@@ -73,7 +76,7 @@ end
 function Fhau:start_fhau_cli()
     local jar_file_path=os.getenv("cli_jar")
     fhau_cli_input_fd = io.popen(
-        "java -ea -jar " .. jar_file_path .. " --web=" .. session_name,
+        "java -ea --enable-native-access=ALL-UNNAMED -jar " .. jar_file_path .. " --web=" .. session_name,
         "w"
     )
 end
