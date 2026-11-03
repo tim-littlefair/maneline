@@ -50,7 +50,7 @@ check_webhome() {
         then
             echo Run the following commands to install Lua requirements:
             # Base version of Lua and luarocks
-            echo sudo apt-get install lua5.1 luarocks
+            echo sudo apt-get install lua5.4 luarocks
             # apt-packaged lua dependencies
             echo sudo apt-get install lua-socket lua-filesystem lua-sec lua-zlib lua-cjson lua-cqueues
             # We would prefer an apt package lua-pegasus if one existed,
