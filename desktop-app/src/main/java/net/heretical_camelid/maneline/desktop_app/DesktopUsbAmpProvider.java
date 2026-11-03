@@ -95,6 +95,8 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
     final private static int MUSTANG_MICRO_ORIGINAL_PID=0x0043;
     final private static int MUSTANG_MICRO_PLUS_PID=0x003a;
 
+    private static String s_productName = "Not yet known";
+
     // No PIDs are yet known for any of the GT-, GTX- or LTX- series
     // devices
 
@@ -208,6 +210,11 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
                 fmicDevice.getSerialNumber(), fmicDevice.getReleaseNumber()
             ));
 
+            // Create a variable for the product name, so that 
+            // we can override the value from fmicDevice
+            // if we want to (e.g. for Mustang I/II V2)
+            s_productName = fmicDevice.getProduct();
+
             // Explore the capabilities of the device
             boolean usbRecordingSupported = true;
             boolean fenderFuseUsbProtocolSupported = false;
@@ -225,7 +232,10 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
 
                 case MUSTANG_I_V2_PID:
                     fenderFuseUsbProtocolSupported = true;
-                    testStatusNote = "Mustang I v2 - tested with firmware TBD - expected to support recording only";
+                    testStatusNote = "Mustang I v2 - tested with firmware 2.1 - expected to support control and recording";
+                    // Override the fmicDevice product name 'Mustang Amplifier'
+                    // with something more specific to this VID/PID
+                    s_productName = "Mustang I/II v2";
                     break;
 
                 case MUSTANG_MICRO_PLUS_PID:
@@ -396,7 +406,7 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
                 manelineAppVersion="unknown";
             }
             ampDetails.put("swversion", manelineAppVersion);
-            ampDetails.put("ampname", fmicDevice.getProduct());
+            ampDetails.put("ampname", s_productName);
             if(!m_firmwareVersion.isEmpty()) {
                 ampDetails.put(
                     "fwversion", "firmware " + m_firmwareVersion
