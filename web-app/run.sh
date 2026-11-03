@@ -2,6 +2,17 @@
 
 exit_wait_sleep_length=5
 
+# We are now using Lua 5.4.
+# Depending on whether we are in the Balena or
+# Linux development context, the path executable
+# may be different
+if [ ! -z "$(which lua5.4)" ]
+then
+    LUA54=lua5.4
+else
+    LUA54=lua
+fi
+
 # We pass $start_dir to the lua process and it
 # does an lfs.chdir() to that directory
 # after all of the local lua files are loaded.
@@ -57,9 +68,7 @@ do
     # Under Lua 5.1 the :close() method on a file descriptor opened
     # with io:popen() returns a boolean (always true?) and there is
     # no way of accessing the true exit status of the subprocess.
-    # I could fix this by upgrading to Lua 5.2 or later, but
-    # for now I prefer to stick with 5.1 and work around this
-    # by dropping an indicator file containing the exit status value.
+    # TODO: Now we are using Lua 5.4 we should see whether we need this.
     exit_status_file=$start_dir/cli_exit_status
     if [ -f $exit_status_file ]
     then
@@ -68,7 +77,7 @@ do
 
     # The lua process started on the next line will be the
     # parent process for the Java CLI session
-    lua5.4 ./run.lua "$start_dir" | tee $start_dir/run.lua.log 2>&1
+    $LUA54 ./run.lua "$start_dir" | tee $start_dir/run.lua.log 2>&1
     cli_exit_status=$?
 
     if [ -f $exit_status_file ]
