@@ -1,7 +1,7 @@
 #! /bin/bash
 
 # This is a quick and dirty script to build and run a release of Maneline
-set -e
+set -e -x 
 
 # Because of problems reported in this message:
 # https://forums.balena.io/t/problems-doing-a-balena-push-free-tier/374797/10
@@ -26,7 +26,15 @@ fi
 
 export releaseString=$RELEASE_VERSION_MAJOR.$RELEASE_VERSION_MINOR.$RELEASE_VERSION_PATCH
 export gitHash=$(git rev-parse HEAD | cut -c 1-7)
-export gitUncleanFileCount=$(git diff --name-only | wc -l)
+for c in $(git diff --name-only | wc -l)
+do
+  # We only expect a single integer, but under macOS
+  # there will be leading spaces.  
+  # The purpose of the for-construct is to trim
+  # the leading spaces.
+  export gitUncleanFileCount=$c
+done
+
 export buildId=$(printf "%04d" "$BUILD_ID")
 
 if [ ! "$buildId" = "9001" ]
@@ -88,8 +96,8 @@ echo buildAndroidVersionCode=$buildAndroidVersionCode
 # Interactive mode to support development
 if [ "$1" = "--do-gradle-build" ]
 then
-  sed -e "s/0.0.0/$buildString/" -i build.gradle
-  sed -e "s/9999/$buildAndroidVersionCode/" -i build.gradle
+  sed -e "s/0.0.0/$buildString/" -i '' build.gradle
+  sed -e "s/9999/$buildAndroidVersionCode/" -i '' build.gradle
   ./gradlew clean build
   # ./gradlew :android-app:bundleRelease
   git restore build.gradle
@@ -127,7 +135,7 @@ fi
 balenaFakerootDir=_work/balena_fakeroot-$buildString
 if [ ! "$1" = "--no-remove-stale-fakeroot" ]
 then
-  if [ -d $balenaFakerootDir ]
+  if [ -d "$balenaFakerootDir" ]
   then
     echo Removing stale directory $balenaFakerootDir
     rm -rf $balenaFakerootDir || true
@@ -135,7 +143,7 @@ then
   fi
 else
   shift
-  if [ -d $balenaFakerootDir ]
+  if [ -d "$balenaFakerootDir" ]
   then
     echo $balenaFakerootDir already exists.
     echo Please delete it manually build.
@@ -153,7 +161,7 @@ then
   deploy_fleet=$1
   push_method=balena_cli_local
   extra_push_flags="--detached --nolive"
-  balena device ssh 9f513e2.local "balena-engine container stop maneline-web" || true
+  balena device ssh $1 "balena-engine container stop maneline-web" || true
   shift
 elif [ ! -z "$(echo $1 | grep '@git.balena-cloud.com')" ]
 then
@@ -175,16 +183,16 @@ mkdir -p "$balenaFakerootDir"
 
 cp deployment/balena/compose-no-browser/docker-compose.yml $balenaFakerootDir
 cp deployment/balena/compose-no-browser/Dockerfile.template $balenaFakerootDir
-cp --recursive --force web-app/lua $balenaFakerootDir
-cp --recursive --force web-app/run.sh $balenaFakerootDir
-cp --recursive --force web-app/web_ui $balenaFakerootDir
-cp --recursive --force web-app/lcd_ui $balenaFakerootDir
+cp -Rf web-app/lua $balenaFakerootDir
+cp -Rf web-app/run.sh $balenaFakerootDir
+cp -Rf web-app/web_ui $balenaFakerootDir
+cp -Rf web-app/lcd_ui $balenaFakerootDir
 
 # The ePaper UI is presently not in use
 epaper_enabled=false
 if [ "$epaper_enabled" = "true" ]
 then
-  cp --recursive --force web-app/epaper_ui $balenaFakerootDir
+  cp -Rf web-app/epaper_ui $balenaFakerootDir
   if [ ! -f _work/E-Paper_code.zip ]
   then
     wget --output-document=_work/E-Paper_code.zip https://files.waveshare.com/upload/7/71/E-Paper_code.zip
@@ -197,12 +205,14 @@ then
 fi
 # end of disabled ePaper UI
 
-cp --recursive --force desktop-app/build/libs $balenaFakerootDir/jar
-cat deployment/balena/compose-no-browser/balena.yml | \
-  sed -e "s/0.0.0/$buildString/" | \
-  sed -e "s/%GITREF%/$buildGitRef/" \
-  > $balenaFakerootDir/balena.yml
+cp -Rf desktop-app/build/libs $balenaFakerootDir/jar
+
+cp deployment/balena/compose-no-browser/balena.yml $balenaFakerootDir/balena.yml
+sed -e "s/0.0.0/$buildString/" -i '' $balenaFakerootDir/balena.yml
+sed -e "s/%GITREF%/$buildGitRef/" -i '' $balenaFakerootDir/balena.yml
+
 echo Files copied to $balenaFakerootDir
+
 sh -c "cd $balenaFakerootDir && zip -r ../maneline-$buildString.zip ."
 
 if [ "$push_method" = "balena_cli" ]

@@ -5,7 +5,10 @@
 # bash/zsh directive its intended effect being the side effect of
 # defining the 4 variables below
 
-if [ -z "$BASH_SOURCE" ] && [ -z $ZSH_SOURCE ]
+# Note that envvar BASH_SOURCE tells us whether the script is 
+# source'd under bash, but zsh has no such useful variable 
+# so we assume source'd if that is the shell in use
+if [ -z "$BASH_SOURCE" ] && [ -z "$ZSH_VERSION" ]
 then
   echo "This script needs to be run in the current shell via the 'source' or '.' directive."
   echo "Running it as a subprocess has no effect."
