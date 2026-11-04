@@ -240,7 +240,7 @@ then
   # For now, Intel binaries are preferred to those for Apple Silicon
   jdk25_url=https://download.oracle.com/java/25/latest/jdk-25_macos-x64_bin.tar.gz
   balena_cli_url=https://github.com/balena-io/balena-cli/releases/download/${balena_version}/balena-cli-${balena_version}-macOS-x64-standalone.tar.gz
-  android_cltools_url=https://dl.google.com/android/repository/commandlinetools-mac-${android_cltools_version}_latest.zip
+  android_cltools_url=https://dl.google.com/android/repository/commandlinetools-mac_x86_64-${android_cltools_version}_latest.zip
   lua_make_target=macosx
 fi
 
@@ -257,7 +257,7 @@ download_and_unpack $lua54_url "tar xzvf"
 download_and_unpack $luarocks_url "tar xzvf"
 build_lua lua-5.4.9 $lua_make_target
 build_lua lua-5.4.9 all
-build_luarocks luarocks-3.13.0 lua-5.5.1
+build_luarocks luarocks-3.13.0 lua-5.4.9
 
 export LUA_HOME=$sdk_absdir/lua-5.4.9
 export LUA_PATH="$LUA_HOME/share/lua/5.4/?.lua;$LUA_HOME/share/lua/5.4/?/init.lua;;"
