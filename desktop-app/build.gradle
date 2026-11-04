@@ -105,7 +105,7 @@ dependencies {
     // to a vulnerable version of commons-lang3
     implementation 'org.apache.commons:commons-lang3:3.21.0'
 
-    implementation 'com.github.hypfvieh:dbus-java-parent:5.2.0'
+    implementation 'com.github.hypfvieh:dbus-java-parent:5.2.2'
     implementation 'com.github.hypfvieh:bluez-dbus:0.3.4'
     implementation 'com.github.hypfvieh:java-utils-extended:1.0.7'
 
@@ -119,7 +119,7 @@ dependencies {
     // It is possible to run a self-test of junixsocket features using the followign command line:
     // java -cp desktop-app/build/libs/maneline-cli-0.0.0.jar org.newsclub.net.unix.selftest.nativeimage.Main
 
-    implementation ('com.github.hypfvieh:dbus-java-transport-junixsocket:5.2.0') {
+    implementation ('com.github.hypfvieh:dbus-java-transport-junixsocket:5.2.2') {
         exclude group: 'com.kohlschutter.junixsocket', module: 'junixsocket-core'
     }
     implementation ('com.kohlschutter.junixsocket:junixsocket-selftest-native-image:2.10.1') {
