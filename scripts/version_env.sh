@@ -2,13 +2,15 @@
 # version_env.bash
 
 # This script is intended to be run using the '.'/'source'
-# bash directive its intended effect being the side effect of
+# bash/zsh directive its intended effect being the side effect of
 # defining the 4 variables below
 
-if [ -z "$BASH_SOURCE" ]
+if [ -z "$BASH_SOURCE" ] && [ -z $ZSH_SOURCE ]
 then
   echo "This script needs to be run in the current shell via the 'source' or '.' directive."
   echo "Running it as a subprocess has no effect."
+  echo "Current shell is '$SHELL'"
+  echo "source directive is supported under 'bash' and 'zsh'"
 elif [ ! "$#" = "4" ]
 then
   echo "Wrong number of arguments $#, require exactly 4 arguments"
