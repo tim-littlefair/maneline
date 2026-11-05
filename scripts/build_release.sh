@@ -1,7 +1,37 @@
 #! /bin/bash
 
 # This is a quick and dirty script to build and run a release of Maneline
-set -e -x 
+
+# This script is presently intended to run on the following operating 
+# systems:
+# Linux (Ubuntu/Debian variants - primary test environment is Ubuntu Resolute 26.04.1 LTS)
+# macOS (secondary test environments are Catalina 10.15 and Sequoia 15.7.X)
+# Some commands in this script need to change to reflect which OS is running
+osname=$(uname -a | grep -o -e Darwin -e Linux | sort | uniq)
+if [ "$osname" = "Linux" ]
+then
+  sed_inline() {
+    sed -e "$1" -i "$2"
+  }
+elif [ "$osname" = "Darwin" ]
+then
+  # macOS
+  sed_inline() {
+    sed -e "$1" -i '' "$2"
+  }
+else
+  echo "uname -a output: $(uname -a)" 
+  echo "Operating system not identified, expecting either 'Linux' or 'Darwin'"
+  exit 1
+fi
+
+if [ "$1" = "--echo-commands" ]
+then
+  # shell/subshell commands will be echoed on console
+  set -e -x 
+else
+  set -e
+fi
 
 # Because of problems reported in this message:
 # https://forums.balena.io/t/problems-doing-a-balena-push-free-tier/374797/10
@@ -26,6 +56,7 @@ fi
 
 export releaseString=$RELEASE_VERSION_MAJOR.$RELEASE_VERSION_MINOR.$RELEASE_VERSION_PATCH
 export gitHash=$(git rev-parse HEAD | cut -c 1-7)
+changed_files=$(git diff --name-only) 
 for c in $(git diff --name-only | wc -l)
 do
   # We only expect a single integer, but under macOS
@@ -44,10 +75,15 @@ then
   export buildString="$releaseString+beta$buildId"
   # buildGitRef will include the basenames of the files which are
   # dirty relative to the commit identified by gitHash
-  gitUncleanFileList=$(basename -a $(git diff --name-only))
-  # Wrapping the command with 'echo' collapses newlines in 
-  # $gitUncleanFileList to spaces
-  export buildGitRef=$(echo "#$gitHash" + changes to: $gitUncleanFileList)
+  if [ ! -z "$changed_files" ]
+  then
+    gitUncleanFileList=$(basename -a "$changed_files")
+    # Wrapping the command with 'echo' collapses newlines in 
+    # $gitUncleanFileList to spaces
+    export buildGitRef=$(echo "#$gitHash" + changes to: $gitUncleanFileList)
+  else
+    export buildGitRef=$(echo "#$gitHash" + no local changes)
+  fi
   export buildString="$buildString.$gitHash.$gitUncleanFileCount"
 elif [ ! "$gitUncleanFileCount" = "0" ]
 then
@@ -96,8 +132,8 @@ echo buildAndroidVersionCode=$buildAndroidVersionCode
 # Interactive mode to support development
 if [ "$1" = "--do-gradle-build" ]
 then
-  sed -e "s/0.0.0/$buildString/" -i '' build.gradle
-  sed -e "s/9999/$buildAndroidVersionCode/" -i '' build.gradle
+  sed_inline "s/0.0.0/$buildString/" build.gradle
+  sed_inline "s/9999/$buildAndroidVersionCode/" build.gradle
   ./gradlew clean build
   # ./gradlew :android-app:bundleRelease
   git restore build.gradle
@@ -208,8 +244,8 @@ fi
 cp -Rf desktop-app/build/libs $balenaFakerootDir/jar
 
 cp deployment/balena/compose-no-browser/balena.yml $balenaFakerootDir/balena.yml
-sed -e "s/0.0.0/$buildString/" -i '' $balenaFakerootDir/balena.yml
-sed -e "s/%GITREF%/$buildGitRef/" -i '' $balenaFakerootDir/balena.yml
+sed_inline "s/0.0.0/$buildString/" $balenaFakerootDir/balena.yml
+sed_inline "s/%GITREF%/$buildGitRef/" $balenaFakerootDir/balena.yml
 
 echo Files copied to $balenaFakerootDir
 
