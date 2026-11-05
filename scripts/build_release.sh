@@ -224,6 +224,11 @@ cp -Rf web-app/run.sh $balenaFakerootDir
 cp -Rf web-app/web_ui $balenaFakerootDir
 cp -Rf web-app/lcd_ui $balenaFakerootDir
 
+# the mmp_ble.py script and supporting files 
+# contributed by GitHub user @jonasjancarik
+mkdir $balenaFakerootDir/mmp_scripts
+cp scripts/mmp* $balenaFakerootDir/mmp_scripts
+
 # The ePaper UI is presently not in use
 epaper_enabled=false
 if [ "$epaper_enabled" = "true" ]

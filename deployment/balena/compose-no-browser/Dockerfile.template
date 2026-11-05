@@ -95,7 +95,12 @@ COPY ./web_ui ./web_ui
 COPY ./lcd_ui ./lcd_ui
 COPY ./jar ./jar
 
-COPY run.sh $WORKDIR
+COPY run.sh .
 RUN chmod +x run.sh
+
+# Installation of Python 3.14 is intended to support the mmp_ble.py
+# script and supporting source contributed by GitHub user @jonasjancarik.
+RUN apt-get install -y --no-install-recommends --no-install-suggests bluez python3.14 python3-bleak python-is-python3 
+COPY ./mmp_scripts ./mmp_scripts
 
 CMD [ "./run.sh" ]
