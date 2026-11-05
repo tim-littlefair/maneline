@@ -5,13 +5,23 @@ import asyncio
 import contextlib
 import json
 import mimetypes
+import os
 import socket
+import sys
 from pathlib import Path
 from urllib.parse import urlsplit
 from mmp_session import MicroPlusSession
 
-WEB_ROOT = Path(__file__).resolve().parents[1] / 'web-app' / 'web_ui'
-
+BASE_DIR=Path(__file__).resolve().parents[1]
+if os.path.exists(f'{BASE_DIR}/web-app/web_ui/micro-plus.html'):
+    # Running in development CLI
+    WEB_ROOT =  BASE_DIR / 'web-app' / 'web_ui'
+elif os.path.exists(f'{BASE_DIR}/web_ui/micro-plus.html'):
+    # Running in CLI on Balena maneline container
+    WEB_ROOT = BASE_DIR / 'web_ui'
+else:
+    print(f'Unable to find MMP web page under $BASE_DIR')
+    sys.exit(1)
 
 class HTTPError(Exception):
     def __init__(self, status, message):
@@ -20,11 +30,17 @@ class HTTPError(Exception):
 
 async def dispatch(method, path, headers, body, session, allowed_hosts=None):
     host = urlsplit('//' + headers.get('host', '')).hostname
-    if allowed_hosts is not None and host not in allowed_hosts:
-        raise HTTPError(403, 'Use the local Maneline address to open these controls.')
+    if (
+        (allowed_hosts is not None) and 
+        ('*' not in allowed_hosts and host not in allowed_hosts)
+    ):
+        raise HTTPError(
+            403, 
+            f'Use the local Maneline address to open these controls or add --allow-host={host}'
+        )
     if path.startswith('/api/'):
         if path != '/api/micro-plus':
-            raise HTTPError(404, 'Page not found.')
+            raise HTTPError(404, f'Page not found for path {path}')
         if method == 'GET':
             return 200, 'application/json', json.dumps(session.snapshot()).encode()
         if method != 'POST':
@@ -50,8 +66,9 @@ async def dispatch(method, path, headers, body, session, allowed_hosts=None):
     if path in ('/', '/index.html', '/micro-plus'):
         path = '/micro-plus.html'
     target = (WEB_ROOT / path.removeprefix('/web_ui/').lstrip('/')).resolve()
+    print(path,target)
     if not target.is_relative_to(WEB_ROOT.resolve()) or not target.is_file():
-        raise HTTPError(404, 'Page not found.')
+        raise HTTPError(404, f'Page not found for path {path} target {target}')
     return 200, mimetypes.guess_type(target.name)[0] or 'application/octet-stream', target.read_bytes()
 
 
@@ -80,6 +97,7 @@ async def handle(reader, writer, session, allowed_hosts=None):
             status, content_type, result = await dispatch(
                 method, urlsplit(target).path, headers, body, session, allowed_hosts)
     except HTTPError as error:
+        print(error)
         status, content_type, result = error.status, 'application/json', json.dumps({'error': error.message}).encode()
     except (ValueError, asyncio.IncompleteReadError, asyncio.LimitOverrunError):
         status, content_type, result = 400, 'application/json', b'{"error":"Invalid HTTP request."}'
