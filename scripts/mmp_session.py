@@ -1,7 +1,7 @@
 """Own one persistent Micro Plus connection and serialize browser commands."""
 import asyncio
 import time
-from mmp_ble import Controller, KEEPALIVE, KEEPALIVE_INTERVAL, NAME, RESPONSE, SERVICE
+from mmp_ble import Controller, KEEPALIVE, KEEPALIVE_INTERVAL, NAME, RESPONSE, SCAN_FILTER
 
 
 class MicroPlusSession:
@@ -54,7 +54,7 @@ class MicroPlusSession:
                 device = await BleakScanner.find_device_by_filter(
                     lambda d, advert: (d.name == NAME or advert.local_name == NAME)
                     and (self.device_id is None or d.address == self.device_id),
-                    service_uuids=[SERVICE], timeout=10)
+                    **SCAN_FILTER, timeout=10)
                 if device is None:
                     raise RuntimeError('Micro Plus not found. Turn it on and close Fender Tone on other devices. '
                                        'If it is already on, switch it off and on again: its Bluetooth can '

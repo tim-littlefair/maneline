@@ -11,6 +11,10 @@ SERVICE = '90559580-b707-11ee-acb1-7b7e30f1af54'
 REQUEST = '820a7e34-4e0a-4f90-8520-04ebce35a3a1'
 RESPONSE = '1017adcc-dcbc-4387-a59f-2546b2ea5bb0'
 NAME = 'Mustang Micro Plus'
+# Scanning with a service-UUID discovery filter makes BlueZ 5.87 re-initialize
+# an Intel AX201 adapter about 0.7 s in, failing with "No discovery started".
+# Matching by name already identifies the amp, so only filter on macOS.
+SCAN_FILTER = {'service_uuids': [SERVICE]} if sys.platform == 'darwin' else {}
 # Firmware 1.1.11 stops sending notifications with one-second keep-alives.
 # Keep a margin below the 500 ms interval used by the original BLE experiment.
 KEEPALIVE_INTERVAL = 0.25
@@ -196,11 +200,11 @@ async def run(args):
         device = await BleakScanner.find_device_by_filter(
             lambda device, advert: device.address == args.device
             and (advert.local_name == NAME or device.name == NAME),
-            timeout=args.timeout, service_uuids=[SERVICE])
+            timeout=args.timeout, **SCAN_FILTER)
         candidates = [device] if device else []
     else:
         devices = await BleakScanner.discover(timeout=args.timeout, return_adv=True,
-                                              service_uuids=[SERVICE])
+                                              **SCAN_FILTER)
         candidates = [device for device, advert in devices.values()
                       if advert.local_name == NAME or device.name == NAME]
     if not candidates:
