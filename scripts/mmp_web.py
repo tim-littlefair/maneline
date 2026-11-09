@@ -20,7 +20,7 @@ elif os.path.exists(f'{BASE_DIR}/web_ui/micro-plus.html'):
     # Running in CLI on Balena maneline container
     WEB_ROOT = BASE_DIR / 'web_ui'
 else:
-    print(f'Unable to find MMP web page under $BASE_DIR')
+    print(f'Unable to find MMP web page under {BASE_DIR}')
     sys.exit(1)
 
 class HTTPError(Exception):
