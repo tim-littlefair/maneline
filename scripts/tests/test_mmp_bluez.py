@@ -192,6 +192,18 @@ class LeBearerTests(unittest.IsolatedAsyncioTestCase):
                            'sss', ['org.bluez', ':1.5', '']))
         self.assertEqual(lost, [client])
 
+    async def test_audio_streaming_reads_this_devices_transport(self):
+        def objects(state, device=DEV):
+            return reply([{device + '/sep1/fd0': {mmp_bluez.MEDIA_TRANSPORT:
+                                                  {'State': Variant('s', state)}}}])
+
+        other = '/org/bluez/hci0/dev_11_22_33_44_55_66'
+        client, bus = await self.connected({'GetManagedObjects': [
+            managed_objects(), objects('active'), objects('idle'), objects('active', other)]})
+        self.assertTrue(await client.audio_streaming())
+        self.assertFalse(await client.audio_streaming())
+        self.assertFalse(await client.audio_streaming())    # another device's audio
+
 
     async def test_refuses_when_another_program_is_subscribed(self):
         client, bus = await self.connected({'GetManagedObjects': [managed_objects()],

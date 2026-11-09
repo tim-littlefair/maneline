@@ -95,6 +95,9 @@ async def handle(reader, writer, session, allowed_hosts=None):
             if not 0 <= length <= 1024:
                 raise HTTPError(413, 'Request body is too large.')
             body = await reader.readexactly(length)
+        # Reading the request is limited above; handling it may take longer when a
+        # switch first has to reconnect an amp that was disconnected to save battery.
+        async with asyncio.timeout(40):
             status, content_type, result = await dispatch(
                 method, urlsplit(target).path, headers, body, session, allowed_hosts)
     except HTTPError as error:
@@ -120,7 +123,7 @@ async def handle(reader, writer, session, allowed_hosts=None):
 async def run(args):
     Path(args.log).parent.mkdir(parents=True, exist_ok=True)
     with open(args.log, 'a', encoding='utf-8') as log:
-        session = MicroPlusSession(args.device, log)
+        session = MicroPlusSession(args.device, log, idle_disconnect=args.idle_disconnect)
         hostname = socket.gethostname().lower().removesuffix('.local')
         allowed_hosts = {'localhost', '127.0.0.1', '::1', hostname, hostname + '.local',
                          *args.allow_host}
@@ -150,7 +153,13 @@ def main():
     parser.add_argument('--log', default='_work/mmp-web.jsonl')
     parser.add_argument('--allow-host', action='append', default=[],
                         help='Additional hostname or IP address allowed to access the controls')
+    parser.add_argument('--idle-disconnect', type=float, metavar='SECONDS',
+                        help='Save the amp\'s battery: disconnect after this many seconds without '
+                             'a preset switch, unless Bluetooth audio is streaming to the amp '
+                             '(Linux). The next switch reconnects, which takes a few seconds.')
     args = parser.parse_args()
+    if args.idle_disconnect is not None and args.idle_disconnect <= 0:
+        parser.error('--idle-disconnect must be a positive number of seconds')
     try:
         asyncio.run(run(args))
     except (KeyboardInterrupt, asyncio.CancelledError):

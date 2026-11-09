@@ -19,6 +19,7 @@ BLUEZ = 'org.bluez'
 DEVICE = 'org.bluez.Device1'
 LE_BEARER = 'org.bluez.Bearer.LE1'
 CHARACTERISTIC = 'org.bluez.GattCharacteristic1'
+MEDIA_TRANSPORT = 'org.bluez.MediaTransport1'
 DEVICE_NAME = '00002a00-0000-1000-8000-00805f9b34fb'
 PROPERTIES = 'org.freedesktop.DBus.Properties'
 OBJECT_MANAGER = 'org.freedesktop.DBus.ObjectManager'
@@ -225,6 +226,26 @@ class LeBearerClient:
                                              'aya{sv}', [bytes(data), options]))
         if error:
             raise RuntimeError(f'Write failed: {error[0]} {error[1]}'.strip())
+
+    async def audio_streaming(self):
+        """True while Bluetooth audio is streaming to this device.
+
+        Lets a caller keep the LE link only while it costs little: next to an active
+        A2DP stream the LE link's wake-ups hardly matter, while on an idle device they
+        are a large share of what the amp's radio does.
+        """
+        if self._bus is None:
+            return False
+        reply = await self._call('/', OBJECT_MANAGER, 'GetManagedObjects')
+        if self._error(reply):
+            return False
+        prefix = self.path + '/'
+        for path, interfaces in reply.body[0].items():
+            transport = interfaces.get(MEDIA_TRANSPORT)
+            if path.startswith(prefix) and transport and \
+                    transport['State'].value in ('pending', 'active'):
+                return True
+        return False
 
     async def disconnect(self):
         bus = self._bus
