@@ -6,6 +6,7 @@ import contextlib
 import json
 import mimetypes
 import os
+import signal
 import socket
 import sys
 from pathlib import Path
@@ -126,6 +127,12 @@ async def run(args):
         server = await asyncio.start_server(lambda r, w: handle(r, w, session, allowed_hosts),
                                             '0.0.0.0', args.port, limit=8192)
         task = asyncio.create_task(session.run())
+        # Service managers stop the server with SIGTERM. Shut down as for Ctrl-C, so the
+        # session closes its Bluetooth connection instead of leaving it to BlueZ (on Linux
+        # that closes only the LE link and Bluetooth audio keeps playing).
+        with contextlib.suppress(NotImplementedError):
+            asyncio.get_running_loop().add_signal_handler(signal.SIGTERM,
+                                                          asyncio.current_task().cancel)
         print(f'Maneline Micro Plus controls: http://localhost:{args.port}', flush=True)
         try:
             async with server:
@@ -146,7 +153,7 @@ def main():
     args = parser.parse_args()
     try:
         asyncio.run(run(args))
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, asyncio.CancelledError):
         pass
 
 
