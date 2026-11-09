@@ -41,6 +41,14 @@ class ProtocolTests(unittest.TestCase):
             frames.feed(bytes.fromhex('350002ff'))
         self.assertEqual(frames.buffer, bytearray())
 
+    def test_stray_fragment_is_dropped_without_poisoning_controller(self):
+        controller = Controller(None, None)
+        controller.notify(None, bytes.fromhex('3400021206'))   # continuation, no start
+        controller.notify(None, bytes.fromhex('35000a120808012a0408472001'))
+        self.assertIsNone(controller.failure)
+        self.assertEqual(controller.dropped, 1)
+        self.assertEqual(controller.slot, 72)
+
     def test_truncated_protobuf_fails(self):
         for data in (b'\x12\xff', b'\x12\x02\x01', b'\x00'):
             with self.assertRaises(ValueError):

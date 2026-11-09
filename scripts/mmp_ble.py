@@ -120,6 +120,7 @@ class Controller:
         self.names = []
         self.changed = asyncio.Event()
         self.failure = None
+        self.dropped = 0
         self.write_lock = asyncio.Lock()
 
     def record(self, direction, data):
@@ -132,6 +133,15 @@ class Controller:
         self.record('rx', data)
         try:
             message = self.frames.feed(data)
+        except ValueError:
+            # A lost or out-of-order fragment, such as the tail of a message that began
+            # before notifications were enabled. Frames has already discarded the partial
+            # message, so drop this one and keep listening instead of failing every
+            # later request.
+            self.dropped += 1
+            self.record('drop', data)
+            return
+        try:
             if message is None or not message.startswith(b'\x12'):
                 return
             outer = fields(message)
