@@ -67,6 +67,10 @@ async def make_client(device, timeout=None, disconnected_callback=None):
     return BleakClient(device, **{k: v for k, v in options.items() if v is not None})
 
 
+class AmpBusy(RuntimeError):
+    """Another program on this computer already receives the amp's replies."""
+
+
 class Characteristic:
     def __init__(self, uuid, path, flags):
         self.uuid = uuid
@@ -195,9 +199,22 @@ class LeBearerClient:
         characteristic = self.services.get_characteristic(uuid)
         if characteristic is None:
             raise RuntimeError(f'Characteristic {uuid} was not found')
+        if await self._notifying(characteristic.path):
+            # Someone else is subscribed. BlueZ would deliver every notification to both
+            # programs twice, corrupting multi-frame messages, and closing the LE link
+            # later would cut the other program off. Leave without touching the link.
+            self._connected = False
+            await self.disconnect()
+            raise AmpBusy('Another program on this computer is already controlling the '
+                          'Micro Plus, for example the Maneline web server. Stop it first: '
+                          'two programs at once corrupt each other\'s messages.')
         self._notify[characteristic.path] = (characteristic, callback)
         async with asyncio.timeout(self.timeout):
             await self._until_ready(characteristic.path, 'StartNotify')
+
+    async def _notifying(self, path):
+        reply = await self._call(path, PROPERTIES, 'Get', 'ss', [CHARACTERISTIC, 'Notifying'])
+        return not self._error(reply) and bool(reply.body) and bool(reply.body[0].value)
 
     async def write_gatt_char(self, characteristic, data, response=False):
         from dbus_fast import Variant

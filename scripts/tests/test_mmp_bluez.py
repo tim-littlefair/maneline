@@ -193,5 +193,19 @@ class LeBearerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(lost, [client])
 
 
+    async def test_refuses_when_another_program_is_subscribed(self):
+        client, bus = await self.connected({'GetManagedObjects': [managed_objects()],
+                                            'Get': [reply([Variant('b', True)])]})
+        with self.assertRaises(mmp_bluez.AmpBusy):
+            await client.start_notify(RESPONSE, lambda *_: None)
+        members = [(interface, member) for _, interface, member in bus.calls]
+        self.assertNotIn((mmp_bluez.CHARACTERISTIC, 'StartNotify'), members)
+        self.assertNotIn((mmp_bluez.LE_BEARER, 'Disconnect'), members)    # not our link to close
+        self.assertFalse(client.is_connected)
+        self.assertTrue(bus.closed)
+        await client.disconnect()                                          # still harmless
+        self.assertNotIn((mmp_bluez.LE_BEARER, 'Disconnect'),
+                         [(i, m) for _, i, m in bus.calls])
+
 if __name__ == '__main__':
     unittest.main()

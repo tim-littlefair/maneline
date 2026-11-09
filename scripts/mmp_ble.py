@@ -240,9 +240,9 @@ async def run(args):
                         'disconnecting will also drop Bluetooth audio')
             else:
                 note = ''
-            print(f'Connected to Mustang Micro Plus{note}', file=sys.stderr, flush=True)
             controller = Controller(client, log)
             await client.start_notify(RESPONSE, controller.notify)
+            print(f'Connected to Mustang Micro Plus{note}', file=sys.stderr, flush=True)
             await controller.initialize()
             if args.command == 'presets':
                 await controller.wait_for(lambda: bool(controller.names))

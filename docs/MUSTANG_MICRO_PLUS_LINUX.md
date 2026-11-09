@@ -101,6 +101,10 @@ Linux.
   the next connection adopts it.
 - A notification fragment without its start is now dropped instead of failing
   every later request.
+- Only one program on a computer can control the amp at a time. Two would both
+  receive every notification twice, corrupting multi-frame messages such as the
+  preset names. If another program is already subscribed, `LeBearerClient`
+  stops with an error and leaves that program's LE link alone.
 
 ## Checking
 
