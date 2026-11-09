@@ -204,7 +204,8 @@ class Controller:
 
 
 async def run(args):
-    from bleak import BleakClient, BleakScanner
+    from bleak import BleakScanner
+    from mmp_bluez import LeBearerClient, make_client
     print('Looking for Mustang Micro Plus…', file=sys.stderr, flush=True)
     if args.device:
         device = await BleakScanner.find_device_by_filter(
@@ -231,8 +232,15 @@ async def run(args):
         Path(args.log).parent.mkdir(parents=True, exist_ok=True)
         log = open(args.log, 'a', encoding='utf-8')
     try:
-        async with BleakClient(candidates[0], timeout=args.timeout) as client:
-            print('Connected to Mustang Micro Plus', file=sys.stderr, flush=True)
+        async with await make_client(candidates[0], timeout=args.timeout) as client:
+            if isinstance(client, LeBearerClient):
+                note = ' over LE only; Bluetooth audio stays connected'
+            elif sys.platform.startswith('linux'):
+                note = ('; BlueZ offers no Bearer.LE1 (needs Experimental = true), so '
+                        'disconnecting will also drop Bluetooth audio')
+            else:
+                note = ''
+            print(f'Connected to Mustang Micro Plus{note}', file=sys.stderr, flush=True)
             controller = Controller(client, log)
             await client.start_notify(RESPONSE, controller.notify)
             await controller.initialize()

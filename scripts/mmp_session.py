@@ -2,6 +2,7 @@
 import asyncio
 import time
 from mmp_ble import Controller, KEEPALIVE, KEEPALIVE_INTERVAL, NAME, RESPONSE, SCAN_FILTER
+from mmp_bluez import make_client
 
 
 class MicroPlusSession:
@@ -46,7 +47,7 @@ class MicroPlusSession:
                 raise RuntimeError(self.error) from None
 
     async def run(self):
-        from bleak import BleakClient, BleakScanner
+        from bleak import BleakScanner
         while True:
             self.reset.clear()
             self.phase = 'connecting'
@@ -61,7 +62,10 @@ class MicroPlusSession:
                                        'stop answering while the amp itself keeps working.')
                 # Pin the first selected device across reconnects.
                 self.device_id = device.address
-                async with BleakClient(device, disconnected_callback=lambda _: self.reset.set()) as client:
+                # On Linux with BlueZ's bearer API this holds only the LE link, so
+                # Bluetooth audio to the amp keeps playing across connects and exits.
+                client = await make_client(device, disconnected_callback=lambda _: self.reset.set())
+                async with client:
                     self.client = client
                     controller = Controller(client, self.log)
                     await client.start_notify(RESPONSE, controller.notify)
