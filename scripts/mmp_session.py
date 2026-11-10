@@ -13,6 +13,7 @@ from mmp_bluez import make_client
 WAKE_TIMEOUT = 25
 # A preset JSON document is about 5 KB; anything much larger is not a preset.
 MAX_PRESET_JSON = 64 * 1024
+MAX_NAME = 16               # longest preset name the amp saves
 
 
 def check_preset(preset):
@@ -135,8 +136,12 @@ class MicroPlusSession:
         if type(slot) is not int or not 1 <= slot <= 100:
             raise ValueError('Choose a slot from 1 to 100.')
         name = (name if name is not None else preset.get('info', {}).get('displayName', '')).strip()
-        if not name or len(name.encode('utf-8')) > 64:
-            raise ValueError('Give the preset a name (at most 64 bytes).')
+        if not name or len(name) > MAX_NAME:
+            # a longer name is silently ignored by the amp: no confirmation, nothing saved
+            # (firmware 1.1.11, 2026-11-10: 16 characters saved, 20 not)
+            raise ValueError('Give the preset a name of 1 to {} characters.'.format(MAX_NAME))
+        preset = json.loads(json.dumps(preset))
+        preset.setdefault('info', {})['displayName'] = name     # the stored name and the list's agree
         async with self.lock:
             controller = await self._connected()
             self.stored.pop(slot, None)

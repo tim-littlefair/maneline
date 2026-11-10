@@ -67,7 +67,7 @@ Long requests use the same frame types, **117 payload bytes per frame**
 | 15 | productIdentificationRequest | | → 14 |
 | 16 | renamePresetRequest | presetName=1 | **writes** |
 | 17 | replaceNodeRequest | nodeIdToReplace=1, fenderIdToReplaceWith=2 | change amp or effect model |
-| 18 | savePresetAsRequest | presetIndex=1, compressedPresetJson=2, isLoadPreset=3, presetName=4 | **writes** a whole preset |
+| 18 | savePresetAsRequest | presetIndex=1, compressedPresetJson=2, isLoadPreset=3, presetName=4 | **writes** a whole preset → 13; names of more than 16 characters are silently ignored (no reply, nothing saved) |
 | 19 | setParameterModifiableRequest | nodeId=1, parameterId=2 | |
 | 20 | setParameterRequest | nodeId=1, parameterId=2, one of float=3 / string=4 / sint32=5 / bool=6 | live edit, not saved |
 | 21 | swapPresetRequest | | **writes** |
