@@ -20,6 +20,9 @@ written to the amp, and the amp returns to its original preset at the end.
   mmp_level.py delta PRESET.json [--offsets 0,3,6,-3,-6]      # does +3 dB give +3 dB?
   mmp_level.py survey BACKUP_DIR [--slots 1-71] [--out FILE]  # level of every preset
 
+A survey can be stopped with Ctrl+C and goes on where it stopped when run again; it
+first measures the last presets again (--overlap) to take today's playing into account.
+
 Analysis needs numpy.
 """
 import argparse
@@ -404,76 +407,181 @@ def run_delta(args):
     return 0 if ok else 1
 
 
+# ---------------------------------------------------------------- survey in sessions
+#
+# A survey can be stopped (Ctrl+C) and run again later: every measured preset is saved
+# at once in <backup>/survey-<method>.json. A new session first measures the last
+# OVERLAP presets of the previous ones again. The mean difference is how much stronger
+# (or weaker) the player plays today, and it is taken off every level of the session,
+# so all sessions end up on the scale of the first.
+
+STOPPED = 3             # exit code: survey not complete yet, run it again to go on
+
+
+def new_progress(method):
+    return {'method': method, 'sessions': [], 'order': [], 'presets': {}, 'failed': {},
+            'reference': []}
+
+
+def load_progress(path, method):
+    if not path.exists():
+        return new_progress(method)
+    progress = json.loads(path.read_text(encoding='utf-8'))
+    if progress.get('method') != method:
+        raise SystemExit('{} belongs to the {} method, not {}'.format(path, progress.get('method'), method))
+    return progress
+
+
+def save_progress(path, progress):
+    tmp = path.with_name(path.name + '.tmp')
+    tmp.write_text(json.dumps(progress, indent=1) + '\n', encoding='utf-8')
+    os.replace(tmp, path)
+
+
+def normalized_db(progress, measurement):
+    '''A level on the first session's scale.'''
+    return measurement['raw_db'] - progress['sessions'][measurement['session']]['offset_db']
+
+
+async def survey(meter, entries, load, progress, save, overlap=2, use_reference=False,
+                 reference_every=REFERENCE_EVERY):
+    '''Measure the presets of entries that progress doesn't have yet. load(entry) gives
+    the preset document; save() is called after every change of progress.'''
+    by_slot = {entry['slot']: entry for entry in entries}
+    session = len(progress['sessions'])
+    progress['sessions'].append({'started': time.strftime('%Y-%m-%dT%H:%M:%S%z'), 'offset_db': 0.0,
+                                 'overlap': []})
+    this = progress['sessions'][-1]
+    done, order = progress['presets'], progress['order']
+    ref_entry = entries[0] if use_reference and entries else None
+
+    async def measure_reference():
+        print('  reference "{}":'.format(ref_entry['name']), flush=True)
+        doc = measurement_copy(load(ref_entry), gate_off=False, name='CP reference')
+        progress['reference'].append({'session': session, 'after_presets': len(order),
+                                      'raw_db': await meter.measure(doc)})
+        save()
+
+    again = [slot for slot in order[-overlap:] if slot in by_slot] if overlap and order else []
+    if again:
+        print('Going on after {} presets. First {} measured last time, again, to compare '
+              'with today:'.format(len(order), len(again)), flush=True)
+        for slot in again:
+            level = await meter.measure(meter.prepare(load(by_slot[slot])))
+            before = normalized_db(progress, done[str(slot)])
+            this['overlap'].append({'slot': slot, 'before_db': round(before, 2), 'now_db': round(level, 2)})
+            print('  {:3d} {:18s} {:7.1f} dBFS, last time {:7.1f}'.format(
+                slot, by_slot[slot]['name'], level, before), flush=True)
+        diffs = [o['now_db'] - o['before_db'] for o in this['overlap']]
+        this['offset_db'] = round(statistics.mean(diffs), 2)
+        save()
+        print('  today {:+.1f} dB compared with last time; taken off the new levels{}'.format(
+            this['offset_db'], '' if max(diffs) - min(diffs) <= TAKE_SPREAD_DB else
+            ' - but the repeats disagree by {:.1f} dB, so better stop (Ctrl+C), warm up and '
+            'start again'.format(max(diffs) - min(diffs))), flush=True)
+    elif ref_entry and not progress['reference']:
+        await measure_reference()
+
+    for entry in entries:
+        slot = entry['slot']
+        if str(slot) in done:
+            continue
+        if ref_entry and order and len(order) % reference_every == 0 \
+                and all(r['after_presets'] != len(order) for r in progress['reference']):
+            await measure_reference()
+        doc = load(entry)
+        volume = amp_params(doc).get('volume', 0.0)
+        try:
+            level = await meter.measure(meter.prepare(doc))
+        except RuntimeError as error:
+            if not meter.checked and (meter.signal_sink or meter.played):
+                raise           # no tone / no playing arrives: no point measuring on
+            progress['failed'][str(slot)] = str(error)
+            save()
+            print('  {:3d} {:18s} FAILED: {}'.format(slot, entry['name'], error), flush=True)
+            continue
+        done[str(slot)] = {'amp_volume_db': volume, 'raw_db': round(level, 2), 'session': session}
+        if meter.spreads.get(doc.get('info', {}).get('displayName')) is not None:
+            done[str(slot)]['spread_db'] = meter.spreads[doc['info']['displayName']]
+        progress['failed'].pop(str(slot), None)
+        order.append(slot)
+        save()
+        print('  {:3d} {:18s} amp volume {:6.1f} dB -> {:7.1f} dBFS   ({} of {})'.format(
+            slot, entry['name'], volume, level - this['offset_db'],
+            sum(str(e['slot']) in done for e in entries), len(entries)), flush=True)
+    if ref_entry and all(r['after_presets'] != len(order) for r in progress['reference']):
+        await measure_reference()
+
+
+def survey_report(progress, entries, manifest, backup):
+    '''The level corrections of every preset measured so far.'''
+    names = {entry['slot']: entry['name'] for entry in entries}
+    levels = {int(slot): (m['amp_volume_db'], normalized_db(progress, m)) for slot, m in progress['presets'].items()}
+    target, result = match(levels)
+    method = progress['method']
+    report = {'method': method,
+              'note': {'noise': 'noise method: exact within a preset, approximate across presets '
+                                '(high-gain and compressed presets measure louder than they sound)',
+                       'signal': 'signal method: test tone at the guitar input',
+                       'played': 'played method: the same riff played for every preset (about +-1 dB)'}[method],
+              'measured_at': time.strftime('%Y-%m-%dT%H:%M:%S%z'), 'firmware': manifest.get('firmware'),
+              'backup': str(backup), 'target_db': round(target, 2),
+              'sessions': [{'started': s['started'], 'offset_db': s['offset_db']} for s in progress['sessions']],
+              'presets': [dict(slot=slot, name=names.get(slot, str(slot)), **values)
+                          for slot, values in sorted(result.items())],
+              'failed': [{'slot': int(slot), 'error': error} for slot, error in sorted(progress['failed'].items())]}
+    if progress['reference']:
+        values = [normalized_db(progress, r) for r in progress['reference']]
+        report['reference'] = {'slot': entries[0]['slot'], 'name': entries[0]['name'],
+                               'levels': [{'after_presets': r['after_presets'], 'db': round(v, 2)}
+                                          for r, v in zip(progress['reference'], values)],
+                               'drift_db': round(max(values) - min(values), 2)}
+    return report
+
+
 def run_survey(args):
     from mmp_backup import slot_list
     backup = Path(args.backup)
     manifest = json.load(open(backup / 'manifest.json', encoding='utf-8'))
     wanted = set(slot_list(args.slots))
     entries = [p for p in manifest['presets'] if p['slot'] in wanted and p['name'] != 'Empty']
+    method = 'played' if args.played else ('signal' if args.signal_sink else 'noise')
+    path = backup / 'survey-{}.json'.format(method)
+    progress = load_progress(path, method)
+    missing = [e for e in entries if str(e['slot']) not in progress['presets']]
+    if missing:
+        print('{} of {} presets to measure{}. Stop any time with Ctrl+C; run the same command '
+              'again to go on.'.format(len(missing), len(entries),
+                                       ', {} done before'.format(len(entries) - len(missing))
+                                       if len(missing) < len(entries) else ''), flush=True)
 
-    async def work(meter):
-        levels, failed = {}, {}
-        reference = []          # played method: (position, level) of the reference preset
-        ref_doc = None
-        if args.played and entries:
-            ref_doc = measurement_copy(json.load(open(backup / entries[0]['file'], encoding='utf-8')),
-                                       gate_off=False, name='CP reference')
+        def load(entry):
+            return json.load(open(backup / entry['file'], encoding='utf-8'))
 
-        async def measure_reference(position):
-            print('  reference "{}":'.format(entries[0]['name']), flush=True)
-            reference.append((position, await meter.measure(ref_doc)))
-
-        if ref_doc:
-            await measure_reference(0)
-        for position, entry in enumerate(entries, 1):
-            if ref_doc and position > 1 and (position - 1) % REFERENCE_EVERY == 0:
-                await measure_reference(position)
-            doc = json.load(open(backup / entry['file'], encoding='utf-8'))
-            volume = amp_params(doc).get('volume', 0.0)
-            try:
-                level = await meter.measure(meter.prepare(doc))
-            except RuntimeError as error:
-                if not meter.checked and (meter.signal_sink or meter.played):
-                    raise           # no tone / no playing arrives: no point measuring on
-                failed[entry['slot']] = str(error)
-                print('  {:3d} {:18s} FAILED: {}'.format(entry['slot'], entry['name'], error), flush=True)
-                continue
-            levels[entry['slot']] = (volume, level)
-            print('  {:3d} {:18s} amp volume {:6.1f} dB -> {:7.1f} dBFS'.format(
-                entry['slot'], entry['name'], volume, level), flush=True)
-        if ref_doc:
-            await measure_reference(len(entries) + 1)
-        return levels, failed, reference
-
-    levels, failed, reference = asyncio.run(with_amp(args, work))
-    if not levels:
+        try:
+            asyncio.run(with_amp(args, lambda meter: survey(
+                meter, entries, load, progress, lambda: save_progress(path, progress), args.overlap,
+                use_reference=args.played)))
+        except KeyboardInterrupt:
+            pass
+    done = sum(str(e['slot']) in progress['presets'] for e in entries)
+    if done + sum(str(e['slot']) in progress['failed'] for e in entries) < len(entries):
+        print('Stopped after {} of {} presets; saved in {}. Run the same command again to go on.'.format(
+            done, len(entries), path))
+        return STOPPED
+    if not progress['presets']:
         print('no preset could be measured; nothing written')
         return 1
-    target, result = match(levels)
-    report = {'method': 'played' if args.played else ('signal' if args.signal_sink else 'noise'),
-              'note': {'noise': 'noise method: exact within a preset, approximate across presets '
-                                '(high-gain and compressed presets measure louder than they sound)',
-                       'signal': 'signal method: test tone at the guitar input',
-                       'played': 'played method: the same riff played for every preset (about +-1 dB)'}[
-                  'played' if args.played else ('signal' if args.signal_sink else 'noise')],
-              'measured_at': time.strftime('%Y-%m-%dT%H:%M:%S%z'), 'firmware': manifest.get('firmware'),
-              'backup': str(backup), 'target_db': round(target, 2),
-              'presets': [dict(slot=slot, name=next(e['name'] for e in entries if e['slot'] == slot),
-                               **values) for slot, values in sorted(result.items())],
-              'failed': [{'slot': slot, 'error': error} for slot, error in sorted(failed.items())]}
-    if reference:
-        values = [level for _, level in reference]
-        report['reference'] = {'slot': entries[0]['slot'], 'name': entries[0]['name'],
-                               'levels': [{'after_presets': pos, 'db': round(lvl, 2)} for pos, lvl in reference],
-                               'drift_db': round(max(values) - min(values), 2)}
+    report = survey_report(progress, entries, manifest, backup)
+    if 'reference' in report:
         print('reference "{}" moved {:.1f} dB over the run (your playing strength){}'.format(
-            entries[0]['name'], report['reference']['drift_db'],
+            report['reference']['name'], report['reference']['drift_db'],
             ' - consider measuring again' if report['reference']['drift_db'] > DRIFT_WARN_DB else ''))
-    out = Path(args.out or backup / 'levels-{}.json'.format(report['method']))
+    out = Path(args.out or backup / 'levels-{}.json'.format(method))
     out.write_text(json.dumps(report, indent=1) + '\n', encoding='utf-8')
     print('target {:.1f} dBFS (median); corrections written to {}{}'.format(
-        target, out, '; {} failed'.format(len(failed)) if failed else ''))
-    return 1 if failed else 0
+        report['target_db'], out, '; {} failed'.format(len(report['failed'])) if report['failed'] else ''))
+    return 1 if report['failed'] else 0
 
 
 def main():
@@ -503,6 +611,9 @@ def main():
     survey.add_argument('backup', help='directory written by mmp_backup.py')
     survey.add_argument('--slots', default='1-100', help='e.g. 1-71')
     survey.add_argument('--out', help='result file (default: <backup>/levels-<method>.json)')
+    survey.add_argument('--overlap', type=int, default=2, choices=(0, 1, 2, 3),
+                        help='when going on after a stop: presets of last time to measure again '
+                             '(default %(default)s)')
     args = parser.parse_args()
     if args.played and args.signal_sink:
         parser.error('choose either --played or --signal-sink')

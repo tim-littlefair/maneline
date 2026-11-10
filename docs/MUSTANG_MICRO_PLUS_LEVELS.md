@@ -73,6 +73,14 @@ when prompted (a terminal bell, then 4 s).
 * **Reference preset:** the first preset is measured again after every 20 presets and at
   the end. Its movement (`reference.drift_db` in the result) shows how much your playing
   strength changed during the run; above 2 dB a new run is suggested.
+* **Stop and go on later (`--overlap 2`, the default):** every measured preset is saved
+  at once in `BACKUP/survey-played.json`. Stop with Ctrl+C (the amp returns to its preset);
+  the same command goes on where it stopped. A new session first measures the last 2
+  presets (or 1, `--overlap 1`) again; their mean difference to last time is today's
+  playing strength and is taken off every level of the session (`sessions[].offset_db`
+  in the result). If the repeats disagree by more than 1.5 dB it suggests stopping and
+  warming up. Exit code 3 means not complete yet; the result file is written once
+  every preset is measured.
 * **Cable versus playing:** the cable is far more repeatable (±0.1–0.2 dB). But its
   synthetic tone drives distorting and compressing presets differently from your
   guitar, unless its level is first matched to your playing on a clean preset.
