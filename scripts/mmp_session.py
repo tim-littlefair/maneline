@@ -128,6 +128,26 @@ class MicroPlusSession:
             self.last_switch = time.monotonic()
             return self.snapshot()
 
+    async def save(self, slot, preset, name=None):
+        """WRITE a preset into a slot (it is not selected). Returns the preset as the
+        amp stored it, read back. Make a backup first (mmp_backup.py)."""
+        check_preset(preset)
+        if type(slot) is not int or not 1 <= slot <= 100:
+            raise ValueError('Choose a slot from 1 to 100.')
+        name = (name if name is not None else preset.get('info', {}).get('displayName', '')).strip()
+        if not name or len(name.encode('utf-8')) > 64:
+            raise ValueError('Give the preset a name (at most 64 bytes).')
+        async with self.lock:
+            controller = await self._connected()
+            self.stored.pop(slot, None)
+            try:
+                stored = await controller.save(slot, preset, name)
+            except (RuntimeError, TimeoutError) as error:
+                raise RuntimeError(str(error) or 'The amp did not confirm the save.') from None
+            self.stored[slot] = stored
+            self.last_switch = time.monotonic()
+            return {'slot': slot, 'name': name, 'preset': stored}
+
     async def stored_preset(self, slot):
         """The preset stored in slot, as JSON (cached for this connection)."""
         if type(slot) is not int or not 1 <= slot <= 100:

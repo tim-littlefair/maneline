@@ -81,6 +81,18 @@ async def dispatch(method, path, headers, body, session, allowed_hosts=None, que
         if not isinstance(request, dict) or 'preset' not in request or not set(request) <= {'preset', 'slot'}:
             raise HTTPError(400, 'Send {"preset": {...}} and optionally "slot".')
         return await _call(session.audition(request['preset'], request.get('slot')))
+    if path == '/api/micro-plus/save':
+        # WRITE a preset into a slot: {"slot": n, "preset": {...}, "name": "..." (optional)}
+        if method != 'POST':
+            raise HTTPError(405, 'Use POST for this request.')
+        _check_write(headers)
+        try:
+            request = json.loads(body)
+        except (ValueError, UnicodeError) as error:
+            raise HTTPError(400, 'Send the preset as JSON.') from error
+        if not isinstance(request, dict) or not {'slot', 'preset'} <= set(request) <= {'slot', 'preset', 'name'}:
+            raise HTTPError(400, 'Send {"slot": n, "preset": {...}} and optionally "name".')
+        return await _call(session.save(request['slot'], request['preset'], request.get('name')))
     if path.startswith('/api/'):
         if path != '/api/micro-plus':
             raise HTTPError(404, f'Page not found for path {path}')

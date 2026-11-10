@@ -72,3 +72,27 @@ class AuditionTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class SaveMessage(unittest.TestCase):
+    '''savePresetAsRequest (18): index, compressed JSON, no load, name.'''
+
+    def decode(self, slot, name):
+        from mmp_audition import save_message, SAVE_AS_REQUEST
+        from mmp_ble import fields
+        from mmp_lz4 import decompress
+        doc = {'info': {'displayName': 'x'}, 'audioGraph': {'nodes': [{'nodeId': 'amp'}]}}
+        envelope = dict(fields(save_message(slot, doc, name)))
+        request = dict(fields(envelope[1]))
+        self.assertEqual(list(request), [SAVE_AS_REQUEST])
+        body = dict(fields(request[SAVE_AS_REQUEST]))
+        self.assertEqual(json.loads(decompress(body[2])), doc)
+        self.assertNotIn(3, body)                       # isLoadPreset false: not selected
+        return body
+
+    def test_fields(self):
+        body = self.decode(99, 'Twin -3')
+        self.assertEqual((body[1], body[4]), (98, b'Twin -3'))
+
+    def test_slot_one_has_no_index_field(self):
+        self.assertNotIn(1, self.decode(1, 'A'))        # proto3 leaves out the default 0
