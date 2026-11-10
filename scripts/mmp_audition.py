@@ -27,6 +27,7 @@ from mmp_ble import (Controller, KEEPALIVE, KEEPALIVE_INTERVAL, NAME, RESPONSE, 
                      fields, tone_message, tone_request, varint)
 from mmp_bluez import make_client
 from mmp_lz4 import compress, decompress
+from mmp_backup import PRESET_DATA_STATUS, preset_data_request
 
 AUDITION_REQUEST = 1            # MustangLtxToneRequest.auditionPresetRequest {compressedPresetJson = 1}
 CURRENT_PRESET_REQUEST = 4      # .currentPresetRequest {dummyField = 1}
@@ -110,6 +111,21 @@ class AuditionController(Controller):
         await self.send(tone_request(CURRENT_PRESET_REQUEST, b'\x08\x01'))
         status = await self.wait_status(CURRENT_PRESET_DATA_STATUS, CONFIRM_TIMEOUT)
         return json.loads(decompress(status[1]))
+
+    async def stored_preset(self, slot):
+        """The preset stored in slot (1-based), as a JSON document, without selecting it."""
+        self.statuses.pop(PRESET_DATA_STATUS, None)
+        self.statuses.pop(UNSUPPORTED_STATUS, None)
+        await self.send(preset_data_request(slot))
+        async with asyncio.timeout(CONFIRM_TIMEOUT * 2):
+            while self.statuses.get(PRESET_DATA_STATUS, {}).get(1, 0) != slot - 1 \
+                    or 2 not in self.statuses.get(PRESET_DATA_STATUS, {}):
+                if UNSUPPORTED_STATUS in self.statuses:
+                    raise RuntimeError('the amp rejected the request (error {})'.format(
+                        self.statuses[UNSUPPORTED_STATUS].get(1, 0)))
+                self.arrived.clear()
+                await self.arrived.wait()
+        return json.loads(decompress(self.statuses[PRESET_DATA_STATUS][2]))
 
     async def audition(self, doc, attempts=3):
         """Send the preset; return the slot the amp reports it on (1-based).

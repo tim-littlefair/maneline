@@ -161,3 +161,27 @@ a minute.
 Before any request marked **writes** above is used, a backup must exist. The first
 tests belong on an empty slot (72–100), with `auditionPresetRequest` tried before
 `savePresetAsRequest`.
+
+## Web server API
+
+`scripts/mmp_web.py` (default port 8081) owns the single BLE connection. Next to the
+browser page it offers:
+
+| Request | Body / query | Does |
+| --- | --- | --- |
+| `GET /api/micro-plus` | | state: connected, preset, name, `audition`, 100 preset names |
+| `POST /api/micro-plus` | `{"preset": n}` | select preset n (ends an audition) |
+| `POST /api/micro-plus/audition` | `{"preset": {…preset JSON…}, "slot": 100}` | play the preset without saving it; with `slot`, select that slot first (a reserved empty one keeps the temporary name away from real presets) |
+| `GET /api/micro-plus/preset?slot=n` | | the preset stored in slot n, as JSON (read without selecting it, cached per connection) |
+
+**Rules:**
+* POSTs need `Content-Type: application/json` and an `Origin` matching the server.
+* Bodies may be up to 64 KB.
+* Errors are 400 (invalid request), 403 (other origin) and 503 (amp not connected, or
+  it did not confirm).
+
+**Tested 2026-11-10 with the amp:**
+* An audition through HTTP takes 0.3–0.6 s.
+* 80S Rock with the gate off measured −80.5 dBFS at +0 dB and −74.7 dBFS at +6 dB
+  (+5.8 dB). Repeating the reference differed by 0.03 dB.
+* Selecting slot 19 afterwards ended the audition.

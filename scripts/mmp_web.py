@@ -10,7 +10,7 @@ import signal
 import socket
 import sys
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urlsplit
 from mmp_session import MicroPlusSession
 
 BASE_DIR=Path(__file__).resolve().parents[1]
@@ -29,7 +29,29 @@ class HTTPError(Exception):
         self.status, self.message = status, message
 
 
-async def dispatch(method, path, headers, body, session, allowed_hosts=None):
+MAX_BODY = 64 * 1024       # an audition carries a whole preset (about 5 KB of JSON)
+
+
+def _check_write(headers):
+    """Browser writes must come from this same host; no cross-origin controls."""
+    origin = headers.get('origin')
+    if origin is None or urlsplit(origin).netloc != headers.get('host'):
+        raise HTTPError(403, 'Open the controls on this server before changing presets.')
+    if headers.get('content-type', '').split(';')[0].strip() != 'application/json':
+        raise HTTPError(415, 'Send the request as JSON.')
+
+
+async def _call(coroutine):
+    try:
+        result = await coroutine
+    except (ValueError, UnicodeError) as error:
+        raise HTTPError(400, str(error)) from error
+    except RuntimeError as error:
+        raise HTTPError(503, str(error)) from error
+    return 200, 'application/json', json.dumps(result).encode()
+
+
+async def dispatch(method, path, headers, body, session, allowed_hosts=None, query=''):
     host = urlsplit('//' + headers.get('host', '')).hostname
     if (
         (allowed_hosts is not None) and 
@@ -39,6 +61,26 @@ async def dispatch(method, path, headers, body, session, allowed_hosts=None):
             403, 
             f'Use the local Maneline address to open these controls or add --allow-host={host}'
         )
+    if path == '/api/micro-plus/preset':
+        # the preset stored in a slot, as Fender's preset JSON: ?slot=1..100
+        if method != 'GET':
+            raise HTTPError(405, 'Use GET for this request.')
+        values = parse_qs(query).get('slot', [])
+        if len(values) != 1 or not values[0].isdigit():
+            raise HTTPError(400, 'Give one slot number, e.g. ?slot=19')
+        return await _call(session.stored_preset(int(values[0])))
+    if path == '/api/micro-plus/audition':
+        # play a preset without saving it: {"preset": {...}, "slot": 100 (optional)}
+        if method != 'POST':
+            raise HTTPError(405, 'Use POST for this request.')
+        _check_write(headers)
+        try:
+            request = json.loads(body)
+        except (ValueError, UnicodeError) as error:
+            raise HTTPError(400, 'Send the audition as JSON.') from error
+        if not isinstance(request, dict) or 'preset' not in request or not set(request) <= {'preset', 'slot'}:
+            raise HTTPError(400, 'Send {"preset": {...}} and optionally "slot".')
+        return await _call(session.audition(request['preset'], request.get('slot')))
     if path.startswith('/api/'):
         if path != '/api/micro-plus':
             raise HTTPError(404, f'Page not found for path {path}')
@@ -92,14 +134,15 @@ async def handle(reader, writer, session, allowed_hosts=None):
             if 'transfer-encoding' in headers:
                 raise HTTPError(400, 'Chunked requests are not supported.')
             length = int(headers.get('content-length', '0'))
-            if not 0 <= length <= 1024:
+            if not 0 <= length <= MAX_BODY:
                 raise HTTPError(413, 'Request body is too large.')
             body = await reader.readexactly(length)
         # Reading the request is limited above; handling it may take longer when a
         # switch first has to reconnect an amp that was disconnected to save battery.
         async with asyncio.timeout(40):
+            parts = urlsplit(target)
             status, content_type, result = await dispatch(
-                method, urlsplit(target).path, headers, body, session, allowed_hosts)
+                method, parts.path, headers, body, session, allowed_hosts, parts.query)
     except HTTPError as error:
         print(error)
         status, content_type, result = error.status, 'application/json', json.dumps({'error': error.message}).encode()
