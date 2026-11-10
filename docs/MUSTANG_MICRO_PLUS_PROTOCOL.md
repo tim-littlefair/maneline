@@ -126,6 +126,36 @@ and doesn't switch presets. It writes one JSON file per slot and `manifest.json`
 the raw LZ4 blocks to `_work/backups/`, which git does not track. 100 slots take about
 a minute.
 
+## Audition: tested 2026-11-10
+
+* **Sending long messages works:** a 1,166-byte compressed preset in 11 frames
+  (`33`, `34`…, `35`, 117 payload bytes each, like the amp's own frames) was
+  accepted.
+* **The amp loads the preset at once,** and the change is audible. A copy of 80S Rock
+  with the amp volume at −12 dB instead of −5 dB was clearly quieter. The amp
+  answered with currentPresetStatus (5) and currentPresetDataStatus (4) for the
+  auditioned preset.
+* **`exitAuditionRequest` needs `dummyField = true` (body `08 01`).** An empty
+  message is ignored. With the field set, the amp reloads like at startup (replies 4,
+  18 and 19). The same probably holds for every request that has a dummyField.
+* **Side effect:** the auditioned preset's name ("Audition Test") replaced the name of
+  the current slot in the **name list** (request 14). It stayed after exiting and
+  after switching away and back. The stored preset itself (request 12) was
+  unchanged, byte-identical to the backup.
+* **The name list is only memory:** after the amp was switched off and on, the whole name
+  list was identical to the backup again ("80S Rock" in slot 19). So an audition never
+  changes anything that survives a power cycle. To avoid the temporary name, audition
+  with the slot's own name, or audition the slot's stored preset again before exiting.
+
+**A reserved empty slot for auditions works** (tested on slot 100, "Empty"):
+* Select it (loadPresetRequest), then audition: the amp confirms slot 100 and loads the
+  auditioned tone.
+* Further auditions replace each other.
+* Selecting a real slot ends the audition and loads that slot unchanged.
+* The temporary name only replaces slot 100's entry in the name list (memory only).
+* The stored "Empty" preset stays untouched, and your real presets' names never show a
+  wrong tone.
+
 ## Not yet done
 
 Before any request marked **writes** above is used, a backup must exist. The first
