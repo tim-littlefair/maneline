@@ -28,7 +28,14 @@ Each BLE write or notification is one frame:
 | `33` | first frame of a longer message |
 | `34` | continuation |
 
-The amp sends long replies in `33`/`34` frames of 117 payload bytes, ending with `35`.
+Long requests use the same frame types, **117 payload bytes per frame**
+(`Controller.send_message`).
+* **Hold the write lock for the whole message.** Another frame in between (e.g. a
+  heartbeat, itself a complete `35` message) ends the message early, and the amp
+  silently drops it.
+* **Pause 20 ms between frames** (`FRAME_GAP`). The frames are writes without response;
+  sent back to back, under 1 ms apart, the amp ignored 4 of 5 auditions. With both
+  rules, 5 of 5 arrived (2026-11-10).
 
 ## Envelope: `MustangLtxAppMessage`
 

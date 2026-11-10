@@ -75,6 +75,37 @@ def packet(payload):
     return bytes((0x35, 0, len(payload))) + payload
 
 
+# The amp sends long messages in frames of 117 payload bytes (120 with the header);
+# requests use the same size. Tested with a 1,166-byte preset audition.
+FRAME_PAYLOAD = 117
+# Pause between the frames of one message. The frames are writes without response:
+# sent back to back (under 1 ms apart) the amp lost some and ignored 4 of 5
+# auditions; 20 ms apart (about two frames per 45 ms connection interval) they
+# arrive. An 11-frame preset then takes about 0.2 s, well inside the heartbeat's
+# 0.5 s limit, which waits for the message.
+FRAME_GAP = 0.02
+
+
+def tone_message(field, body):
+    """App-to-amp message: MustangLtxAppMessage.toneRequest (field 1) wrapping one
+    request, given by its number in MustangLtxToneRequest and its encoded fields.
+    See docs/MUSTANG_MICRO_PLUS_PROTOCOL.md."""
+    request = varint((field << 3) | 2) + varint(len(body)) + body
+    return b'\x0a' + varint(len(request)) + request
+
+
+def tone_request(field, body):
+    """A request that fits into one frame, ready to send with Controller.send()."""
+    return packet(tone_message(field, body))
+
+
+def frames(payload):
+    """Split a message into frames: 33 first, 34 continuation, 35 last (or only)."""
+    chunks = [payload[i:i + FRAME_PAYLOAD] for i in range(0, len(payload), FRAME_PAYLOAD)] or [b'']
+    return [bytes((0x35 if n == len(chunks) - 1 else (0x33 if n == 0 else 0x34), 0, len(chunk)))
+            + chunk for n, chunk in enumerate(chunks)]
+
+
 def select_preset(slot):
     if not 1 <= slot <= 100:
         raise ValueError('Preset number must be between 1 and 100')
@@ -163,7 +194,8 @@ class Controller:
             self.failure = error
             self.changed.set()
 
-    async def send(self, data):
+    async def _write(self, data):
+        """Write one frame; the caller holds write_lock."""
         self.record('tx', data)
         characteristic = self.client.services.get_characteristic(REQUEST)
         if characteristic is None:
@@ -173,8 +205,27 @@ class Controller:
         properties = characteristic.properties
         response = ('write-without-response' not in properties
                     or (sys.platform == 'darwin' and 'write' in properties))
+        await self.client.write_gatt_char(characteristic, data, response=response)
+
+    async def send(self, data):
+        """Send one complete frame (a request that fits into one frame)."""
         async with self.write_lock:
-            await self.client.write_gatt_char(characteristic, data, response=response)
+            await self._write(data)
+
+    async def send_message(self, payload):
+        """Send a message of any length as consecutive frames.
+
+        The lock is held for all frames: a frame from another task in between, such
+        as a heartbeat (a complete one-frame message), would end the message early,
+        and the amp drops it. Seen on 2026-11-10: two auditions with a heartbeat after
+        the second frame were silently ignored.
+        """
+        async with self.write_lock:
+            parts = frames(payload)
+            for n, frame in enumerate(parts):
+                await self._write(frame)
+                if n < len(parts) - 1:
+                    await asyncio.sleep(FRAME_GAP)
 
     async def initialize(self):
         # Read-only handshake from the checked-in Android Tone captures.
