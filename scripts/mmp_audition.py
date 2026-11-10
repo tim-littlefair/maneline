@@ -111,12 +111,25 @@ class AuditionController(Controller):
         status = await self.wait_status(CURRENT_PRESET_DATA_STATUS, CONFIRM_TIMEOUT)
         return json.loads(decompress(status[1]))
 
-    async def audition(self, doc):
-        """Send the preset; return the slot the amp reports it on (1-based)."""
-        self.statuses.clear()
-        await self.send_message(audition_message(doc))
-        status = await self.wait_status(CURRENT_PRESET_STATUS, CONFIRM_TIMEOUT)
-        return status.get(1, 0) + 1
+    async def audition(self, doc, attempts=3):
+        """Send the preset; return the slot the amp reports it on (1-based).
+
+        Now and then the amp does not confirm an audition (about one in 25 in a survey
+        of all factory presets, independent of the preset); the message was probably
+        lost on the radio. Auditioning is idempotent, so it is simply sent again.
+        """
+        message = audition_message(doc)
+        for attempt in range(1, attempts + 1):
+            self.statuses.clear()
+            await self.send_message(message)
+            try:
+                status = await self.wait_status(CURRENT_PRESET_STATUS, CONFIRM_TIMEOUT)
+                return status.get(1, 0) + 1
+            except TimeoutError:
+                if attempt == attempts:
+                    raise RuntimeError('the amp did not confirm the audition '
+                                       '({} attempts)'.format(attempts)) from None
+                await asyncio.sleep(0.5)
 
 
 async def heartbeat(controller):
