@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import numpy as np
-from mmp_level import INTERFERENCE_HZ, RATE, Meter, check_signal, decode_s24, level_db, match, measurement_copy, played_level_db
+from mmp_level import INTERFERENCE_HZ, RATE, Meter, check_signal, combine_takes, decode_s24, level_db, match, measurement_copy, played_level_db
 
 PRESET = {'info': {'displayName': '80S Rock'},
           'audioGraph': {'nodes': [{'nodeId': 'amp', 'dspUnitParameters': {'volume': -5.0, 'gatePreset': 'mid'}}]}}
@@ -70,6 +70,16 @@ class PlayedLevel(unittest.TestCase):
         meter = Meter.__new__(Meter)
         meter.signal_sink, meter.played = None, True
         self.assertEqual(meter.prepare(PRESET)['audioGraph']['nodes'][0]['dspUnitParameters']['gatePreset'], 'mid')
+
+
+class Takes(unittest.TestCase):
+    def test_power_mean_and_spread(self):
+        mean, spread = combine_takes([-30.0, -30.0])
+        self.assertAlmostEqual(mean, -30.0)
+        self.assertEqual(spread, 0.0)
+        mean, spread = combine_takes([-30.0, -33.0])
+        self.assertAlmostEqual(mean, -31.25, delta=0.01)   # power mean, not -31.5
+        self.assertEqual(spread, 3.0)
 
 
 class SignalChecks(unittest.TestCase):

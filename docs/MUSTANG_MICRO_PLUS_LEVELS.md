@@ -59,6 +59,16 @@ when prompted (a terminal bell, then 4 s).
   between strums don't lower it.
 * **Precision:** about ±1 dB from take to take, but it measures exactly what matters:
   how loud each preset is when *you* play it.
+* **Takes (`--takes 2`, the default):** each preset gets two takes, averaged as power.
+  If they differ by more than 1.5 dB, a third take is requested.
+* **Reference preset:** the first preset is measured again after every 20 presets and at
+  the end. Its movement (`reference.drift_db` in the result) shows how much your playing
+  strength changed during the run; above 2 dB a new run is suggested.
+* **Cable versus playing:** the cable is far more repeatable (±0.1–0.2 dB). But its
+  synthetic tone drives distorting and compressing presets differently from your
+  guitar, unless its level is first matched to your playing on a clean preset.
+  Playing has no such systematic error, and its random error shrinks with takes:
+  about ±0.7–1 dB with two.
 * **Safeguard:** the muted-string noise floor is measured once. If the first take isn't
   at least 15 dB above it, the run aborts without a result file. Checked in a dry run
   without playing: −104.7 dBFS against −117.8, stopped.

@@ -72,6 +72,17 @@ def played_level_db(x, rate=RATE, frame_s=0.1):
     return 10 * np.log10(mean) if mean > 0 else SILENCE_DB - 40
 
 
+TAKE_SPREAD_DB = 1.5    # played method: takes further apart than this get one more take
+DRIFT_WARN_DB = 2.0     # played method: reference preset moved more than this -> warn
+REFERENCE_EVERY = 20    # played method: measure the reference preset again after this many
+
+
+def combine_takes(levels):
+    '''Mean level of several takes (averaged as power) and their spread in dB.'''
+    power = sum(10 ** (level / 10) for level in levels) / len(levels)
+    return 10 * np.log10(power), max(levels) - min(levels)
+
+
 def decode_s24(raw, channels=2):
     """24-bit little-endian PCM to a mono float array in [-1, 1)."""
     b = np.frombuffer(raw, np.uint8)
@@ -233,9 +244,12 @@ def match(levels, target=None):
 class Meter:
     """Audition presets on a reserved slot and measure each one."""
 
-    def __init__(self, controller, slot=100, seconds=3.0, settle=0.7, signal_sink=None, played=False):
+    def __init__(self, controller, slot=100, seconds=3.0, settle=0.7, signal_sink=None, played=False,
+                 takes=2):
         self.controller = controller
         self.played = played            # the player plays a riff for every preset
+        self.takes = takes              # played method: takes per preset
+        self.spreads = {}               # played method: name -> spread of its takes
         self.slot = slot
         self.seconds = seconds
         self.settle = settle
@@ -262,7 +276,8 @@ class Meter:
         return await self._measure(doc)
 
     async def _measure_played(self, doc):
-        '''Played method: the player plays the same riff for every preset.'''
+        '''Played method: the player plays the same riff for every preset, in several
+        takes; one more take if they disagree by more than TAKE_SPREAD_DB.'''
         if not self.checked:
             print('Mute the strings and keep still for 3 s (noise floor)...', flush=True)
             await asyncio.sleep(1.0)
@@ -270,14 +285,23 @@ class Meter:
         confirmed = await self.controller.audition(doc)
         if confirmed != self.slot:
             raise RuntimeError('audition confirmed on slot {}, expected {}'.format(confirmed, self.slot))
-        print('\a  "{}": play your riff now ({:.0f} s)'.format(
-            doc.get('info', {}).get('displayName'), self.seconds), flush=True)
-        await asyncio.sleep(0.5)
-        level = played_level_db(await asyncio.to_thread(record, self.seconds, self.source))
-        if not self.checked:
-            check_signal(level, self.floor, played=True)
-            self.checked = True
-        return level
+        name = doc.get('info', {}).get('displayName')
+        levels = []
+        while len(levels) < self.takes or (len(levels) == self.takes and self.takes > 1
+                                           and combine_takes(levels)[1] > TAKE_SPREAD_DB):
+            print('\a  "{}": play your riff now ({:.0f} s){}'.format(
+                name, self.seconds, '' if self.takes == 1 else ', take {}'.format(len(levels) + 1)),
+                flush=True)
+            await asyncio.sleep(0.5)
+            level = played_level_db(await asyncio.to_thread(record, self.seconds, self.source))
+            if not self.checked:
+                check_signal(level, self.floor, played=True)
+                self.checked = True
+            levels.append(level)
+            await asyncio.sleep(0.5)
+        mean, spread = combine_takes(levels)
+        self.spreads[name] = round(spread, 2)
+        return mean
 
     async def _measure(self, doc, use_signal=True):
         confirmed = await self.controller.audition(doc)
@@ -320,7 +344,8 @@ async def with_amp(args, work):
             await controller.switch(args.slot)
             try:
                 sink = signal_sink(args.signal_sink) if args.signal_sink else None
-                meter = Meter(controller, args.slot, args.seconds, args.settle, sink, args.played)
+                meter = Meter(controller, args.slot, args.seconds, args.settle, sink, args.played,
+                              args.takes)
                 if sink:
                     with sink_volume(sink, args.signal_volume):
                         return await work(meter)
@@ -380,7 +405,21 @@ def run_survey(args):
 
     async def work(meter):
         levels, failed = {}, {}
-        for entry in entries:
+        reference = []          # played method: (position, level) of the reference preset
+        ref_doc = None
+        if args.played and entries:
+            ref_doc = measurement_copy(json.load(open(backup / entries[0]['file'], encoding='utf-8')),
+                                       gate_off=False, name='CP reference')
+
+        async def measure_reference(position):
+            print('  reference "{}":'.format(entries[0]['name']), flush=True)
+            reference.append((position, await meter.measure(ref_doc)))
+
+        if ref_doc:
+            await measure_reference(0)
+        for position, entry in enumerate(entries, 1):
+            if ref_doc and position > 1 and (position - 1) % REFERENCE_EVERY == 0:
+                await measure_reference(position)
             doc = json.load(open(backup / entry['file'], encoding='utf-8'))
             volume = amp_params(doc).get('volume', 0.0)
             try:
@@ -394,9 +433,11 @@ def run_survey(args):
             levels[entry['slot']] = (volume, level)
             print('  {:3d} {:18s} amp volume {:6.1f} dB -> {:7.1f} dBFS'.format(
                 entry['slot'], entry['name'], volume, level), flush=True)
-        return levels, failed
+        if ref_doc:
+            await measure_reference(len(entries) + 1)
+        return levels, failed, reference
 
-    levels, failed = asyncio.run(with_amp(args, work))
+    levels, failed, reference = asyncio.run(with_amp(args, work))
     if not levels:
         print('no preset could be measured; nothing written')
         return 1
@@ -412,6 +453,14 @@ def run_survey(args):
               'presets': [dict(slot=slot, name=next(e['name'] for e in entries if e['slot'] == slot),
                                **values) for slot, values in sorted(result.items())],
               'failed': [{'slot': slot, 'error': error} for slot, error in sorted(failed.items())]}
+    if reference:
+        values = [level for _, level in reference]
+        report['reference'] = {'slot': entries[0]['slot'], 'name': entries[0]['name'],
+                               'levels': [{'after_presets': pos, 'db': round(lvl, 2)} for pos, lvl in reference],
+                               'drift_db': round(max(values) - min(values), 2)}
+        print('reference "{}" moved {:.1f} dB over the run (your playing strength){}'.format(
+            entries[0]['name'], report['reference']['drift_db'],
+            ' - consider measuring again' if report['reference']['drift_db'] > DRIFT_WARN_DB else ''))
     out = Path(args.out or backup / 'levels-{}.json'.format(report['method']))
     out.write_text(json.dumps(report, indent=1) + '\n', encoding='utf-8')
     print('target {:.1f} dBFS (median); corrections written to {}{}'.format(
@@ -429,6 +478,8 @@ def main():
                                               '"auto" picks the headphone output')
     parser.add_argument('--played', action='store_true',
                         help='played method: you play the same riff for every preset (no cable needed)')
+    parser.add_argument('--takes', type=int, default=2,
+                        help='played method: takes per preset, averaged (default %(default)s)')
     parser.add_argument('--signal-volume', default=SIGNAL_VOLUME,
                         help='output volume while the test tone plays (default %(default)s)')
     parser.add_argument('--device', help='Bluetooth address of the amp')
