@@ -245,8 +245,9 @@ class Meter:
     """Audition presets on a reserved slot and measure each one."""
 
     def __init__(self, controller, slot=100, seconds=3.0, settle=0.7, signal_sink=None, played=False,
-                 takes=2):
+                 takes=2, warmup=2):
         self.controller = controller
+        self.warmup = warmup            # played method: practice takes before the first measurement
         self.played = played            # the player plays a riff for every preset
         self.takes = takes              # played method: takes per preset
         self.spreads = {}               # played method: name -> spread of its takes
@@ -282,6 +283,13 @@ class Meter:
             print('Mute the strings and keep still for 3 s (noise floor)...', flush=True)
             await asyncio.sleep(1.0)
             self.floor = level_db(await asyncio.to_thread(record, 3.0, self.source))
+            # A player settles in during the first takes (2026-11-10: the first preset rose
+            # 3.3 dB over four takes, the next two stayed within 0.4 and 0.8 dB), so the
+            # first takes are practice and not measured.
+            for practice in range(1, self.warmup + 1):
+                print('\a  practice {} of {}: play your riff now ({:.0f} s, not measured)'.format(
+                    practice, self.warmup, self.seconds), flush=True)
+                await asyncio.sleep(self.seconds + 1.5)
         confirmed = await self.controller.audition(doc)
         if confirmed != self.slot:
             raise RuntimeError('audition confirmed on slot {}, expected {}'.format(confirmed, self.slot))
@@ -345,7 +353,7 @@ async def with_amp(args, work):
             try:
                 sink = signal_sink(args.signal_sink) if args.signal_sink else None
                 meter = Meter(controller, args.slot, args.seconds, args.settle, sink, args.played,
-                              args.takes)
+                              args.takes, args.warmup)
                 if sink:
                     with sink_volume(sink, args.signal_volume):
                         return await work(meter)
@@ -480,6 +488,8 @@ def main():
                         help='played method: you play the same riff for every preset (no cable needed)')
     parser.add_argument('--takes', type=int, default=2,
                         help='played method: takes per preset, averaged (default %(default)s)')
+    parser.add_argument('--warmup', type=int, default=2,
+                        help='played method: practice takes before measuring (default %(default)s)')
     parser.add_argument('--signal-volume', default=SIGNAL_VOLUME,
                         help='output volume while the test tone plays (default %(default)s)')
     parser.add_argument('--device', help='Bluetooth address of the amp')

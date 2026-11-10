@@ -59,6 +59,15 @@ when prompted (a terminal bell, then 4 s).
   between strums don't lower it.
 * **Precision:** about ±1 dB from take to take, but it measures exactly what matters:
   how loud each preset is when *you* play it.
+* **Your consistency, measured 2026-11-10:** open E major, 4 down-strums, four takes each on
+  three clean presets. 65 Twin Reverb (played first) rose from −23.8 to −20.5 dBFS while
+  you warmed up. Then Jazz Clean stayed within 0.4 dB (std 0.19 dB) and 65 Dlx Reverb
+  within 0.8 dB (std 0.36 dB). Overall std 0.8 dB, so two takes average to about
+  ±0.6 dB, and about ±0.3 dB once warmed up. The same test showed real differences
+  between clean presets as played: Jazz Clean −20.0, Twin about −22, Dlx −23.6 dBFS.
+  The noise method had ranked Jazz Clean the quietest of the three.
+* **Warm-up (`--warmup 2`, the default):** two prompted practice takes after the noise
+  floor, not measured.
 * **Takes (`--takes 2`, the default):** each preset gets two takes, averaged as power.
   If they differ by more than 1.5 dB, a third take is requested.
 * **Reference preset:** the first preset is measured again after every 20 presets and at
