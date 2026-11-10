@@ -55,6 +55,23 @@ SIGNAL_VOLUME = '40%'           # output volume while the test tone plays (repro
 
 # ---------------------------------------------------------------- analysis
 
+def played_level_db(x, rate=RATE, frame_s=0.1):
+    '''Level of the loud part of a played take: mean power of the loudest half of the
+    100 ms frames, so pauses between strums don't lower the result.'''
+    x = np.asarray(x, dtype=float)
+    n = int(rate * frame_s)
+    frames = len(x) // n
+    if frames < 4:
+        raise ValueError('recording too short')
+    powers = []
+    for i in range(frames):
+        chunk = x[i * n:(i + 1) * n]
+        powers.append(10 ** (level_db(chunk, rate) / 10) if np.any(chunk) else 0.0)
+    loud = sorted(powers)[frames // 2:]
+    mean = sum(loud) / len(loud)
+    return 10 * np.log10(mean) if mean > 0 else SILENCE_DB - 40
+
+
 def decode_s24(raw, channels=2):
     """24-bit little-endian PCM to a mono float array in [-1, 1)."""
     b = np.frombuffer(raw, np.uint8)
@@ -67,7 +84,7 @@ def decode_s24(raw, channels=2):
 def level_db(x, rate=RATE):
     """Band-limited RMS level in dBFS, without the interference line."""
     x = np.asarray(x, dtype=float)
-    if len(x) < rate // 10:
+    if len(x) < rate // 20:
         raise ValueError('recording too short')
     x = x - x.mean()
     # Hann window: the interference line falls between FFT bins; without a window its
@@ -110,9 +127,14 @@ def signal_sink(name):
     return phones[0]
 
 
-def check_signal(tone_db, silent_db, margin=SIGNAL_MARGIN_DB):
-    '''Raise unless the test tone clearly reaches the amp.'''
+def check_signal(tone_db, silent_db, margin=SIGNAL_MARGIN_DB, played=False):
+    '''Raise unless the test tone (or the playing) clearly reaches the amp.'''
     if tone_db - silent_db < margin:
+        if played:
+            raise RuntimeError(
+                'no playing arrived: {:.1f} dBFS during the take, {:.1f} dBFS with muted strings '
+                '(needs {:.0f} dB more). Turn the guitar volume up and play the riff when '
+                'prompted.'.format(tone_db, silent_db, margin))
         raise RuntimeError(
             'the test tone does not reach the guitar input: {:.1f} dBFS with it, {:.1f} dBFS '
             'without (needs {:.0f} dB more). Check the cable from the headphone output to the '
@@ -211,8 +233,9 @@ def match(levels, target=None):
 class Meter:
     """Audition presets on a reserved slot and measure each one."""
 
-    def __init__(self, controller, slot=100, seconds=3.0, settle=0.7, signal_sink=None):
+    def __init__(self, controller, slot=100, seconds=3.0, settle=0.7, signal_sink=None, played=False):
         self.controller = controller
+        self.played = played            # the player plays a riff for every preset
         self.slot = slot
         self.seconds = seconds
         self.settle = settle
@@ -224,9 +247,11 @@ class Meter:
     def prepare(self, doc, offset_db=0.0, name=None):
         '''The measurement copy: noise method with the gate off; signal method as the
         preset is played (a real signal opens its gate).'''
-        return measurement_copy(doc, offset_db, gate_off=not self.signal_sink, name=name)
+        return measurement_copy(doc, offset_db, gate_off=not (self.signal_sink or self.played), name=name)
 
     async def measure(self, doc):
+        if self.played:
+            return await self._measure_played(doc)
         if self.signal_sink and not self.checked:
             # once per run: with the tone the amp must be far above its level without it
             silent = await self._measure(doc, use_signal=False)
@@ -235,6 +260,24 @@ class Meter:
             self.checked = True
             return tone
         return await self._measure(doc)
+
+    async def _measure_played(self, doc):
+        '''Played method: the player plays the same riff for every preset.'''
+        if not self.checked:
+            print('Mute the strings and keep still for 3 s (noise floor)...', flush=True)
+            await asyncio.sleep(1.0)
+            self.floor = level_db(await asyncio.to_thread(record, 3.0, self.source))
+        confirmed = await self.controller.audition(doc)
+        if confirmed != self.slot:
+            raise RuntimeError('audition confirmed on slot {}, expected {}'.format(confirmed, self.slot))
+        print('\a  "{}": play your riff now ({:.0f} s)'.format(
+            doc.get('info', {}).get('displayName'), self.seconds), flush=True)
+        await asyncio.sleep(0.5)
+        level = played_level_db(await asyncio.to_thread(record, self.seconds, self.source))
+        if not self.checked:
+            check_signal(level, self.floor, played=True)
+            self.checked = True
+        return level
 
     async def _measure(self, doc, use_signal=True):
         confirmed = await self.controller.audition(doc)
@@ -277,7 +320,7 @@ async def with_amp(args, work):
             await controller.switch(args.slot)
             try:
                 sink = signal_sink(args.signal_sink) if args.signal_sink else None
-                meter = Meter(controller, args.slot, args.seconds, args.settle, sink)
+                meter = Meter(controller, args.slot, args.seconds, args.settle, sink, args.played)
                 if sink:
                     with sink_volume(sink, args.signal_volume):
                         return await work(meter)
@@ -343,8 +386,8 @@ def run_survey(args):
             try:
                 level = await meter.measure(meter.prepare(doc))
             except RuntimeError as error:
-                if not meter.checked and meter.signal_sink:
-                    raise           # the test tone doesn't arrive: no point measuring on
+                if not meter.checked and (meter.signal_sink or meter.played):
+                    raise           # no tone / no playing arrives: no point measuring on
                 failed[entry['slot']] = str(error)
                 print('  {:3d} {:18s} FAILED: {}'.format(entry['slot'], entry['name'], error), flush=True)
                 continue
@@ -354,11 +397,16 @@ def run_survey(args):
         return levels, failed
 
     levels, failed = asyncio.run(with_amp(args, work))
+    if not levels:
+        print('no preset could be measured; nothing written')
+        return 1
     target, result = match(levels)
-    report = {'method': 'signal' if args.signal_sink else 'noise',
-              'note': ('noise method: exact within a preset, approximate across presets '
-                       '(high-gain and compressed presets measure louder than they sound)'
-                       if not args.signal_sink else 'signal method: test tone at the guitar input'),
+    report = {'method': 'played' if args.played else ('signal' if args.signal_sink else 'noise'),
+              'note': {'noise': 'noise method: exact within a preset, approximate across presets '
+                                '(high-gain and compressed presets measure louder than they sound)',
+                       'signal': 'signal method: test tone at the guitar input',
+                       'played': 'played method: the same riff played for every preset (about +-1 dB)'}[
+                  'played' if args.played else ('signal' if args.signal_sink else 'noise')],
               'measured_at': time.strftime('%Y-%m-%dT%H:%M:%S%z'), 'firmware': manifest.get('firmware'),
               'backup': str(backup), 'target_db': round(target, 2),
               'presets': [dict(slot=slot, name=next(e['name'] for e in entries if e['slot'] == slot),
@@ -379,6 +427,8 @@ def main():
     parser.add_argument('--settle', type=float, default=0.7, help='wait after each audition')
     parser.add_argument('--signal-sink', help='PipeWire sink feeding the guitar input (signal method); '
                                               '"auto" picks the headphone output')
+    parser.add_argument('--played', action='store_true',
+                        help='played method: you play the same riff for every preset (no cable needed)')
     parser.add_argument('--signal-volume', default=SIGNAL_VOLUME,
                         help='output volume while the test tone plays (default %(default)s)')
     parser.add_argument('--device', help='Bluetooth address of the amp')
@@ -393,6 +443,10 @@ def main():
     survey.add_argument('--slots', default='1-100', help='e.g. 1-71')
     survey.add_argument('--out', help='result file (default: <backup>/levels-<method>.json)')
     args = parser.parse_args()
+    if args.played and args.signal_sink:
+        parser.error('choose either --played or --signal-sink')
+    if args.played and args.seconds < 4:
+        args.seconds = 4.0
     sys.exit(run_delta(args) if args.command == 'delta' else run_survey(args))
 
 

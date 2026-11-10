@@ -51,6 +51,21 @@ USB and Bluetooth playback don't pass the amp model, and the protocol has no int
 test generator. So a playing-level signal at the input needs the cable (or a guitar
 being played).
 
+## Played method (no cable needed)
+
+`mmp_level.py --played survey BACKUP`: for every preset you play the same short riff
+when prompted (a terminal bell, then 4 s).
+* **What is measured:** the level of the loudest half of the 100 ms frames, so pauses
+  between strums don't lower it.
+* **Precision:** about ±1 dB from take to take, but it measures exactly what matters:
+  how loud each preset is when *you* play it.
+* **Safeguard:** the muted-string noise floor is measured once. If the first take isn't
+  at least 15 dB above it, the run aborts without a result file. Checked in a dry run
+  without playing: −104.7 dBFS against −117.8, stopped.
+* **No software-only alternative to playing or the cable:** a delay moved in front of
+  the amp (the graph allows any order) with feedback 1.0, the most it accepts, lifts the
+  noise by only 15–22 dB (Jazz Clean −102.4 → −87.3, Metal 2000 −58.1 → −36.5 dBFS).
+
 ## Signal method (needs a cable, not tested yet)
 
 A test tone from the computer's headphone output (`--signal-sink <PipeWire sink>`)

@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import numpy as np
-from mmp_level import INTERFERENCE_HZ, RATE, Meter, check_signal, decode_s24, level_db, match, measurement_copy
+from mmp_level import INTERFERENCE_HZ, RATE, Meter, check_signal, decode_s24, level_db, match, measurement_copy, played_level_db
 
 PRESET = {'info': {'displayName': '80S Rock'},
           'audioGraph': {'nodes': [{'nodeId': 'amp', 'dspUnitParameters': {'volume': -5.0, 'gatePreset': 'mid'}}]}}
@@ -56,15 +56,33 @@ class LevelTests(unittest.TestCase):
         self.assertEqual(result[3]['correction_db'], 0.0)
 
 
+class PlayedLevel(unittest.TestCase):
+    def test_pauses_do_not_lower_the_level(self):
+        loud = noise(-30, seconds=2.0)
+        with_pauses = np.concatenate([loud[:RATE], np.zeros(RATE // 2), loud[RATE:], np.zeros(RATE // 2)])
+        self.assertAlmostEqual(played_level_db(loud), -30, delta=0.5)
+        self.assertAlmostEqual(played_level_db(with_pauses), -30, delta=0.5)
+
+    def test_louder_take_measures_louder(self):
+        self.assertAlmostEqual(played_level_db(noise(-27, seed=2)) - played_level_db(noise(-30, seed=3)), 3.0, delta=0.3)
+
+    def test_played_method_keeps_the_gate(self):
+        meter = Meter.__new__(Meter)
+        meter.signal_sink, meter.played = None, True
+        self.assertEqual(meter.prepare(PRESET)['audioGraph']['nodes'][0]['dspUnitParameters']['gatePreset'], 'mid')
+
+
 class SignalChecks(unittest.TestCase):
     def test_tone_must_arrive(self):
         check_signal(-30.0, -80.0)                      # fine: 50 dB above
         with self.assertRaises(RuntimeError):
             check_signal(-80.4, -80.6)                  # no tone at the input (the dry run on 2026-11-10)
+        with self.assertRaisesRegex(RuntimeError, 'no playing arrived'):
+            check_signal(-104.7, -118.7, played=True)   # nobody played (dry run of the played method)
 
     def test_signal_method_keeps_the_gate(self):
         meter = Meter.__new__(Meter)
-        meter.signal_sink = 'phones'
+        meter.signal_sink, meter.played = 'phones', False
         self.assertEqual(meter.prepare(PRESET)['audioGraph']['nodes'][0]['dspUnitParameters']['gatePreset'], 'mid')
         meter.signal_sink = None
         self.assertEqual(meter.prepare(PRESET)['audioGraph']['nodes'][0]['dspUnitParameters']['gatePreset'], 'off')
