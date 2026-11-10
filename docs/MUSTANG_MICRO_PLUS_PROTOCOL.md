@@ -1,0 +1,112 @@
+# Mustang Micro Plus: Bluetooth message numbers
+
+The Micro Plus speaks Fender's protobuf protocol of the **"mp" family** (package
+`fendermessage.mp`). The definitions, including the envelope with all message
+numbers, are embedded in the Fender Tone app's `libmustangdevice.so`. Extracted
+2026-11-10 from Fender Tone 5.1.3 (Android, arm64) with
+`scripts/extract_fender_protos.py`.
+
+**Checked against the amp (firmware 1.1.11; firmware reply text 1.0.29):**
+* Every message number maneline had observed matches the table below. That covers
+  requests 4, 7, 8, 14, 22, 24, 25 and 26, replies 4, 5, 6, 12, 18 and 19, and modal
+  status SYNC_END.
+* Request 12 (`presetDataRequest`) was sent for slot 21. The amp answered with reply
+  10 for index 20 ("Echo Dome") and stayed on its preset.
+
+The "ltx" family, which an earlier extraction (spod/fmmp, Fender Tone 4.0.5) published,
+uses the same message definitions but **different numbers** (for example ltx 8 =
+heartbeat, 9 = load preset). It is not the Micro Plus protocol.
+
+## Frames
+
+Each BLE write or notification is one frame:
+`<type> 00 <length> <payload>`, where the payload is at most 255 bytes.
+
+| Type | Meaning |
+| --- | --- |
+| `35` | single frame, or last frame of a message |
+| `33` | first frame of a longer message |
+| `34` | continuation |
+
+The amp sends long replies in `33`/`34` frames of 117 payload bytes, ending with `35`.
+
+## Envelope: `MustangLtxAppMessage`
+
+| Field | Content |
+| --- | --- |
+| 1 | `toneRequest`: one of the requests below (app → amp) |
+| 2 | `ampStatus`: `responseType` (field 1: 0 unsolicited, 1 not last, 2 last), then one of the statuses below (amp → app) |
+| 3 | `modalStatus` {context, state}. Contexts: SYNC_BEGIN/END, BACKUP_*, RESTORE_*, TUNER_*, FACTORY_RESTORE_BEGIN/END, TONE_BUSY_* |
+| 4 | `loopback` |
+
+### Requests (`toneRequest`, field number = message)
+
+| # | Request | Fields | Notes |
+| --- | --- | --- | --- |
+| 1 | auditionPresetRequest | compressedPresetJson=1 | load a preset **without saving** |
+| 2 | clearPresetRequest | presetIndex=1 | **writes**: empties a slot |
+| 3 | connectionStatusRequest | | |
+| 4 | currentPresetRequest | | → 4, loaded form of the current preset |
+| 5 | currentPresetSaveRequest | presetName=1, presetIndex=2 | **writes** |
+| 6 | exitAuditionRequest | | |
+| 7 | firmwareVersionRequest | | → 6 |
+| 8 | loadPresetRequest | newPresetIndex=1 (0-based) | select a preset (as the buttons do) → 5 |
+| 9 | modifiableParameterRequest | | which parameter MODIFY controls → 7 |
+| 10 | moveNodeRequest | | |
+| 11 | parameterRequest | nodeId=1, parameterId=2 | → 9 |
+| 12 | presetDataRequest | presetIndex=1 (0-based) | stored form of any slot, no switching → 10 |
+| 13 | presetNameRequest | | |
+| 14 | presetNamesRequest | | → 12 |
+| 15 | productIdentificationRequest | | → 14 |
+| 16 | renamePresetRequest | presetName=1 | **writes** |
+| 17 | replaceNodeRequest | nodeIdToReplace=1, fenderIdToReplaceWith=2 | change amp or effect model |
+| 18 | savePresetAsRequest | presetIndex=1, compressedPresetJson=2, isLoadPreset=3, presetName=4 | **writes** a whole preset |
+| 19 | setParameterModifiableRequest | nodeId=1, parameterId=2 | |
+| 20 | setParameterRequest | nodeId=1, parameterId=2, one of float=3 / string=4 / sint32=5 / bool=6 | live edit, not saved |
+| 21 | swapPresetRequest | | **writes** |
+| 22 | usbAudioGainInfoRequest | | → 18 |
+| 23 | usbAudioGainSetRequest | | |
+| 24 | heartbeat | | must come at least every 0.5 s |
+| 25 | eqRequest | | → 19 |
+| 26 | setEqRequest | | |
+| 27 | setTapTempoRequest | | |
+| 28 | tapTempoRequest | | → 20 |
+| 29 | tunerRequest | | → 21 |
+| 30 / 31 | setAttenuatorRequest / attenuatorRequest | | → 22 |
+| 32 | movePresetRequest | | **writes** |
+| 33 / 34 | muteDetectEnableRequest / set… | | → 24 |
+| 35 / 36 | inputPadRequest / set… | | → 25 |
+
+### Statuses (`ampStatus`)
+
+| # | Status | # | Status |
+| --- | --- | --- | --- |
+| 2 | clearPresetStatus | 13 | presetSavedStatus {presetIndex, presetName} |
+| 3 | connectionStatus | 14 | productIdentificationStatus |
+| 4 | currentPresetDataStatus {compressedPresetJson=1} | 15 | replaceNodeStatus |
+| 5 | currentPresetStatus (selected preset) | 17 | unsupportedMessageStatus {status=1} |
+| 6 | firmwareVersionStatus | 18 | usbAudioGainInfoStatus |
+| 7 | modifiableParameterStatus | 19 | eqStatus |
+| 8 | moveNodeStatus | 20 | tapTempoStatus |
+| 9 | parameterStatus (same fields as setParameterRequest) | 21 | tunerStatus |
+| 10 | presetDataStatus {presetIndex=1, compressedPresetJson=2} | 22–25 | attenuator, movePreset, muteDetect, inputPad |
+| 11 / 12 | presetNameStatus / presetNamesStatus | | |
+
+**Error codes** (`unsupportedMessageStatus.status`): 0 UNSUPPORTED, 1 FAILED,
+2 INVALID_PARAM, 3 INVALID_NODE_ID, 4 PARAM_OUT_OF_BOUNDS,
+5 FACTORY_RESTORE_IN_PROGRESS. The last one is only a state the amp reports. **No
+request performs a factory restore**; that is done with buttons at power-on.
+
+## Preset JSON
+
+`compressedPresetJson` is an **LZ4 block** (no frame header, no size prefix) of
+Fender's preset JSON (`product_id: "mustang-ltx"`). The JSON contains a graph of five
+`dspUnit` nodes: stomp, mod, amp, delay and reverb. Each node has a `FenderId` (e.g.
+`ACD_Jcm800GT`) and `dspUnitParameters`. The amp's `volume` is in dB.
+`scripts/mmp_lz4.py` decodes and encodes it.
+
+## Not yet done
+
+Before any request marked **writes** above is used, a backup must exist. The first
+tests belong on an empty slot (72–100), with `auditionPresetRequest` tried before
+`savePresetAsRequest`.
