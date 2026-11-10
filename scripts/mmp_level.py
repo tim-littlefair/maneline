@@ -47,6 +47,10 @@ INTERFERENCE_HZ = RATE / 18
 NOTCH_HZ = 25
 BAND = (40.0, 12000.0)
 SILENCE_DB = -200.0             # an all-zero recording measures far below this
+# signal method: the test tone must be clearly above what the amp sends without it,
+# or it does not reach the guitar input (cable missing or in the wrong socket)
+SIGNAL_MARGIN_DB = 15.0
+SIGNAL_VOLUME = '40%'           # output volume while the test tone plays (reproducible level)
 
 
 # ---------------------------------------------------------------- analysis
@@ -90,6 +94,43 @@ def usb_device(kind):
     if not names:
         raise RuntimeError('Micro Plus USB {} not found: connect the amp by USB'.format(kind))
     return names[0]
+
+
+def signal_sink(name):
+    '''The PipeWire sink for the test tone; "auto" picks the headphone output.'''
+    if name != 'auto':
+        return name
+    out = subprocess.run(['pactl', 'list', 'short', 'sinks'], capture_output=True, text=True,
+                         check=True).stdout
+    sinks = [line.split('\t')[1] for line in out.splitlines()]
+    phones = [s for s in sinks if 'headphone' in s.lower()]
+    if len(phones) != 1:
+        raise RuntimeError('cannot pick the headphone output automatically; give --signal-sink '
+                           'one of: ' + ', '.join(sinks))
+    return phones[0]
+
+
+def check_signal(tone_db, silent_db, margin=SIGNAL_MARGIN_DB):
+    '''Raise unless the test tone clearly reaches the amp.'''
+    if tone_db - silent_db < margin:
+        raise RuntimeError(
+            'the test tone does not reach the guitar input: {:.1f} dBFS with it, {:.1f} dBFS '
+            'without (needs {:.0f} dB more). Check the cable from the headphone output to the '
+            'amp\'s plug, and the output volume.'.format(tone_db, silent_db, margin))
+
+
+@contextlib.contextmanager
+def sink_volume(sink, volume):
+    '''Set the test-tone output to a fixed volume, restore it afterwards.'''
+    before = subprocess.run(['pactl', 'get-sink-volume', sink], capture_output=True,
+                            text=True).stdout.split('/')
+    previous = before[1].strip() if len(before) > 1 else None
+    subprocess.run(['pactl', 'set-sink-volume', sink, volume], check=True)
+    try:
+        yield
+    finally:
+        if previous:
+            subprocess.run(['pactl', 'set-sink-volume', sink, previous])
 
 
 def record(seconds, source=None, play=None, play_sink=None):
@@ -178,13 +219,29 @@ class Meter:
         self.signal_sink = signal_sink
         self.source = usb_device('sources')
         self.tone = None
+        self.checked = False
+
+    def prepare(self, doc, offset_db=0.0, name=None):
+        '''The measurement copy: noise method with the gate off; signal method as the
+        preset is played (a real signal opens its gate).'''
+        return measurement_copy(doc, offset_db, gate_off=not self.signal_sink, name=name)
 
     async def measure(self, doc):
+        if self.signal_sink and not self.checked:
+            # once per run: with the tone the amp must be far above its level without it
+            silent = await self._measure(doc, use_signal=False)
+            tone = await self._measure(doc)
+            check_signal(tone, silent)
+            self.checked = True
+            return tone
+        return await self._measure(doc)
+
+    async def _measure(self, doc, use_signal=True):
         confirmed = await self.controller.audition(doc)
         if confirmed != self.slot:
             raise RuntimeError('audition confirmed on slot {}, expected {}'.format(confirmed, self.slot))
         await asyncio.sleep(self.settle)
-        if self.signal_sink:
+        if self.signal_sink and use_signal:
             if self.tone is None:
                 self.tone = os.path.join(tempfile.mkdtemp(), 'tone.wav')
                 test_tone_wav(self.tone, self.seconds)
@@ -219,8 +276,12 @@ async def with_amp(args, work):
             original = controller.slot
             await controller.switch(args.slot)
             try:
-                return await work(Meter(controller, args.slot, args.seconds, args.settle,
-                                        args.signal_sink))
+                sink = signal_sink(args.signal_sink) if args.signal_sink else None
+                meter = Meter(controller, args.slot, args.seconds, args.settle, sink)
+                if sink:
+                    with sink_volume(sink, args.signal_volume):
+                        return await work(meter)
+                return await work(meter)
             finally:
                 await controller.switch(original)
                 print('Back on preset {} "{}"'.format(original, controller.names[original - 1]),
@@ -238,19 +299,20 @@ def run_delta(args):
 
     async def work(meter):
         rows = []
-        reference = await meter.measure(measurement_copy(preset, 0.0, name='CP level ref'))
+        reference = await meter.measure(meter.prepare(preset, 0.0, name='CP level ref'))
         for offset in offsets:
             levels = []
             for _ in range(args.repeat):
-                levels.append(await meter.measure(measurement_copy(
+                levels.append(await meter.measure(meter.prepare(
                     preset, offset, name='CP level {:+g}'.format(offset))))
             rows.append((offset, statistics.mean(levels), max(levels) - min(levels)))
-        drift = await meter.measure(measurement_copy(preset, 0.0, name='CP level ref')) - reference
+        drift = await meter.measure(meter.prepare(preset, 0.0, name='CP level ref')) - reference
         return reference, rows, drift
 
     reference, rows, drift = asyncio.run(with_amp(args, work))
-    print('{} (amp volume {:.1f} dB), reference {:.1f} dBFS, noise method, gate off'.format(
-        preset.get('info', {}).get('displayName'), base_volume, reference))
+    print('{} (amp volume {:.1f} dB), reference {:.1f} dBFS, {}'.format(
+        preset.get('info', {}).get('displayName'), base_volume, reference,
+        'signal method' if args.signal_sink else 'noise method, gate off'))
     ok = True
     for offset, level, spread in rows:
         delta = level - reference
@@ -279,8 +341,10 @@ def run_survey(args):
             doc = json.load(open(backup / entry['file'], encoding='utf-8'))
             volume = amp_params(doc).get('volume', 0.0)
             try:
-                level = await meter.measure(measurement_copy(doc, 0.0))
+                level = await meter.measure(meter.prepare(doc))
             except RuntimeError as error:
+                if not meter.checked and meter.signal_sink:
+                    raise           # the test tone doesn't arrive: no point measuring on
                 failed[entry['slot']] = str(error)
                 print('  {:3d} {:18s} FAILED: {}'.format(entry['slot'], entry['name'], error), flush=True)
                 continue
@@ -313,7 +377,10 @@ def main():
     parser.add_argument('--slot', type=int, default=100, help='reserved slot to audition on')
     parser.add_argument('--seconds', type=float, default=3.0, help='recording length')
     parser.add_argument('--settle', type=float, default=0.7, help='wait after each audition')
-    parser.add_argument('--signal-sink', help='PipeWire sink feeding the guitar input (signal method)')
+    parser.add_argument('--signal-sink', help='PipeWire sink feeding the guitar input (signal method); '
+                                              '"auto" picks the headphone output')
+    parser.add_argument('--signal-volume', default=SIGNAL_VOLUME,
+                        help='output volume while the test tone plays (default %(default)s)')
     parser.add_argument('--device', help='Bluetooth address of the amp')
     sub = parser.add_subparsers(dest='command', required=True)
     delta = sub.add_parser('delta', help='check that volume offsets give the same level change')

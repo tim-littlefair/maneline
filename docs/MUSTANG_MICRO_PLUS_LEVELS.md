@@ -41,6 +41,16 @@ Metal 2000 down by 31.6 dB. Fender's own volumes (Metal 2000 −9.8 dB, Jazz Cle
 −14.0 dB) show the factory presets were balanced far more closely by ear. The
 survey file records `"method": "noise"` for this reason.
 
+## Why there is no software-only drive signal
+
+Tested 2026-11-10: a fuzz at full gain and full level (VariFuzz) in the stomp block of
+the measurement copy lifts the input noise by only 9–27 dB. Jazz Clean goes from −102.3
+to −93.2 dBFS, Metal 2000 from −58.0 to −43.2 dBFS. The input noise is far too small to
+saturate even a fuzz, and halving the fuzz level drops the output by another ~10 dB.
+USB and Bluetooth playback don't pass the amp model, and the protocol has no internal
+test generator. So a playing-level signal at the input needs the cable (or a guitar
+being played).
+
 ## Signal method (needs a cable, not tested yet)
 
 A test tone from the computer's headphone output (`--signal-sink <PipeWire sink>`)
@@ -48,6 +58,16 @@ goes into a 6.35 mm mono socket that the amp is plugged into, via an adapter cab
 with a 3.5 mm stereo plug and a 6.35 mm socket. The tone is guitar-like: decaying
 plucked notes with harmonics, at −20 dBFS RMS. Every preset then gets a real playing
 signal, so `survey` gives levels that can be matched.
+
+**Safeguards:**
+* `--signal-sink auto` picks the headphone output.
+* Its volume is set to 40% (`--signal-volume`) while the tone plays, then restored, so
+  runs are comparable.
+* The measurement copy keeps the preset's noise gate: a real signal opens it.
+* **The tone must arrive.** Before the first measurement, the preset is recorded with and
+  without the tone; less than 15 dB difference aborts the run and no result file is
+  written. A dry run without a cable reported noise as "signal" before this guard;
+  with it, the same run stopped (−105.2 dBFS with the tone, −105.3 without).
 
 ## Reliability
 

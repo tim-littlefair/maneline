@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import numpy as np
-from mmp_level import INTERFERENCE_HZ, RATE, decode_s24, level_db, match, measurement_copy
+from mmp_level import INTERFERENCE_HZ, RATE, Meter, check_signal, decode_s24, level_db, match, measurement_copy
 
 PRESET = {'info': {'displayName': '80S Rock'},
           'audioGraph': {'nodes': [{'nodeId': 'amp', 'dspUnitParameters': {'volume': -5.0, 'gatePreset': 'mid'}}]}}
@@ -54,6 +54,20 @@ class LevelTests(unittest.TestCase):
         self.assertEqual(result[1]['correction_db'], -5.0)
         self.assertEqual(result[2]['matched_volume_db'], -7.0)
         self.assertEqual(result[3]['correction_db'], 0.0)
+
+
+class SignalChecks(unittest.TestCase):
+    def test_tone_must_arrive(self):
+        check_signal(-30.0, -80.0)                      # fine: 50 dB above
+        with self.assertRaises(RuntimeError):
+            check_signal(-80.4, -80.6)                  # no tone at the input (the dry run on 2026-11-10)
+
+    def test_signal_method_keeps_the_gate(self):
+        meter = Meter.__new__(Meter)
+        meter.signal_sink = 'phones'
+        self.assertEqual(meter.prepare(PRESET)['audioGraph']['nodes'][0]['dspUnitParameters']['gatePreset'], 'mid')
+        meter.signal_sink = None
+        self.assertEqual(meter.prepare(PRESET)['audioGraph']['nodes'][0]['dspUnitParameters']['gatePreset'], 'off')
 
 
 if __name__ == '__main__':
