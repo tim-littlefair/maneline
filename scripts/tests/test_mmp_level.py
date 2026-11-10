@@ -121,6 +121,9 @@ class FakeMeter:
     def prepare(self, doc, offset_db=0.0, name=None):
         return measurement_copy(doc, offset_db, gate_off=False, name=name)
 
+    async def warm_up(self):
+        self.measured.append('practice')
+
     async def measure(self, doc):
         if self.stop_after is not None and len(self.measured) >= self.stop_after:
             raise Stop()
@@ -178,6 +181,26 @@ class Sessions(unittest.TestCase):
         self.run_session(second, overlap=1)
         self.assertEqual(second.measured[0], 'Jazz Clean')
         self.assertEqual(self.progress['sessions'][1]['offset_db'], -1.5)
+
+    def test_pause_warms_up_and_measures_the_last_ones_again(self):
+        meter = FakeMeter(self.TRUE)
+
+        class Pause:
+            '''Enter after the second preset; back after the pause, 2 dB weaker.'''
+            def requested(self):
+                return meter.measured.count('80S Rock') == 1 and len(meter.measured) == 3
+
+            async def wait(self):
+                meter.strength = -2.0
+
+        asyncio.run(mmp_level.survey(meter, self.entries, self.load, self.progress, lambda: None,
+                                     use_reference=True, pause=Pause()))
+        self.assertEqual(meter.measured[:6], ['CP reference', '80S Rock', 'Jazz Clean',
+                                              'practice', '80S Rock', 'Jazz Clean'])
+        self.assertEqual([s['offset_db'] for s in self.progress['sessions']], [0.0, -2.0])
+        report = mmp_level.survey_report(self.progress, self.entries, {}, 'backup')
+        self.assertEqual({p['name']: p['correction_db'] for p in report['presets']},
+                         {'80S Rock': 0.0, 'Jazz Clean': -2.0, 'Twin': 2.0, 'Deluxe': 3.5, 'Metal': -5.0})
 
     def test_progress_file_round_trip(self):
         self.run_session(FakeMeter(self.TRUE, stop_after=3))

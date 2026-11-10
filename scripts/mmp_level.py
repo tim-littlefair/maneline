@@ -279,6 +279,17 @@ class Meter:
             return tone
         return await self._measure(doc)
 
+    async def warm_up(self):
+        '''Played method: practice takes, not measured. A player settles in during the first
+        takes (2026-11-10: the first preset rose 3.3 dB over four takes, the next two stayed
+        within 0.4 and 0.8 dB). Also after a pause.'''
+        if not self.played:
+            return
+        for practice in range(1, self.warmup + 1):
+            print('\a  practice {} of {}: play your riff now ({:.0f} s, not measured)'.format(
+                practice, self.warmup, self.seconds), flush=True)
+            await asyncio.sleep(self.seconds + 1.5)
+
     async def _measure_played(self, doc):
         '''Played method: the player plays the same riff for every preset, in several
         takes; one more take if they disagree by more than TAKE_SPREAD_DB.'''
@@ -286,13 +297,7 @@ class Meter:
             print('Mute the strings and keep still for 3 s (noise floor)...', flush=True)
             await asyncio.sleep(1.0)
             self.floor = level_db(await asyncio.to_thread(record, 3.0, self.source))
-            # A player settles in during the first takes (2026-11-10: the first preset rose
-            # 3.3 dB over four takes, the next two stayed within 0.4 and 0.8 dB), so the
-            # first takes are practice and not measured.
-            for practice in range(1, self.warmup + 1):
-                print('\a  practice {} of {}: play your riff now ({:.0f} s, not measured)'.format(
-                    practice, self.warmup, self.seconds), flush=True)
-                await asyncio.sleep(self.seconds + 1.5)
+            await self.warm_up()
         confirmed = await self.controller.audition(doc)
         if confirmed != self.slot:
             raise RuntimeError('audition confirmed on slot {}, expected {}'.format(confirmed, self.slot))
@@ -443,17 +448,38 @@ def normalized_db(progress, measurement):
     return measurement['raw_db'] - progress['sessions'][measurement['session']]['offset_db']
 
 
+class PauseKey:
+    '''Enter on the terminal: pause after the current preset; Enter again: go on.'''
+
+    def __init__(self):
+        self.lines = asyncio.Queue()
+        self.fd = sys.stdin.fileno() if sys.stdin.isatty() else None
+        if self.fd is not None:
+            asyncio.get_running_loop().add_reader(self.fd, lambda: self.lines.put_nowait(sys.stdin.readline()))
+
+    def requested(self):
+        pressed = not self.lines.empty()
+        while not self.lines.empty():
+            self.lines.get_nowait()
+        return pressed
+
+    async def wait(self):
+        await self.lines.get()
+
+    def close(self):
+        if self.fd is not None:
+            asyncio.get_running_loop().remove_reader(self.fd)
+
+
 async def survey(meter, entries, load, progress, save, overlap=2, use_reference=False,
-                 reference_every=REFERENCE_EVERY):
+                 reference_every=REFERENCE_EVERY, pause=None):
     '''Measure the presets of entries that progress doesn't have yet. load(entry) gives
-    the preset document; save() is called after every change of progress.'''
+    the preset document; save() is called after every change of progress. pause (a
+    PauseKey) pauses between presets; going on starts a new session.'''
     by_slot = {entry['slot']: entry for entry in entries}
-    session = len(progress['sessions'])
-    progress['sessions'].append({'started': time.strftime('%Y-%m-%dT%H:%M:%S%z'), 'offset_db': 0.0,
-                                 'overlap': []})
-    this = progress['sessions'][-1]
     done, order = progress['presets'], progress['order']
     ref_entry = entries[0] if use_reference and entries else None
+    session = this = None
 
     async def measure_reference():
         print('  reference "{}":'.format(ref_entry['name']), flush=True)
@@ -462,30 +488,45 @@ async def survey(meter, entries, load, progress, save, overlap=2, use_reference=
                                       'raw_db': await meter.measure(doc)})
         save()
 
-    again = [slot for slot in order[-overlap:] if slot in by_slot] if overlap and order else []
-    if again:
-        print('Going on after {} presets. First {} measured last time, again, to compare '
-              'with today:'.format(len(order), len(again)), flush=True)
-        for slot in again:
-            level = await meter.measure(meter.prepare(load(by_slot[slot])))
-            before = normalized_db(progress, done[str(slot)])
-            this['overlap'].append({'slot': slot, 'before_db': round(before, 2), 'now_db': round(level, 2)})
-            print('  {:3d} {:18s} {:7.1f} dBFS, last time {:7.1f}'.format(
-                slot, by_slot[slot]['name'], level, before), flush=True)
-        diffs = [o['now_db'] - o['before_db'] for o in this['overlap']]
-        this['offset_db'] = round(statistics.mean(diffs), 2)
-        save()
-        print('  today {:+.1f} dB compared with last time; taken off the new levels{}'.format(
-            this['offset_db'], '' if max(diffs) - min(diffs) <= TAKE_SPREAD_DB else
-            ' - but the repeats disagree by {:.1f} dB, so better stop (Ctrl+C), warm up and '
-            'start again'.format(max(diffs) - min(diffs))), flush=True)
-    elif ref_entry and not progress['reference']:
-        await measure_reference()
+    async def start_session(after_pause):
+        '''A new session: measure the last presets again, their difference is the offset.'''
+        nonlocal session, this
+        session = len(progress['sessions'])
+        progress['sessions'].append({'started': time.strftime('%Y-%m-%dT%H:%M:%S%z'), 'offset_db': 0.0,
+                                     'overlap': []})
+        this = progress['sessions'][-1]
+        if after_pause:
+            await meter.warm_up()
+        again = [slot for slot in order[-overlap:] if slot in by_slot] if overlap and order else []
+        if again:
+            print('Going on after {} presets. First {} measured {}, again, to compare:'.format(
+                len(order), len(again), 'before the pause' if after_pause else 'last time'), flush=True)
+            for slot in again:
+                level = await meter.measure(meter.prepare(load(by_slot[slot])))
+                before = normalized_db(progress, done[str(slot)])
+                this['overlap'].append({'slot': slot, 'before_db': round(before, 2), 'now_db': round(level, 2)})
+                print('  {:3d} {:18s} {:7.1f} dBFS, before {:7.1f}'.format(
+                    slot, by_slot[slot]['name'], level, before), flush=True)
+            diffs = [o['now_db'] - o['before_db'] for o in this['overlap']]
+            this['offset_db'] = round(statistics.mean(diffs), 2)
+            save()
+            print('  now {:+.1f} dB compared with before; taken off the new levels{}'.format(
+                this['offset_db'], '' if max(diffs) - min(diffs) <= TAKE_SPREAD_DB else
+                ' - but the repeats disagree by {:.1f} dB, so better pause (Enter) and warm up '
+                'more'.format(max(diffs) - min(diffs))), flush=True)
+        elif ref_entry and not progress['reference']:
+            await measure_reference()
 
+    await start_session(after_pause=False)
     for entry in entries:
         slot = entry['slot']
         if str(slot) in done:
             continue
+        if pause and pause.requested():
+            print('Paused after {} presets; the amp stays connected. Enter goes on (with practice '
+                  'takes first), Ctrl+C stops.'.format(len(order)), flush=True)
+            await pause.wait()
+            await start_session(after_pause=True)
         if ref_entry and order and len(order) % reference_every == 0 \
                 and all(r['after_presets'] != len(order) for r in progress['reference']):
             await measure_reference()
@@ -550,18 +591,24 @@ def run_survey(args):
     progress = load_progress(path, method)
     missing = [e for e in entries if str(e['slot']) not in progress['presets']]
     if missing:
-        print('{} of {} presets to measure{}. Stop any time with Ctrl+C; run the same command '
-              'again to go on.'.format(len(missing), len(entries),
-                                       ', {} done before'.format(len(entries) - len(missing))
-                                       if len(missing) < len(entries) else ''), flush=True)
+        print('{} of {} presets to measure{}. Enter pauses after the current preset; Ctrl+C '
+              'stops, and the same command goes on later.'.format(
+                  len(missing), len(entries), ', {} done before'.format(len(entries) - len(missing))
+                  if len(missing) < len(entries) else ''), flush=True)
 
         def load(entry):
             return json.load(open(backup / entry['file'], encoding='utf-8'))
 
+        async def work(meter):
+            pause = PauseKey()
+            try:
+                await survey(meter, entries, load, progress, lambda: save_progress(path, progress),
+                             args.overlap, use_reference=args.played, pause=pause)
+            finally:
+                pause.close()
+
         try:
-            asyncio.run(with_amp(args, lambda meter: survey(
-                meter, entries, load, progress, lambda: save_progress(path, progress), args.overlap,
-                use_reference=args.played)))
+            asyncio.run(with_amp(args, work))
         except KeyboardInterrupt:
             pass
     done = sum(str(e['slot']) in progress['presets'] for e in entries)

@@ -73,6 +73,8 @@ when prompted (a terminal bell, then 4 s).
 * **Reference preset:** the first preset is measured again after every 20 presets and at
   the end. Its movement (`reference.drift_db` in the result) shows how much your playing
   strength changed during the run; above 2 dB a new run is suggested.
+* **Pause:** Enter pauses after the current preset; the amp stays connected. Enter again
+  goes on: practice takes (`--warmup`), then a new session as below.
 * **Stop and go on later (`--overlap 2`, the default):** every measured preset is saved
   at once in `BACKUP/survey-played.json`. Stop with Ctrl+C (the amp returns to its preset);
   the same command goes on where it stopped. A new session first measures the last 2
