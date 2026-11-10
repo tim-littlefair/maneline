@@ -112,6 +112,20 @@ Fender's preset JSON (`product_id: "mustang-ltx"`). The JSON contains a graph of
 `ACD_Jcm800GT`) and `dspUnitParameters`. The amp's `volume` is in dB.
 `scripts/mmp_lz4.py` decodes and encodes it.
 
+There are two forms of the same preset:
+* **Stored** (`presetDataRequest`): exactly as saved, with short decimal numbers,
+  `gateDetectorPosition`, and no entries for empty blocks. This is what a restore
+  writes back.
+* **Loaded** (`currentPresetRequest`): numbers widened from float, and
+  bypass/bypassType filled in for every block.
+
+## Backup
+
+`scripts/mmp_backup.py` reads all 100 slots with `presetDataRequest`. It is read-only
+and doesn't switch presets. It writes one JSON file per slot and `manifest.json` with
+the raw LZ4 blocks to `_work/backups/`, which git does not track. 100 slots take about
+a minute.
+
 ## Not yet done
 
 Before any request marked **writes** above is used, a backup must exist. The first
