@@ -6,7 +6,7 @@ numbers, are embedded in the Fender Tone app's `libmustangdevice.so`. Extracted
 2026-11-10 from Fender Tone 5.1.3 (Android, arm64) with
 `scripts/extract_fender_protos.py`.
 
-**Checked against the amp (firmware 1.1.11; firmware reply text 1.0.29):**
+**Checked against the amp (firmware 1.0.29, as it reports in `firmwareVersionStatus`):**
 * Every message number maneline had observed matches the table below. That covers
   requests 4, 7, 8, 14, 22, 24, 25 and 26, replies 4, 5, 6, 12, 18 and 19, and modal
   status SYNC_END.
@@ -119,12 +119,16 @@ There are two forms of the same preset:
 * **Loaded** (`currentPresetRequest`): numbers widened from float, and
   bypass/bypassType filled in for every block.
 
-## Backup
+## Backup and restore
 
 `scripts/mmp_backup.py` reads all 100 slots with `presetDataRequest`. It is read-only
 and doesn't switch presets. It writes one JSON file per slot and `manifest.json` with
 the raw LZ4 blocks to `_work/backups/`, which git does not track. 100 slots take about
 a minute.
+
+`scripts/mmp_restore.py BACKUP_DIR --slots …` writes slots back through the running
+agent (`savePresetAsRequest`, see "Saving" below) and reads each one back. A slot that
+already holds the backup's preset is not written; `--dry-run` only compares.
 
 ## Audition: tested 2026-11-10
 
@@ -156,11 +160,23 @@ a minute.
 * The stored "Empty" preset stays untouched, and your real presets' names never show a
   wrong tone.
 
-## Not yet done
+## Saving: tested 2026-11-10
 
-Before any request marked **writes** above is used, a backup must exist. The first
-tests belong on an empty slot (72–100), with `auditionPresetRequest` tried before
-`savePresetAsRequest`.
+`savePresetAsRequest` (18) writes a whole preset into a slot without selecting it; the
+amp answers with `presetSavedStatus` (13).
+
+* **Tested on slot 99:** "80S Rock −3" was written in 1.3 s and read back identical
+  (request 12), then the slot was restored to "Empty" from the backup.
+* **Names of at most 16 characters.** A longer name is ignored without any reply and
+  nothing is saved (16 characters saved, 20 not). `MicroPlusSession.save` refuses such
+  names up front.
+* **A save is never sent twice.** Unlike an audition, a missing confirmation doesn't
+  mean nothing happened; the read-back shows what the slot holds.
+* **Make a backup first** (`mmp_backup.py`), and write only to slots you can spare: the
+  factory presets are slots 1–71, 72–100 are "Empty".
+
+Of the requests marked **writes** above, only 18 is used and tested. 2 (clear), 5, 16,
+21 and 32 are untried.
 
 ## After a firmware update
 
@@ -181,16 +197,20 @@ browser page it offers:
 
 | Request | Body / query | Does |
 | --- | --- | --- |
-| `GET /api/micro-plus` | | state: connected, preset, name, `audition`, 100 preset names |
+| `GET /api/micro-plus` | | state: connected, asleep (idle disconnect), preset, name, `audition`, `firmware`, 100 preset names |
 | `POST /api/micro-plus` | `{"preset": n}` | select preset n (ends an audition) |
 | `POST /api/micro-plus/audition` | `{"preset": {…preset JSON…}, "slot": 100}` | play the preset without saving it; with `slot`, select that slot first (a reserved empty one keeps the temporary name away from real presets) |
 | `GET /api/micro-plus/preset?slot=n` | | the preset stored in slot n, as JSON (read without selecting it, cached per connection) |
+| `POST /api/micro-plus/save` | `{"slot": n, "preset": {…}, "name": "…"}` | **writes** the preset into slot n (not selected) and returns it as read back; `name` is optional (default: the preset's own), 1–16 characters |
 
 **Rules:**
 * POSTs need `Content-Type: application/json` and an `Origin` matching the server.
 * Bodies may be up to 64 KB.
-* Errors are 400 (invalid request), 403 (other origin) and 503 (amp not connected, or
-  it did not confirm).
+* Errors are 400 (invalid request), 403 (other origin or host), 405 (wrong method), 413
+  (body too large), 415 (not JSON), 503 (amp not connected, or it did not confirm) and
+  504 (no answer within 40 s).
+* The server listens on all interfaces but answers only requests whose `Host` is
+  localhost or this machine's name (`--allow-host` adds more).
 
 **Tested 2026-11-10 with the amp:**
 * An audition through HTTP takes 0.3–0.6 s.

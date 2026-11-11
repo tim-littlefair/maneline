@@ -139,7 +139,7 @@ class MicroPlusSession:
         name = (name if name is not None else preset.get('info', {}).get('displayName', '')).strip()
         if not name or len(name) > MAX_NAME:
             # a longer name is silently ignored by the amp: no confirmation, nothing saved
-            # (firmware 1.1.11, 2026-11-10: 16 characters saved, 20 not)
+            # (firmware 1.0.29, 2026-11-10: 16 characters saved, 20 not)
             raise ValueError('Give the preset a name of 1 to {} characters.'.format(MAX_NAME))
         preset = json.loads(json.dumps(preset))
         preset.setdefault('info', {})['displayName'] = name     # the stored name and the list's agree

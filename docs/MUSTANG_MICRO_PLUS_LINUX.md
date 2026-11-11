@@ -5,7 +5,7 @@ audio from the same computer. The protocol and the commands are the same as in
 [MUSTANG_MICRO_PLUS_MACOS.md](MUSTANG_MICRO_PLUS_MACOS.md); this page covers what
 BlueZ needs.
 
-Tested on 9 November 2026 with firmware 1.1.11, BlueZ 5.87, an Intel AX201
+Tested on 9 November 2026 with firmware 1.0.29, BlueZ 5.87, an Intel AX201
 adapter, Python 3.13 and Bleak 3.0.2.
 
 ## Audio and control at the same time
@@ -89,7 +89,7 @@ Linux.
 
 While connected, the amp's radio wakes every 45 ms for the LE link (connection
 interval 45 ms, latency 0), and the heartbeat must arrive at least every 0.5 s or
-the amp stops replying. Measured on firmware 1.1.11 with 20 s of idle: a 1 s, 2 s
+the amp stops replying. Measured on firmware 1.0.29 with 20 s of idle: a 1 s, 2 s
 or 5 s heartbeat, or none, left switches unconfirmed although the amp still
 switched; 0.5 s and 0.25 s kept every switch confirmed. A heartbeat burst after
 replies have stopped did not bring them back, only a new connection did.
