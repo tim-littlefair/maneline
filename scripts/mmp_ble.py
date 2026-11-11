@@ -259,24 +259,18 @@ class Controller:
 
 
 async def run(args):
-    from bleak import BleakScanner
-    from mmp_bluez import LeBearerClient, make_client
+    from mmp_bluez import LeBearerClient, find_device, find_devices, make_client, not_found
     print('Looking for Mustang Micro Plus…', file=sys.stderr, flush=True)
     if args.device:
-        device = await BleakScanner.find_device_by_filter(
-            lambda device, advert: device.address == args.device
-            and (advert.local_name == NAME or device.name == NAME),
-            timeout=args.timeout, **SCAN_FILTER)
+        device = await find_device(NAME, args.device, timeout=args.timeout, **SCAN_FILTER)
         candidates = [device] if device else []
     else:
-        devices = await BleakScanner.discover(timeout=args.timeout, return_adv=True,
-                                              **SCAN_FILTER)
-        candidates = [device for device, advert in devices.values()
-                      if advert.local_name == NAME or device.name == NAME]
+        candidates = await find_devices(NAME, timeout=args.timeout, **SCAN_FILTER)
     if not candidates:
-        raise RuntimeError('Micro Plus was not found. Turn it on, close Fender Tone on '
-                           'other devices, and try again with the Micro Plus nearby. If it is '
-                           'already on, switch it off and on again.')
+        raise RuntimeError(not_found(
+            'Micro Plus was not found. Turn it on, close Fender Tone on '
+            'other devices, and try again with the Micro Plus nearby. If it is '
+            'already on, switch it off and on again.'))
     if args.command == 'scan':
         print(json.dumps([{'name': d.name, 'id': d.address} for d in candidates]))
         return
@@ -288,13 +282,8 @@ async def run(args):
         log = open(args.log, 'a', encoding='utf-8')
     try:
         async with await make_client(candidates[0], timeout=args.timeout) as client:
-            if isinstance(client, LeBearerClient):
-                note = ' over LE only; Bluetooth audio stays connected'
-            elif sys.platform.startswith('linux'):
-                note = ('; BlueZ offers no Bearer.LE1 (needs Experimental = true), so '
-                        'disconnecting will also drop Bluetooth audio')
-            else:
-                note = ''
+            note = (' over LE only; Bluetooth audio stays connected'
+                    if isinstance(client, LeBearerClient) else '')
             controller = Controller(client, log)
             await client.start_notify(RESPONSE, controller.notify)
             print(f'Connected to Mustang Micro Plus{note}', file=sys.stderr, flush=True)
@@ -314,7 +303,7 @@ async def run(args):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--device', help='CoreBluetooth device UUID from scan')
+    parser.add_argument('--device', help='Device ID from scan (Linux: the Bluetooth address)')
     parser.add_argument('--timeout', type=float, default=15)
     parser.add_argument('--log', help='Append timestamped BLE traffic to a JSONL file')
     commands = parser.add_subparsers(dest='command', required=True)
@@ -323,10 +312,13 @@ def main():
     switch = commands.add_parser('preset')
     switch.add_argument('slot', type=int, choices=range(1, 101), metavar='1–100')
     args = parser.parse_args()
-    from bleak.exc import BleakError
+    errors = (RuntimeError, ValueError, TimeoutError)
+    if not sys.platform.startswith('linux'):      # Linux talks to BlueZ without Bleak
+        from bleak.exc import BleakError
+        errors += (BleakError,)
     try:
         asyncio.run(run(args))
-    except (RuntimeError, ValueError, TimeoutError, BleakError) as error:
+    except errors as error:
         message = str(error).strip()
         if not message:
             message = ('Timed out waiting for a Bluetooth response. Reconnect with '

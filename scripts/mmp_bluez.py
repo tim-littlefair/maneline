@@ -10,6 +10,10 @@ device connected already and never brings up LE.
 BlueZ with `Experimental = true` exports org.bluez.Bearer.LE1, whose Connect and
 Disconnect touch the LE link alone. LeBearerClient uses that plus the plain BlueZ
 GATT objects, and offers the small part of the BleakClient API used by Controller.
+
+Linux therefore needs no Bleak at all: the amp has to be paired anyway, so find_device
+asks BlueZ for the paired device instead of scanning. Bleak is imported on other
+platforms only (macOS).
 """
 import asyncio
 import sys
@@ -30,10 +34,96 @@ NOT_READY = ('org.bluez.Error.Failed', 'org.bluez.Error.NotConnected',
              'org.freedesktop.DBus.Error.UnknownMethod')
 
 
+LINUX = sys.platform.startswith('linux')
+NOT_PAIRED = ('Micro Plus not found among the paired Bluetooth devices. Pair it first, '
+              'see docs/MUSTANG_MICRO_PLUS_LINUX.md.')
+NO_LE_BEARER = ('BlueZ offers no org.bluez.Bearer.LE1 for the Micro Plus. Control needs '
+                'BlueZ 5.84 or later with "Experimental = true" in /etc/bluetooth/main.conf, '
+                'see docs/MUSTANG_MICRO_PLUS_LINUX.md.')
+NO_ANSWER = ('The Micro Plus does not answer. Turn it on and close Fender Tone on other '
+             'devices. If it is already on, switch it off and on again: its Bluetooth can '
+             'stop answering while the amp itself keeps working.')
+
+
+class Device:
+    """A device BlueZ knows, with what the callers use of a Bleak scan result."""
+
+    def __init__(self, path, address, name):
+        self.address = address
+        self.name = name
+        self.details = {'path': path}
+
+
 def device_path(device):
-    """The BlueZ object path of a Bleak scan result, or None (other platforms, fakes)."""
+    """The BlueZ object path of a device, or None (other platforms, fakes)."""
     details = getattr(device, 'details', None)
     return details.get('path') if isinstance(details, dict) else None
+
+
+async def paired_devices(name, address=None):
+    """The paired devices of that name that BlueZ knows, without scanning.
+
+    A paired device is listed whether it is switched on or not; connecting tells.
+    """
+    try:
+        from dbus_fast import BusType, Message, MessageType
+        from dbus_fast.aio import MessageBus
+    except ImportError:
+        raise RuntimeError('The Python package dbus-fast is missing.') from None
+    try:
+        bus = await MessageBus(bus_type=BusType.SYSTEM).connect()
+    except OSError as error:
+        raise RuntimeError(f'The D-Bus system bus is not reachable ({error}).') from None
+    try:
+        reply = await bus.call(Message(destination=BLUEZ, path='/', interface=OBJECT_MANAGER,
+                                       member='GetManagedObjects'))
+    finally:
+        bus.disconnect()
+    if reply.message_type == MessageType.ERROR:
+        raise RuntimeError(f'BlueZ does not answer ({reply.error_name}). '
+                           'Is the bluetooth service running?')
+
+    def value(properties, key):
+        variant = properties.get(key)
+        return variant.value if variant is not None else None
+
+    found = []
+    for path, interfaces in sorted(reply.body[0].items()):
+        properties = interfaces.get(DEVICE)
+        if not properties or not value(properties, 'Paired'):
+            continue
+        device = Device(path, value(properties, 'Address') or '',
+                        value(properties, 'Name') or value(properties, 'Alias'))
+        if device.name == name and (address is None
+                                    or device.address.upper() == address.upper()):
+            found.append(device)
+    return found
+
+
+async def find_devices(name, address=None, timeout=10, **scan_filter):
+    """Every Micro Plus in reach: on Linux the paired ones, elsewhere a Bleak scan."""
+    if LINUX:
+        return await paired_devices(name, address)
+    from bleak import BleakScanner
+    devices = await BleakScanner.discover(timeout=timeout, return_adv=True, **scan_filter)
+    return [device for device, advert in devices.values()
+            if (advert.local_name == name or device.name == name)
+            and (address is None or device.address == address)]
+
+
+async def find_device(name, address=None, timeout=10, **scan_filter):
+    """One Micro Plus or None: on Linux the paired one, elsewhere the first one scanned."""
+    if LINUX:
+        return next(iter(await paired_devices(name, address)), None)
+    from bleak import BleakScanner
+    return await BleakScanner.find_device_by_filter(
+        lambda device, advert: (device.name == name or advert.local_name == name)
+        and (address is None or device.address == address), timeout=timeout, **scan_filter)
+
+
+def not_found(message):
+    """Why find_device returned None: on Linux the amp is not paired, else the caller's text."""
+    return NOT_PAIRED if LINUX else message
 
 
 async def le_bearer_available(path):
@@ -58,9 +148,11 @@ async def le_bearer_available(path):
 
 
 async def make_client(device, timeout=None, disconnected_callback=None):
-    """An unconnected client: LeBearerClient where BlueZ allows it, else BleakClient."""
-    path = device_path(device)
-    if sys.platform.startswith('linux') and path and await le_bearer_available(path):
+    """An unconnected client: LeBearerClient on Linux, BleakClient elsewhere."""
+    if LINUX:
+        path = device_path(device)
+        if not (path and await le_bearer_available(path)):
+            raise RuntimeError(NO_LE_BEARER)
         return LeBearerClient(path, disconnected_callback=disconnected_callback,
                               timeout=timeout or 15)
     from bleak import BleakClient
@@ -146,6 +238,11 @@ class LeBearerClient:
                 self._connected = True
                 await self._discover()
                 await self._wait_for_gatt()
+        except TimeoutError:
+            # A paired amp is known to BlueZ while it is switched off, so this is where
+            # an absent amp shows (a scan used to tell before connecting).
+            await self.disconnect()
+            raise RuntimeError(NO_ANSWER) from None
         except BaseException:
             await self.disconnect()
             raise

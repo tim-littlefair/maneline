@@ -6,7 +6,8 @@ audio from the same computer. The protocol and the commands are the same as in
 BlueZ needs.
 
 Tested on 9 November 2026 with firmware 1.0.29, BlueZ 5.87, an Intel AX201
-adapter, Python 3.13 and Bleak 3.0.2.
+adapter and Python 3.13. Since 11 November 2026 the scripts need no Bleak on Linux,
+only `dbus-fast`; that change is tested without an amp so far.
 
 ## Audio and control at the same time
 
@@ -21,17 +22,25 @@ sends it when a client disconnects, when an `async with` block ends and when
 `asyncio.run()` shuts down. While audio is connected, Bleak also considers the
 device connected already and never brings up LE.
 
-`scripts/mmp_bluez.py` therefore talks to BlueZ directly when BlueZ exports its
-per-bearer interface `org.bluez.Bearer.LE1`. It connects and disconnects only the
-LE link, and watches that link rather than the device. `mmp_ble.py` and the
-browser server use it automatically and say so:
+`scripts/mmp_bluez.py` therefore talks to BlueZ directly, through its per-bearer
+interface `org.bluez.Bearer.LE1`. It connects and disconnects only the LE link,
+and watches that link rather than the device. `mmp_ble.py` says so:
 
 ```
 Connected to Mustang Micro Plus over LE only; Bluetooth audio stays connected
 ```
 
+On Linux the scripts do not use Bleak at all. The only Python package they need
+is `dbus-fast` (Debian 13: `python3-dbus-fast`). They also do not scan: the amp
+has to be paired anyway (below), so they ask BlueZ for the paired device named
+"Mustang Micro Plus". `mmp_ble.py scan` lists the paired amps, and `--device`
+takes the Bluetooth address. A paired amp is known to BlueZ while it is switched
+off, so an amp that is off shows as "does not answer" after the connection
+timeout rather than as "not found".
+
 Without the bearer interface (BlueZ older than 5.84 or experimental interfaces
-off), they fall back to Bleak and warn that disconnecting will also drop audio.
+off) the scripts stop and say what BlueZ needs. They no longer fall back to
+Bleak, which would drop audio on every disconnect.
 
 ## One-time BlueZ setup
 

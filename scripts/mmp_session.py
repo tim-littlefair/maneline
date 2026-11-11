@@ -5,7 +5,7 @@ import time
 # AuditionController is the BLE Controller plus audition and stored-preset reads.
 from mmp_audition import AuditionController as Controller
 from mmp_ble import KEEPALIVE, KEEPALIVE_INTERVAL, NAME, RESPONSE, SCAN_FILTER
-from mmp_bluez import make_client
+from mmp_bluez import find_device, make_client, not_found
 
 # Longest a switch request waits for the amp to reconnect after an idle disconnect.
 # Usually about 3 s (find the amp, connect, handshake); once 14 s, just after Bluetooth
@@ -183,7 +183,6 @@ class MicroPlusSession:
         return not self.lock.locked()          # a switch may have started meanwhile
 
     async def run(self):
-        from bleak import BleakScanner
         while True:
             if self.asleep:
                 self.phase = 'asleep'
@@ -194,17 +193,15 @@ class MicroPlusSession:
             self.reset.clear()
             self.phase = 'connecting'
             try:
-                device = await BleakScanner.find_device_by_filter(
-                    lambda d, advert: (d.name == NAME or advert.local_name == NAME)
-                    and (self.device_id is None or d.address == self.device_id),
-                    **SCAN_FILTER, timeout=10)
+                device = await find_device(NAME, self.device_id, timeout=10, **SCAN_FILTER)
                 if device is None:
-                    raise RuntimeError('Micro Plus not found. Turn it on and close Fender Tone on other devices. '
-                                       'If it is already on, switch it off and on again: its Bluetooth can '
-                                       'stop answering while the amp itself keeps working.')
+                    raise RuntimeError(not_found(
+                        'Micro Plus not found. Turn it on and close Fender Tone on other devices. '
+                        'If it is already on, switch it off and on again: its Bluetooth can '
+                        'stop answering while the amp itself keeps working.'))
                 # Pin the first selected device across reconnects.
                 self.device_id = device.address
-                # On Linux with BlueZ's bearer API this holds only the LE link, so
+                # On Linux this holds only the LE link (BlueZ's bearer API), so
                 # Bluetooth audio to the amp keeps playing across connects and exits.
                 client = await make_client(device, disconnected_callback=lambda _: self.reset.set())
                 async with client:

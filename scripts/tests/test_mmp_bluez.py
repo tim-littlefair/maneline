@@ -1,4 +1,5 @@
 """LE-bearer client for Linux: keeps Bluetooth audio up, without a real BlueZ."""
+import asyncio
 import sys
 import types
 import unittest
@@ -65,23 +66,120 @@ def signal(path, interface, member, signature, body):
                    body=body, message_type=MessageType.SIGNAL)
 
 
+NO_BLEAK = {'bleak': None}         # importing bleak raises ImportError
+
+
 class ClientSelectionTests(unittest.IsolatedAsyncioTestCase):
-    async def test_device_without_bluez_path_uses_bleak(self):
+    async def test_other_platforms_use_bleak(self):
         made = []
 
         class FakeBleakClient:
             def __init__(self, device, **options):
                 made.append((device, options))
 
-        device = types.SimpleNamespace(address='test-device')
-        with patch.dict(sys.modules, {'bleak': types.SimpleNamespace(BleakClient=FakeBleakClient)}):
+        class FakeScanner:
+            @staticmethod
+            async def find_device_by_filter(match, **options):
+                made.append(options)
+                return device if match(device, types.SimpleNamespace(local_name=None)) else None
+
+        device = types.SimpleNamespace(address='test-device', name='Amp')
+        fake_bleak = types.SimpleNamespace(BleakClient=FakeBleakClient, BleakScanner=FakeScanner)
+        with patch.dict(sys.modules, {'bleak': fake_bleak}), patch('mmp_bluez.LINUX', False):
+            self.assertIs(await mmp_bluez.find_device('Amp', service_uuids=['x']), device)
+            self.assertIsNone(await mmp_bluez.find_device('Amp', 'another-device'))
             client = await mmp_bluez.make_client(device, disconnected_callback=print)
+            self.assertEqual(mmp_bluez.not_found('caller text'), 'caller text')
         self.assertIsInstance(client, FakeBleakClient)
-        self.assertEqual(made, [(device, {'disconnected_callback': print})])
+        self.assertEqual(made, [{'timeout': 10, 'service_uuids': ['x']}, {'timeout': 10},
+                                (device, {'disconnected_callback': print})])
+
+    async def test_linux_without_le_bearer_explains_instead_of_using_bleak(self):
+        async def unavailable(path):
+            return False
+
+        for device in (types.SimpleNamespace(address='test-device'),
+                       mmp_bluez.Device(DEV, 'AA:BB:CC:DD:EE:FF', 'Amp')):
+            with patch.dict(sys.modules, NO_BLEAK), patch('mmp_bluez.LINUX', True), \
+                 patch('mmp_bluez.le_bearer_available', unavailable), \
+                 self.assertRaisesRegex(RuntimeError, 'Experimental = true'):
+                await mmp_bluez.make_client(device)
+
+    async def test_linux_with_le_bearer_needs_no_bleak(self):
+        async def available(path):
+            return path == DEV
+
+        with patch.dict(sys.modules, NO_BLEAK), patch('mmp_bluez.LINUX', True), \
+             patch('mmp_bluez.le_bearer_available', available):
+            client = await mmp_bluez.make_client(mmp_bluez.Device(DEV, 'AA:BB:CC:DD:EE:FF', 'Amp'),
+                                                 disconnected_callback=print)
+            self.assertEqual(mmp_bluez.not_found('caller text'), mmp_bluez.NOT_PAIRED)
+        self.assertIsInstance(client, mmp_bluez.LeBearerClient)
+        self.assertEqual((client.path, client.disconnected_callback, client.timeout),
+                         (DEV, print, 15))
 
     def test_device_path_comes_from_bluez_details(self):
         self.assertEqual(mmp_bluez.device_path(types.SimpleNamespace(details={'path': DEV})), DEV)
         self.assertIsNone(mmp_bluez.device_path(types.SimpleNamespace(details=object())))
+
+
+@unittest.skipIf(Message is None, 'dbus-fast is only used on Linux')
+class PairedDeviceTests(unittest.IsolatedAsyncioTestCase):
+    """Linux finds the amp among BlueZ's paired devices: no scan, no Bleak."""
+    OTHER = '/org/bluez/hci0/dev_11_22_33_44_55_66'
+    SEEN = '/org/bluez/hci0/dev_77_88_99_AA_BB_CC'
+    RENAMED = '/org/bluez/hci0/dev_DD_EE_FF_00_11_22'
+
+    def objects(self):
+        def device(address, paired, **names):
+            properties = {'Address': Variant('s', address), 'Paired': Variant('b', paired)}
+            properties.update({key: Variant('s', name) for key, name in names.items()})
+            return {mmp_bluez.DEVICE: properties}
+        return reply([{
+            '/org/bluez/hci0': {'org.bluez.Adapter1': {}},
+            self.OTHER: device('11:22:33:44:55:66', True, Name='Headphones', Alias='Headphones'),
+            self.SEEN: device('77:88:99:AA:BB:CC', False, Name='Amp', Alias='Amp'),   # scanned once
+            DEV: device('AA:BB:CC:DD:EE:FF', True, Name='Amp', Alias='Practice amp'),
+            self.RENAMED: device('DD:EE:FF:00:11:22', True, Alias='Amp'),             # no Name
+            RESPONSE_PATH: {mmp_bluez.CHARACTERISTIC: {'UUID': Variant('s', RESPONSE)}}}])
+
+    async def find(self, function, *args, answer=None, **options):
+        bus = FakeBus({'GetManagedObjects': [answer or self.objects()]})
+        with patch('dbus_fast.aio.MessageBus', lambda **_: bus), \
+             patch.dict(sys.modules, NO_BLEAK), patch('mmp_bluez.LINUX', True):
+            result = await function(*args, **options)
+        self.assertEqual(bus.calls, [('/', mmp_bluez.OBJECT_MANAGER, 'GetManagedObjects')])
+        self.assertTrue(bus.closed)
+        return result
+
+    async def test_only_paired_devices_of_that_name(self):
+        devices = await self.find(mmp_bluez.find_devices, 'Amp', timeout=3, service_uuids=['x'])
+        self.assertEqual([(d.address, d.name, mmp_bluez.device_path(d)) for d in devices],
+                         [('AA:BB:CC:DD:EE:FF', 'Amp', DEV),
+                          ('DD:EE:FF:00:11:22', 'Amp', self.RENAMED)])
+
+    async def test_one_device_by_address_in_any_case(self):
+        device = await self.find(mmp_bluez.find_device, 'Amp', 'dd:ee:ff:00:11:22')
+        self.assertEqual(mmp_bluez.device_path(device), self.RENAMED)
+        self.assertEqual(mmp_bluez.device_path(await self.find(mmp_bluez.find_device, 'Amp')), DEV)
+
+    async def test_none_when_not_paired(self):
+        self.assertIsNone(await self.find(mmp_bluez.find_device, 'Amp', '77:88:99:AA:BB:CC'))
+        self.assertIsNone(await self.find(mmp_bluez.find_device, 'Mustang'))
+        self.assertEqual(await self.find(mmp_bluez.find_devices, 'Mustang'), [])
+
+    async def test_no_system_bus_is_an_error(self):
+        def no_bus(**_):
+            raise FileNotFoundError(2, 'No such file or directory')
+
+        with patch('dbus_fast.aio.MessageBus', no_bus), patch('mmp_bluez.LINUX', True), \
+             self.assertRaisesRegex(RuntimeError, 'system bus'):
+            await mmp_bluez.find_device('Amp')
+
+    async def test_bluez_not_running_is_an_error(self):
+        error = reply(error='org.freedesktop.DBus.Error.ServiceUnknown')
+        with self.assertRaisesRegex(RuntimeError, 'bluetooth service'):
+            await self.find(mmp_bluez.find_device, 'Amp', answer=error)
 
 
 @unittest.skipIf(Message is None, 'dbus-fast is only used on Linux')
@@ -119,6 +217,21 @@ class LeBearerTests(unittest.IsolatedAsyncioTestCase):
         client = mmp_bluez.LeBearerClient(DEV, timeout=2)
         with patch('dbus_fast.aio.MessageBus', lambda **_: bus), \
              self.assertRaises(RuntimeError):
+            await client.connect()
+        self.assertFalse(client.is_connected)
+        self.assertTrue(bus.closed)
+
+    async def test_amp_that_is_off_does_not_answer(self):
+        class SilentBus(FakeBus):
+            async def call(self, message):
+                if message.member == 'Connect':
+                    await asyncio.sleep(60)
+                return await super().call(message)
+
+        bus = SilentBus()
+        client = mmp_bluez.LeBearerClient(DEV, timeout=0.05)
+        with patch('dbus_fast.aio.MessageBus', lambda **_: bus), \
+             self.assertRaisesRegex(RuntimeError, 'Turn it on'):
             await client.connect()
         self.assertFalse(client.is_connected)
         self.assertTrue(bus.closed)

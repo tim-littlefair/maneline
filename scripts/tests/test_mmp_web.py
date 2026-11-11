@@ -72,10 +72,11 @@ class PersistentTests(unittest.IsolatedAsyncioTestCase):
         clients = []
         beats = []
 
-        class FakeScanner:
-            @staticmethod
-            async def find_device_by_filter(*args, **kwargs):
-                return types.SimpleNamespace(address='test-device')
+        async def find_device(*args, **kwargs):
+            return types.SimpleNamespace(address='test-device')
+
+        async def make_client(device, disconnected_callback):
+            return FakeClient(device, disconnected_callback)
 
         class FakeClient:
             def __init__(self, device, disconnected_callback):
@@ -119,9 +120,9 @@ class PersistentTests(unittest.IsolatedAsyncioTestCase):
                 await acknowledgement.wait()
                 self.slot = slot
 
-        fake_bleak = types.SimpleNamespace(BleakClient=FakeClient, BleakScanner=FakeScanner)
         session = MicroPlusSession()
-        with patch.dict(sys.modules, {'bleak': fake_bleak}), \
+        with patch('mmp_session.find_device', find_device), \
+             patch('mmp_session.make_client', make_client), \
              patch('mmp_session.Controller', FakeController), \
              patch('mmp_session.KEEPALIVE_INTERVAL', .005):
             background = asyncio.create_task(session.run())

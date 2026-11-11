@@ -340,15 +340,12 @@ class Meter:
 
 async def with_amp(args, work):
     """Connect, select the reserved slot, run work(meter), return to the original preset."""
-    from bleak import BleakScanner
     from mmp_audition import AuditionController, heartbeat
     from mmp_ble import NAME, RESPONSE, SCAN_FILTER
-    from mmp_bluez import make_client
-    device = await BleakScanner.find_device_by_filter(
-        lambda d, advert: (d.name == NAME or advert.local_name == NAME)
-        and (args.device is None or d.address == args.device), **SCAN_FILTER, timeout=10)
+    from mmp_bluez import find_device, make_client, not_found
+    device = await find_device(NAME, args.device, timeout=10, **SCAN_FILTER)
     if device is None:
-        sys.exit('Micro Plus not found. Turn it on and stop other programs that control it.')
+        sys.exit(not_found('Micro Plus not found. Turn it on and stop other programs that control it.'))
     client = await make_client(device)
     async with client:
         controller = AuditionController(client, None)
