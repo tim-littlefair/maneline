@@ -85,6 +85,31 @@ reset the adapter within a second (`No discovery started`). The scripts
 therefore filter by service UUID only on macOS and find the amp by name on
 Linux.
 
+## Saving the amp's battery
+
+While connected, the amp's radio wakes every 45 ms for the LE link (connection
+interval 45 ms, latency 0), and the heartbeat must arrive at least every 0.5 s or
+the amp stops replying. Measured on firmware 1.1.11 with 20 s of idle: a 1 s, 2 s
+or 5 s heartbeat, or none, left switches unconfirmed although the amp still
+switched; 0.5 s and 0.25 s kept every switch confirmed. A heartbeat burst after
+replies have stopped did not bring them back, only a new connection did.
+
+The browser server can therefore disconnect when idle:
+
+```sh
+bash scripts/run_web_cli.sh --micro-plus --idle-disconnect 30
+```
+
+After 30 s without a preset switch it closes the connection, unless Bluetooth
+audio is streaming to the amp. Next to a running A2DP stream (about 360 kbit/s)
+the LE link costs little, so it stays up for instant switching. With audio
+connected but silent, or not connected at all, the LE link is a large share of
+what the radio does. The page keeps showing the presets and the last known one;
+choosing a preset reconnects first. That took 2.7–3.4 s in tests, including
+while audio streamed. Once, just after streaming had started, it took 14 s.
+On macOS the audio state is not available, so the server disconnects whenever
+it is idle.
+
 ## Notes for applications
 
 - Bring up the control link with `Bearer.LE1.Connect()` and close it with

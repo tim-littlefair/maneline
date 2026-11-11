@@ -8,12 +8,20 @@ const grid = document.getElementById('presets');
 const filter = document.getElementById('filter');
 const message = document.getElementById('message');
 
+// Asleep: the server closed the connection to save the amp's battery. Presets stay
+// selectable; choosing one reconnects first.
+function usable() {
+  return state.connected || state.asleep;
+}
+
 function render() {
   document.getElementById('connection').textContent = state.connected
     ? 'Connected over Bluetooth'
-    : state.error || 'Connecting to your Micro Plus…';
-  document.getElementById('current').textContent = state.connected && state.preset
-    ? `Preset ${state.preset} · ${state.name || 'Unnamed preset'}`
+    : state.asleep
+      ? 'Disconnected to save the amp\u2019s battery. Choosing a preset reconnects, which takes a few seconds.'
+      : state.error || 'Connecting to your Micro Plus…';
+  document.getElementById('current').textContent = usable() && state.preset
+    ? `Preset ${state.preset} · ${state.name || 'Unnamed preset'}${state.connected ? '' : ' (last known)'}`
     : 'Reading the current preset…';
   const names = JSON.stringify(state.presets);
   if (names !== renderedNames) {
@@ -35,13 +43,13 @@ function render() {
   const query = filter.value.toLocaleLowerCase().trim();
   let visible = 0;
   for (const button of grid.children) {
-    button.disabled = switching || !state.connected;
+    button.disabled = switching || !usable();
     button.setAttribute('aria-pressed', String(Number(button.dataset.preset) === state.preset));
     button.hidden = !button.textContent.toLocaleLowerCase().includes(query);
     if (!button.hidden) visible++;
   }
-  grid.setAttribute('aria-busy', String(switching || !state.connected));
-  document.getElementById('empty').hidden = !state.connected || visible > 0;
+  grid.setAttribute('aria-busy', String(switching || !usable()));
+  document.getElementById('empty').hidden = !usable() || visible > 0;
 }
 
 async function readState() {
@@ -64,16 +72,18 @@ async function readState() {
 }
 
 async function selectPreset(preset) {
-  if (switching || !state.connected) return;
+  if (switching || !usable()) return;
   switching = true;
   selectionRevision++;
   message.className = '';
-  message.textContent = `Selecting preset ${preset}…`;
+  message.textContent = state.asleep
+    ? `Reconnecting and selecting preset ${preset}…`
+    : `Selecting preset ${preset}…`;
   render();
   try {
     const response = await fetch('/api/micro-plus', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ preset }), signal: AbortSignal.timeout(15000)
+      body: JSON.stringify({ preset }), signal: AbortSignal.timeout(45000)
     });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'The amp did not confirm the preset.');

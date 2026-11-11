@@ -51,6 +51,10 @@ interpreter. The server binds to `0.0.0.0`; localhost and this Mac's hostname an
 add `--allow-host HOSTNAME_OR_IP` (repeatable). Use this on a trusted network;
 there is no user login. Browser writes require a matching Origin and Host.
 
+`--idle-disconnect SECONDS` saves the amp's battery: after that long without a
+preset switch the server disconnects, and the next switch reconnects first,
+which takes a few seconds. See [MUSTANG_MICRO_PLUS_LINUX.md](MUSTANG_MICRO_PLUS_LINUX.md#saving-the-amps-battery).
+
 The API is `GET /api/micro-plus` for connection state, selected preset, names and
 connection count, and `POST /api/micro-plus` with JSON `{"preset": 72}` to switch.
 Preset numbers are 1–100, matching the display. Invalid numbers return HTTP 400;
