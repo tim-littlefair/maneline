@@ -32,9 +32,13 @@ Connected to Mustang Micro Plus over LE only; Bluetooth audio stays connected
 
 On Linux the scripts do not use Bleak at all. The only Python package they need
 is `dbus-fast` (Debian 13: `python3-dbus-fast`). They also do not scan: the amp
-has to be paired anyway (below), so they ask BlueZ for the paired device named
-"Mustang Micro Plus". `mmp_ble.py scan` lists the paired amps, and `--device`
-takes the Bluetooth address. A paired amp is known to BlueZ while it is switched
+has to be paired anyway (below), so they ask BlueZ for the paired device that
+offers the amp's control service (`90559580-b707-11ee-acb1-7b7e30f1af54` among
+the device's `UUIDs`), whatever the device is called; a paired device named
+"Mustang Micro Plus" also counts, for the case that BlueZ does not list its
+services. `mmp_ble.py scan` lists the paired amps. With more than one, pass
+`--device` with the Bluetooth address: `mmp_ble.py` insists on it, the other
+scripts and the browser server take the first amp BlueZ lists. A paired amp is known to BlueZ while it is switched
 off, so an amp that is off shows as "does not answer" after the connection
 timeout rather than as "not found".
 

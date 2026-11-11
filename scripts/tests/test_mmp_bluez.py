@@ -126,18 +126,25 @@ class ClientSelectionTests(unittest.IsolatedAsyncioTestCase):
 @unittest.skipIf(Message is None, 'dbus-fast is only used on Linux')
 class PairedDeviceTests(unittest.IsolatedAsyncioTestCase):
     """Linux finds the amp among BlueZ's paired devices: no scan, no Bleak."""
+    SERVICE = '90559580-B707-11EE-ACB1-7B7E30F1AF54'       # BlueZ lists lower case
+    OWN_NAME = '/org/bluez/hci0/dev_33_44_55_66_77_88'
     OTHER = '/org/bluez/hci0/dev_11_22_33_44_55_66'
     SEEN = '/org/bluez/hci0/dev_77_88_99_AA_BB_CC'
     RENAMED = '/org/bluez/hci0/dev_DD_EE_FF_00_11_22'
 
     def objects(self):
-        def device(address, paired, **names):
+        def device(address, paired, uuids=None, **names):
             properties = {'Address': Variant('s', address), 'Paired': Variant('b', paired)}
+            if uuids is not None:
+                properties['UUIDs'] = Variant('as', uuids)
             properties.update({key: Variant('s', name) for key, name in names.items()})
             return {mmp_bluez.DEVICE: properties}
         return reply([{
             '/org/bluez/hci0': {'org.bluez.Adapter1': {}},
-            self.OTHER: device('11:22:33:44:55:66', True, Name='Headphones', Alias='Headphones'),
+            self.OTHER: device('11:22:33:44:55:66', True, ['0000110b-0000-1000-8000-00805f9b34fb'],
+                               Name='Headphones', Alias='Headphones'),
+            self.OWN_NAME: device('33:44:55:66:77:88', True, [self.SERVICE.lower()],
+                                  Name='Stage left', Alias='Stage left'),
             self.SEEN: device('77:88:99:AA:BB:CC', False, Name='Amp', Alias='Amp'),   # scanned once
             DEV: device('AA:BB:CC:DD:EE:FF', True, Name='Amp', Alias='Practice amp'),
             self.RENAMED: device('DD:EE:FF:00:11:22', True, Alias='Amp'),             # no Name
@@ -162,6 +169,17 @@ class PairedDeviceTests(unittest.IsolatedAsyncioTestCase):
         device = await self.find(mmp_bluez.find_device, 'Amp', 'dd:ee:ff:00:11:22')
         self.assertEqual(mmp_bluez.device_path(device), self.RENAMED)
         self.assertEqual(mmp_bluez.device_path(await self.find(mmp_bluez.find_device, 'Amp')), DEV)
+
+    async def test_the_service_identifies_an_amp_of_any_name(self):
+        devices = await self.find(mmp_bluez.find_devices, 'Amp', service=self.SERVICE)
+        self.assertEqual([(d.address, d.name) for d in devices],
+                         [('33:44:55:66:77:88', 'Stage left'),      # by service
+                          ('AA:BB:CC:DD:EE:FF', 'Amp'),             # no services listed: by name
+                          ('DD:EE:FF:00:11:22', 'Amp')])
+        device = await self.find(mmp_bluez.find_device, 'Amp', '33:44:55:66:77:88',
+                                 service=self.SERVICE)
+        self.assertEqual(mmp_bluez.device_path(device), self.OWN_NAME)
+        self.assertIsNone(await self.find(mmp_bluez.find_device, 'Amp', '33:44:55:66:77:88'))
 
     async def test_none_when_not_paired(self):
         self.assertIsNone(await self.find(mmp_bluez.find_device, 'Amp', '77:88:99:AA:BB:CC'))

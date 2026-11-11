@@ -4,7 +4,7 @@ import json
 import time
 # AuditionController is the BLE Controller plus audition and stored-preset reads.
 from mmp_audition import AuditionController as Controller
-from mmp_ble import KEEPALIVE, KEEPALIVE_INTERVAL, NAME, RESPONSE, SCAN_FILTER
+from mmp_ble import KEEPALIVE, KEEPALIVE_INTERVAL, NAME, RESPONSE, SCAN_FILTER, SERVICE
 from mmp_bluez import find_device, make_client, not_found
 
 # Longest a switch request waits for the amp to reconnect after an idle disconnect.
@@ -193,7 +193,8 @@ class MicroPlusSession:
             self.reset.clear()
             self.phase = 'connecting'
             try:
-                device = await find_device(NAME, self.device_id, timeout=10, **SCAN_FILTER)
+                device = await find_device(NAME, self.device_id, timeout=10, service=SERVICE,
+                                           **SCAN_FILTER)
                 if device is None:
                     raise RuntimeError(not_found(
                         'Micro Plus not found. Turn it on and close Fender Tone on other devices. '

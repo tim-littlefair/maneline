@@ -23,7 +23,7 @@ import json
 import sys
 import time
 
-from mmp_ble import (Controller, KEEPALIVE, KEEPALIVE_INTERVAL, NAME, RESPONSE, SCAN_FILTER,
+from mmp_ble import (Controller, KEEPALIVE, KEEPALIVE_INTERVAL, NAME, RESPONSE, SCAN_FILTER, SERVICE,
                      fields, tone_message, tone_request, varint)
 from mmp_bluez import find_device, make_client, not_found
 from mmp_lz4 import compress, decompress
@@ -213,7 +213,8 @@ async def heartbeat(controller):
 
 async def run(args):
     doc = apply_overrides(json.load(open(args.preset, encoding='utf-8')), args.name, args.volume)
-    device = await find_device(NAME, args.device, timeout=10, **SCAN_FILTER)
+    device = await find_device(NAME, args.device, timeout=10, service=SERVICE,
+                               **SCAN_FILTER)
     if device is None:
         sys.exit(not_found('Micro Plus not found. Turn it on and stop other programs that control it.'))
     log = open(args.log, 'a', encoding='utf-8') if args.log else None

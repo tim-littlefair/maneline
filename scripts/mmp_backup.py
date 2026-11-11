@@ -24,7 +24,7 @@ import sys
 import time
 from pathlib import Path
 
-from mmp_ble import (Controller, KEEPALIVE, KEEPALIVE_INTERVAL, NAME, RESPONSE, SCAN_FILTER,
+from mmp_ble import (Controller, KEEPALIVE, KEEPALIVE_INTERVAL, NAME, RESPONSE, SCAN_FILTER, SERVICE,
                      fields, tone_request, varint)
 from mmp_bluez import find_device, make_client, not_found
 from mmp_lz4 import decompress
@@ -141,7 +141,8 @@ async def heartbeat(controller):
 
 
 async def backup(args):
-    device = await find_device(NAME, args.device, timeout=10, **SCAN_FILTER)
+    device = await find_device(NAME, args.device, timeout=10, service=SERVICE,
+                               **SCAN_FILTER)
     if device is None:
         sys.exit(not_found('Micro Plus not found. Turn it on, close Fender Tone and stop other programs '
                  'that control it (e.g. the browser server or ChordsPlay\'s amp agent).'))

@@ -341,9 +341,10 @@ class Meter:
 async def with_amp(args, work):
     """Connect, select the reserved slot, run work(meter), return to the original preset."""
     from mmp_audition import AuditionController, heartbeat
-    from mmp_ble import NAME, RESPONSE, SCAN_FILTER
+    from mmp_ble import NAME, RESPONSE, SCAN_FILTER, SERVICE
     from mmp_bluez import find_device, make_client, not_found
-    device = await find_device(NAME, args.device, timeout=10, **SCAN_FILTER)
+    device = await find_device(NAME, args.device, timeout=10, service=SERVICE,
+                               **SCAN_FILTER)
     if device is None:
         sys.exit(not_found('Micro Plus not found. Turn it on and stop other programs that control it.'))
     client = await make_client(device)

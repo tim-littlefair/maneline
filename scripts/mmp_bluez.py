@@ -60,10 +60,12 @@ def device_path(device):
     return details.get('path') if isinstance(details, dict) else None
 
 
-async def paired_devices(name, address=None):
-    """The paired devices of that name that BlueZ knows, without scanning.
+async def paired_devices(name, address=None, service=None):
+    """The paired devices BlueZ knows that offer that GATT service, without scanning.
 
-    A paired device is listed whether it is switched on or not; connecting tells.
+    The service identifies the amp whatever it is called. The name only counts for a
+    device whose services BlueZ does not list (yet). A paired device is listed whether
+    it is switched on or not; connecting tells.
     """
     try:
         from dbus_fast import BusType, Message, MessageType
@@ -94,16 +96,18 @@ async def paired_devices(name, address=None):
             continue
         device = Device(path, value(properties, 'Address') or '',
                         value(properties, 'Name') or value(properties, 'Alias'))
-        if device.name == name and (address is None
-                                    or device.address.upper() == address.upper()):
+        services = [uuid.lower() for uuid in value(properties, 'UUIDs') or ()]
+        offered = service is not None and service.lower() in services
+        if (offered or device.name == name) and (address is None
+                                                 or device.address.upper() == address.upper()):
             found.append(device)
     return found
 
 
-async def find_devices(name, address=None, timeout=10, **scan_filter):
+async def find_devices(name, address=None, timeout=10, service=None, **scan_filter):
     """Every Micro Plus in reach: on Linux the paired ones, elsewhere a Bleak scan."""
     if LINUX:
-        return await paired_devices(name, address)
+        return await paired_devices(name, address, service)
     from bleak import BleakScanner
     devices = await BleakScanner.discover(timeout=timeout, return_adv=True, **scan_filter)
     return [device for device, advert in devices.values()
@@ -111,10 +115,10 @@ async def find_devices(name, address=None, timeout=10, **scan_filter):
             and (address is None or device.address == address)]
 
 
-async def find_device(name, address=None, timeout=10, **scan_filter):
+async def find_device(name, address=None, timeout=10, service=None, **scan_filter):
     """One Micro Plus or None: on Linux the paired one, elsewhere the first one scanned."""
     if LINUX:
-        return next(iter(await paired_devices(name, address)), None)
+        return next(iter(await paired_devices(name, address, service)), None)
     from bleak import BleakScanner
     return await BleakScanner.find_device_by_filter(
         lambda device, advert: (device.name == name or advert.local_name == name)

@@ -262,10 +262,12 @@ async def run(args):
     from mmp_bluez import LeBearerClient, find_device, find_devices, make_client, not_found
     print('Looking for Mustang Micro Plus…', file=sys.stderr, flush=True)
     if args.device:
-        device = await find_device(NAME, args.device, timeout=args.timeout, **SCAN_FILTER)
+        device = await find_device(NAME, args.device, timeout=args.timeout, service=SERVICE,
+                                   **SCAN_FILTER)
         candidates = [device] if device else []
     else:
-        candidates = await find_devices(NAME, timeout=args.timeout, **SCAN_FILTER)
+        candidates = await find_devices(NAME, timeout=args.timeout, service=SERVICE,
+                                        **SCAN_FILTER)
     if not candidates:
         raise RuntimeError(not_found(
             'Micro Plus was not found. Turn it on, close Fender Tone on '
