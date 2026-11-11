@@ -168,7 +168,11 @@ class Controller:
         characteristic = self.client.services.get_characteristic(REQUEST)
         if characteristic is None:
             raise RuntimeError('Micro Plus control characteristic was not found')
-        response = 'write-without-response' not in characteristic.properties
+        # On macOS a write without response can be lost unnoticed when CoreBluetooth's queue is
+        # full, so a write with response is used there whenever the amp accepts one.
+        properties = characteristic.properties
+        response = ('write-without-response' not in properties
+                    or (sys.platform == 'darwin' and 'write' in properties))
         async with self.write_lock:
             await self.client.write_gatt_char(characteristic, data, response=response)
 
