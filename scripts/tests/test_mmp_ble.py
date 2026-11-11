@@ -3,7 +3,7 @@ import sys
 import unittest
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from mmp_ble import Controller, Frames, fields, packet, select_preset
+from mmp_ble import Controller, Frames, fields, select_preset
 
 
 class ProtocolTests(unittest.TestCase):

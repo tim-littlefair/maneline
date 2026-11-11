@@ -28,7 +28,7 @@ enable it in System Settings > Privacy & Security > Bluetooth before retrying.
 bash scripts/run_web_cli.sh --micro-plus
 ```
 
-Open `http://localhost:8080`. This launch mode serves the Micro Plus page from
+Open `http://localhost:8081`. This launch mode serves the Micro Plus page from
 `web-app/web_ui`, using the existing Maneline styles. It owns one persistent BLE
 connection shared by all browser clients; browser refreshes and preset clicks do
 not reconnect the amplifier. The original Java/Lua USB mode is still launched
