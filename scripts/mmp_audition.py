@@ -34,6 +34,7 @@ CURRENT_PRESET_REQUEST = 4      # .currentPresetRequest {dummyField = 1}
 CURRENT_PRESET_DATA_STATUS = 4  # MustangLtxAmpStatus.currentPresetDataStatus {compressedPresetJson = 1}
 CURRENT_PRESET_STATUS = 5       # .currentPresetStatus {presetIndex = 1, ...}
 UNSUPPORTED_STATUS = 17
+FIRMWARE_STATUS = 6             # .firmwareVersionStatus {version = 1}: answered to the handshake
 SAVE_AS_REQUEST = 18            # .savePresetAsRequest {presetIndex = 1, compressedPresetJson = 2,
                                 #   isLoadPreset = 3, presetName = 4}: WRITES a whole preset into a slot
 PRESET_SAVED_STATUS = 13        # .presetSavedStatus {presetIndex = 1, presetName = 2}
@@ -87,6 +88,7 @@ class AuditionController(Controller):
     def __init__(self, client, log):
         super().__init__(client, log)
         self.statuses = {}
+        self.firmware = None        # firmwareVersionStatus (6) of the handshake, kept
         self.arrived = asyncio.Event()
         feed = self.frames.feed
 
@@ -106,6 +108,8 @@ class AuditionController(Controller):
                     for kind, value in fields(body):
                         if kind != 1 and isinstance(value, bytes):
                             self.statuses[kind] = dict(fields(value))
+                            if kind == FIRMWARE_STATUS and isinstance(self.statuses[kind].get(1), bytes):
+                                self.firmware = self.statuses[kind][1].decode('utf-8', 'replace')
                             self.arrived.set()
         except ValueError:
             pass

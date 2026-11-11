@@ -73,6 +73,7 @@ class MicroPlusSession:
                 'connected_since': self.connected_since,
                 'asleep': self.asleep, 'idle_disconnect': self.idle_disconnect,
                 'preset': preset, 'name': name, 'audition': auditioned,
+                'firmware': getattr(controller, 'firmware', None) if connected else None,
                 'presets': [{'preset': i + 1, 'name': n} for i, n in enumerate(names)]}
 
     async def _connected(self):
