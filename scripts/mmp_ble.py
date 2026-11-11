@@ -11,6 +11,10 @@ SERVICE = '90559580-b707-11ee-acb1-7b7e30f1af54'
 REQUEST = '820a7e34-4e0a-4f90-8520-04ebce35a3a1'
 RESPONSE = '1017adcc-dcbc-4387-a59f-2546b2ea5bb0'
 NAME = 'Mustang Micro Plus'
+# Scanning with a service-UUID discovery filter makes BlueZ 5.87 re-initialize
+# an Intel AX201 adapter about 0.7 s in, failing with "No discovery started".
+# Matching by name already identifies the amp, so only filter on macOS.
+SCAN_FILTER = {'service_uuids': [SERVICE]} if sys.platform == 'darwin' else {}
 # Firmware 1.1.11 stops sending notifications with one-second keep-alives.
 # Keep a margin below the 500 ms interval used by the original BLE experiment.
 KEEPALIVE_INTERVAL = 0.25
@@ -116,6 +120,7 @@ class Controller:
         self.names = []
         self.changed = asyncio.Event()
         self.failure = None
+        self.dropped = 0
         self.write_lock = asyncio.Lock()
 
     def record(self, direction, data):
@@ -128,6 +133,15 @@ class Controller:
         self.record('rx', data)
         try:
             message = self.frames.feed(data)
+        except ValueError:
+            # A lost or out-of-order fragment, such as the tail of a message that began
+            # before notifications were enabled. Frames has already discarded the partial
+            # message, so drop this one and keep listening instead of failing every
+            # later request.
+            self.dropped += 1
+            self.record('drop', data)
+            return
+        try:
             if message is None or not message.startswith(b'\x12'):
                 return
             outer = fields(message)
@@ -190,17 +204,18 @@ class Controller:
 
 
 async def run(args):
-    from bleak import BleakClient, BleakScanner
+    from bleak import BleakScanner
+    from mmp_bluez import LeBearerClient, make_client
     print('Looking for Mustang Micro Plus…', file=sys.stderr, flush=True)
     if args.device:
         device = await BleakScanner.find_device_by_filter(
             lambda device, advert: device.address == args.device
             and (advert.local_name == NAME or device.name == NAME),
-            timeout=args.timeout, service_uuids=[SERVICE])
+            timeout=args.timeout, **SCAN_FILTER)
         candidates = [device] if device else []
     else:
         devices = await BleakScanner.discover(timeout=args.timeout, return_adv=True,
-                                              service_uuids=[SERVICE])
+                                              **SCAN_FILTER)
         candidates = [device for device, advert in devices.values()
                       if advert.local_name == NAME or device.name == NAME]
     if not candidates:
@@ -217,10 +232,17 @@ async def run(args):
         Path(args.log).parent.mkdir(parents=True, exist_ok=True)
         log = open(args.log, 'a', encoding='utf-8')
     try:
-        async with BleakClient(candidates[0], timeout=args.timeout) as client:
-            print('Connected to Mustang Micro Plus', file=sys.stderr, flush=True)
+        async with await make_client(candidates[0], timeout=args.timeout) as client:
+            if isinstance(client, LeBearerClient):
+                note = ' over LE only; Bluetooth audio stays connected'
+            elif sys.platform.startswith('linux'):
+                note = ('; BlueZ offers no Bearer.LE1 (needs Experimental = true), so '
+                        'disconnecting will also drop Bluetooth audio')
+            else:
+                note = ''
             controller = Controller(client, log)
             await client.start_notify(RESPONSE, controller.notify)
+            print(f'Connected to Mustang Micro Plus{note}', file=sys.stderr, flush=True)
             await controller.initialize()
             if args.command == 'presets':
                 await controller.wait_for(lambda: bool(controller.names))

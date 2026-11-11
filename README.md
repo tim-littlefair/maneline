@@ -38,6 +38,8 @@ TBD: More information on how Balena deployment works.
 [Mustang Micro Plus Bluetooth control on macOS](docs/MUSTANG_MICRO_PLUS_MACOS.md)
 supports reading and switching presets from the browser with
 `bash scripts/run_web_cli.sh --micro-plus`, or from a standalone Python controller.
+[On Linux](docs/MUSTANG_MICRO_PLUS_LINUX.md) the same tools switch presets while
+the amp keeps playing Bluetooth audio from the computer.
 
 There is a roadmap for this project [in the wiki](https://github.com/tim-littlefair/maneline/wiki/Roadmap)
 An earlier version of this README.md file (with a lot more detail, some of which 

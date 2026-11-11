@@ -1,7 +1,8 @@
 """Own one persistent Micro Plus connection and serialize browser commands."""
 import asyncio
 import time
-from mmp_ble import Controller, KEEPALIVE, KEEPALIVE_INTERVAL, NAME, RESPONSE, SERVICE
+from mmp_ble import Controller, KEEPALIVE, KEEPALIVE_INTERVAL, NAME, RESPONSE, SCAN_FILTER
+from mmp_bluez import make_client
 
 
 class MicroPlusSession:
@@ -46,7 +47,7 @@ class MicroPlusSession:
                 raise RuntimeError(self.error) from None
 
     async def run(self):
-        from bleak import BleakClient, BleakScanner
+        from bleak import BleakScanner
         while True:
             self.reset.clear()
             self.phase = 'connecting'
@@ -54,14 +55,17 @@ class MicroPlusSession:
                 device = await BleakScanner.find_device_by_filter(
                     lambda d, advert: (d.name == NAME or advert.local_name == NAME)
                     and (self.device_id is None or d.address == self.device_id),
-                    service_uuids=[SERVICE], timeout=10)
+                    **SCAN_FILTER, timeout=10)
                 if device is None:
                     raise RuntimeError('Micro Plus not found. Turn it on and close Fender Tone on other devices. '
                                        'If it is already on, switch it off and on again: its Bluetooth can '
                                        'stop answering while the amp itself keeps working.')
                 # Pin the first selected device across reconnects.
                 self.device_id = device.address
-                async with BleakClient(device, disconnected_callback=lambda _: self.reset.set()) as client:
+                # On Linux with BlueZ's bearer API this holds only the LE link, so
+                # Bluetooth audio to the amp keeps playing across connects and exits.
+                client = await make_client(device, disconnected_callback=lambda _: self.reset.set())
+                async with client:
                     self.client = client
                     controller = Controller(client, self.log)
                     await client.start_notify(RESPONSE, controller.notify)
