@@ -162,6 +162,18 @@ Before any request marked **writes** above is used, a backup must exist. The fir
 tests belong on an empty slot (72–100), with `auditionPresetRequest` tried before
 `savePresetAsRequest`.
 
+## After a firmware update
+
+Firmware updates can change any of the above. With the agent (`mmp_web.py`) running:
+
+    scripts/mmp_check.py BACKUP_DIR --all          # read-only apart from a switch and an audition
+    scripts/mmp_check.py BACKUP_DIR --all --write  # also save into slot 99 and put it back
+
+It checks the connection, the firmware version (the agent now reports the handshake's
+`firmwareVersionStatus`) against the backup's, the 100 names and presets against the
+backup, switching, an audition on slot 100 and, with `--write`, `savePresetAsRequest`.
+2026-11-11: all passed on firmware reply 1.0.29.
+
 ## Web server API
 
 `scripts/mmp_web.py` (default port 8081) owns the single BLE connection. Next to the
