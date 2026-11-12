@@ -16,6 +16,8 @@ asks BlueZ for the paired device instead of scanning. Bleak is imported on other
 platforms only (macOS).
 """
 import asyncio
+import re
+import subprocess
 import sys
 import xml.etree.ElementTree as ElementTree
 
@@ -40,6 +42,16 @@ NOT_PAIRED = ('Micro Plus not found among the paired Bluetooth devices. Pair it 
 NO_LE_BEARER = ('BlueZ offers no org.bluez.Bearer.LE1 for the Micro Plus. Control needs '
                 'BlueZ 5.86 or later with "Experimental = true" in /etc/bluetooth/main.conf, '
                 'see docs/MUSTANG_MICRO_PLUS_LINUX.md.')
+# Bearer.LE1 appeared in 5.84, but its Connect and Disconnect stayed empty until 5.86:
+# 5.84 and 5.85 export the methods and never reply to them.
+MIN_BLUEZ = (5, 86)
+OLD_BLUEZ = ('BlueZ {} is too old for the Micro Plus: its org.bluez.Bearer.LE1 Connect never '
+             'answers before 5.86. Control needs BlueZ 5.86 or later with "Experimental = true" '
+             'in /etc/bluetooth/main.conf, see docs/MUSTANG_MICRO_PLUS_LINUX.md.')
+# The daemon tells its own version; bluetoothctl, from the same package, is the fallback.
+BLUEZ_VERSION_COMMANDS = (('/usr/libexec/bluetooth/bluetoothd', '--version'),
+                          ('/usr/lib/bluetooth/bluetoothd', '--version'),
+                          ('bluetoothctl', '--version'))
 NO_ANSWER = ('The Micro Plus does not answer. Turn it on and close Fender Tone on other '
              'devices. If it is already on, switch it off and on again: its Bluetooth can '
              'stop answering while the amp itself keeps working.')
@@ -130,6 +142,19 @@ def not_found(message):
     return NOT_PAIRED if LINUX else message
 
 
+def bluez_version():
+    """The installed BlueZ version as a tuple like (5, 87), or None if no command tells."""
+    for command in BLUEZ_VERSION_COMMANDS:
+        try:
+            output = subprocess.run(command, capture_output=True, text=True, timeout=5).stdout
+        except (OSError, subprocess.SubprocessError):
+            continue
+        match = re.search(r'(\d+)\.(\d+)', output)
+        if match:
+            return int(match.group(1)), int(match.group(2))
+    return None
+
+
 async def le_bearer_available(path):
     """True if BlueZ offers Bearer.LE1.Connect for this device (needs Experimental = true)."""
     try:
@@ -154,6 +179,9 @@ async def le_bearer_available(path):
 async def make_client(device, timeout=None, disconnected_callback=None):
     """An unconnected client: LeBearerClient on Linux, BleakClient elsewhere."""
     if LINUX:
+        version = bluez_version()
+        if version is not None and version < MIN_BLUEZ:
+            raise RuntimeError(OLD_BLUEZ.format('.'.join(map(str, version))))
         path = device_path(device)
         if not (path and await le_bearer_available(path)):
             raise RuntimeError(NO_LE_BEARER)

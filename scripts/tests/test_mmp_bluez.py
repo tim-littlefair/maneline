@@ -102,6 +102,7 @@ class ClientSelectionTests(unittest.IsolatedAsyncioTestCase):
         for device in (types.SimpleNamespace(address='test-device'),
                        mmp_bluez.Device(DEV, 'AA:BB:CC:DD:EE:FF', 'Amp')):
             with patch.dict(sys.modules, NO_BLEAK), patch('mmp_bluez.LINUX', True), \
+                 patch('mmp_bluez.bluez_version', lambda: (5, 87)), \
                  patch('mmp_bluez.le_bearer_available', unavailable), \
                  self.assertRaisesRegex(RuntimeError, 'Experimental = true'):
                 await mmp_bluez.make_client(device)
@@ -110,7 +111,14 @@ class ClientSelectionTests(unittest.IsolatedAsyncioTestCase):
         async def available(path):
             return path == DEV
 
+        for version in ((5, 86), (5, 87), (6, 0), None):     # None: no command tells
+            with patch.dict(sys.modules, NO_BLEAK), patch('mmp_bluez.LINUX', True), \
+                 patch('mmp_bluez.bluez_version', lambda: version), \
+                 patch('mmp_bluez.le_bearer_available', available):
+                self.assertIsInstance(await mmp_bluez.make_client(
+                    mmp_bluez.Device(DEV, 'AA:BB:CC:DD:EE:FF', 'Amp')), mmp_bluez.LeBearerClient)
         with patch.dict(sys.modules, NO_BLEAK), patch('mmp_bluez.LINUX', True), \
+             patch('mmp_bluez.bluez_version', lambda: (5, 87)), \
              patch('mmp_bluez.le_bearer_available', available):
             client = await mmp_bluez.make_client(mmp_bluez.Device(DEV, 'AA:BB:CC:DD:EE:FF', 'Amp'),
                                                  disconnected_callback=print)
@@ -118,6 +126,35 @@ class ClientSelectionTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsInstance(client, mmp_bluez.LeBearerClient)
         self.assertEqual((client.path, client.disconnected_callback, client.timeout),
                          (DEV, print, 15))
+
+    async def test_linux_bluez_before_5_86_names_the_version(self):
+        # 5.84 and 5.85 export Bearer.LE1, but its Connect never replies.
+        async def available(path):
+            return True
+
+        for version, text in (((5, 85), '5.85'), ((5, 84), '5.84'), ((5, 82), '5.82')):
+            with patch.dict(sys.modules, NO_BLEAK), patch('mmp_bluez.LINUX', True), \
+                 patch('mmp_bluez.bluez_version', lambda: version), \
+                 patch('mmp_bluez.le_bearer_available', available), \
+                 self.assertRaisesRegex(RuntimeError, f'BlueZ {text} is too old.*5\\.86'):
+                await mmp_bluez.make_client(mmp_bluez.Device(DEV, 'AA:BB:CC:DD:EE:FF', 'Amp'))
+
+    def test_bluez_version_from_the_first_command_that_tells(self):
+        def run(outputs):
+            def fake(command, **kwargs):
+                output = outputs.pop(0)
+                if isinstance(output, Exception):
+                    raise output
+                return types.SimpleNamespace(stdout=output)
+            return fake
+
+        for outputs, expected in (
+                (['5.87\n'], (5, 87)),
+                ([FileNotFoundError(), FileNotFoundError(), 'bluetoothctl: 5.85\n'], (5, 85)),
+                ([mmp_bluez.subprocess.TimeoutExpired('bluetoothd', 5), '', '5.86\n'], (5, 86)),
+                ([FileNotFoundError()] * 3, None)):
+            with patch('mmp_bluez.subprocess.run', run(list(outputs))):
+                self.assertEqual(mmp_bluez.bluez_version(), expected)
 
     def test_device_path_comes_from_bluez_details(self):
         self.assertEqual(mmp_bluez.device_path(types.SimpleNamespace(details={'path': DEV})), DEV)
