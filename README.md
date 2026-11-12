@@ -39,7 +39,8 @@ TBD: More information on how Balena deployment works.
 supports reading and switching presets from the browser with
 `bash scripts/run_web_cli.sh --micro-plus`, or from a standalone Python controller.
 [On Linux](docs/MUSTANG_MICRO_PLUS_LINUX.md) the same tools switch presets while
-the amp keeps playing Bluetooth audio from the computer.
+the amp keeps playing Bluetooth audio from the computer; that page also lists
+backup, audition, saving and restoring presets, and level measurement.
 
 There is a roadmap for this project [in the wiki](https://github.com/tim-littlefair/maneline/wiki/Roadmap)
 An earlier version of this README.md file (with a lot more detail, some of which 
