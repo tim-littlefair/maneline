@@ -19,6 +19,7 @@ import base64
 import contextlib
 import hashlib
 import json
+import os
 import re
 import sys
 import time
@@ -36,8 +37,23 @@ FIRMWARE_STATUS = 6             # MustangLtxAmpStatus.firmwareVersionStatus {ver
 ERRORS = {0: 'UNSUPPORTED', 1: 'FAILED', 2: 'INVALID_PARAM', 3: 'INVALID_NODE_ID',
           4: 'PARAM_OUT_OF_BOUNDS', 5: 'FACTORY_RESTORE_IN_PROGRESS'}
 READ_TIMEOUT = 8
-# default output, independent of the working directory (_work is not tracked by git)
-BACKUP_DIR = Path(__file__).resolve().parents[1] / '_work' / 'backups'
+
+
+def work_dir(environ=None, repo=None):
+    """Where output goes by default: $MMP_WORK_DIR, else _work in a checkout (not tracked by git,
+    independent of the working directory), else - installed read-only from a package - the
+    user's data directory."""
+    environ = os.environ if environ is None else environ
+    if environ.get('MMP_WORK_DIR'):
+        return Path(environ['MMP_WORK_DIR']).expanduser()
+    repo = Path(__file__).resolve().parents[1] if repo is None else Path(repo)
+    if os.access(repo, os.W_OK):
+        return repo / '_work'
+    data = environ.get('XDG_DATA_HOME') or Path(environ.get('HOME') or Path.home()) / '.local' / 'share'
+    return Path(data) / 'maneline'
+
+
+BACKUP_DIR = work_dir() / 'backups'
 
 
 def preset_data_request(slot):
@@ -197,8 +213,9 @@ def main():
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--slots', type=slot_list, default=list(range(1, 101)),
                         help='slots to back up, e.g. 1-71,80 (default: all 100)')
-    parser.add_argument('--out', help='output directory (default: _work/backups/micro-plus-<time>, '
-                                      'not tracked by git)')
+    parser.add_argument('--out', help='output directory (default: backups/micro-plus-<time> in '
+                                      'the work directory: $MMP_WORK_DIR, else _work in a '
+                                      'checkout, else ~/.local/share/maneline)')
     parser.add_argument('--device', help='Bluetooth address of the amp')
     parser.add_argument('--log', help='append the BLE traffic to this JSONL file')
     args = parser.parse_args()

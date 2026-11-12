@@ -11,6 +11,7 @@ import socket
 import sys
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
+from mmp_backup import work_dir
 from mmp_session import MicroPlusSession
 
 BASE_DIR=Path(__file__).resolve().parents[1]
@@ -205,7 +206,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--port', type=int, default=8081)
     parser.add_argument('--device')
-    parser.add_argument('--log', default='_work/mmp-web.jsonl')
+    parser.add_argument('--log', help='append the BLE traffic to this JSONL file (default: '
+                                      'mmp-web.jsonl in the work directory: $MMP_WORK_DIR, '
+                                      'else _work in a checkout, else ~/.local/share/maneline)')
     parser.add_argument('--allow-host', action='append', default=[],
                         help='Additional hostname or IP address allowed to access the controls')
     parser.add_argument('--idle-disconnect', type=float, metavar='SECONDS',
@@ -213,6 +216,8 @@ def main():
                              'a preset switch, unless Bluetooth audio is streaming to the amp '
                              '(Linux). The next switch reconnects, which takes a few seconds.')
     args = parser.parse_args()
+    if args.log is None:
+        args.log = str(work_dir() / 'mmp-web.jsonl')
     if args.idle_disconnect is not None and args.idle_disconnect <= 0:
         parser.error('--idle-disconnect must be a positive number of seconds')
     try:
