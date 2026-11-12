@@ -98,7 +98,8 @@ class IdleDisconnectTests(unittest.IsolatedAsyncioTestCase):
     async def test_idle_without_audio_sleeps_and_switch_reconnects(self):
         await self.start(idle_disconnect=0.05)
         await self.until(lambda: self.session.asleep)
-        self.assertFalse(self.clients[0].is_connected)
+        # asleep is set before the link is closed; the close ends a moment later
+        await self.until(lambda: not self.clients[0].is_connected)
         state = self.session.snapshot()
         self.assertFalse(state['connected'])
         self.assertTrue(state['asleep'])
