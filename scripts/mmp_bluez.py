@@ -38,7 +38,7 @@ LINUX = sys.platform.startswith('linux')
 NOT_PAIRED = ('Micro Plus not found among the paired Bluetooth devices. Pair it first, '
               'see docs/MUSTANG_MICRO_PLUS_LINUX.md.')
 NO_LE_BEARER = ('BlueZ offers no org.bluez.Bearer.LE1 for the Micro Plus. Control needs '
-                'BlueZ 5.84 or later with "Experimental = true" in /etc/bluetooth/main.conf, '
+                'BlueZ 5.86 or later with "Experimental = true" in /etc/bluetooth/main.conf, '
                 'see docs/MUSTANG_MICRO_PLUS_LINUX.md.')
 NO_ANSWER = ('The Micro Plus does not answer. Turn it on and close Fender Tone on other '
              'devices. If it is already on, switch it off and on again: its Bluetooth can '

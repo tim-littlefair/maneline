@@ -42,6 +42,8 @@ scripts and the browser server take the first amp BlueZ lists. A paired amp is k
 off, so an amp that is off shows as "does not answer" after the connection
 timeout rather than as "not found".
 
+The interface appeared in BlueZ 5.84, but its `Connect` and `Disconnect` were empty
+until 5.86 (`src/bearer.c`: "TODO", no reply), so 5.86 is the first version that works.
 Without the bearer interface (BlueZ older than 5.84 or experimental interfaces
 off) the scripts stop and say what BlueZ needs. They no longer fall back to
 Bleak, which would drop audio on every disconnect.
