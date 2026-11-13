@@ -2,11 +2,11 @@
 # Author: Tim Littlefair
 # Copying: see ../LICENSE (GPL v2)
 
-# The logic in this file is entirely provided by the 
+# The initial logic in this file was entirely provided by the 
 # document ../MUSTANG_MICRO_PLUS_LINUX.md
 # which arrived in the maneline git repository as 
 # part of a group of pull requests including
-# https://github.com/tim-littlefair/maneline/pull/140
+# https://github.com/tim-littlefair/maneline/pull/139
 # raised by GitHub user @joba-1.
 
 # I am very grateful to @joba-1 and @jonasjancarik for
@@ -18,6 +18,29 @@
 
 # The purpose of this script is to automate manual steps
 # recommended in the .md document referenced above.
+
+# As of the 13 November 2026 version, the intent of this script
+# is that it should be run manually under the root user's 
+# credentials to pre-condition the BlueZ stack config/cache
+# state for a specific MMP's Bluetooth address ready for 
+# scripts/mmp_ble.py (or any other alternate connection 
+# script or application) to run on it.  
+
+# Note that as at this date, I (Tim L) have not yet achieved a 
+# single successful 'mmp_ble.py status' run on the hardware 
+# available to me, although I have had one successful connection
+# (and a few failed ones) using @joba-1's preset editor project 
+# from https://github.com/joba-1/ChordsPlay.
+
+# At least some steps in this script are likely to require root 
+# privileges, so for the time being, it will be 
+# Ultimately I hope that this script will become something 
+# which can be run automatically once when a new MMP is first 
+# detected or is  found to need re-pairing, or to require 
+# action to connect cleanly for other reasons.  Before we 
+# can get to that state I expect to make frequent tweaks to 
+# this file 
+
 
 usage() {
     echo ""
@@ -38,7 +61,11 @@ debug_btctl_info() {
     fi
 }
 
-if [ -z "$1" -o "$1" = "--help" ]
+if [ ! "$(whoami)" = "root" ]
+then
+    echo This script expects to be run with root credentials
+    exit 101
+elif [ -z "$1" -o "$1" = "--help" ]
 then
     usage
     exit 1
@@ -59,7 +86,7 @@ then
     echo "If the file needs to edited run:"
     echo "sudo systemctl restart bluetooth"
     echo "to ensure it is re-read."
-    exit 101
+    exit 102
 else
     echo $bt_main_config enables experimental features as required
 fi 
@@ -72,7 +99,7 @@ then
         then
             echo Host has more than one Bluetooth adaptor, specify
             echo which one is to be used for the setup
-            exit 102
+            exit 103
         else
             host_bd_addr=$c
         fi
@@ -86,7 +113,8 @@ mmp_dbus_addr=/org/bluez/hci0/dev_$(echo $mmp_bd_addr | sed -e s/:/_/g -)
 # continues to work
 debug_btctl_info "before le pairing"
 busctl --system set-property org.bluez $mmp_dbus_addr org.bluez.Device1 PreferredBearer s le
-bluetoothctl pair $mmp_bd_addr             
+bluetoothctl pair $mmp_bd_addr
+bluetoothctl trust $mmp_bd_addr             
 busctl --system set-property org.bluez $mmp_dbus_addr org.bluez.Device1 PreferredBearer s bredr
 debug_btctl_info "after le pairing"
 
@@ -97,16 +125,13 @@ adaptor_mmp_cache=/var/lib/bluetooth/$host_bd_addr/cache/$mmp_bd_addr
 if [ -f $adaptor_mmp_cache ]
 then
     systemctl stop bluetooth
-    cp -p $adaptor_mmp_cache $adaptor_mmp_cache.bak
     sed -i '/^0005=2803:0006:0a:00002b29-/d' $adaptor_mmp_cache
+    cat $adaptor_mmp_cache
     systemctl start bluetooth
-    cache_changes=$(diff $adaptor_mmp_cache $adaptor_mmp_cache.bak)
-    if [ ! -z "$cache_changes" ]
-    then
-        echo cache for $mmp_bd_addr via $host_bd_addr was changed
-    else
-        echo cache for $mmp_bd_addr via $host_bd_addr was not changed
-    fi
+    # Allow some time for the adaptor to come up
+    sleep 2
+    # Do a BR/EDR connection to leave the device 
+    bluetoothctl connect $mmp_bd_addr
 else
     echo cache for $mmp_bd_addr via $host_bd_addr did not exist
 fi
