@@ -85,5 +85,28 @@ class SwitchTests(unittest.IsolatedAsyncioTestCase):
             await controller.wait_for(lambda: False, timeout=0.01)
 
 
+    async def test_write_type_follows_the_platform(self):
+        from unittest import mock
+
+        class Characteristic:
+            properties = ['write-without-response', 'write']
+
+        class Client:
+            is_connected = True
+
+            def __init__(self):
+                self.services = mock.Mock(get_characteristic=lambda _uuid: Characteristic())
+                self.responses = []
+
+            async def write_gatt_char(self, _characteristic, _data, response):
+                self.responses.append(response)
+
+        for platform, expected in (('darwin', True), ('linux', False)):
+            client = Client()
+            with mock.patch('mmp_ble.sys.platform', platform):
+                await Controller(client, None).send(b'\x35')
+            self.assertEqual(client.responses, [expected], platform)
+
+
 if __name__ == '__main__':
     unittest.main()
