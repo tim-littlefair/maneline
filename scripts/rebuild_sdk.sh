@@ -154,6 +154,24 @@ download_and_unpack () {
   $_unpack_cmd $cache_absdir/$_file_bn
 }
 
+build_bluez() {
+  _dir=$1
+  echo Building $_dir
+  cd $sdk_absdir/$_dir
+  bluez_install_base=`pwd`
+  ./bootstrap
+  ./configure --prefix=$bluez_install_base \
+              --sysconfdir=$bluez_install_base/etc \
+              --localstatedir=$bluez_install_base/var \
+              --enable-library \
+              --disable-systemd \
+              --with-udevdir=/usr/lib/udev
+  make
+  make check
+  cd ..
+  echo $_dir built
+}
+
 set_java_home () {
   _jdkver=$1
 
@@ -224,18 +242,23 @@ build_pyvenv_for_moonshine_wrangler() {
   # called bleak
   $PYTHON_VENV/bin/pip install bleak
 }
+
 ## Latest versions of the key packages
+
+# from https://github.com/bluez/bluez/releases
+bluez_version=5.88
 
 # from https://docs.balena.io/reference/balena-cli/latest/
 balena_version=v25.2.7
+
 android_cltools_version=15859902
 
 osname=$(uname -s)
 if [ "$osname" = "Linux" ]
 then
-  #TODO: avoid sudo here
-  sudo apt install lib32z1-dev libreadline-dev libssl-dev
-
+  #TODO: avoid sudo here 
+  sudo apt install lib32z1-dev libreadline-dev libssl-dev autoconf libtool libdbus-1-3 libdbus-1-dev libudev-dev libical-dev python3-docutils
+  bluez_url=https://github.com/bluez/bluez/archive/refs/tags/5.88.zip
   jdk25_url=https://download.oracle.com/java/25/latest/jdk-25_linux-x64_bin.tar.gz
   balena_cli_url=https://github.com/balena-io/balena-cli/releases/download/${balena_version}/balena-cli-${balena_version}-linux-x64-standalone.tar.gz
   android_cltools_url=https://dl.google.com/android/repository/commandlinetools-linux-${android_cltools_version}_latest.zip
@@ -257,6 +280,10 @@ fi
 lua54_url=https://www.lua.org/ftp/lua-5.4.9.tar.gz
 luarocks_url=https://luarocks.org/releases/luarocks-3.13.0.tar.gz
 
+download_and_unpack $bluez_url "unzip"
+build_bluez bluez-$bluez_version
+ls -ld bluez-$bluez_version/*
+exit 21
 
 download_and_unpack $jdk25_url "tar xzvf"
 set_java_home jdk-25.0.5.0.3
