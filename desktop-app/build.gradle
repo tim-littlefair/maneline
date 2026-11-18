@@ -103,7 +103,7 @@ dependencies {
     // The following dependency is intended to forestall 
     // a transitive dependency from java-utils-extended 
     // to a vulnerable version of commons-lang3
-    implementation 'org.apache.commons:commons-lang3:3.21.0'
+    implementation 'org.apache.commons:commons-lang3:3.22.0'
 
     implementation 'com.github.hypfvieh:dbus-java-parent:5.2.2'
     implementation 'com.github.hypfvieh:bluez-dbus:0.3.5'
