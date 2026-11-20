@@ -1,0 +1,16 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: maneline
+Source: https://github.com/tim-littlefair/maneline
+
+Files: *
+Copyright: Tim Littlefair and the maneline contributors
+License: GPL-2
+ On Debian systems the full text of the GNU General Public License version 2
+ is in /usr/share/common-licenses/GPL-2.
+
+Files: web-app/web_ui/_static/css/*
+Copyright: Read the Docs (theme), Dave Gandy (Font Awesome), Lukasz Dziedzic (Lato), Google (Roboto Slab)
+License: MIT and OFL-1.1 and Apache-2.0
+ The Sphinx Read the Docs theme is under the MIT licence, the fonts under the
+ SIL Open Font License 1.1 (Font Awesome, Lato) and the Apache License 2.0
+ (Roboto Slab).
