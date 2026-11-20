@@ -74,22 +74,25 @@ else
     host_bd_addr=$2
 fi
 
-bt_main_config=/etc/bluetooth/main.conf
-bluez_experimental_enabled=$(grep -E '^Experimental = true$' $bt_main_config )
-if [ -z "$bluez_experimental_enabled" ]
+if false
 then
-    echo "In the file $bt_main_config, please ensure that there"
-    echo "is a line which matches: 'Experimental = true'."
-    echo "The match must be exact - no leading space or comment"
-    echo "marker, no trailing space, exactly one space either side"
-    echo "of '='."
-    echo "If the file needs to edited run:"
-    echo "sudo systemctl restart bluetooth"
-    echo "to ensure it is re-read."
-    exit 102
-else
-    echo $bt_main_config enables experimental features as required
-fi 
+    bt_main_config=/etc/bluetooth/main.conf
+    bluez_experimental_enabled=$(grep -E '^Experimental = true$' $bt_main_config )
+    if [ -z "$bluez_experimental_enabled" ]
+    then
+        echo "In the file $bt_main_config, please ensure that there"
+        echo "is a line which matches: 'Experimental = true'."
+        echo "The match must be exact - no leading space or comment"
+        echo "marker, no trailing space, exactly one space either side"
+        echo "of '='."
+        echo "If the file needs to edited run:"
+        echo "sudo systemctl restart bluetooth"
+        echo "to ensure it is re-read."
+        exit 102
+    else
+        echo $bt_main_config enables experimental features as required
+    fi 
+fi
 
 if [ -z $host_bd_addr ]
 then

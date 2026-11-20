@@ -50,21 +50,38 @@
 
 # The current default eclipse-temurin image for OpenJDK 25 as at 28/10/2026
 # has been tested and works - but is not lightweight
-FROM eclipse-temurin:25 AS platform-layer
+# FROM eclipse-temurin:25 AS platform-layer
+
+# sourcemation provide a Debian13-based alternative to 
+# the OpenJDK project's Ubuntu-based eclipse-temurin:25
+# reference JDK 25 image.
+# https://hub.docker.com/r/sourcemation/jdk-25
+# 
+# Debian is preferred to Ubuntu for this project
+# because it (as at November 2026) contains 
+# BlueZ 5.88, which is required for successful
+# interaction with BLE-connected Mustang products.
+FROM sourcemation/jdk-25:jdk-25.0.5-8-20261109
 
 WORKDIR /home/maneline
 
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN rm -f /var/lib/apt/lists/*
+#RUN rm -f /var/lib/apt/lists/*
 #RUN sed -e s^http://ports.ubuntu.com/ubuntu-ports^https://mirror.aarnet.edu.au/pub/ubuntu/ports^ -i /etc/apt/sources.list.d/ubuntu.sources
-RUN cat /etc/apt/sources.list.d/ubuntu.sources
+#RUN cat /etc/apt/sources.list.d/ubuntu.sources
 
 RUN apt-get update
-RUN apt-get install -y --no-install-recommends --no-install-suggests apt-utils
-RUN apt-get install -y --no-install-recommends --no-install-suggests readline-common git wget curl
-RUN apt-get install -y --no-install-recommends --no-install-suggests gcc 
 
+# installing packages with preinst scripts complains if apt-utils is not 
+# present, so add it before doing anyting else
+RUN apt-get install -y --no-install-recommends --no-install-suggests apt-utils
+
+# Install build-essential, autoconf, our preferred version of python3+pip+venv
+# and a few other things we expect to need
+RUN apt-get install -y --install-recommends --no-install-suggests \
+    build-essential autoconf python3.13 python3-venv python3-pip python3-docutils \
+    readline-common git wget curl
 
 # iproute2 is required to get the IP address of the device
 # zint is used to generate a 2D barcode with the URL of the webserver from the IP address
@@ -72,7 +89,7 @@ RUN apt-get install -y --no-install-recommends --no-install-suggests gcc
 # displaying on the optional LCD UI
 RUN apt-get install -y --no-install-recommends --no-install-suggests \
     iproute2 zint librsvg2-bin optipng fbi fbset \
-    python3 python3-pil python3-numpy python3-spidev python3-gpiozero python3-lgpio python3-watchdog
+    python3 python3-pil python3-numpy python3-spidev python3-gpiozero python3-watchdog
 
 # It is useful to have a vi app while experimenting
 RUN apt-get install -y --no-install-recommends --no-install-suggests vim
@@ -86,10 +103,8 @@ RUN apt-get install -y --no-install-recommends --no-install-suggests lua5.4 libl
 RUN apt-get install -y --no-install-recommends --no-install-suggests luarocks 
 RUN apt-get install -y --no-install-recommends --no-install-suggests liblz-dev zlib1g-dev
 RUN luarocks install --lua-version 5.4 pegasus
-
 RUN echo "require('pegasus')" | lua5.4 
 
-FROM platform-layer AS web-app
 COPY ./lua ./lua
 COPY ./web_ui ./web_ui
 COPY ./lcd_ui ./lcd_ui
@@ -98,9 +113,36 @@ COPY ./jar ./jar
 COPY run.sh .
 RUN chmod +x run.sh
 
-# Installation of Python 3.14 is intended to support the mmp_ble.py
-# script and supporting source contributed by GitHub user @jonasjancarik.
-RUN apt-get install -y --no-install-recommends --no-install-suggests bluez python3.14 python3-bleak python-is-python3 
+## Build from source and install BlueZ 5.88 
+# intended to support the mmp_ble.py
+# script and supporting source contributed by GitHub user @jonasjancarik
+# and amended by @joba-1.
+# Not confirmed working yet, but pushing WIP scripting to device to 
+# make experimentation easier
+
 COPY ./mmp_scripts ./mmp_scripts
+
+# The list of packages installed in the next RUN matches
+# a list of packages installed early during the RUN for
+# ./mmp_scripts/build_bluez.sh one line below.
+# This apparent duplication is intended: under Balena/Docker,
+# having a separate RUN for the installs ensures a cache baseline
+# is created directly after the time-consuming install of these
+# packages, but build_bluez.sh will also be used by
+# scripts/rebuild_sdk.sh to create a free-standing build 
+# of BlueZ-5.88 which can be brought up after stopping the 
+# Ubuntu 26.04.X development environment's default system 
+# install of BlueZ 5.82.
+RUN apt-get install -y --no-install-recommends --no-install-suggests \
+    libglib2.0-dev libreadline-dev libssl-dev libtool libtool-bin libdbus-1-3 libdbus-1-dev libudev-dev libical-dev 
+RUN curl --no-progress-meter -L https://github.com/bluez/bluez/archive/refs/tags/5.88.zip -o bluez-5.88.zip
+RUN unzip bluez-5.88.zip
+RUN sh ./mmp_scripts/build_bluez.sh bluez-5.88 /var/run/maneline
+
+# candidates for adding to the initial baseline
+RUN apt-get install -y --no-install-recommends --no-install-suggests procps psmisc python-is-python3
+
+RUN python3 -m venv python.venv
+RUN python.venv/bin/python -m pip install bleak 
 
 CMD [ "./run.sh" ]

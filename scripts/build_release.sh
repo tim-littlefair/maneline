@@ -227,7 +227,8 @@ cp -Rf web-app/lcd_ui $balenaFakerootDir
 # the mmp_ble.py script and supporting files 
 # contributed by GitHub user @jonasjancarik
 mkdir $balenaFakerootDir/mmp_scripts
-cp scripts/mmp* $balenaFakerootDir/mmp_scripts
+cp scripts/mmp* scripts/*bluez* $balenaFakerootDir/mmp_scripts
+cp assets/etc_bluetooth_main.conf $balenaFakerootDir
 
 # The ePaper UI is presently not in use
 epaper_enabled=false

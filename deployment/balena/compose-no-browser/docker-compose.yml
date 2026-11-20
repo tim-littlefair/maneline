@@ -1,17 +1,16 @@
 # docker-compose.yml
 
 # The design for the Balena image this file will render
-# is that it should contain the following two service containers:
-# + tl-maneline-web
+# is that it should contain the following service container:
+# + maneline-web
 #   This container will contain the maneline CLI binary, and also a
 #   minimal web server which will serve a GUI reflecting the 
 #   CLI application state and servicing requests to send messages
 #   to the attached Mustang amp (which will be relayed to CLI 
 #   commands to the application)
-# + balenalabs-browser
-#   This is a kiosk browser provided as an example by balena.io.
-#   The intent of this service is that that the web GUI
-#   will be presented on the HDMI screen of the balena device.
+#
+# At some time in the future this file may be modified to 
+# separate services into different blocks.
 
 version: "2"
 
