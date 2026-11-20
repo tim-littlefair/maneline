@@ -4,6 +4,7 @@ import json
 import sys
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from mmp_backup import BackupController, preset_data_request, slot_list
 from mmp_ble import KEEPALIVE, packet, select_preset, tone_request, varint
@@ -48,6 +49,47 @@ class BackupTests(unittest.TestCase):
             for frame in reply(17, b'\x08\x02'):
                 controller.notify(None, frame)
             self.assertEqual(controller.error, 'INVALID_PARAM')
+        asyncio.run(run())
+
+    def test_unanswered_read_is_sent_again(self):
+        async def run():
+            controller = BackupController(None, None)
+            doc = {'nodeType': 'preset', 'info': {'displayName': 'Echo Dome'}}
+            raw = compress(json.dumps(doc).encode())
+            sent = []
+
+            async def send(data):           # the first request goes unanswered
+                sent.append(data)
+                if len(sent) > 1:
+                    for frame in reply(10, b'\x08\x14' + b'\x12' + varint(len(raw)) + raw):
+                        controller.notify(None, frame)
+            controller.send = send
+            with patch('mmp_backup.READ_TIMEOUT', 0.05):
+                self.assertEqual(await controller.read_slot(21), (raw, doc))
+            self.assertEqual(len(sent), 2)
+            self.assertEqual(controller.repeated, 1)
+
+            sent.clear()
+            controller.send = lambda data: asyncio.sleep(0, sent.append(data))
+            with patch('mmp_backup.READ_TIMEOUT', 0.05), \
+                    self.assertRaisesRegex(RuntimeError, 'slot 21: no answer \\(3 attempts\\)'):
+                await controller.read_slot(21)
+            self.assertEqual(len(sent), 3)
+        asyncio.run(run())
+
+    def test_error_answer_is_not_retried(self):
+        async def run():
+            controller = BackupController(None, None)
+            sent = []
+
+            async def send(data):
+                sent.append(data)
+                for frame in reply(17, b'\x08\x02'):
+                    controller.notify(None, frame)
+            controller.send = send
+            with self.assertRaisesRegex(RuntimeError, 'INVALID_PARAM'):
+                await controller.read_slot(21)
+            self.assertEqual(len(sent), 1)
         asyncio.run(run())
 
     def test_slot_list(self):

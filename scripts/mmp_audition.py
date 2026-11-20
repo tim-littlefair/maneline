@@ -112,20 +112,30 @@ class AuditionController(Controller):
         status = await self.wait_status(CURRENT_PRESET_DATA_STATUS, CONFIRM_TIMEOUT)
         return json.loads(decompress(status[1]))
 
-    async def stored_preset(self, slot):
-        """The preset stored in slot (1-based), as a JSON document, without selecting it."""
-        self.statuses.pop(PRESET_DATA_STATUS, None)
-        self.statuses.pop(UNSUPPORTED_STATUS, None)
-        await self.send(preset_data_request(slot))
-        async with asyncio.timeout(CONFIRM_TIMEOUT * 2):
-            while self.statuses.get(PRESET_DATA_STATUS, {}).get(1, 0) != slot - 1 \
-                    or 2 not in self.statuses.get(PRESET_DATA_STATUS, {}):
-                if UNSUPPORTED_STATUS in self.statuses:
-                    raise RuntimeError('the amp rejected the request (error {})'.format(
-                        self.statuses[UNSUPPORTED_STATUS].get(1, 0)))
-                self.arrived.clear()
-                await self.arrived.wait()
-        return json.loads(decompress(self.statuses[PRESET_DATA_STATUS][2]))
+    async def stored_preset(self, slot, attempts=3):
+        """The preset stored in slot (1-based), as a JSON document, without selecting it.
+
+        Like an audition, a read now and then gets no answer; reading changes nothing,
+        so it is sent again. A rejection by the amp is not retried.
+        """
+        for attempt in range(1, attempts + 1):
+            self.statuses.pop(PRESET_DATA_STATUS, None)
+            self.statuses.pop(UNSUPPORTED_STATUS, None)
+            await self.send(preset_data_request(slot))
+            try:
+                async with asyncio.timeout(CONFIRM_TIMEOUT * 2):
+                    while self.statuses.get(PRESET_DATA_STATUS, {}).get(1, 0) != slot - 1 \
+                            or 2 not in self.statuses.get(PRESET_DATA_STATUS, {}):
+                        if UNSUPPORTED_STATUS in self.statuses:
+                            raise RuntimeError('the amp rejected the request (error {})'.format(
+                                self.statuses[UNSUPPORTED_STATUS].get(1, 0)))
+                        self.arrived.clear()
+                        await self.arrived.wait()
+                return json.loads(decompress(self.statuses[PRESET_DATA_STATUS][2]))
+            except TimeoutError:
+                if attempt == attempts:
+                    raise RuntimeError('the amp did not send preset {} ({} attempts)'.format(
+                        slot, attempts)) from None
 
     async def audition(self, doc, attempts=3):
         """Send the preset; return the slot the amp reports it on (1-based).

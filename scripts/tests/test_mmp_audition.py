@@ -4,10 +4,12 @@ import json
 import sys
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from mmp_audition import EXIT_AUDITION, AuditionController, apply_overrides, audition_message
 from mmp_ble import fields, frames, varint
-from mmp_lz4 import decompress
+from mmp_backup import PRESET_DATA_STATUS
+from mmp_lz4 import compress, decompress
 
 PRESET = {'nodeType': 'preset', 'info': {'displayName': '80S Rock'},
           'audioGraph': {'nodes': [{'nodeId': 'stomp', 'FenderId': 'DUBS_Unknown'},
@@ -43,6 +45,28 @@ class AuditionTests(unittest.TestCase):
             body = b'\x08\x02' + b'\x2a' + varint(len(status)) + status
             controller.notify(None, bytes((0x35, 0, len(body) + 2)) + b'\x12' + bytes((len(body),)) + body)
             self.assertEqual((await controller.wait_status(5, 0.1)).get(1, 0) + 1, 100)
+        asyncio.run(run())
+
+    def test_unanswered_stored_preset_read_is_sent_again(self):
+        async def run():
+            controller = AuditionController(None, None)
+            raw = compress(json.dumps(PRESET).encode())
+            sent = []
+
+            async def send(data):           # the first request goes unanswered
+                sent.append(data)
+                if len(sent) > 1:
+                    controller.statuses[PRESET_DATA_STATUS] = {1: 20, 2: raw}
+                    controller.arrived.set()
+            controller.send = send
+            with patch('mmp_audition.CONFIRM_TIMEOUT', 0.03):
+                self.assertEqual(await controller.stored_preset(21), PRESET)
+                self.assertEqual(len(sent), 2)
+                sent.clear()
+                controller.send = lambda data: asyncio.sleep(0, sent.append(data))
+                with self.assertRaisesRegex(RuntimeError, 'did not send preset 21 \\(3 attempts\\)'):
+                    await controller.stored_preset(21)
+                self.assertEqual(len(sent), 3)
         asyncio.run(run())
 
 

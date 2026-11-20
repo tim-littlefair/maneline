@@ -54,6 +54,7 @@ class BackupController(Controller):
         self.presets = {}           # 0-based index -> raw LZ4 block
         self.error = None
         self.firmware = None
+        self.repeated = 0           # reads sent again because no answer arrived
         self.arrived = asyncio.Event()
         feed = self.frames.feed
 
@@ -86,21 +87,33 @@ class BackupController(Controller):
         except ValueError:
             pass                    # message types the simple decoder doesn't know
 
-    async def read_slot(self, slot):
-        """The preset stored in slot as (raw LZ4 block, JSON document)."""
+    async def read_slot(self, slot, attempts=3):
+        """The preset stored in slot as (raw LZ4 block, JSON document).
+
+        Now and then a reply does not arrive (one in about 150 reads on 2026-11-20; the
+        same slot read fine right after). Reading changes nothing on the amp, so an
+        unanswered request is simply sent again; an error answer is not retried.
+        """
         index = slot - 1
-        self.presets.pop(index, None)
-        self.error = None
-        self.arrived.clear()
-        await self.send(preset_data_request(slot))
-        async with asyncio.timeout(READ_TIMEOUT):
-            while index not in self.presets:
-                if self.failure:
-                    raise self.failure
-                if self.error:
-                    raise RuntimeError('slot {}: the amp answered {}'.format(slot, self.error))
-                self.arrived.clear()
-                await self.arrived.wait()
+        for attempt in range(1, attempts + 1):
+            self.presets.pop(index, None)
+            self.error = None
+            self.arrived.clear()
+            await self.send(preset_data_request(slot))
+            try:
+                async with asyncio.timeout(READ_TIMEOUT):
+                    while index not in self.presets:
+                        if self.failure:
+                            raise self.failure
+                        if self.error:
+                            raise RuntimeError('slot {}: the amp answered {}'.format(slot, self.error))
+                        self.arrived.clear()
+                        await self.arrived.wait()
+                break
+            except TimeoutError:
+                if attempt == attempts:
+                    raise RuntimeError('slot {}: no answer ({} attempts)'.format(slot, attempts)) from None
+                self.repeated += 1
         raw = self.presets[index]
         return raw, json.loads(decompress(raw))
 
@@ -176,8 +189,9 @@ async def backup(args):
                 await beat
     if log:
         log.close()
-    print('{} presets saved in {} (amp still on preset {})'.format(
-        len(manifest['presets']), out, controller.slot))
+    repeated = ', {} read(s) repeated'.format(controller.repeated) if controller.repeated else ''
+    print('{} presets saved in {} (amp still on preset {}{})'.format(
+        len(manifest['presets']), out, controller.slot, repeated))
 
 
 def main():
