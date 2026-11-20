@@ -236,15 +236,26 @@ class LeBearerClient:
                              [rule], destination='org.freedesktop.DBus')
         try:
             async with asyncio.timeout(self.timeout):
-                error = self._error(await self._call(self.path, LE_BEARER, 'Connect'))
-                if error and error[0] != 'org.bluez.Error.AlreadyConnected':
-                    raise RuntimeError(f'LE connection failed: {error[0]} {error[1]}'.strip())
+                while True:
+                    error = self._error(await self._call(self.path, LE_BEARER, 'Connect'))
+                    if not error or error[0] == 'org.bluez.Error.AlreadyConnected':
+                        break
+                    if error[0] != 'org.bluez.Error.InProgress':
+                        raise RuntimeError(f'LE connection failed: {error[0]} {error[1]}'.strip())
+                    # BlueZ is still trying from an earlier attempt (ours before a
+                    # timeout, or a stopped program's) and adds no second one. When the
+                    # amp turns up, that attempt connects and ours adopts the link.
+                    await asyncio.sleep(0.5)
                 self._connected = True
                 await self._discover()
                 await self._wait_for_gatt()
         except TimeoutError:
             # A paired amp is known to BlueZ while it is switched off, so this is where
-            # an absent amp shows (a scan used to tell before connecting).
+            # an absent amp shows (a scan used to tell before connecting). BlueZ goes on
+            # trying for a while (the kernel gives up after about 40 s) and connects if
+            # the amp turns up; the next connect waits for that attempt and adopts the link.
+            # Never take the attempt back with Device1.Disconnect: BlueZ 5.87 then keeps
+            # answering Bearer.LE1.Connect with InProgress until bluetoothd is restarted.
             await self.disconnect()
             raise RuntimeError(NO_ANSWER) from None
         except BaseException:
