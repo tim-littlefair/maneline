@@ -170,8 +170,10 @@ amp answers with `presetSavedStatus` (13).
 * **Names of at most 16 characters.** A longer name is ignored without any reply and
   nothing is saved (16 characters saved, 20 not). `MicroPlusSession.save` refuses such
   names up front.
-* **A save is never sent twice.** Unlike an audition, a missing confirmation doesn't
-  mean nothing happened; the read-back shows what the slot holds.
+* **An unconfirmed save is sent again** (up to three attempts). The first may or may
+  not have been written, but the same preset into the same slot gives the same result;
+  the read-back shows what the slot holds. On 2026-11-20 one of four saves was not
+  confirmed, the next three were. Preset reads (request 12) are repeated the same way.
 * **Make a backup first** (`mmp_backup.py`), and write only to slots you can spare: the
   factory presets are slots 1–71, 72–100 are "Empty".
 

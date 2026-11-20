@@ -177,17 +177,27 @@ class AuditionController(Controller):
                 await asyncio.sleep(0.5)
 
 
-    async def save(self, slot, doc, name):
+    async def save(self, slot, doc, name, attempts=3):
         """WRITE doc into slot (1-based) under name, without selecting it; return the
         preset as stored, read back from the amp.
 
-        Not sent twice on a missing confirmation: unlike an audition, a lost reply
-        doesn't mean nothing happened. The read-back shows what the slot holds."""
+        A missing confirmation is sent again: whether or not the first save went through,
+        saving the same preset into the same slot gives the same result (2026-11-20: one
+        of four saves was not confirmed, the next three were)."""
         if not 1 <= slot <= 100:
             raise ValueError('Choose a slot from 1 to 100.')
-        self.statuses.clear()
-        await self.send_message(save_message(slot, doc, name))
-        status = await self.wait_status(PRESET_SAVED_STATUS, SAVE_TIMEOUT)
+        message = save_message(slot, doc, name)
+        for attempt in range(1, attempts + 1):
+            self.statuses.clear()
+            await self.send_message(message)
+            try:
+                status = await self.wait_status(PRESET_SAVED_STATUS, SAVE_TIMEOUT)
+                break
+            except TimeoutError:
+                if attempt == attempts:
+                    raise RuntimeError('the amp did not confirm the save ({} attempts)'.format(
+                        attempts)) from None
+                await asyncio.sleep(0.5)
         if status.get(1, 0) != slot - 1:
             raise RuntimeError('the amp saved into slot {} instead of {}'.format(status.get(1, 0) + 1, slot))
         if len(self.names) >= slot:
