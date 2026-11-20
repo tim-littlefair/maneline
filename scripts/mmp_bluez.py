@@ -39,15 +39,12 @@ NOT_READY = ('org.bluez.Error.Failed', 'org.bluez.Error.NotConnected',
 LINUX = sys.platform.startswith('linux')
 NOT_PAIRED = ('Micro Plus not found among the paired Bluetooth devices. Pair it first, '
               'see docs/MUSTANG_MICRO_PLUS_LINUX.md.')
-NO_LE_BEARER = ('BlueZ offers no org.bluez.Bearer.LE1 for the Micro Plus. Control needs '
-                'BlueZ 5.86 or later with "Experimental = true" in /etc/bluetooth/main.conf, '
-                'see docs/MUSTANG_MICRO_PLUS_LINUX.md.')
+NO_LE_BEARER = ('BlueZ has no separate LE connections: set "Experimental = true" '
+                'in /etc/bluetooth/main.conf')
 # Bearer.LE1 appeared in 5.84, but its Connect and Disconnect stayed empty until 5.86:
 # 5.84 and 5.85 export the methods and never reply to them.
 MIN_BLUEZ = (5, 86)
-OLD_BLUEZ = ('BlueZ {} is too old for the Micro Plus: its org.bluez.Bearer.LE1 Connect never '
-             'answers before 5.86. Control needs BlueZ 5.86 or later with "Experimental = true" '
-             'in /etc/bluetooth/main.conf, see docs/MUSTANG_MICRO_PLUS_LINUX.md.')
+OLD_BLUEZ = 'BlueZ {} is too old, you need 5.86 for separate LE connections'
 # The daemon tells its own version; bluetoothctl, from the same package, is the fallback.
 BLUEZ_VERSION_COMMANDS = (('/usr/libexec/bluetooth/bluetoothd', '--version'),
                           ('/usr/lib/bluetooth/bluetoothd', '--version'),
