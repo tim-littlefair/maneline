@@ -40,25 +40,19 @@
         style="font-size:13px;fill:#a11">
       <tspan
           x="10.0"
-          y="130.0">Maneline</tspan>
+          y="130.0">Maneline @swversion</tspan>
     </text>
     <text
         style="font-size:13px;fill:#a11">
       <tspan
           x="10.0"
-          y="150.0">@swversion</tspan>
+          y="150.0">@ampname</tspan>
     </text>
     <text
         style="font-size:13px;fill:#a11">
       <tspan
           x="10.0"
-          y="170.0">@ampname</tspan>
-    </text>
-    <text
-        style="font-size:13px;fill:#a11">
-      <tspan
-          x="10.0"
-          y="190.0">@fwversion</tspan>
+          y="170.0">@fwversion</tspan>
     </text>
     <image
         href="@qrcode_data_uri"
@@ -90,32 +84,32 @@
         x="120.0"
         y="10.0"
         width="240.0"
-        height="200.0"
+        height="170.0"
     />
     <text
-      style="font-size:110px;fill:#fff"
+      style="font-size:70px;fill:#fff"
       text-anchor="middle"
       x="240.0"
-      y="100.0"
+      y="70.0"
     >##</text>
     <text
-        style="font-size:40px; fill:#fff"
+        style="font-size:36px; fill:#fff"
         text-anchor="middle"
         x="240.0"
-        y="150.0"
+        y="110.0"
     >@psname1</text>
     <text
-        style="font-size:40px; fill:#fff"
+        style="font-size:36px; fill:#fff"
         text-anchor="middle"
         x="240.0"
-        y="200.0"
+        y="160.0"
     >@psname2</text>
     <rect
         style="fill:#ccc"
       x="10.0"
-      y="220.0"
+      y="190.0"
       width="460.0"
-      height="90.0"
+      height="120.0"
       />
     <text style="font-size:22px;fill:#333"
         text-anchor="middle"
