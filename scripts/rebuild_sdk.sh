@@ -249,7 +249,7 @@ build_pyvenv_for_moonshine_wrangler() {
 bluez_version=5.88
 
 # from https://docs.balena.io/reference/balena-cli/latest/
-balena_version=v25.2.7
+balena_version=v25.2.35
 
 android_cltools_version=15859902
 
@@ -282,8 +282,6 @@ luarocks_url=https://luarocks.org/releases/luarocks-3.13.0.tar.gz
 
 download_and_unpack $bluez_url "unzip"
 build_bluez bluez-$bluez_version
-ls -ld bluez-$bluez_version/*
-exit 21
 
 download_and_unpack $jdk25_url "tar xzvf"
 set_java_home jdk-25.0.5.0.3
