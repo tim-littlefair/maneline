@@ -230,6 +230,12 @@ public abstract class AbstractMessageProtocolBase {
                 String.format("%02d",m_currentPresetIndex)
             );
             presetDetails.put(
+                "psname",
+                currentPresetRecord.displayName()
+            );
+            // TODO: Remove psname1 and psname2 once the LCD/HDMI 
+            // UI script uses psname
+            presetDetails.put(
                 "psname1",
                 currentPresetRecord.displayName().substring(0,8).strip()
             );

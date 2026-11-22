@@ -12,6 +12,7 @@ import subprocess
 import time
 import traceback
 import webbrowser
+import math
 
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
@@ -90,6 +91,35 @@ class PresetUpdatedHandler(PatternMatchingEventHandler):
     def on_closed(self,event):
         update_lcd_ui(self.run_dir, self.ipaddr, display_method)
 
+def split_preset_name(device_details, preset_details):
+    psname = preset_details["psname"]
+    if "LT" in device_details["ampname"]:
+        # LT presets all have names exactly 16 characters long
+        # and both Fender Tone Desktop and the amp itself split
+        # this into two lines 8+8
+        preset_details["psname1"] = psname[0:8].strip()
+        preset_details["psname2"] = psname[8:16].strip()
+    else:
+        # For other amps we make best effort to find a good place 
+        # to split
+        psname = psname.strip()
+        psnamelen = len(psname)
+        space_positions = [ p for p in range(0,len(psname)) if psname[p]==" "]
+        if len(space_positions)==0:
+            split_position = math.floor((psnamelen+1)/2)
+            preset_details["psname1"] = psname[:split_position].strip()
+            preset_details["psname2"] = psname[split_position:].strip()
+        else:
+            while(len(space_positions)>1):
+                # print(space_positions)
+                if psnamelen-space_positions[-1]<=space_positions[0]:
+                    space_positions.remove(space_positions[-1])
+                else:
+                    space_positions.remove(space_positions[0])
+                # print(space_positions)
+            removable_space_position = space_positions[0]
+            preset_details["psname1"] = psname[:removable_space_position].strip()
+            preset_details["psname2"] = psname[removable_space_position+1:].strip()
 
 def update_lcd_ui(run_dir, ipaddr, display_method):
     device_details = None
@@ -109,9 +139,11 @@ def update_lcd_ui(run_dir, ipaddr, display_method):
         preset_details = json.load(open(os.path.join(run_dir, "preset-details.json")))
     except:
         preset_details = json.loads("""{
-                "psslot":"","psname1":"...","psname2":"",
+                "psslot":"##","psname":"... ...", 
+                "psname1":"...","psname2":"", # TODO remove these
                 "psmodule1":"","psmodule2":"","psmodule3":"","psmodule4":"","psmodule5":""
         }""")
+    split_preset_name(device_details, preset_details)
     icon_data_uri = generate_icon_data_uri()
     qrcode_data_uri = generate_qrcode_data_uri(ipaddr)
     svg_fn=generate_svg(
@@ -134,6 +166,8 @@ def update_lcd_ui(run_dir, ipaddr, display_method):
     else:
         exit(1)
 def update_selected_lcds(display_method, png_fn):
+    if display_method is None:
+        return
     dev_paths = None
     if display_method == "--fb-both":
         dev_paths = [ "/dev/fb0", "/dev/fb1" ]
@@ -150,7 +184,7 @@ def update_selected_lcds(display_method, png_fn):
 
 display_method=None
 def sigterm_handler(signum,frame):
-    update_selected_lcds(display_method,"lcd_ui/lcd_shutdown.png")
+    update_selected_lcds(display_method,"lcd_ui/lcd-shutdown.png")
     raise KeyboardInterrupt
 
 if __name__ == "__main__":
@@ -193,11 +227,11 @@ if __name__ == "__main__":
             while True:
                 time.sleep(3)
         except KeyboardInterrupt:
-            update_selected_lcds(display_method,"lcd_ui/lcd_shutdown.png")
+            update_selected_lcds(display_method,"lcd_ui/lcd-shutdown.png")
         preset_details_observer.stop()
         preset_details_observer.join()
 
     except:
         traceback.print_exc()
 
-update_selected_lcds(display_method,"lcd_ui/lcd_shutdown.png")
+update_selected_lcds(display_method,"lcd_ui/lcd-startup.png")
