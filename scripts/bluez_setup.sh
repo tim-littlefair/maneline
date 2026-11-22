@@ -19,28 +19,32 @@
 # The purpose of this script is to automate manual steps
 # recommended in the .md document referenced above.
 
-# As of the 13 November 2026 version, the intent of this script
+# As of the 22 November 2026 version, the intent of this script
 # is that it should be run manually under the root user's 
 # credentials to pre-condition the BlueZ stack config/cache
 # state for a specific MMP's Bluetooth address ready for 
-# scripts/mmp_ble.py (or any other alternate connection 
+# scripts/mmp_web.py (or any other alternate connection 
 # script or application) to run on it.  
 
-# Note that as at this date, I (Tim L) have not yet achieved a 
-# single successful 'mmp_ble.py status' run on the hardware 
-# available to me, although I have had one successful connection
-# (and a few failed ones) using @joba-1's preset editor project 
-# from https://github.com/joba-1/ChordsPlay.
-
-# At least some steps in this script are likely to require root 
-# privileges, so for the time being, it will be 
-# Ultimately I hope that this script will become something 
-# which can be run automatically once when a new MMP is first 
-# detected or is  found to need re-pairing, or to require 
-# action to connect cleanly for other reasons.  Before we 
-# can get to that state I expect to make frequent tweaks to 
-# this file 
-
+# A sequence which appears to work for me as of this version is:
+# 0) Environment is Ubuntu 26.10 Stonking with BlueZ 5.87,
+#    /etc/bluetooth/main.conf has been manually edited
+#    to include the line 'Experimental = true' and 
+#    Bluetooth has been restarted since the edit
+# 1) Factory reset the MMP and turn it off
+# 2) On the Ubuntu host system tray Blueooth manager
+#    (blueman), forget the MMP if it is listed.
+# 3) Switch the MMP on, put it in pairing mode, and 
+#    pair using the Ubuntu blueman UI.
+# 4) Disconnect and run the following command line:
+#    'sh scripts/bluez_setup.sh AA:BB:CC:DD:EE:FF'
+# 5) Run python scripts/mmp_web.py
+# 6) Browse to http://localhost:8081
+# Matrix of buttons for presets should appear within 
+# a couple of seconds.
+# Note that I have only tested this twice, as I am not 
+# keen to do too many factory resets with the borrowed
+# MMP I am using.
 
 usage() {
     echo ""
@@ -48,85 +52,83 @@ usage() {
     echo "    mmp_bd_addr is the colon-separated Bluetooth address of the MMP"
     echo "    host_bd_addr is optional, unless the host has multiple bluetooth"
     echo "    adaptors, in which case it must be the colon-separated Bluetooth"
-    echo "    address of the adaptor to be used for setup"
+    echo "    address of the adaptor to be used for setup."
+    echo "NB: $0 must be run with root credentials."
     echo ""
 }
 
-if [ ! "$(whoami)" = "root" ]
-then
-    echo This script expects to be run with root credentials
-    exit 101
-elif [ -z "$1" -o "$1" = "--help" ]
+bt_main_config=
+bluez_experimental_enabled=
+
+if [ -z "$1" -o "$1" = "--help" ]
 then
     usage
     exit 1
+elif [ ! "$(whoami)" = "root" ]
+then
+    echo This script expects to be run with root credentials
+    exit 101
+elif [ -z "$(grep -E '^Experimental = true$' /etc/bluetooth/main.conf )" ]
+then
+    echo "In the file $bt_main_config, please ensure that there"
+    echo "is a line which matches: 'Experimental = true'."
+    echo "The match must be exact - no leading space or comment"
+    echo "marker, no trailing space, exactly one space either side"
+    echo "of '='."
+    echo "If the file needs to edited run:"
+    echo "sudo systemctl restart bluetooth"
+    echo "to ensure it is re-read."
+    exit 102
 else
+    echo $bt_main_config enables experimental features as required
     mmp_bd_addr=$1
     host_bd_addr=$2
 fi
 
 debug_btctl_info() {
-    if [ true ]
+    if true
     then
-        echo ">>> $1 >>>"
+        echo $1 begins
         bluetoothctl info $mmp_bd_addr
-        echo "<<< $1 <<<"
+        echo $1 ends
     fi
 }
 
 set_bearer() {
-    if true
+    if [ ! -z "$(which busctl)" ]
     then
         busctl --system set-property org.bluez $mmp_dbus_addr org.bluez.Device1 PreferredBearer s $1
     else
+        # WIP busctl is provided by systemd => not available on Balena/RPi container
         dbus_send_cmd_prefix='dbus-send --system --print-reply --type=method_call --dest=org.bluez $mmp_dbus_addr.SetProperty '
         echo $dbus_send_cmd_prefix"$1"
         $dbus_send_cmd_prefix"$1"
     fi
 }
 
-pair_and_bond_le() {
-    if false
-    then
-        busctl --system call org.bluez $mmp_dbus_addr org.bluez.Bearer.LE1 Connect $mmp_bd_addr
-        busctl --system call org.bluez $mmp_dbus_addr org.bluez.Bearer.LE1 Connect $mmp_bd_addr
 
+pair_and_bond_le() {
+    if false || [ ! -z "$(which busctl)" ]
+    then
+        # WIP If busctl is available we might prefer to do an LE connect/pair/trust
+        # via the org.bluez.Bearer.LE1 interface rather than switching PreferredBearer 
+        # out to 'le' and back to 'bredr'
+        busctl --system call org.bluez $mmp_dbus_addr org.bluez.Bearer.LE1 Connect $mmp_bd_addr
+        busctl --system call org.bluez $mmp_dbus_addr org.bluez.Bearer.LE1 Connect $mmp_bd_addr
     else
-        set_bearer le
+        # set_bearer le
         bluetoothctl connect $mmp_bd_addr
         bluetoothctl pair $mmp_bd_addr
         bluetoothctl trust $mmp_bd_addr             
-        set_bearer bredr
-        busctl --system set-property org.bluez $mmp_dbus_addr org.bluez.Device1 PreferredBearer s bredr
+        # set_bearer bredr
     fi
 }
-
-
-if false
-then
-    bt_main_config=/etc/bluetooth/main.conf
-    bluez_experimental_enabled=$(grep -E '^Experimental = true$' $bt_main_config )
-    if [ -z "$bluez_experimental_enabled" ]
-    then
-        echo "In the file $bt_main_config, please ensure that there"
-        echo "is a line which matches: 'Experimental = true'."
-        echo "The match must be exact - no leading space or comment"
-        echo "marker, no trailing space, exactly one space either side"
-        echo "of '='."
-        echo "If the file needs to edited run:"
-        echo "sudo systemctl restart bluetooth"
-        echo "to ensure it is re-read."
-        exit 102
-    else
-        echo $bt_main_config enables experimental features as required
-    fi 
-fi
 
 if [ -z $host_bd_addr ]
 then
     for c in $(ls /var/lib/bluetooth)
     do
-        if [ ! -z $host_bd_addr ]
+        if [ ! -z "$host_bd_addr" ]
         then
             echo Host has more than one Bluetooth adaptor, specify
             echo which one is to be used for the setup
@@ -138,7 +140,7 @@ then
 fi
 
 mmp_dbus_addr=/org/bluez/hci0/dev_$(echo $mmp_bd_addr | sed -e s/:/_/g -)
-echo Operating on $mmp_dbus_addr
+echo Operating on $mmp_bd_addr via $mmp_dbus_addr
 
 # Do a pairing over Bluetooth LE, but leave the device
 # set to prefer BR/EDR so that the audio headset behaviour 
