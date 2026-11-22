@@ -34,6 +34,11 @@ CURRENT_PRESET_REQUEST = 4      # .currentPresetRequest {dummyField = 1}
 CURRENT_PRESET_DATA_STATUS = 4  # MustangLtxAmpStatus.currentPresetDataStatus {compressedPresetJson = 1}
 CURRENT_PRESET_STATUS = 5       # .currentPresetStatus {presetIndex = 1, ...}
 UNSUPPORTED_STATUS = 17
+FIRMWARE_STATUS = 6             # .firmwareVersionStatus {version = 1}: answered to the handshake
+SAVE_AS_REQUEST = 18            # .savePresetAsRequest {presetIndex = 1, compressedPresetJson = 2,
+                                #   isLoadPreset = 3, presetName = 4}: WRITES a whole preset into a slot
+PRESET_SAVED_STATUS = 13        # .presetSavedStatus {presetIndex = 1, presetName = 2}
+SAVE_TIMEOUT = 8                # writing flash takes longer than an audition
 # exitAuditionRequest {dummyField = true}: an empty message is ignored by the amp.
 EXIT_AUDITION = tone_request(6, b'\x08\x01')
 CONFIRM_TIMEOUT = 3
@@ -58,6 +63,17 @@ def audition_message(doc):
     return tone_message(AUDITION_REQUEST, b'\x0a' + varint(len(raw)) + raw)
 
 
+def save_message(slot, doc, name, load=False):
+    """The unframed savePresetAsRequest: store doc in slot (1-based) under name."""
+    raw = compress(json.dumps(doc, separators=(',', ':'), ensure_ascii=False).encode('utf-8'))
+    index, label = slot - 1, name.encode('utf-8')
+    body = (b'\x08' + varint(index) if index else b'')              # proto3 omits the default 0
+    body += b'\x12' + varint(len(raw)) + raw
+    body += b'\x18\x01' if load else b''
+    body += b'\x22' + varint(len(label)) + label
+    return tone_message(SAVE_AS_REQUEST, body)
+
+
 def summary(doc):
     amp = next((n for n in doc.get('audioGraph', {}).get('nodes', []) if n.get('nodeId') == 'amp'), {})
     volume = amp.get('dspUnitParameters', {}).get('volume')
@@ -72,6 +88,7 @@ class AuditionController(Controller):
     def __init__(self, client, log):
         super().__init__(client, log)
         self.statuses = {}
+        self.firmware = None        # firmwareVersionStatus (6) of the handshake, kept
         self.arrived = asyncio.Event()
         feed = self.frames.feed
 
@@ -91,6 +108,8 @@ class AuditionController(Controller):
                     for kind, value in fields(body):
                         if kind != 1 and isinstance(value, bytes):
                             self.statuses[kind] = dict(fields(value))
+                            if kind == FIRMWARE_STATUS and isinstance(self.statuses[kind].get(1), bytes):
+                                self.firmware = self.statuses[kind][1].decode('utf-8', 'replace')
                             self.arrived.set()
         except ValueError:
             pass
@@ -156,6 +175,34 @@ class AuditionController(Controller):
                     raise RuntimeError('the amp did not confirm the audition '
                                        '({} attempts)'.format(attempts)) from None
                 await asyncio.sleep(0.5)
+
+
+    async def save(self, slot, doc, name, attempts=3):
+        """WRITE doc into slot (1-based) under name, without selecting it; return the
+        preset as stored, read back from the amp.
+
+        A missing confirmation is sent again: whether or not the first save went through,
+        saving the same preset into the same slot gives the same result (2026-11-20: one
+        of four saves was not confirmed, the next three were)."""
+        if not 1 <= slot <= 100:
+            raise ValueError('Choose a slot from 1 to 100.')
+        message = save_message(slot, doc, name)
+        for attempt in range(1, attempts + 1):
+            self.statuses.clear()
+            await self.send_message(message)
+            try:
+                status = await self.wait_status(PRESET_SAVED_STATUS, SAVE_TIMEOUT)
+                break
+            except TimeoutError:
+                if attempt == attempts:
+                    raise RuntimeError('the amp did not confirm the save ({} attempts)'.format(
+                        attempts)) from None
+                await asyncio.sleep(0.5)
+        if status.get(1, 0) != slot - 1:
+            raise RuntimeError('the amp saved into slot {} instead of {}'.format(status.get(1, 0) + 1, slot))
+        if len(self.names) >= slot:
+            self.names[slot - 1] = name
+        return await self.stored_preset(slot)
 
 
 async def heartbeat(controller):

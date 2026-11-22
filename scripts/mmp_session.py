@@ -13,6 +13,7 @@ from mmp_bluez import make_client
 WAKE_TIMEOUT = 25
 # A preset JSON document is about 5 KB; anything much larger is not a preset.
 MAX_PRESET_JSON = 64 * 1024
+MAX_NAME = 16               # longest preset name the amp saves
 
 
 def check_preset(preset):
@@ -72,6 +73,7 @@ class MicroPlusSession:
                 'connected_since': self.connected_since,
                 'asleep': self.asleep, 'idle_disconnect': self.idle_disconnect,
                 'preset': preset, 'name': name, 'audition': auditioned,
+                'firmware': getattr(controller, 'firmware', None) if connected else None,
                 'presets': [{'preset': i + 1, 'name': n} for i, n in enumerate(names)]}
 
     async def _connected(self):
@@ -127,6 +129,30 @@ class MicroPlusSession:
                                'slot': confirmed}
             self.last_switch = time.monotonic()
             return self.snapshot()
+
+    async def save(self, slot, preset, name=None):
+        """WRITE a preset into a slot (it is not selected). Returns the preset as the
+        amp stored it, read back. Make a backup first (mmp_backup.py)."""
+        check_preset(preset)
+        if type(slot) is not int or not 1 <= slot <= 100:
+            raise ValueError('Choose a slot from 1 to 100.')
+        name = (name if name is not None else preset.get('info', {}).get('displayName', '')).strip()
+        if not name or len(name) > MAX_NAME:
+            # a longer name is silently ignored by the amp: no confirmation, nothing saved
+            # (firmware 1.0.29, 2026-11-10: 16 characters saved, 20 not)
+            raise ValueError('Give the preset a name of 1 to {} characters.'.format(MAX_NAME))
+        preset = json.loads(json.dumps(preset))
+        preset.setdefault('info', {})['displayName'] = name     # the stored name and the list's agree
+        async with self.lock:
+            controller = await self._connected()
+            self.stored.pop(slot, None)
+            try:
+                stored = await controller.save(slot, preset, name)
+            except (RuntimeError, TimeoutError) as error:
+                raise RuntimeError(str(error) or 'The amp did not confirm the save.') from None
+            self.stored[slot] = stored
+            self.last_switch = time.monotonic()
+            return {'slot': slot, 'name': name, 'preset': stored}
 
     async def stored_preset(self, slot):
         """The preset stored in slot, as JSON (cached for this connection)."""
