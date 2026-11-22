@@ -52,15 +52,6 @@ usage() {
     echo ""
 }
 
-debug_btctl_info() {
-    if [ true ]
-    then
-        echo ">>> $1 >>>"
-        bluetoothctl info $mmp_bd_addr
-        echo "<<< $1 <<<"
-    fi
-}
-
 if [ ! "$(whoami)" = "root" ]
 then
     echo This script expects to be run with root credentials
@@ -73,6 +64,43 @@ else
     mmp_bd_addr=$1
     host_bd_addr=$2
 fi
+
+debug_btctl_info() {
+    if [ true ]
+    then
+        echo ">>> $1 >>>"
+        bluetoothctl info $mmp_bd_addr
+        echo "<<< $1 <<<"
+    fi
+}
+
+set_bearer() {
+    if true
+    then
+        busctl --system set-property org.bluez $mmp_dbus_addr org.bluez.Device1 PreferredBearer s $1
+    else
+        dbus_send_cmd_prefix='dbus-send --system --print-reply --type=method_call --dest=org.bluez $mmp_dbus_addr.SetProperty '
+        echo $dbus_send_cmd_prefix"$1"
+        $dbus_send_cmd_prefix"$1"
+    fi
+}
+
+pair_and_bond_le() {
+    if false
+    then
+        busctl --system call org.bluez $mmp_dbus_addr org.bluez.Bearer.LE1 Connect $mmp_bd_addr
+        busctl --system call org.bluez $mmp_dbus_addr org.bluez.Bearer.LE1 Connect $mmp_bd_addr
+
+    else
+        set_bearer le
+        bluetoothctl connect $mmp_bd_addr
+        bluetoothctl pair $mmp_bd_addr
+        bluetoothctl trust $mmp_bd_addr             
+        set_bearer bredr
+        busctl --system set-property org.bluez $mmp_dbus_addr org.bluez.Device1 PreferredBearer s bredr
+    fi
+}
+
 
 if false
 then
@@ -110,15 +138,13 @@ then
 fi
 
 mmp_dbus_addr=/org/bluez/hci0/dev_$(echo $mmp_bd_addr | sed -e s/:/_/g -)
+echo Operating on $mmp_dbus_addr
 
 # Do a pairing over Bluetooth LE, but leave the device
 # set to prefer BR/EDR so that the audio headset behaviour 
 # continues to work
 debug_btctl_info "before le pairing"
-busctl --system set-property org.bluez $mmp_dbus_addr org.bluez.Device1 PreferredBearer s le
-bluetoothctl pair $mmp_bd_addr
-bluetoothctl trust $mmp_bd_addr             
-busctl --system set-property org.bluez $mmp_dbus_addr org.bluez.Device1 PreferredBearer s bredr
+pair_and_bond_le $mmp_dbus_addr
 debug_btctl_info "after le pairing"
 
 # Remove cached value of characteristic '2b29 value if present
@@ -133,7 +159,7 @@ then
     systemctl start bluetooth
     # Allow some time for the adaptor to come up
     sleep 2
-    # Do a BR/EDR connection to leave the device 
+    # Do a BR/EDR connection to leave the device connected
     bluetoothctl connect $mmp_bd_addr
 else
     echo cache for $mmp_bd_addr via $host_bd_addr did not exist

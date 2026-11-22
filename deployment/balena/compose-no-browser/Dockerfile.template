@@ -61,7 +61,8 @@
 # because it (as at November 2026) contains 
 # BlueZ 5.88, which is required for successful
 # interaction with BLE-connected Mustang products.
-FROM sourcemation/jdk-25:jdk-25.0.5-8-20261109
+# FROM sourcemation/jdk-25:jdk-25.0.5-8-20261109
+FROM debian:forky-20261104-slim
 
 WORKDIR /home/maneline
 
@@ -80,8 +81,12 @@ RUN apt-get install -y --no-install-recommends --no-install-suggests apt-utils
 # Install build-essential, autoconf, our preferred version of python3+pip+venv
 # and a few other things we expect to need
 RUN apt-get install -y --install-recommends --no-install-suggests \
-    build-essential autoconf python3.13 python3-venv python3-pip python3-docutils \
-    readline-common git wget curl
+    build-essential autoconf \
+    openjdk-25-jdk-headless \
+    python3.14 python3-venv python3-pip python3-docutils \
+    git wget curl readline-common libreadline-dev 
+
+RUN apt-get install -y --install-recommends --no-install-suggests 
 
 # iproute2 is required to get the IP address of the device
 # zint is used to generate a 2D barcode with the URL of the webserver from the IP address
@@ -133,16 +138,19 @@ COPY ./mmp_scripts ./mmp_scripts
 # of BlueZ-5.88 which can be brought up after stopping the 
 # Ubuntu 26.04.X development environment's default system 
 # install of BlueZ 5.82.
-RUN apt-get install -y --no-install-recommends --no-install-suggests \
-    libglib2.0-dev libreadline-dev libssl-dev libtool libtool-bin libdbus-1-3 libdbus-1-dev libudev-dev libical-dev 
-RUN curl --no-progress-meter -L https://github.com/bluez/bluez/archive/refs/tags/5.88.zip -o bluez-5.88.zip
-RUN unzip bluez-5.88.zip
-RUN sh ./mmp_scripts/build_bluez.sh bluez-5.88 /var/run/maneline
+#RUN apt-get install -y --no-install-recommends --no-install-suggests \
+#    libglib2.0-dev libreadline-dev libssl-dev libtool libtool-bin libdbus-1-3 libdbus-1-dev libudev-dev libical-dev 
+#RUN curl --no-progress-meter -L https://github.com/bluez/bluez/archive/refs/tags/5.88.zip -o bluez-5.88.zip
+#RUN unzip bluez-5.88.zip
+#RUN sh ./mmp_scripts/build_bluez.sh bluez-5.88 /var/run/maneline
+RUN apt-get install -y --install-recommends --no-install-suggests bluez bluez-tools systemctl dbus-bin
 
 # candidates for adding to the initial baseline
 RUN apt-get install -y --no-install-recommends --no-install-suggests procps psmisc python-is-python3
 
 RUN python3 -m venv python.venv
 RUN python.venv/bin/python -m pip install bleak 
+
+RUN sed -e "s/#Experimental = false/Experimental = true/p" -i /etc/bluetooth/main.conf
 
 CMD [ "./run.sh" ]
