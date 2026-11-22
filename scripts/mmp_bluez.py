@@ -10,8 +10,14 @@ device connected already and never brings up LE.
 BlueZ with `Experimental = true` exports org.bluez.Bearer.LE1, whose Connect and
 Disconnect touch the LE link alone. LeBearerClient uses that plus the plain BlueZ
 GATT objects, and offers the small part of the BleakClient API used by Controller.
+
+Linux therefore needs no Bleak at all: the amp has to be paired anyway, so find_device
+asks BlueZ for the paired device instead of scanning. Bleak is imported on other
+platforms only (macOS).
 """
 import asyncio
+import re
+import subprocess
 import sys
 import xml.etree.ElementTree as ElementTree
 
@@ -30,10 +36,120 @@ NOT_READY = ('org.bluez.Error.Failed', 'org.bluez.Error.NotConnected',
              'org.freedesktop.DBus.Error.UnknownMethod')
 
 
+LINUX = sys.platform.startswith('linux')
+NOT_PAIRED = ('Micro Plus not found among the paired Bluetooth devices. Pair it first, '
+              'see docs/MUSTANG_MICRO_PLUS_LINUX.md.')
+NO_LE_BEARER = ('BlueZ has no separate LE connections: set "Experimental = true" '
+                'in /etc/bluetooth/main.conf')
+# Bearer.LE1 appeared in 5.84, but its Connect and Disconnect stayed empty until 5.86:
+# 5.84 and 5.85 export the methods and never reply to them.
+MIN_BLUEZ = (5, 86)
+OLD_BLUEZ = 'BlueZ {} is too old, you need 5.86 for separate LE connections'
+# The daemon tells its own version; bluetoothctl, from the same package, is the fallback.
+BLUEZ_VERSION_COMMANDS = (('/usr/libexec/bluetooth/bluetoothd', '--version'),
+                          ('/usr/lib/bluetooth/bluetoothd', '--version'),
+                          ('bluetoothctl', '--version'))
+NO_ANSWER = ('The Micro Plus does not answer. Turn it on and close Fender Tone on other '
+             'devices. If it is already on, switch it off and on again: its Bluetooth can '
+             'stop answering while the amp itself keeps working.')
+
+
+class Device:
+    """A device BlueZ knows, with what the callers use of a Bleak scan result."""
+
+    def __init__(self, path, address, name):
+        self.address = address
+        self.name = name
+        self.details = {'path': path}
+
+
 def device_path(device):
-    """The BlueZ object path of a Bleak scan result, or None (other platforms, fakes)."""
+    """The BlueZ object path of a device, or None (other platforms, fakes)."""
     details = getattr(device, 'details', None)
     return details.get('path') if isinstance(details, dict) else None
+
+
+async def paired_devices(name, address=None, service=None):
+    """The paired devices BlueZ knows that offer that GATT service, without scanning.
+
+    The service identifies the amp whatever it is called. The name only counts for a
+    device whose services BlueZ does not list (yet). A paired device is listed whether
+    it is switched on or not; connecting tells.
+    """
+    try:
+        from dbus_fast import BusType, Message, MessageType
+        from dbus_fast.aio import MessageBus
+    except ImportError:
+        raise RuntimeError('The Python package dbus-fast is missing.') from None
+    try:
+        bus = await MessageBus(bus_type=BusType.SYSTEM).connect()
+    except OSError as error:
+        raise RuntimeError(f'The D-Bus system bus is not reachable ({error}).') from None
+    try:
+        reply = await bus.call(Message(destination=BLUEZ, path='/', interface=OBJECT_MANAGER,
+                                       member='GetManagedObjects'))
+    finally:
+        bus.disconnect()
+    if reply.message_type == MessageType.ERROR:
+        raise RuntimeError(f'BlueZ does not answer ({reply.error_name}). '
+                           'Is the bluetooth service running?')
+
+    def value(properties, key):
+        variant = properties.get(key)
+        return variant.value if variant is not None else None
+
+    found = []
+    for path, interfaces in sorted(reply.body[0].items()):
+        properties = interfaces.get(DEVICE)
+        if not properties or not value(properties, 'Paired'):
+            continue
+        device = Device(path, value(properties, 'Address') or '',
+                        value(properties, 'Name') or value(properties, 'Alias'))
+        services = [uuid.lower() for uuid in value(properties, 'UUIDs') or ()]
+        offered = service is not None and service.lower() in services
+        if (offered or device.name == name) and (address is None
+                                                 or device.address.upper() == address.upper()):
+            found.append(device)
+    return found
+
+
+async def find_devices(name, address=None, timeout=10, service=None, **scan_filter):
+    """Every Micro Plus in reach: on Linux the paired ones, elsewhere a Bleak scan."""
+    if LINUX:
+        return await paired_devices(name, address, service)
+    from bleak import BleakScanner
+    devices = await BleakScanner.discover(timeout=timeout, return_adv=True, **scan_filter)
+    return [device for device, advert in devices.values()
+            if (advert.local_name == name or device.name == name)
+            and (address is None or device.address == address)]
+
+
+async def find_device(name, address=None, timeout=10, service=None, **scan_filter):
+    """One Micro Plus or None: on Linux the paired one, elsewhere the first one scanned."""
+    if LINUX:
+        return next(iter(await paired_devices(name, address, service)), None)
+    from bleak import BleakScanner
+    return await BleakScanner.find_device_by_filter(
+        lambda device, advert: (device.name == name or advert.local_name == name)
+        and (address is None or device.address == address), timeout=timeout, **scan_filter)
+
+
+def not_found(message):
+    """Why find_device returned None: on Linux the amp is not paired, else the caller's text."""
+    return NOT_PAIRED if LINUX else message
+
+
+def bluez_version():
+    """The installed BlueZ version as a tuple like (5, 87), or None if no command tells."""
+    for command in BLUEZ_VERSION_COMMANDS:
+        try:
+            output = subprocess.run(command, capture_output=True, text=True, timeout=5).stdout
+        except (OSError, subprocess.SubprocessError):
+            continue
+        match = re.search(r'(\d+)\.(\d+)', output)
+        if match:
+            return int(match.group(1)), int(match.group(2))
+    return None
 
 
 async def le_bearer_available(path):
@@ -58,9 +174,14 @@ async def le_bearer_available(path):
 
 
 async def make_client(device, timeout=None, disconnected_callback=None):
-    """An unconnected client: LeBearerClient where BlueZ allows it, else BleakClient."""
-    path = device_path(device)
-    if sys.platform.startswith('linux') and path and await le_bearer_available(path):
+    """An unconnected client: LeBearerClient on Linux, BleakClient elsewhere."""
+    if LINUX:
+        version = bluez_version()
+        if version is not None and version < MIN_BLUEZ:
+            raise RuntimeError(OLD_BLUEZ.format('.'.join(map(str, version))))
+        path = device_path(device)
+        if not (path and await le_bearer_available(path)):
+            raise RuntimeError(NO_LE_BEARER)
         return LeBearerClient(path, disconnected_callback=disconnected_callback,
                               timeout=timeout or 15)
     from bleak import BleakClient
@@ -140,12 +261,28 @@ class LeBearerClient:
                              [rule], destination='org.freedesktop.DBus')
         try:
             async with asyncio.timeout(self.timeout):
-                error = self._error(await self._call(self.path, LE_BEARER, 'Connect'))
-                if error and error[0] != 'org.bluez.Error.AlreadyConnected':
-                    raise RuntimeError(f'LE connection failed: {error[0]} {error[1]}'.strip())
+                while True:
+                    error = self._error(await self._call(self.path, LE_BEARER, 'Connect'))
+                    if not error or error[0] == 'org.bluez.Error.AlreadyConnected':
+                        break
+                    if error[0] != 'org.bluez.Error.InProgress':
+                        raise RuntimeError(f'LE connection failed: {error[0]} {error[1]}'.strip())
+                    # BlueZ is still trying from an earlier attempt (ours before a
+                    # timeout, or a stopped program's) and adds no second one. When the
+                    # amp turns up, that attempt connects and ours adopts the link.
+                    await asyncio.sleep(0.5)
                 self._connected = True
                 await self._discover()
                 await self._wait_for_gatt()
+        except TimeoutError:
+            # A paired amp is known to BlueZ while it is switched off, so this is where
+            # an absent amp shows (a scan used to tell before connecting). BlueZ goes on
+            # trying for a while (the kernel gives up after about 40 s) and connects if
+            # the amp turns up; the next connect waits for that attempt and adopts the link.
+            # Never take the attempt back with Device1.Disconnect: BlueZ 5.87 then keeps
+            # answering Bearer.LE1.Connect with InProgress until bluetoothd is restarted.
+            await self.disconnect()
+            raise RuntimeError(NO_ANSWER) from None
         except BaseException:
             await self.disconnect()
             raise

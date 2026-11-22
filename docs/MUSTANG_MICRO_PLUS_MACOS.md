@@ -5,8 +5,12 @@ or developing its BLE protocol.
 
 Maneline can read all 100 preset names, display the current selection, and switch
 presets on a Micro Plus using Bleak's CoreBluetooth backend. The USB cable can
-remain connected for audio and power. Preset editing, saving, restoring and full
-preset-definition export are not implemented for this device.
+remain connected for audio and power. It can also back up every preset, audition a
+preset without saving it, save and restore presets, and measure output levels; the
+full list is in [MUSTANG_MICRO_PLUS_LINUX.md](MUSTANG_MICRO_PLUS_LINUX.md#what-works).
+The programs and protocol are shared across platforms, with Bleak on macOS and
+BlueZ on Linux; they have been tested on Linux only.
+Editing single parameters live is not implemented.
 
 ## Setup
 

@@ -23,9 +23,9 @@ import json
 import sys
 import time
 
-from mmp_ble import (Controller, KEEPALIVE, KEEPALIVE_INTERVAL, NAME, RESPONSE, SCAN_FILTER,
+from mmp_ble import (Controller, KEEPALIVE, KEEPALIVE_INTERVAL, NAME, RESPONSE, SCAN_FILTER, SERVICE,
                      fields, tone_message, tone_request, varint)
-from mmp_bluez import make_client
+from mmp_bluez import find_device, make_client, not_found
 from mmp_lz4 import compress, decompress
 from mmp_backup import PRESET_DATA_STATUS, preset_data_request
 
@@ -213,12 +213,10 @@ async def heartbeat(controller):
 
 async def run(args):
     doc = apply_overrides(json.load(open(args.preset, encoding='utf-8')), args.name, args.volume)
-    from bleak import BleakScanner
-    device = await BleakScanner.find_device_by_filter(
-        lambda d, advert: (d.name == NAME or advert.local_name == NAME)
-        and (args.device is None or d.address == args.device), **SCAN_FILTER, timeout=10)
+    device = await find_device(NAME, args.device, timeout=10, service=SERVICE,
+                               **SCAN_FILTER)
     if device is None:
-        sys.exit('Micro Plus not found. Turn it on and stop other programs that control it.')
+        sys.exit(not_found('Micro Plus not found. Turn it on and stop other programs that control it.'))
     log = open(args.log, 'a', encoding='utf-8') if args.log else None
     client = await make_client(device)
     async with client:

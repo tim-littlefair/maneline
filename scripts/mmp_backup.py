@@ -24,9 +24,9 @@ import sys
 import time
 from pathlib import Path
 
-from mmp_ble import (Controller, KEEPALIVE, KEEPALIVE_INTERVAL, NAME, RESPONSE, SCAN_FILTER,
+from mmp_ble import (Controller, KEEPALIVE, KEEPALIVE_INTERVAL, NAME, RESPONSE, SCAN_FILTER, SERVICE,
                      fields, tone_request, varint)
-from mmp_bluez import make_client
+from mmp_bluez import find_device, make_client, not_found
 from mmp_lz4 import decompress
 
 PRESET_DATA_REQUEST = 12        # MustangLtxToneRequest.presetDataRequest {presetIndex = 1}
@@ -141,13 +141,11 @@ async def heartbeat(controller):
 
 
 async def backup(args):
-    from bleak import BleakScanner
-    device = await BleakScanner.find_device_by_filter(
-        lambda d, advert: (d.name == NAME or advert.local_name == NAME)
-        and (args.device is None or d.address == args.device), **SCAN_FILTER, timeout=10)
+    device = await find_device(NAME, args.device, timeout=10, service=SERVICE,
+                               **SCAN_FILTER)
     if device is None:
-        sys.exit('Micro Plus not found. Turn it on, close Fender Tone and stop other programs '
-                 'that control it (e.g. the browser server or ChordsPlay\'s amp agent).')
+        sys.exit(not_found('Micro Plus not found. Turn it on, close Fender Tone and stop other programs '
+                 'that control it (e.g. the browser server or ChordsPlay\'s amp agent).'))
     out = Path(args.out) if args.out else BACKUP_DIR / ('micro-plus-' + time.strftime('%Y%m%d-%H%M%S'))
     out.mkdir(parents=True, exist_ok=False)
     log = open(args.log, 'a', encoding='utf-8') if args.log else None

@@ -1,12 +1,70 @@
 # Mustang Micro Plus on Linux
 
 Read when controlling a Micro Plus from Linux, especially while it plays Bluetooth
-audio from the same computer. The protocol and the commands are the same as in
-[MUSTANG_MICRO_PLUS_MACOS.md](MUSTANG_MICRO_PLUS_MACOS.md); this page covers what
-BlueZ needs.
+audio from the same computer. This page lists what maneline can do with the amp and
+covers what BlueZ needs. The programs and the protocol are the same on macOS
+([MUSTANG_MICRO_PLUS_MACOS.md](MUSTANG_MICRO_PLUS_MACOS.md)), except for how the amp
+is found and connected.
 
 Tested on 9 November 2026 with firmware 1.0.29, BlueZ 5.87, an Intel AX201
-adapter, Python 3.13 and Bleak 3.0.2.
+adapter and Python 3.13. Since 11 November 2026 the scripts need no Bleak on Linux,
+only `dbus-fast`; that change is tested without an amp so far.
+
+## What works
+
+Run from a checkout as `scripts/mmp_<name>.py`, or from the `maneline-mmp` package as
+`mmp-<name>` (for example `mmp-backup`). Only one program at a time can control the amp
+(see "Notes for applications"): the command-line programs connect themselves, so stop
+the agent first; `mmp_restore.py` and `mmp_check.py` go through the running agent.
+
+| Feature | Program or API | Details |
+| --- | --- | --- |
+| Find the amp | `mmp_ble.py scan` | Linux: the paired amp, from BlueZ, without scanning (below) |
+| Read the state | `mmp_ble.py status`, `mmp_ble.py presets`, `GET /api/micro-plus` | current preset, the 100 preset names; the API also reports the firmware version |
+| Switch presets | `mmp_ble.py preset N`, browser page, `POST /api/micro-plus` | waits for the amp's confirmation; follows switches made with the amp's buttons |
+| Browser controls | `mmp_web.py` (`run_web_cli.sh --micro-plus`) | current preset, search by number or name, one click to switch; [MUSTANG_MICRO_PLUS_MACOS.md](MUSTANG_MICRO_PLUS_MACOS.md#browser-controls) |
+| Agent | `mmp_web.py` | holds the one connection for every browser and program; heartbeat, reconnects by itself, optional idle disconnect (below), stops cleanly on SIGTERM |
+| Audio keeps playing | all programs | control uses only the LE link (below) |
+| Backup | `mmp_backup.py` | reads all 100 stored presets without switching or writing, about a minute: one JSON file per slot and the raw data for a byte-exact restore |
+| Read one stored preset | `GET /api/micro-plus/preset?slot=n` | without selecting the slot |
+| Audition | `mmp_audition.py`, `POST /api/micro-plus/audition` | plays a preset without saving it, optionally with another name or amp volume; on a reserved empty slot (default 100) so no real preset shows a wrong name; nothing survives switching off |
+| Save | `POST /api/micro-plus/save` | writes a whole preset into a slot without selecting it and returns what the slot holds afterwards; names of 1–16 characters |
+| Restore | `mmp_restore.py BACKUP --slots …` | puts slots back from a backup and reads each one back; skips slots that already match; `--dry-run` only compares |
+| Check after a firmware update | `mmp_check.py BACKUP [--all] [--write]` | connection, firmware, names and presets against a backup, switching, audition, and with `--write` saving on slot 99 |
+| Output level | `mmp_level.py delta`, `mmp_level.py survey` | records the amp's USB output while auditioning, to check volume changes and match the presets' levels; [MUSTANG_MICRO_PLUS_LEVELS.md](MUSTANG_MICRO_PLUS_LEVELS.md) |
+| BlueZ setup | `bluez_setup.sh` (`mmp-bluez-setup`) | LE pairing and the GATT cache fix (below) |
+
+Not implemented: editing single parameters live, renaming, clearing, moving or swapping
+presets, the tuner, tap tempo, setting the EQ, the attenuator, the input pad and the
+USB gain. The amp has messages for all of these
+([MUSTANG_MICRO_PLUS_PROTOCOL.md](MUSTANG_MICRO_PLUS_PROTOCOL.md)); maneline does not
+send them.
+
+### Protocol
+
+What the programs send and understand; message numbers, frames and the preset JSON are
+described in [MUSTANG_MICRO_PLUS_PROTOCOL.md](MUSTANG_MICRO_PLUS_PROTOCOL.md).
+
+* **Frames:** replies arriving in several frames are put back together; a fragment
+  without its start is dropped. Long requests (auditions, saves) go out in frames of
+  117 bytes, 20 ms apart, and nothing else is sent in between.
+* **Preset data:** `mmp_lz4.py` decodes and encodes the LZ4 blocks that carry Fender's
+  preset JSON.
+* **Handshake** (copied from a Fender Tone capture, read-only): firmware version (7),
+  preset names (14), current preset (4), USB gain (22) and EQ (25), between two
+  `modalStatus` messages. The gain and EQ replies are not used.
+* **Heartbeat** (24) every 250 ms while connected.
+
+| Request | Used for | Reply |
+| --- | --- | --- |
+| 8 loadPresetRequest | switch; also ends an audition | 5 currentPresetStatus, also sent when the amp's buttons switch |
+| 12 presetDataRequest | backup, read a stored preset | 10 presetDataStatus |
+| 1 auditionPresetRequest | audition; sent again if not confirmed | 5 and 4 currentPresetDataStatus |
+| 18 savePresetAsRequest | save, restore; never sent twice | 13 presetSavedStatus |
+| 1, 12, 18 | | 17 unsupportedMessageStatus is reported as an error |
+
+`exitAuditionRequest` (6) works too (with `dummyField = true`), but the programs end an
+audition by selecting a slot instead.
 
 ## Audio and control at the same time
 
@@ -21,17 +79,33 @@ sends it when a client disconnects, when an `async with` block ends and when
 `asyncio.run()` shuts down. While audio is connected, Bleak also considers the
 device connected already and never brings up LE.
 
-`scripts/mmp_bluez.py` therefore talks to BlueZ directly when BlueZ exports its
-per-bearer interface `org.bluez.Bearer.LE1`. It connects and disconnects only the
-LE link, and watches that link rather than the device. `mmp_ble.py` and the
-browser server use it automatically and say so:
+`scripts/mmp_bluez.py` therefore talks to BlueZ directly, through its per-bearer
+interface `org.bluez.Bearer.LE1`. It connects and disconnects only the LE link,
+and watches that link rather than the device. `mmp_ble.py` says so:
 
 ```
 Connected to Mustang Micro Plus over LE only; Bluetooth audio stays connected
 ```
 
+On Linux the scripts do not use Bleak at all. The only Python package they need
+is `dbus-fast` (Debian 13: `python3-dbus-fast`). They also do not scan: the amp
+has to be paired anyway (below), so they ask BlueZ for the paired device that
+offers the amp's control service (`90559580-b707-11ee-acb1-7b7e30f1af54` among
+the device's `UUIDs`), whatever the device is called; a paired device named
+"Mustang Micro Plus" also counts, for the case that BlueZ does not list its
+services. `mmp_ble.py scan` lists the paired amps. With more than one, pass
+`--device` with the Bluetooth address: `mmp_ble.py` insists on it, the other
+scripts and the browser server take the first amp BlueZ lists. A paired amp is known to BlueZ while it is switched
+off, so an amp that is off shows as "does not answer" after the connection
+timeout rather than as "not found".
+
+The interface appeared in BlueZ 5.84, but its `Connect` and `Disconnect` were empty
+until 5.86 (`src/bearer.c`: "TODO", no reply), so 5.86 is the first version that works.
 Without the bearer interface (BlueZ older than 5.84 or experimental interfaces
-off), they fall back to Bleak and warn that disconnecting will also drop audio.
+off) the scripts stop and say what BlueZ needs. With 5.84 or 5.85 the interface is
+there but `Connect` never answers, so the scripts check the version first
+(`bluetoothd --version`, else `bluetoothctl --version`) and name it as too old.
+They no longer fall back to Bleak, which would drop audio on every disconnect.
 
 ## One-time BlueZ setup
 
@@ -80,10 +154,10 @@ off), they fall back to Bleak and warn that disconnecting will also drop audio.
 
 ## Scanning
 
-On the tested adapter, scanning with a service-UUID discovery filter made BlueZ
-reset the adapter within a second (`No discovery started`). The scripts
-therefore filter by service UUID only on macOS and find the amp by name on
-Linux.
+On Linux the scripts no longer scan; they ask BlueZ for the paired amp (above).
+When they still scanned, a scan with a service-UUID discovery filter made BlueZ
+reset the tested adapter within a second (`No discovery started`), so only the
+macOS scan filters by service UUID.
 
 ## Saving the amp's battery
 

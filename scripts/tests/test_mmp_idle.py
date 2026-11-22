@@ -19,10 +19,11 @@ class IdleDisconnectTests(unittest.IsolatedAsyncioTestCase):
         self.close_delay = 0
         test = self
 
-        class FakeScanner:
-            @staticmethod
-            async def find_device_by_filter(*args, **kwargs):
-                return types.SimpleNamespace(address='test-device')
+        async def find_device(*args, **kwargs):
+            return types.SimpleNamespace(address='test-device')
+
+        async def make_client(device, disconnected_callback):
+            return FakeClient(device, disconnected_callback)
 
         class FakeClient:
             def __init__(self, device, disconnected_callback):
@@ -67,8 +68,8 @@ class IdleDisconnectTests(unittest.IsolatedAsyncioTestCase):
                 await test.acknowledge.wait()
                 self.slot = slot
 
-        self.patches = [patch.dict(sys.modules, {'bleak': types.SimpleNamespace(
-                            BleakClient=FakeClient, BleakScanner=FakeScanner)}),
+        self.patches = [patch('mmp_session.find_device', find_device),
+                        patch('mmp_session.make_client', make_client),
                         patch('mmp_session.Controller', FakeController),
                         patch('mmp_session.KEEPALIVE_INTERVAL', .005)]
         for p in self.patches:
@@ -97,7 +98,8 @@ class IdleDisconnectTests(unittest.IsolatedAsyncioTestCase):
     async def test_idle_without_audio_sleeps_and_switch_reconnects(self):
         await self.start(idle_disconnect=0.05)
         await self.until(lambda: self.session.asleep)
-        self.assertFalse(self.clients[0].is_connected)
+        # asleep is set before the link is closed; the close ends a moment later
+        await self.until(lambda: not self.clients[0].is_connected)
         state = self.session.snapshot()
         self.assertFalse(state['connected'])
         self.assertTrue(state['asleep'])
