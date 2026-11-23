@@ -1,8 +1,8 @@
 {
     "psname_full": "Chimey Deluxe",
-    "psmodule1": "Compressor",
-    "psmodule2": "57Deluxe",
-    "psmodule3": "LargeHall",
+    "psline1": "Compressor",
+    "psline2": "57Deluxe",
+    "psline3": "LargeHall",
     "psslot": "23",
     "dspUnits": [
         {

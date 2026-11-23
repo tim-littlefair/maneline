@@ -21,7 +21,8 @@ def _render_param(param_details, param_name):
     if (
         (param_name not in param_details) or 
         (param_name.startswith("other")) or
-        ("#" in param_name)
+        ("#" in param_name) or
+        (param_name in ( "cab"))
     ):
         return ""
     else:
@@ -39,31 +40,57 @@ def _render_param(param_details, param_name):
                 del param_details[rpn]
         return f" {param_name}={param_value}"
 
-def summarize_signal_chain(preset_details):
+def _filter_least_useful_lines(pslines, max_lines):
+    amp_continuation_lines = []
+    other_continuation_lines = []
+    for line in range(len(pslines)-1,0,-1):
+        if "amp: " in pslines[line]:
+            amp_continuation_lines += [line]
+        elif ": " in pslines[line]:
+            other_continuation_lines += [line]
+    while len(pslines)>max_lines:
+        if len(other_continuation_lines)>0:
+            removable_line=other_continuation_lines.pop()
+            pslines.remove(pslines[removable_line])
+            for i in range(0,len(amp_continuation_lines)):
+                if amp_continuation_lines[i]>removable_line:
+                    amp_continuation_lines[i]-=1
+        elif len(amp_continuation_lines)>0:
+            removable_line=amp_continuation_lines.pop()
+            pslines.remove(pslines[removable_line])
+
+def summarize_signal_chain(preset_details, max_lines=5, max_line_length=85):
     retval = []
     for du in preset_details["dspUnits"]:
         unit_description_sio = StringIO()
         unit_description_sio.write(f'{du["type"]}:{du["name"]}')
         du_type = du["type"]
+        du_name = du["name"]
         del du["type"]
         del du["name"]
         if du_type == "amp":
             # First spit out the params which map to knobs on top
             # (NB 'middle' does not have a physical knob on Mustang I/II or LT series
             # but should clearly have equal prominence to 'treble' and 'bass')
-            for param_name in ( "gain", "volume", "treble", "middle", "bass", "masterVolume" ):
+            for param_name in ( "gain", "volume", "treble", "middle", "bass" ):
                 unit_description_sio.write(_render_param(du, param_name))
                 del du[param_name]
             retval += [ unit_description_sio.getvalue() ]
             # Create a second line for the amp for additional params
             unit_description_sio = StringIO()
-            unit_description_sio.write("    ")
-        #for param_name in sorted(du.keys()):
+            unit_description_sio.write(f'{du_type}:{" "*len(du_name)}')
         while len(du.keys())>0:
             param_name = sorted(du.keys())[0]
-            unit_description_sio.write(_render_param(du, param_name))
+            param_rendered = _render_param(du, param_name)
+            if len(unit_description_sio.getvalue()) + len(param_rendered) > max_line_length:
+                retval += [ unit_description_sio.getvalue() ]
+                # Create a second line for the amp for additional params
+                unit_description_sio = StringIO()
+                unit_description_sio.write(f'{du_type}:{" "*(len(du_name)-1)}')
+            unit_description_sio.write(param_rendered)
             del du[param_name]
         retval += [ unit_description_sio.getvalue() ]
+    _filter_least_useful_lines(retval,max_lines)
     return retval
 
 if __name__ == "__main__":

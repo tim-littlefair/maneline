@@ -18,6 +18,8 @@ from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 from watchdog.events import FileSystemEventHandler
 
+from summarize_signal_chain import summarize_signal_chain
+
 # Get local ip address
 # ref: https://stackoverflow.com/a/23822431
 def getNetworkIp():
@@ -72,7 +74,7 @@ def generate_icon_data_uri():
 
 def generate_qrcode_data_uri(ipaddr):
     generation_outcome = subprocess.run(
-        f"zint -b QRCODE -d http://{ipaddr}:8080 --filetype=PNG --direct| base64 --wrap=0",
+        f"zint -b QRCODE -d http://{ipaddr}:8080 --filetype=PNG --scale=4 --direct| base64 --wrap=0",
         shell=True, capture_output=True, text=True
     )
     qrcode_data_base64=generation_outcome.stdout
@@ -136,11 +138,19 @@ def update_lcd_ui(run_dir, ipaddr, display_method):
     device_details["swversion"]=swversion
     preset_details = None
     try:
+        _TEMPLATE_LINE_COUNT = 7
         preset_details = json.load(open(os.path.join(run_dir, "preset-details.json")))
+        pslines = summarize_signal_chain(preset_details,_TEMPLATE_LINE_COUNT,85)
+        for i in range(0,_TEMPLATE_LINE_COUNT):
+            if i < len(pslines):
+                preset_details[f"psline{i+1}"] = pslines[i]
+            else: 
+                preset_details[f"psline{i+1}"] = ""
+
     except:
         preset_details = json.loads("""{
                 "psslot":"##","psname_full":"scanning presets", 
-                "psmodule1":"","psmodule2":"","psmodule3":"","psmodule4":"","psmodule5":""
+                "psline1":"","psline2":"","psline3":"","psline4":"","psline5":""
         }""")
     split_preset_name(device_details, preset_details)
     icon_data_uri = generate_icon_data_uri()
@@ -164,6 +174,7 @@ def update_lcd_ui(run_dir, ipaddr, display_method):
         update_selected_lcds(display_method, png_fn)
     else:
         exit(1)
+
 def update_selected_lcds(display_method, png_fn):
     if display_method is None:
         return

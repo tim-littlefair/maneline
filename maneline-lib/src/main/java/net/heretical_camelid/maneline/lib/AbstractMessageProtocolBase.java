@@ -239,7 +239,7 @@ public abstract class AbstractMessageProtocolBase {
                 DspModule m = currentPresetRecord.m_preset.signalChain().get(i);
                 if(m!=null) {
                     presetDetails.put(
-                        String.format("psmodule%d",i+1),
+                        String.format("psline%d",i+1),
                         m.m_genericName
                     );
                     JSONObject dspUnitDetails = new JSONObject();

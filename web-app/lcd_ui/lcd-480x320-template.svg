@@ -110,40 +110,54 @@
           width="460.0"
           height="120.0"
     />
-    <text style="font-size:18px;fill:#333"
+    <text style="font-size:10px;fill:#333"
           text-anchor="left"
           x="20.0"
-          y="210.0"
+          y="204.0"
           width="440.0"
-    >@psmodule1</text>
+    >@psline1</text>
 
-    <text style="font-size:18px;fill:#333"
+    <text style="font-size:10px;fill:#333"
           text-anchor="left"
           x="20.0"
-          y="232.0"
+          y="220.0"
           width="440.0"
-    >@psmodule2</text>
+    >@psline2</text>
 
-    <text style="font-size:18px;fill:#333"
+    <text style="font-size:10px;fill:#333"
           text-anchor="left"
           x="20.0"
-          y="254.0"
+          y="236.0"
           width="440.0"
-    >@psmodule3</text>
+    >@psline3</text>
 
-    <text style="font-size:18px;fill:#333"
+    <text style="font-size:10px;fill:#333"
           text-anchor="left"
           x="20.0"
-          y="276.0"
+          y="252.0"
           width="440.0"
-    >@psmodule4</text>
+    >@psline4</text>
 
-    <text style="font-size:18px;fill:#333"
+    <text style="font-size:10px;fill:#333"
           text-anchor="left"
           x="20.0"
-          y="298.0"
+          y="268.0"
           width="440.0"
-    >@psmodule5</text>
+    >@psline5</text>
+
+    <text style="font-size:10px;fill:#333"
+          text-anchor="left"
+          x="20.0"
+          y="284.0"
+          width="440.0"
+    >@psline6</text>
+
+    <text style="font-size:10px;fill:#333"
+          text-anchor="left"
+          x="20.0"
+          y="300.0"
+          width="440.0"
+    >@psline7</text>
 
   </g>
   <metadata
