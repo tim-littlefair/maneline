@@ -13,7 +13,9 @@ only `dbus-fast`; that change is tested without an amp so far.
 ## What works
 
 Run from a checkout as `scripts/mmp_<name>.py`, or from the `maneline` package as
-`mmp-<name>` (for example `mmp-backup`). Only one program at a time can control the amp
+`mmp-<name>` (for example `mmp-backup`; installing it on each distribution:
+[deployment/packages/maneline/README.md](../deployment/packages/maneline/README.md)).
+Only one program at a time can control the amp
 (see "Notes for applications"): the command-line programs connect themselves, so stop
 the agent first; `mmp_restore.py` and `mmp_check.py` go through the running agent.
 
