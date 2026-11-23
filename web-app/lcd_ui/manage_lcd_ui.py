@@ -139,8 +139,7 @@ def update_lcd_ui(run_dir, ipaddr, display_method):
         preset_details = json.load(open(os.path.join(run_dir, "preset-details.json")))
     except:
         preset_details = json.loads("""{
-                "psslot":"##","psname":"... ...", 
-                "psname1":"...","psname2":"", # TODO remove these
+                "psslot":"##","psname":"scanning presets", 
                 "psmodule1":"","psmodule2":"","psmodule3":"","psmodule4":"","psmodule5":""
         }""")
     split_preset_name(device_details, preset_details)
@@ -234,4 +233,4 @@ if __name__ == "__main__":
     except:
         traceback.print_exc()
 
-update_selected_lcds(display_method,"lcd_ui/lcd-startup.png")
+    update_selected_lcds(display_method,"lcd_ui/lcd-shutdown.png")
