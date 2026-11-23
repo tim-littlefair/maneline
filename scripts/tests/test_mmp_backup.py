@@ -2,11 +2,12 @@
 import asyncio
 import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from mmp_backup import BackupController, preset_data_request, slot_list
+from mmp_backup import BackupController, preset_data_request, slot_list, work_dir
 from mmp_ble import KEEPALIVE, packet, select_preset, tone_request, varint
 from mmp_lz4 import compress
 
@@ -97,6 +98,21 @@ class BackupTests(unittest.TestCase):
         for bad in ('0', '101', '5-3'):
             with self.assertRaises(Exception):
                 slot_list(bad)
+
+
+class WorkDirTests(unittest.TestCase):
+    def test_checkout_keeps_work_in_the_repo(self):
+        with tempfile.TemporaryDirectory() as repo:
+            self.assertEqual(work_dir({}, repo), Path(repo) / '_work')
+
+    def test_environment_wins(self):
+        self.assertEqual(work_dir({'MMP_WORK_DIR': '/data/mmp'}, '/nonexistent'), Path('/data/mmp'))
+
+    def test_read_only_install_uses_the_users_data_directory(self):
+        self.assertEqual(work_dir({'HOME': '/home/me'}, '/nonexistent'),
+                         Path('/home/me/.local/share/maneline'))
+        self.assertEqual(work_dir({'HOME': '/home/me', 'XDG_DATA_HOME': '/x'}, '/nonexistent'),
+                         Path('/x/maneline'))
 
 
 if __name__ == '__main__':

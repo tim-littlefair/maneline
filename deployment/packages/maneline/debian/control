@@ -1,0 +1,22 @@
+Source: maneline
+Section: sound
+Priority: optional
+Maintainer: joba1 <joba-1@users.noreply.github.com>
+Build-Depends: debhelper-compat (= 13), python3 (>= 3.11), python3-dbus-fast, python3-numpy
+Standards-Version: 4.7.0
+Homepage: https://github.com/tim-littlefair/maneline
+Rules-Requires-Root: no
+
+Package: maneline
+Architecture: all
+Depends: ${misc:Depends}, python3 (>= 3.11), python3-dbus-fast, bluez
+Recommends: python3-numpy, pipewire-bin, pulseaudio-utils
+Description: Tools for Fender Mustang amplifiers (for now the Mustang Micro Plus)
+ The Mustang Micro Plus part of maneline: programs that talk to a Fender
+ Mustang Micro Plus headphone amplifier over Bluetooth LE, without the
+ vendor's phone app: mmp-web (browser page and HTTP API), mmp-backup,
+ mmp-restore, mmp-audition, mmp-check, mmp-level.
+ .
+ Needs BlueZ 5.86 or newer with "Experimental = true" in
+ /etc/bluetooth/main.conf. Debian 13 ships BlueZ 5.82: the programs install
+ but report that BlueZ is too old until a newer one is installed.
