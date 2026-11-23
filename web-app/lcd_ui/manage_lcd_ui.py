@@ -92,7 +92,7 @@ class PresetUpdatedHandler(PatternMatchingEventHandler):
         update_lcd_ui(self.run_dir, self.ipaddr, display_method)
 
 def split_preset_name(device_details, preset_details):
-    psname = preset_details["psname"]
+    psname = preset_details["psname_full"]
     if "LT" in device_details["ampname"]:
         # LT presets all have names exactly 16 characters long
         # and both Fender Tone Desktop and the amp itself split
@@ -139,7 +139,7 @@ def update_lcd_ui(run_dir, ipaddr, display_method):
         preset_details = json.load(open(os.path.join(run_dir, "preset-details.json")))
     except:
         preset_details = json.loads("""{
-                "psslot":"##","psname":"scanning presets", 
+                "psslot":"##","psname_full":"scanning presets", 
                 "psmodule1":"","psmodule2":"","psmodule3":"","psmodule4":"","psmodule5":""
         }""")
     split_preset_name(device_details, preset_details)

@@ -14,3 +14,4 @@ if __name__ == "__main__":
     print(name_for_amp(dd_classic, "Brutal Metal II"))
     print(name_for_amp(dd_classic, "Pigs Can Fly"))
     print(name_for_amp(dd_classic, "What The #^[!"))
+    print(name_for_amp(dd_classic, "scanning presets"))
