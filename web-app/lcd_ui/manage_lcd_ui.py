@@ -18,6 +18,7 @@ from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 from watchdog.events import FileSystemEventHandler
 
+from split_preset_name import split_preset_name
 from summarize_signal_chain import summarize_signal_chain
 
 # Get local ip address
@@ -93,48 +94,18 @@ class PresetUpdatedHandler(PatternMatchingEventHandler):
     def on_closed(self,event):
         update_lcd_ui(self.run_dir, self.ipaddr, display_method)
 
-def split_preset_name(device_details, preset_details):
-    psname = preset_details["psname_full"]
-    if "LT" in device_details["ampname"]:
-        # LT presets all have names exactly 16 characters long
-        # and both Fender Tone Desktop and the amp itself split
-        # this into two lines 8+8
-        preset_details["psname1"] = psname[0:8].strip()
-        preset_details["psname2"] = psname[8:16].strip()
-    else:
-        # For other amps we make best effort to find a good place 
-        # to split
-        psname = psname.strip()
-        psnamelen = len(psname)
-        space_positions = [ p for p in range(0,len(psname)) if psname[p]==" "]
-        if len(space_positions)==0:
-            split_position = math.floor((psnamelen+1)/2)
-            preset_details["psname1"] = psname[:split_position].strip()
-            preset_details["psname2"] = psname[split_position:].strip()
-        else:
-            while(len(space_positions)>1):
-                # print(space_positions)
-                if psnamelen-space_positions[-1]<=space_positions[0]:
-                    space_positions.remove(space_positions[-1])
-                else:
-                    space_positions.remove(space_positions[0])
-                # print(space_positions)
-            removable_space_position = space_positions[0]
-            preset_details["psname1"] = psname[:removable_space_position].strip()
-            preset_details["psname2"] = psname[removable_space_position+1:].strip()
-
 def update_lcd_ui(run_dir, ipaddr, display_method):
     device_details = None
     try:
         device_details = json.load(open(os.path.join(run_dir, "amp-details.json")))
     except:
         device_details = json.loads("""{
-            "swversion":"","ampname":"","fwversion":""
+            "swversion":"******","ampname":"********","fwversion":"***"
         }""")
-    # During development, swversion is A.B.C+betaDEFG
-    # we prefer to see the betaDEFG
+    # During development, swversion is A.B.C+betaDEFG.<git_hash>...
+    # we prefer to see the DEFG
     swversion = device_details["swversion"]
-    swversion = swversion.split("+")[-1].replace("beta","")
+    swversion = swversion.split("+")[-1].replace("beta","")[0:4]
     device_details["swversion"]=swversion
     preset_details = None
     try:
@@ -150,7 +121,8 @@ def update_lcd_ui(run_dir, ipaddr, display_method):
     except:
         preset_details = json.loads("""{
                 "psslot":"##","psname_full":"scanning presets", 
-                "psline1":"","psline2":"","psline3":"","psline4":"","psline5":""
+                "psline1":"","psline2":"","psline3":"","psline4":"","psline5":"",
+                "psline6":"","psline7":""
         }""")
     split_preset_name(device_details, preset_details)
     icon_data_uri = generate_icon_data_uri()
