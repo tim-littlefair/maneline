@@ -522,4 +522,9 @@ public class DesktopUsbAmpProvider implements IAmpProvider, HidServicesListener
     public String getStatus() {
         return m_protocol.getStatus();
     }
+
+    public void appendToLog(String message) {
+        assert s_loggingAgent != null;
+        s_loggingAgent.appendToLog(message);        
+    }
 }

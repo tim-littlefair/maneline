@@ -33,6 +33,7 @@ public class CommandLineInterface {
 
     static int doInteractive(DesktopUsbAmpProvider provider) {
         int exitStatus=0;
+
         provider.startProvider();
         boolean continueAcceptingCommands=true;
         Scanner commandScanner = new Scanner(System.in);
@@ -63,7 +64,7 @@ public class CommandLineInterface {
                 if(lineWords[0].equals("reset")) {
                     provider.resetProvider();
                 } else
-                 */
+                */
                 if(lineWords[0].equals("exit") || lineWords[0].equals("quit")) {
                     provider.stopProvider();
                     continueAcceptingCommands=false;
@@ -93,6 +94,7 @@ public class CommandLineInterface {
                 System.out.println("\nInterrupted sleep");
             }
         }
+
         try {
             FileOutputStream fos = new FileOutputStream("./cli_exit_status");
             fos.write(String.valueOf(exitStatus).getBytes());
@@ -100,6 +102,10 @@ public class CommandLineInterface {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        System.err.println(String.format(
+            "Exiting with status %d",exitStatus
+        ));
         return exitStatus;
     }
 
@@ -138,8 +144,12 @@ public class CommandLineInterface {
             }
         }
         catch(FhauLibException e) {
-            e.printStackTrace();
+            logStackTrace(e);
             System.exit(e.getExitStatus());
+        }
+        catch(Exception e) {
+            logStackTrace(e);
+            System.exit(127);
         }
     }
 
@@ -409,5 +419,11 @@ public class CommandLineInterface {
             );
             System.exit(1);
         }
+    }
+
+    static void logStackTrace(Exception e) {
+        s_cliLogStream.println(e.getMessage());
+        e.printStackTrace(s_cliLogStream);
+        s_cliLogStream.flush();
     }
 }

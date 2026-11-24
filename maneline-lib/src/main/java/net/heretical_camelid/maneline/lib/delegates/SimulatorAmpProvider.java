@@ -198,4 +198,7 @@ public class SimulatorAmpProvider implements IAmpProvider {
         System.out.println("Tests for SimulatorAmplifierProvider done");
     }
      */
+    public void appendToLog(String message) {
+        
+    }
 }

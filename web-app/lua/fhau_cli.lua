@@ -112,6 +112,10 @@ function Fhau:check_for_cli_death()
         -- Updating to Lua 5.2 or later is under consideration
         -- but there is no commitment to do this at the
         -- present time.
+        trailing_output = fhau_cli_output:read("*all")
+        print("CLI exited with status: "..close_status)
+        print("Trailing output: ")
+        print(trailing_output)
         if(close_status)
         then
             print("CLI process has completed OK")

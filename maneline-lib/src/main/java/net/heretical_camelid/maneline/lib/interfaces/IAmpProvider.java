@@ -29,4 +29,6 @@ public interface IAmpProvider {
     void switchPreset(int slotIndex);
 
     ProviderState_e  attemptConnection();
+
+    void appendToLog(String message);
 }
