@@ -102,10 +102,11 @@ def update_lcd_ui(run_dir, ipaddr, display_method):
         device_details = json.loads("""{
             "swversion":"******","ampname":"********","fwversion":"***"
         }""")
+    swversion = device_details["swversion"]
     # During development, swversion is A.B.C+betaDEFG.<git_hash>...
     # we prefer to see the DEFG
-    swversion = device_details["swversion"]
-    swversion = swversion.split("+")[-1].replace("beta","")[0:4]
+    if "beta" in swversion:
+        swversion = swversion.split("+")[-1].replace("beta","")[0:4]
     device_details["swversion"]=swversion
     preset_details = None
     try:
