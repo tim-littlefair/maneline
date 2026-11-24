@@ -12,6 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.json.JSONObject;
+import org.json.JSONArray;
 
 import net.heretical_camelid.maneline.lib.interfaces.IDeviceTransport;
 import net.heretical_camelid.maneline.lib.interfaces.ILoggingAgent;
@@ -230,28 +231,34 @@ public abstract class AbstractMessageProtocolBase {
                 String.format("%02d",m_currentPresetIndex)
             );
             presetDetails.put(
-                "psname1",
-                currentPresetRecord.displayName().substring(0,8).strip()
+                "psname_full",
+                currentPresetRecord.displayName()
             );
-            presetDetails.put(
-                "psname2",
-                currentPresetRecord.displayName().substring(8).strip()
-            );
+            JSONArray dspUnitArray = new JSONArray();
             for(int i=0; i<currentPresetRecord.m_preset.signalChain().size(); ++i) {
                 DspModule m = currentPresetRecord.m_preset.signalChain().get(i);
                 if(m!=null) {
                     presetDetails.put(
-                        String.format("psmodule%d",i+1),
+                        String.format("psline%d",i+1),
                         m.m_genericName
                     );
+                    JSONObject dspUnitDetails = new JSONObject();
+                    dspUnitDetails.put("type",m.m_nodeId);
+                    dspUnitDetails.put("name", m.m_genericName);
+                    for(String paramKey: m.m_parameters.keySet()) {
+                        dspUnitDetails.put(paramKey,m.m_parameters.get(paramKey));
+                    }
+                    dspUnitArray.put(dspUnitDetails);
                 }
             }
+            presetDetails.put("dspUnits",dspUnitArray);
+
             FileOutputStream presetDetailsStream = null;
             try {
                 presetDetailsStream = new FileOutputStream(
                     "./preset-details.json"
                 );
-                presetDetailsStream.write(presetDetails.toString().getBytes());
+                presetDetailsStream.write(presetDetails.toString(4).getBytes());
                 presetDetailsStream.close();
             } catch (FileNotFoundException e) {
                 throw new RuntimeException(e);

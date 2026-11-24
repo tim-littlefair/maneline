@@ -149,7 +149,7 @@ RUN apt-get install -y --install-recommends --no-install-suggests bluez bluez-to
 RUN apt-get install -y --no-install-recommends --no-install-suggests procps psmisc python-is-python3
 
 RUN python3 -m venv python.venv
-RUN python.venv/bin/python -m pip install bleak 
+RUN python.venv/bin/python -m pip install bleak watchdog
 
 RUN sed -e "s/#Experimental = false/Experimental = true/p" -i /etc/bluetooth/main.conf
 

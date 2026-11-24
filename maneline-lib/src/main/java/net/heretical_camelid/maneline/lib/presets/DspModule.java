@@ -3,6 +3,7 @@ package net.heretical_camelid.maneline.lib.presets;
 import net.heretical_camelid.maneline.lib.generated.TONE_Constants;
 
 import org.json.JSONObject;
+import org.json.JSONArray;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -1,0 +1,331 @@
+{
+    "psname_full": "Chimey Deluxe",
+    "psline1": "Compressor",
+    "psline2": "57Deluxe",
+    "psline3": "LargeHall",
+    "psslot": "23",
+    "dspUnits": [
+        {
+            "threshold#details": {
+                "_fuseValueU8": 115,
+                "_nineTickKnobPos": 5,
+                "_fuseParamIndex": 1,
+                "_fuseParamType": 1,
+                "_fuseParamName": "Threshold",
+                "_fuseValueU16a": 29440,
+                "_fuseValueU16b": 29555,
+                "_fuseRawFloatValue": 0.4488189
+            },
+            "level#details": {
+                "_fuseValueU8": 70,
+                "_nineTickKnobPos": 3.4,
+                "_fuseParamIndex": 0,
+                "_fuseParamType": 1,
+                "_fuseParamName": "Level",
+                "_fuseValueU16a": 17920,
+                "_fuseValueU16b": 17990,
+                "_fuseRawFloatValue": 0.27165353
+            },
+            "attackTime": 0.248,
+            "releaseTime": 0.362,
+            "level": 0.272,
+            "attackTime#details": {
+                "_fuseValueU8": 64,
+                "_nineTickKnobPos": 3.2,
+                "_fuseParamIndex": 3,
+                "_fuseParamType": 1,
+                "_fuseParamName": "Attack Time",
+                "_fuseValueU16a": 16384,
+                "_fuseValueU16b": 16448,
+                "_fuseRawFloatValue": 0.2480315
+            },
+            "name": "Compressor",
+            "threshold": 0.449,
+            "releaseTime#details": {
+                "_fuseValueU8": 93,
+                "_nineTickKnobPos": 4.3,
+                "_fuseParamIndex": 4,
+                "_fuseParamType": 1,
+                "_fuseParamName": "Release Time",
+                "_fuseValueU16a": 23808,
+                "_fuseValueU16b": 23901,
+                "_fuseRawFloatValue": 0.36220473
+            },
+            "type": "stomp",
+            "ratio#details": {
+                "_fuseValueU8": 170,
+                "_fuseParamIndex": 2,
+                "_fuseParamType": 4,
+                "_fuseValueU16a": 43520,
+                "_fuseParamName": "Ratio",
+                "_fuseValueU16b": 43690
+            },
+            "ratio": 170
+        },
+        {
+            "other_13": 1,
+            "other_12": 1,
+            "other_14": 1,
+            "noiseGateDepth#details": {
+                "_fuseValueU8": 255,
+                "_nineTickKnobPos": 10,
+                "_fuseParamIndex": 9,
+                "_fuseParamType": 12,
+                "_fuseParamName": "Noise Gate Depth",
+                "_fuseValueU16a": 65280,
+                "_fuseValueU16b": 65535,
+                "_fuseRawFloatValue": 1
+            },
+            "cab": 1,
+            "noiseGateThresh": 0,
+            "other_21#details": {
+                "_fuseValueU8": 1,
+                "_fuseParamIndex": 21,
+                "_fuseParamType": 141,
+                "_fuseParamName": "Other_21"
+            },
+            "gain2": 0.5,
+            "treble#details": {
+                "_fuseValueU8": 201,
+                "_nineTickKnobPos": 8.1,
+                "_fuseParamIndex": 4,
+                "_fuseParamType": 12,
+                "_fuseParamName": "Treble",
+                "_fuseValueU16a": 51456,
+                "_fuseValueU16b": 51657,
+                "_fuseRawFloatValue": 0.78740156
+            },
+            "type": "amp",
+            "powerSupply": 1,
+            "gain": 0.669,
+            "middle#details": {
+                "_fuseValueU8": 129,
+                "_nineTickKnobPos": 5.5,
+                "_fuseParamIndex": 5,
+                "_fuseParamType": 12,
+                "_fuseParamName": "Middle",
+                "_fuseValueU16a": 33024,
+                "_fuseValueU16b": 33153,
+                "_fuseRawFloatValue": 0.503937
+            },
+            "other_12#details": {
+                "_fuseValueU8": 1,
+                "_fuseParamIndex": 12,
+                "_fuseParamType": 141,
+                "_fuseParamName": "Other_12"
+            },
+            "other_11#details": {
+                "_fuseValueU8": 128,
+                "_nineTickKnobPos": 5.5,
+                "_fuseParamIndex": 11,
+                "_fuseParamType": 12,
+                "_fuseParamName": "Other_11",
+                "_fuseValueU16a": 32768,
+                "_fuseValueU16b": 32896,
+                "_fuseRawFloatValue": 0.5
+            },
+            "noiseGateThresh#details": {
+                "_fuseValueU8": 0,
+                "_fuseParamIndex": 16,
+                "_fuseParamType": 134,
+                "_fuseParamName": "Noise Gate Thresh"
+            },
+            "bias": 0.5,
+            "bass#details": {
+                "_fuseValueU8": 72,
+                "_nineTickKnobPos": 3.5,
+                "_fuseParamIndex": 6,
+                "_fuseParamType": 12,
+                "_fuseParamName": "Bass",
+                "_fuseValueU16a": 18432,
+                "_fuseValueU16b": 18504,
+                "_fuseRawFloatValue": 0.27952754
+            },
+            "powerSupply#details": {
+                "_fuseValueU8": 1,
+                "_fuseParamIndex": 18,
+                "_fuseParamType": 141,
+                "_fuseParamName": "Power Supply"
+            },
+            "sag": 1,
+            "cab#details": {
+                "_fuseValueU8": 1,
+                "_fuseParamIndex": 17,
+                "_fuseParamType": 142,
+                "_fuseParamName": "Cab"
+            },
+            "resonance#details": {
+                "_fuseValueU8": 128,
+                "_nineTickKnobPos": 5.5,
+                "_fuseParamIndex": 8,
+                "_fuseParamType": 12,
+                "_fuseParamName": "Resonance",
+                "_fuseValueU16a": 32768,
+                "_fuseValueU16b": 32896,
+                "_fuseRawFloatValue": 0.5
+            },
+            "presence": 0.5,
+            "other_11": 0.5,
+            "noiseGate#details": {
+                "_fuseValueU8": 0,
+                "_fuseParamIndex": 15,
+                "_fuseParamType": 144,
+                "_fuseParamName": "Noise Gate"
+            },
+            "sag#details": {
+                "_fuseValueU8": 1,
+                "_fuseParamIndex": 19,
+                "_fuseParamType": 143,
+                "_fuseParamName": "Sag"
+            },
+            "middle": 0.504,
+            "noiseGate": "off",
+            "masterVolume": 0.5,
+            "noiseGateDepth": 1,
+            "resonance": 0.5,
+            "volume": 0.669,
+            "volume#details": {
+                "_fuseValueU8": 171,
+                "_nineTickKnobPos": 7,
+                "_fuseParamIndex": 0,
+                "_fuseParamType": 12,
+                "_fuseParamName": "Volume",
+                "_fuseValueU16a": 43776,
+                "_fuseValueU16b": 43947,
+                "_fuseRawFloatValue": 0.6692913
+            },
+            "gain2#details": {
+                "_fuseValueU8": 128,
+                "_nineTickKnobPos": 5.5,
+                "_fuseParamIndex": 2,
+                "_fuseParamType": 12,
+                "_fuseParamName": "Gain2",
+                "_fuseValueU16a": 32768,
+                "_fuseValueU16b": 32896,
+                "_fuseRawFloatValue": 0.5
+            },
+            "masterVolume#details": {
+                "_fuseValueU8": 128,
+                "_nineTickKnobPos": 5.5,
+                "_fuseParamIndex": 3,
+                "_fuseParamType": 12,
+                "_fuseParamName": "Master Volume",
+                "_fuseValueU16a": 32768,
+                "_fuseValueU16b": 32896,
+                "_fuseRawFloatValue": 0.5
+            },
+            "bass": 0.28,
+            "other_13#details": {
+                "_fuseValueU8": 1,
+                "_fuseParamIndex": 13,
+                "_fuseParamType": 141,
+                "_fuseParamName": "Other_13"
+            },
+            "other_20#details": {
+                "_fuseValueU8": 0,
+                "_fuseParamIndex": 20,
+                "_fuseParamType": 141,
+                "_fuseParamName": "Other_20"
+            },
+            "gain#details": {
+                "_fuseValueU8": 171,
+                "_nineTickKnobPos": 7,
+                "_fuseParamIndex": 1,
+                "_fuseParamType": 12,
+                "_fuseParamName": "Gain",
+                "_fuseValueU16a": 43776,
+                "_fuseValueU16b": 43947,
+                "_fuseRawFloatValue": 0.6692913
+            },
+            "name": "57Deluxe",
+            "other_14#details": {
+                "_fuseValueU8": 1,
+                "_fuseParamIndex": 14,
+                "_fuseParamType": 141,
+                "_fuseParamName": "Other_14"
+            },
+            "bias#details": {
+                "_fuseValueU8": 128,
+                "_nineTickKnobPos": 5.5,
+                "_fuseParamIndex": 10,
+                "_fuseParamType": 13,
+                "_fuseParamName": "Bias",
+                "_fuseValueU16a": 32768,
+                "_fuseValueU16b": 32896,
+                "_fuseRawFloatValue": 0.5
+            },
+            "treble": 0.787,
+            "presence#details": {
+                "_fuseValueU8": 128,
+                "_nineTickKnobPos": 5.5,
+                "_fuseParamIndex": 7,
+                "_fuseParamType": 12,
+                "_fuseParamName": "Presence",
+                "_fuseValueU16a": 32768,
+                "_fuseValueU16b": 32896,
+                "_fuseRawFloatValue": 0.5
+            },
+            "other_20": 0,
+            "other_21": 1
+        },
+        {
+            "level#details": {
+                "_fuseValueU8": 82,
+                "_nineTickKnobPos": 3.9,
+                "_fuseParamIndex": 0,
+                "_fuseParamType": 1,
+                "_fuseParamName": "Level",
+                "_fuseValueU16a": 20992,
+                "_fuseValueU16b": 21074,
+                "_fuseRawFloatValue": 0.31889763
+            },
+            "diffusion": 0.028,
+            "diffusion#details": {
+                "_fuseValueU8": 8,
+                "_nineTickKnobPos": 1.2,
+                "_fuseParamIndex": 3,
+                "_fuseParamType": 1,
+                "_fuseParamName": "Diffusion",
+                "_fuseValueU16a": 2048,
+                "_fuseValueU16b": 2056,
+                "_fuseRawFloatValue": 0.027559055
+            },
+            "tone": 0.693,
+            "level": 0.319,
+            "name": "LargeHall",
+            "dwell#details": {
+                "_fuseValueU8": 128,
+                "_nineTickKnobPos": 5.5,
+                "_fuseParamIndex": 2,
+                "_fuseParamType": 1,
+                "_fuseParamName": "Dwell",
+                "_fuseValueU16a": 32768,
+                "_fuseValueU16b": 32896,
+                "_fuseRawFloatValue": 0.5
+            },
+            "tone#details": {
+                "_fuseValueU8": 177,
+                "_nineTickKnobPos": 7.2,
+                "_fuseParamIndex": 4,
+                "_fuseParamType": 1,
+                "_fuseParamName": "Tone",
+                "_fuseValueU16a": 45312,
+                "_fuseValueU16b": 45489,
+                "_fuseRawFloatValue": 0.6929134
+            },
+            "decay": 0.256,
+            "dwell": 0.5,
+            "type": "reverb",
+            "decay#details": {
+                "_fuseValueU8": 66,
+                "_nineTickKnobPos": 3.3,
+                "_fuseParamIndex": 1,
+                "_fuseParamType": 1,
+                "_fuseParamName": "Decay",
+                "_fuseValueU16a": 16896,
+                "_fuseValueU16b": 16962,
+                "_fuseRawFloatValue": 0.2559055
+            }
+        }
+    ]
+}
