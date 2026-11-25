@@ -12,7 +12,7 @@ only `dbus-fast`; that change is tested without an amp so far.
 
 ## What works
 
-Run from a checkout as `python-ble-scripts/mmp_<name>.py`, or from the `maneline` package as
+Run from a checkout as `ble-python-scripts/mmp_<name>.py`, or from the `maneline` package as
 `mmp-<name>` (for example `mmp-backup`; installing it on each distribution:
 [deployment/packages/maneline/README.md](../deployment/packages/maneline/README.md)).
 Only one program at a time can control the amp
@@ -81,7 +81,7 @@ sends it when a client disconnects, when an `async with` block ends and when
 `asyncio.run()` shuts down. While audio is connected, Bleak also considers the
 device connected already and never brings up LE.
 
-`scripts/mmp_bluez.py` therefore talks to BlueZ directly, through its per-bearer
+`ble-python-scripts/mmp_bluez.py` therefore talks to BlueZ directly, through its per-bearer
 interface `org.bluez.Bearer.LE1`. It connects and disconnects only the LE link,
 and watches that link rather than the device. `mmp_ble.py` says so:
 
@@ -111,11 +111,11 @@ They no longer fall back to Bleak, which would drop audio on every disconnect.
 
 ## One-time BlueZ setup
 
-Steps 2 and 3 below are automated by `scripts/bluez_setup.sh` (from a package:
+Steps 2 and 3 below are automated by `ble-python-scripts/bluez_setup.sh` (from a package:
 `mmp-bluez-setup`); it also checks step 1. Run it as root, with the amp switched on:
 
 ```sh
-sudo scripts/bluez_setup.sh AA:BB:CC:DD:EE:FF            # your amp's address
+sudo ble-python-scripts/bluez_setup.sh AA:BB:CC:DD:EE:FF            # your amp's address
 ```
 
 It stops and starts bluetoothd once, so every Bluetooth device reconnects. If
@@ -222,7 +222,7 @@ it is idle.
 ## Checking
 
 ```sh
-python -m unittest discover -s scripts/tests -v
+python -m unittest discover -s ble-python-scripts/tests -v
 bluetoothctl info AA:BB:CC:DD:EE:FF | grep -E '(BREDR|LE)\.(Bonded|Connected)'
 busctl --system get-property org.bluez $DEV org.bluez.Device1 PreferredBearer
 ```

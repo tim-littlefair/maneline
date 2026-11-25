@@ -23,7 +23,7 @@
 # is that it should be run manually under the root user's 
 # credentials to pre-condition the BlueZ stack config/cache
 # state for a specific MMP's Bluetooth address ready for 
-# scripts/mmp_web.py (or any other alternate connection 
+# ble-python-scripts/mmp_web.py (or any other alternate connection 
 # script or application) to run on it.  
 
 # A sequence which appears to work for me as of this version is:
@@ -37,8 +37,8 @@
 # 3) Switch the MMP on, put it in pairing mode, and 
 #    pair using the Ubuntu blueman UI.
 # 4) Disconnect and run the following command line:
-#    'sh scripts/bluez_setup.sh AA:BB:CC:DD:EE:FF'
-# 5) Run python scripts/mmp_web.py
+#    'sh ble-python-scripts/bluez_setup.sh AA:BB:CC:DD:EE:FF'
+# 5) Run python ble-python-scripts/mmp_web.py
 # 6) Browse to http://localhost:8081
 # Matrix of buttons for presets should appear within 
 # a couple of seconds.

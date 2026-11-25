@@ -1,7 +1,7 @@
 # maneline as a distribution package
 
 The package `maneline` contains, for now, maneline's Mustang Micro Plus programs
-(`scripts/mmp_*.py`), the browser page `mmp_web.py` serves and the Mustang Micro Plus
+(`ble-python-scripts/mmp_*.py`), the browser page `mmp_web.py` serves and the Mustang Micro Plus
 documents. It needs Python 3.11+, `dbus-fast` and BlueZ 5.86+, all taken from the
 distribution: no venv, no `bleak` on Linux.
 
@@ -14,7 +14,7 @@ distribution: no venv, no `bleak` on Linux.
 
 Installed layout: `/usr/share/maneline/scripts`, `/usr/share/maneline/web_ui`,
 commands `mmp-web`, `mmp-ble`, `mmp-backup`, `mmp-restore`, `mmp-audition`, `mmp-check`,
-`mmp-level` and `mmp-bluez-setup` (`scripts/bluez_setup.sh`, the one-time BlueZ setup) in
+`mmp-level` and `mmp-bluez-setup` (`ble-python-scripts/bluez_setup.sh`, the one-time BlueZ setup) in
 `/usr/bin`, the documents in the package's doc directory. Backups go to
 `~/.local/share/maneline/backups` unless `--out` or `MMP_WORK_DIR` says otherwise.
 

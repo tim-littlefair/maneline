@@ -53,7 +53,7 @@ desktop apps) is not part of this package.
 deployment/packages/maneline/install.sh %{buildroot} %{_docdir}/%{name}
 
 %check
-python3 -m unittest discover -s scripts/tests
+python3 -m unittest discover -s ble-python-scripts/tests
 
 %files
 %license LICENSE

@@ -51,7 +51,7 @@ class HTTPTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(caught.exception.status, 503)
 
     async def test_static_paths_cannot_escape_web_directory(self):
-        for path in ('/../../scripts/mmp_web.py', '/api/missing'):
+        for path in ('/../../ble-python-scripts/mmp_web.py', '/api/missing'):
             with self.subTest(path=path), self.assertRaises(HTTPError) as caught:
                 await dispatch('GET', path, self.headers, b'', self.session)
             self.assertEqual(caught.exception.status, 404)
