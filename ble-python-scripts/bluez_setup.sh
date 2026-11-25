@@ -105,20 +105,23 @@ set_bearer() {
 
 
 pair_and_bond_le() {
+    set_bearer le
     if false || [ ! -z "$(which busctl)" ]
     then
         # WIP If busctl is available we might prefer to do an LE connect/pair/trust
         # via the org.bluez.Bearer.LE1 interface rather than switching PreferredBearer 
         # out to 'le' and back to 'bredr'
-        busctl --system call org.bluez $mmp_dbus_addr org.bluez.Bearer.LE1 Connect $mmp_bd_addr
-        busctl --system call org.bluez $mmp_dbus_addr org.bluez.Bearer.LE1 Connect $mmp_bd_addr
+        busctl --system introspect org.bluez $mmp_dbus_addr org.bluez.Device1
+        busctl --system introspect org.bluez $mmp_dbus_addr org.bluez.Bearer.LE1
+        busctl --system call org.bluez $mmp_dbus_addr org.bluez.Device1 Connect
+        busctl --system call org.bluez $mmp_dbus_addr org.bluez.Device1 Pair
+        # busctl --system call org.bluez $mmp_dbus_addr org.bluez.Device1 Trust s $mmp_bd_addr
     else
-        # set_bearer le
         bluetoothctl connect $mmp_bd_addr
         bluetoothctl pair $mmp_bd_addr
         bluetoothctl trust $mmp_bd_addr             
-        # set_bearer bredr
     fi
+    set_bearer last-used
 }
 
 if [ -z $host_bd_addr ]

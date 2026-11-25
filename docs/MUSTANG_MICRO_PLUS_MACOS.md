@@ -15,7 +15,7 @@ Editing single parameters live is not implemented.
 ## Setup
 
 Use Python 3.11 or later with Bleak installed. The Python environment created by
-`scripts/rebuild_sdk.sh` includes Bleak, or create an isolated environment:
+`ble-python-scripts/rebuild_sdk.sh` includes Bleak, or create an isolated environment:
 
 ```sh
 uv venv _work/mmp-venv
@@ -71,10 +71,10 @@ below, so only one program holds the connection.
 ## One-shot command-line controls
 
 ```sh
-_work/mmp-venv/bin/python scripts/mmp_ble.py scan
-_work/mmp-venv/bin/python scripts/mmp_ble.py status
-_work/mmp-venv/bin/python scripts/mmp_ble.py presets
-_work/mmp-venv/bin/python scripts/mmp_ble.py preset 72
+_work/mmp-venv/bin/python ble-python-scripts/mmp_ble.py scan
+_work/mmp-venv/bin/python ble-python-scripts/mmp_ble.py status
+_work/mmp-venv/bin/python ble-python-scripts/mmp_ble.py presets
+_work/mmp-venv/bin/python ble-python-scripts/mmp_ble.py preset 72
 ```
 
 These commands connect, perform one operation and disconnect. Put `--device ID`
@@ -104,7 +104,7 @@ from the browser without reconnecting. The amplifier was restored to preset 71.
 Disconnect handling is also covered by simulated lifecycle tests.
 
 ```sh
-_work/mmp-venv/bin/python -m unittest discover -s scripts/tests -v
+_work/mmp-venv/bin/python -m unittest discover -s ble-python-scripts/tests -v
 ```
 
 Tests cover captured packets, fragmented names, invalid input, acknowledgement

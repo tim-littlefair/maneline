@@ -1,14 +1,31 @@
 #!/bin/bash
 
+
 if [ "$1" = "--micro-plus" ]; then
     shift
-    micro_python=${MANELINE_PYTHON:-$(pwd)/_work/mmp-venv/bin/python}
+    if python -c "import bleak"
+    then
+        # Development of maneline Java app normally occurs using an SDK
+        # built using scripts/rebuild_sdk.sh which presently includes 
+        # Python 3.13 or 3.14 with dbus_fast and bleak packages installed.
+        # The top level directory of the built SDK includes a script 
+        # sdk_vars.sh which sets up path environment variables for SDK 
+        # tools and a Python virtual environment with dbus_fast and bleak.
+        micro_python=$(which python)
+    elif [ -z "$MANELINE_PYTHON" ]
+    then
+        echo Using $MANELINE_PYTHON
+        micro_python=${MANELINE_PYTHON}
+    else 
+        micro_python=$(pwd)/_work/mmp-venv/bin/python}
+    fi
+
     if [ ! -x "$micro_python" ]; then
         echo 'Set MANELINE_PYTHON to a Python 3.11+ interpreter with Bleak installed.' >&2
         echo 'See docs/MUSTANG_MICRO_PLUS_MACOS.md for setup.' >&2
         exit 1
     fi
-    exec "$micro_python" "$(pwd)/scripts/mmp_web.py" "$@"
+    exec "$micro_python" "$(pwd)/ble-python-scripts/mmp_web.py" "$@"
 fi
 
 rundir=$(pwd)/_work/webhome

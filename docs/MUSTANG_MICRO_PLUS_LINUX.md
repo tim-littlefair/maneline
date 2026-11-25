@@ -12,7 +12,7 @@ only `dbus-fast`; that change is tested without an amp so far.
 
 ## What works
 
-Run from a checkout as `scripts/mmp_<name>.py`, or from the `maneline` package as
+Run from a checkout as `python-ble-scripts/mmp_<name>.py`, or from the `maneline` package as
 `mmp-<name>` (for example `mmp-backup`; installing it on each distribution:
 [deployment/packages/maneline/README.md](../deployment/packages/maneline/README.md)).
 Only one program at a time can control the amp
@@ -97,9 +97,9 @@ the device's `UUIDs`), whatever the device is called; a paired device named
 "Mustang Micro Plus" also counts, for the case that BlueZ does not list its
 services. `mmp_ble.py scan` lists the paired amps. With more than one, pass
 `--device` with the Bluetooth address: `mmp_ble.py` insists on it, the other
-scripts and the browser server take the first amp BlueZ lists. A paired amp is known to BlueZ while it is switched
-off, so an amp that is off shows as "does not answer" after the connection
-timeout rather than as "not found".
+scripts and the browser server take the first amp BlueZ lists. A paired amp is 
+known to BlueZ while it is switched off, so an amp that is off shows as 
+"does not answer" after the connection timeout rather than as "not found".
 
 The interface appeared in BlueZ 5.84, but its `Connect` and `Disconnect` were empty
 until 5.86 (`src/bearer.c`: "TODO", no reply), so 5.86 is the first version that works.
