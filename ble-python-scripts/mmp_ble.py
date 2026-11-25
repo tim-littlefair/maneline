@@ -10,7 +10,9 @@ from pathlib import Path
 SERVICE = '90559580-b707-11ee-acb1-7b7e30f1af54'
 REQUEST = '820a7e34-4e0a-4f90-8520-04ebce35a3a1'
 RESPONSE = '1017adcc-dcbc-4387-a59f-2546b2ea5bb0'
-NAME = 'Mustang Micro Plus'
+
+NAME = 'Mustang'
+
 # Scanning with a service-UUID discovery filter makes BlueZ 5.87 re-initialize
 # an Intel AX201 adapter about 0.7 s in, failing with "No discovery started".
 # Matching by name already identifies the amp, so only filter on macOS.
