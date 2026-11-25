@@ -125,7 +125,7 @@ RUN chmod +x run.sh
 # Not confirmed working yet, but pushing WIP scripting to device to 
 # make experimentation easier
 
-COPY ./mmp_scripts ./mmp_scripts
+COPY ./ble-python-scripts ./ble-python-scripts
 
 # The list of packages installed in the next RUN matches
 # a list of packages installed early during the RUN for
@@ -143,10 +143,11 @@ COPY ./mmp_scripts ./mmp_scripts
 #RUN curl --no-progress-meter -L https://github.com/bluez/bluez/archive/refs/tags/5.88.zip -o bluez-5.88.zip
 #RUN unzip bluez-5.88.zip
 #RUN sh ./mmp_scripts/build_bluez.sh bluez-5.88 /var/run/maneline
-RUN apt-get install -y --install-recommends --no-install-suggests bluez bluez-tools systemctl dbus-bin
+RUN apt-get install -y --install-recommends --no-install-suggests bluez bluez-tools dbus-bin
 
 # candidates for adding to the initial baseline
-RUN apt-get install -y --no-install-recommends --no-install-suggests procps psmisc python-is-python3
+RUN apt-get install -y --no-install-recommends --no-install-suggests \
+    procps psmisc python-is-python3 openssh-server
 
 RUN python3 -m venv python.venv
 RUN python.venv/bin/python -m pip install bleak watchdog

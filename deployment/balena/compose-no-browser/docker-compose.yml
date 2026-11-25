@@ -16,11 +16,30 @@ version: "2"
 
 volumes:
   var-run-maneline:
-
+  # In order to support BLE-enabled Mustangs, bluetoothd must run 
+  # with the Experimental feature enabled in /etc/bluetooth/main.conf
+  # and must be able to modify BlueZ's cache of attributes of 
+  # previously seen devices.
+  etc-bluetooth:
+    driver: local
+    driver_opts: 
+      type: none
+      o: bind
+      device: /etc/bluetooth
+  var-lib-bluetooth:
+    driver: local
+    driver_opts: 
+      type: none
+      o: bind
+      device: /var/lib/bluetooth
+    
 services:
   maneline-web:
     volumes:
-      - var-run-maneline:/var/run/maneline
+    - var-run-maneline:/var/run/maneline
+    - etc-bluetooth:/etc/bluetooth
+    - var-lib-bluetooth:/var/lib/bluetooth
+
     build: .
       # If Balena supported compose version 3 we would be able
       # to use the build.additional_contexts parameter instead of having
