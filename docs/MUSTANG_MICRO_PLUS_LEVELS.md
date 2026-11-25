@@ -1,6 +1,6 @@
 # Mustang Micro Plus: measuring output level
 
-`scripts/mmp_level.py` checks what a preset change does to the amp's output, by
+`ble-python-scripts/mmp_level.py` checks what a preset change does to the amp's output, by
 recording the amp's USB output while the preset is auditioned on a reserved slot
 (default 100). Nothing is written to the amp, and it ends on the original preset.
 

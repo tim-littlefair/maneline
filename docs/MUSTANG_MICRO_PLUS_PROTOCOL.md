@@ -110,7 +110,7 @@ request performs a factory restore**; that is done with buttons at power-on.
 Fender's preset JSON (`product_id: "mustang-ltx"`). The JSON contains a graph of five
 `dspUnit` nodes: stomp, mod, amp, delay and reverb. Each node has a `FenderId` (e.g.
 `ACD_Jcm800GT`) and `dspUnitParameters`. The amp's `volume` is in dB.
-`scripts/mmp_lz4.py` decodes and encodes it.
+`ble-python-scripts/mmp_lz4.py` decodes and encodes it.
 
 There are two forms of the same preset:
 * **Stored** (`presetDataRequest`): exactly as saved, with short decimal numbers,
@@ -121,12 +121,12 @@ There are two forms of the same preset:
 
 ## Backup and restore
 
-`scripts/mmp_backup.py` reads all 100 slots with `presetDataRequest`. It is read-only
+`ble-python-scripts/mmp_backup.py` reads all 100 slots with `presetDataRequest`. It is read-only
 and doesn't switch presets. It writes one JSON file per slot and `manifest.json` with
 the raw LZ4 blocks to `_work/backups/`, which git does not track. 100 slots take about
 a minute.
 
-`scripts/mmp_restore.py BACKUP_DIR --slots …` writes slots back through the running
+`ble-python-scripts/mmp_restore.py BACKUP_DIR --slots …` writes slots back through the running
 agent (`savePresetAsRequest`, see "Saving" below) and reads each one back. A slot that
 already holds the backup's preset is not written; `--dry-run` only compares.
 
@@ -184,8 +184,8 @@ Of the requests marked **writes** above, only 18 is used and tested. 2 (clear), 
 
 Firmware updates can change any of the above. With the agent (`mmp_web.py`) running:
 
-    scripts/mmp_check.py BACKUP_DIR --all          # read-only apart from a switch and an audition
-    scripts/mmp_check.py BACKUP_DIR --all --write  # also save into slot 99 and put it back
+    ble-python-scripts/mmp_check.py BACKUP_DIR --all          # read-only apart from a switch and an audition
+    ble-python-scripts/mmp_check.py BACKUP_DIR --all --write  # also save into slot 99 and put it back
 
 It checks the connection, the firmware version (the agent now reports the handshake's
 `firmwareVersionStatus`) against the backup's, the 100 names and presets against the
@@ -194,7 +194,7 @@ backup, switching, an audition on slot 100 and, with `--write`, `savePresetAsReq
 
 ## Web server API
 
-`scripts/mmp_web.py` (default port 8081) owns the single BLE connection. Next to the
+`ble-python-scripts/mmp_web.py` (default port 8081) owns the single BLE connection. Next to the
 browser page it offers:
 
 | Request | Body / query | Does |

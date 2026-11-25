@@ -238,7 +238,7 @@ build_pyvenv_for_moonshine_wrangler() {
   python3.14 -m venv python.venv
   PYTHON_VENV=$sdk_absdir/python.venv
   $PYTHON_VENV/bin/pip install flake8 pycodestyle pytest requests sphinx
-  # Experimental script scripts/mmp_helper.py requires a BLE python library
+  # Experimental script ble-python-scripts/mmp_helper.py.disabled requires a BLE python library
   # called bleak
   $PYTHON_VENV/bin/pip install bleak
 }

@@ -3,7 +3,7 @@
 	dh $@
 
 override_dh_auto_test:
-	python3 -m unittest discover -s scripts/tests
+	python3 -m unittest discover -s ble-python-scripts/tests
 
 override_dh_auto_install:
 	deployment/packages/maneline/install.sh debian/$(shell dh_listpackages)

@@ -6,7 +6,7 @@
 #
 # Layout: /usr/share/maneline/scripts (the mmp_*.py programs),
 # /usr/share/maneline/web_ui (the browser page mmp_web.py serves),
-# /usr/bin/mmp-<name> for each program and mmp-bluez-setup (scripts/bluez_setup.sh),
+# /usr/bin/mmp-<name> for each program and mmp-bluez-setup (ble-python-scripts/bluez_setup.sh),
 # the documents in DOCDIR
 # (default /usr/share/doc/maneline).
 set -eu
@@ -15,7 +15,7 @@ docdir=${2:-/usr/share/doc/maneline}
 share=$dest/usr/share/maneline
 
 install -d "$share/scripts" "$share/web_ui/_static" "$dest/usr/bin" "$dest$docdir"
-for f in scripts/mmp_*.py; do
+for f in ble-python-scripts/mmp_*.py; do
     name=$(basename "$f" .py)
     # modules are imported; programs (those with a main part) get a command
     if ! grep -q '^if __name__ == .__main__.' "$f"; then
@@ -28,7 +28,7 @@ for f in scripts/mmp_*.py; do
     chmod 755 "$cmd"
 done
 # the one-time BlueZ setup for an amp (LE pairing, GATT cache), run as root
-install -m 755 scripts/bluez_setup.sh "$share/scripts/"
+install -m 755 ble-python-scripts/bluez_setup.sh "$share/scripts/"
 ln -s ../share/maneline/scripts/bluez_setup.sh "$dest/usr/bin/mmp-bluez-setup"
 install -m 644 web-app/web_ui/micro-plus.html "$share/web_ui/"
 install -m 644 web-app/web_ui/_static/micro-plus.js web-app/web_ui/_static/style-font.css \

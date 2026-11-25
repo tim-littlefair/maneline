@@ -18,7 +18,7 @@ sha256sums=('SKIP')
 
 check() {
     cd "$pkgname-$pkgver"
-    python -m unittest discover -s scripts/tests
+    python -m unittest discover -s ble-python-scripts/tests
 }
 
 package() {
