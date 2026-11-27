@@ -1,0 +1,2392 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fender Amp Check</title>
+<meta name="description" content="Connects to a Fender Mustang, GTX, LTX or Rumble amp over Bluetooth, reads what it reports, and builds a report you can check and send to the maneline project.">
+<style>
+:root {
+  --bg: #f6f5f2; --card: #ffffff; --fg: #1d1d1f; --muted: #5d5d66; --border: #dcd9d2;
+  --accent: #b3261e; --accent-fg: #ffffff; --ok: #1b7f3b; --warn: #9a6400; --bad: #b3261e;
+  --code-bg: #f0eee9; --focus: #2457c5; --info-bg: #e6eefc;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #16161a; --card: #1f1f24; --fg: #ececf0; --muted: #a3a3ad; --border: #34343c;
+    --accent: #ef6b5f; --accent-fg: #16161a; --ok: #5cc07f; --warn: #e0ac4a; --bad: #ef6b5f;
+    --code-bg: #26262c; --focus: #7aa2ff; --info-bg: #1d2740;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #16161a; --card: #1f1f24; --fg: #ececf0; --muted: #a3a3ad; --border: #34343c;
+  --accent: #ef6b5f; --accent-fg: #16161a; --ok: #5cc07f; --warn: #e0ac4a; --bad: #ef6b5f;
+  --code-bg: #26262c; --focus: #7aa2ff; --info-bg: #1d2740;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; }
+h1 { font-size: 1.6rem; margin: 0 0 4px; }
+h2 { font-size: 1.15rem; margin: 0 0 8px; display: flex; gap: 10px; align-items: baseline; }
+h2 .n { display: inline-grid; place-items: center; width: 1.6em; height: 1.6em; border-radius: 50%;
+  background: var(--accent); color: var(--accent-fg); font-size: .85rem; flex: none; }
+p { margin: 6px 0; }
+.lead { color: var(--muted); margin-bottom: 20px; }
+section { background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+  padding: 16px; margin: 14px 0; }
+section.off { opacity: .55; }
+ul, ol { padding-left: 1.3em; margin: 6px 0; }
+.privacy { border-left: 4px solid var(--ok); padding: 8px 12px; background: var(--code-bg); border-radius: 6px; }
+button { font: inherit; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--card); color: var(--fg); cursor: pointer; margin: 4px 6px 4px 0; }
+button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 600; }
+button:disabled { opacity: .5; cursor: default; }
+button.copy-cmd { font-size: .85rem; padding: 5px 10px; margin: 2px 0 8px; }
+#linux-tip pre.cmd { margin: 6px 0 4px; }
+.cmd-note { margin: 0; }
+button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+label { display: block; margin: 10px 0 4px; font-weight: 600; }
+label.inline { display: inline-flex; gap: 6px; align-items: center; font-weight: normal; margin: 4px 14px 4px 0; }
+input[type=text], textarea, select { width: 100%; font: inherit; padding: 8px; border-radius: 6px;
+  border: 1px solid var(--border); background: var(--bg); color: var(--fg); }
+textarea { min-height: 80px; }
+.status { color: var(--muted); min-height: 1.5em; }
+.error { color: var(--bad); }
+.blocker { background: var(--card); border: 2px solid var(--bad); border-radius: 10px; padding: 14px 16px; margin: 0 0 16px; }
+.blocker .error { display: block; font-weight: 700; font-size: 1.1rem; margin-bottom: 4px; }
+#checks { list-style: none; padding: 0; }
+#checks li { padding: 4px 0; border-bottom: 1px solid var(--border); display: flex; gap: 8px; }
+#checks li:last-child { border-bottom: 0; }
+.badge { flex: none; font-size: .78rem; font-weight: 700; padding: 1px 8px; border-radius: 10px;
+  border: 1px solid currentColor; height: fit-content; min-width: 70px; text-align: center; }
+.b-ok { color: var(--ok); } .b-failed, .b-noanswer { color: var(--bad); }
+.b-skipped, .b-info { color: var(--muted); } .b-partial, .b-warn { color: var(--warn); }
+.detail { color: var(--muted); font-size: .9rem; overflow-wrap: anywhere; }
+pre#report { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px;
+  max-height: 480px; overflow: auto; font: 12.5px/1.4 ui-monospace, Menlo, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+code { font: .9em ui-monospace, Menlo, Consolas, monospace; background: var(--code-bg); padding: 0 3px; border-radius: 4px; overflow-wrap: anywhere; }
+pre.cmd { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px;
+  overflow-x: auto; font: 13px/1.5 ui-monospace, Menlo, Consolas, monospace; }
+fieldset { border: 0; padding: 0; margin: 8px 0; }
+legend { font-weight: 600; padding: 0; }
+footer { color: var(--muted); font-size: .85rem; margin-top: 28px; }
+a { color: var(--focus); }
+#report-print { display: none; }
+.howto, .status.notice { background: var(--info-bg); border-left: 4px solid var(--focus); border-radius: 6px;
+  padding: 10px 14px; margin: 8px 0 12px; }
+.howto p { margin: 0 0 6px; } .howto p:last-child { margin: 0; }
+.status.notice { font-weight: 600; }
+@media print {
+  body { background: #fff; color: #000; font-size: 10.5pt; }
+  main > *:not(#step5) { display: none; }
+  #step5 > *:not(#report-print) { display: none; }
+  #step5 { opacity: 1 !important; border: 0; padding: 0; margin: 0; box-shadow: none; background: none; }
+  #report-print { display: block; color: #000; }
+  #report-print h1 { font-size: 18pt; margin: 0 0 8pt; }
+  #report-print h2 { font-size: 13pt; margin: 14pt 0 5pt; border-bottom: 1px solid #999; padding-bottom: 2pt; break-after: avoid; }
+  #report-print h3 { font-size: 11pt; margin: 10pt 0 4pt; break-after: avoid; }
+  #report-print table { border-collapse: collapse; width: 100%; margin: 4pt 0; }
+  #report-print th, #report-print td { border: 1px solid #bbb; padding: 2pt 4pt; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+  #report-print th { background: #eee; white-space: nowrap; }
+  #report-print tr { break-inside: avoid; }
+  #report-print pre { font: 7.5pt/1.3 ui-monospace, Menlo, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere;
+    border: 1px solid #ccc; padding: 4pt; margin: 4pt 0; }
+  #report-print code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .9em; background: none; padding: 0; }
+  #report-print blockquote { margin: 4pt 0; padding-left: 8pt; border-left: 3px solid #999; }
+  #report-print ul { margin: 2pt 0; padding-left: 16pt; }
+}
+</style>
+</head>
+<body>
+<main>
+<h1>Fender amp check</h1>
+<p class="lead">This page helps the maneline project make Fender amps work with free software.
+It connects to your amp over Bluetooth, asks it what it can do, and puts the answers into a
+report that you can check and then send. It takes about three minutes.</p>
+
+<section id="step0">
+<h2><span class="n">0</span> Before you start</h2>
+<ol>
+<li>Use <b>Chrome</b>, <b>Edge</b> or <b>Chromium</b> on a Windows, Mac or Linux computer, or <b>Chrome</b>
+on an Android phone or tablet. iPhone, iPad, Safari and Firefox can't talk to Bluetooth amps from a web page.</li>
+<li>Switch the amp on. Make sure its Bluetooth is on.</li>
+<li><b>Close the Fender Tone app</b> on your phone or tablet, or switch their Bluetooth off.
+The amp talks to only one app at a time.</li>
+<li>Keep the amp close to the computer or phone.</li>
+<li id="linux-tip" hidden><b>Linux, if this computer is paired with the amp for audio:</b> the browser
+would use the audio link, which has no control service; that is on the amp's Bluetooth LE link. After you
+choose the amp in step 1, the page shows a few lines to run in a terminal first, and step 5 shows how to
+undo them. Nothing to type: the lines find the amp by its name.</li>
+</ol>
+<p class="privacy"><b>Your privacy:</b> this page sends nothing anywhere. It only talks to your amp.
+At the end you see the whole report and decide whether to send it. The report leaves out the
+amp's Bluetooth address, Wi-Fi names and addresses, and who made your presets.</p>
+<p id="offline" class="detail">Want to read this page first, or use it without internet?
+<a href="index.html" download="fender-amp-check.html">Download this page</a>, then open the file
+in Chrome or Edge on your computer. It works the same.</p>
+<p id="browser-check" class="status"></p>
+</section>
+
+<section id="step1">
+<h2><span class="n">1</span> Connect</h2>
+<p>Click the button, pick your amp in the list that opens, then click <b>Pair</b> or <b>Connect</b>.</p>
+<button id="connect" class="primary">Find my amp</button>
+<label class="inline"><input type="checkbox" id="show-all"> My amp isn't in the list: show all Bluetooth devices</label>
+<p id="connect-status" class="status" role="status"></p>
+<div id="linux-prep" class="howto" hidden>
+<p><b>Linux: before connecting</b>, run these lines in a terminal (copy, paste, Enter; any shell, they
+run in bash). They look for "<span id="prep-name"></span>" among this computer's paired devices (or for
+a paired Fender amp, if the name differs), save its current Bluetooth setting, disconnect it and let
+Bluetooth use its LE link. If no amp is paired with this computer, they change nothing and say so.
+Step 5 shows the lines that put it back.</p>
+<pre class="cmd" id="linux-prep-cmd"></pre>
+<button type="button" class="copy-cmd" data-from="linux-prep-cmd">Copy these commands</button>
+<button type="button" id="connect-now" class="primary">Connect</button>
+</div>
+</section>
+
+<section id="step2" class="off">
+<h2><span class="n">2</span> Reading from the amp</h2>
+<p>This only reads. Your amp doesn't change.</p>
+<ul id="checks" aria-live="polite"></ul>
+</section>
+
+<section id="step3" class="off">
+<h2><span class="n">3</span> Short control test (you can skip it)</h2>
+<p>The page switches your amp to another preset for two seconds and back, and then turns
+one knob (such as gain) a little and back. <b>Nothing is saved</b>: your presets stay as
+they are. If you have changed the current sound without saving it, the test is skipped
+so your changes are kept.</p>
+<p class="detail">With a guitar plugged in you can hear the change, even if the amp's display stays dark.
+If you can't tell, answer "Not sure": the page reads the values back from the amp anyway.</p>
+<button id="control" class="primary" disabled>Run the control test</button>
+<button id="skip-control" disabled>Skip it</button>
+<p id="control-status" class="status" role="status"></p>
+<div id="observations" hidden>
+<fieldset><legend>Did the amp switch to another preset and back?</legend>
+<label class="inline"><input type="radio" name="q-switch" value="yes"> Yes</label>
+<label class="inline"><input type="radio" name="q-switch" value="no"> No</label>
+<label class="inline"><input type="radio" name="q-switch" value="not sure"> Not sure</label></fieldset>
+<fieldset><legend>Did the sound or a knob value change for a moment and come back?</legend>
+<label class="inline"><input type="radio" name="q-knob" value="yes"> Yes</label>
+<label class="inline"><input type="radio" name="q-knob" value="no"> No</label>
+<label class="inline"><input type="radio" name="q-knob" value="not sure"> Not sure</label></fieldset>
+</div>
+</section>
+
+<section id="step4" class="off">
+<h2><span class="n">4</span> A few questions</h2>
+<label for="n-model">Amp model, as printed on the amp</label>
+<input type="text" id="n-model" placeholder="e.g. Mustang GTX50">
+<label for="n-fw">Amp firmware version, if you know it</label>
+<input type="text" id="n-fw" placeholder="e.g. 1.2.3 (leave empty if you don't know)">
+<label for="n-usb">Is the amp also connected to this computer with a USB cable?</label>
+<select id="n-usb"><option value="">Please choose</option><option>No</option><option>Yes</option><option>I don't know</option></select>
+<label for="n-audio">Is the computer or a phone playing music to the amp over Bluetooth right now?</label>
+<select id="n-audio"><option value="">Please choose</option><option>No</option><option>Yes</option><option>I don't know</option></select>
+<label for="n-notes">Anything else? For example, if something odd happened</label>
+<textarea id="n-notes"></textarea>
+<button id="make-report" class="primary">Show the report</button>
+</section>
+
+<section id="step5" class="off">
+<h2><span class="n">5</span> Check the report, then send it</h2>
+<p>This is everything the report contains. Please read it. If you find something you don't
+want to share, you can stop here, or edit the saved file before you send it.</p>
+<pre id="report" tabindex="0"></pre>
+<div id="report-print"></div>
+<p id="removed" class="detail"></p>
+<button id="save" class="primary" disabled>Save report file</button>
+<button id="copy" disabled>Copy text</button>
+<button id="print" disabled>Print or save as PDF</button>
+<p><b>Then send it</b>, in one of these ways:</p>
+<div class="howto">
+<p id="email-help"><b>By email:</b> "Send by email" copies the whole report and opens your email program
+with the address and subject filled in. <b>In the email, paste the report where it says so</b>
+(Ctrl+V, on a Mac ⌘V), or attach the saved file, then send. If you write email in Gmail in the
+browser and no email program opens, use "Gmail in the browser" instead: it opens Gmail's new message
+the same way.</p>
+<p><b>On GitHub</b> (needs a GitHub account (free)): "Report on GitHub" also copies the report and opens a
+new issue. <b>Paste the report into the text box</b>, or drag the saved file there.</p>
+</div>
+<button id="email" disabled>Send by email</button>
+<button id="gmail" disabled>Gmail in the browser</button>
+<button id="github" disabled>Report on GitHub</button>
+<p id="send-status" class="status" role="status"></p>
+<div class="howto" id="linux-after" hidden>
+<p><b>Linux: put Bluetooth back as it was</b>, if you ran the lines from step 1. These read what
+those lines saved, set the amp's Bluetooth setting back and reconnect its audio link. If you ran
+nothing, they just say so.</p>
+<pre class="cmd" id="linux-after-cmd"></pre>
+<button type="button" class="copy-cmd" data-from="linux-after-cmd">Copy these commands</button>
+</div>
+</section>
+
+<section id="more">
+<h2>Optional: send even more details</h2>
+<p>If we ask you to, and you are fine with installing Python, a small program
+records a few things the browser can't see: more Bluetooth details, and how the amp shows
+up as a USB or Bluetooth audio device on your computer. It reads the amp in the same way as
+this page, makes the same kind of report for you to check, and sends nothing by itself.</p>
+<ol>
+<li>Install Python 3.9 or newer from <a href="https://www.python.org/downloads/" target="_blank" rel="noopener">python.org</a>
+(Windows: tick <b>Add python.exe to PATH</b> in the installer).</li>
+<li><a id="py-link" href="fender_amp_probe.py" download>Download the program</a> (fender_amp_probe.py)
+into your Downloads folder.</li>
+<li>Open <b>Terminal</b> (Mac, Linux) or <b>Command Prompt</b> (Windows) and type these lines,
+pressing Enter after each:
+<pre class="cmd">Windows:  cd Downloads
+          py -m pip install bleak
+          py fender_amp_probe.py
+
+Mac:      cd Downloads
+          python3 -m pip install bleak
+          python3 fender_amp_probe.py
+
+Linux:    cd ~/Downloads
+          python3 -m venv amp-venv
+          amp-venv/bin/pip install bleak
+          amp-venv/bin/python fender_amp_probe.py</pre>
+On Linux, Python is usually installed already. If the amp plays audio from this computer
+over Bluetooth, the program offers to disconnect that first.</li>
+<li>Answer its questions. It saves the report on your Desktop and offers to send it,
+like this page.</li>
+</ol>
+</section>
+
+<footer>Fender amp check <span id="version"></span>, part of
+<a href="https://github.com/tim-littlefair/maneline" target="_blank" rel="noopener">maneline</a>. Not made or endorsed by Fender.
+Fender, Mustang and Rumble are trademarks of Fender Musical Instruments Corporation.</footer>
+</main>
+
+<script id="probe-core">
+'use strict';
+// ---------------------------------------------------------------------------------------
+// Probe core: protocol tables, protobuf codec, privacy filter, amp scripts and report.
+// No DOM and no Bluetooth here, so tests/test_core.js can run it against simulated amps.
+// Keep in step with fender_amp_probe.py.
+// ---------------------------------------------------------------------------------------
+const PROBE_VERSION = '1.21';
+const CONFIG = {
+  email: 'joachim.banzhaf@gmail.com',   // address for "Send by email"; the button is hidden while this is empty
+  issues: 'https://github.com/tim-littlefair/maneline/issues/new',
+  home: 'https://banzhaf.chickenkiller.com/amp-probe/',   // the online page; a downloaded copy links back to it
+};
+
+// The message definitions this page needs, extracted from the Fender Tone app (amp-probe/build_schema.py).
+const SCHEMA = /*SCHEMA-BEGIN*/{
+"enums": {
+ "gt.BackupRestoreCompleteStatus.Status": {
+  "0":"SUCCESS", "1":"FAIL", "2":"DIRTY_CURR_PRESET", "3":"COMPRESS_FAIL",
+  "4":"DECOMPRESS_FAIL", "5":"INCORRECT_CRC", "6":"ABORT"
+ },
+ "gt.BtState": {
+  "0":"BT_OFF", "1":"BLE_ON", "2":"BLUETOOTH_STREAMING_ON", "3":"BLE_AND_BLUETOOTH_STREAMING_ON"
+ },
+ "gt.FileTransferBegin.FileType": {
+  "0":"JSON", "1":"BINARY"
+ },
+ "gt.FootswitchCommStatus.ProductID": {
+  "12":"FTSW_ID_ULT1", "8":"FTSW_ID_ULT4", "9":"FTSW_ID_SIMPLE", "11":"FTSW_ID_SWR_2BTN",
+  "10":"FTSW_ID_SM1500"
+ },
+ "gt.LooperState": {
+  "0":"STOPPED_CLEAN", "1":"STOPPED_DIRTY", "2":"RECORDING", "3":"OVERDUBBING", "4":"PLAYING",
+  "5":"NUM_LOOPER_STATES"
+ },
+ "gt.PacketStatus": {
+  "0":"SUCCESS", "1":"UNKNOWN_ERROR", "2":"INVALID_ID"
+ },
+ "gt.PacketType": {
+  "0":"LOAD_PRESET", "1":"NODE_REPLACE", "2":"NODE_ADD", "3":"NODE_INSERT_PRE", "4":"NODE_MOVE",
+  "5":"NODE_DELETE", "6":"SYNC", "7":"FACTORY_RESTORE", "8":"RESTORE_ALL_FACTORY",
+  "9":"PRESET_DISPLAY", "10":"FIND_NEXT_VALID_PRESET", "11":"FIND_PREVIOUS_VALID_PRESET",
+  "12":"FIND_NEXT_EMPTY_SLOT", "13":"FIND_PREVIOUS_EMPTY_SLOT", "14":"LOAD_PRESET_IF_VALID",
+  "15":"SAVE_CURRENT_PRESET", "16":"DELETE_PRESET", "17":"RENAME_PRESET",
+  "18":"NODE_INSERT_POST", "19":"TONE_SYNC", "20":"SAVE_TO", "21":"BACKUP", "22":"RESTORE",
+  "23":"SYNC_CURRRENT_PRESET_TONE"
+ },
+ "gt.SSIDEntry.Protocol": {
+  "0":"NONE", "1":"WEP", "2":"WPA_WPA2_PSK", "3":"EAP_802_1X"
+ },
+ "gt.WifiConnectToSSIDMessage.Protocol": {
+  "0":"NONE", "1":"WEP", "2":"WPA_WPA2_PSK", "3":"EAP_802_1X"
+ },
+ "gt.WifiConnectToSSIDResponse.ResponseCode": {
+  "0":"CONNECTED", "1":"NOT_FOUND", "2":"INVALID_PASSWORD_OR_SSID", "3":"INVALID_PROTOCOL"
+ },
+ "ltx.ErrorType": {
+  "0":"UNSUPPORTED", "1":"FAILED", "2":"INVALID_PARAM", "3":"INVALID_NODE_ID",
+  "4":"PARAM_OUT_OF_BOUNDS", "5":"FACTORY_RESTORE_IN_PROGRESS"
+ },
+ "ltx.ModalContext": {
+  "0":"SYNC_BEGIN", "1":"SYNC_END", "2":"BACKUP_BEGIN", "3":"BACKUP_END", "4":"RESTORE_BEGIN",
+  "5":"RESTORE_END", "6":"TUNER_ENABLE", "7":"TUNER_DISABLE", "8":"FACTORY_RESTORE_BEGIN",
+  "9":"FACTORY_RESTORE_END", "10":"TONE_BUSY_BEGIN", "11":"TONE_BUSY_END"
+ },
+ "ltx.ModalState": {
+  "0":"OK", "1":"FAIL"
+ },
+ "ltx.ProtobufOutputPower": {
+  "0":"One", "1":"Two", "2":"Three", "3":"Four"
+ },
+ "ltx.ProtobufPresetMode": {
+  "0":"Sequential", "1":"Bank"
+ },
+ "ltx.ProtobufProductId": {
+  "0":"LTX100", "1":"LTX50"
+ },
+ "ltx.ResponseType": {
+  "0":"UNSOLICITED", "1":"NOT_LAST_ACK", "2":"IS_LAST_ACK"
+ },
+ "mp.EqPreset": {
+  "0":"FLAT", "1":"BRIGHT_CUT_1", "2":"BRIGHT_CUT_2", "3":"LOW_CUT_1", "4":"LOW_CUT_2",
+  "5":"BRIGHT_BOOST_1", "6":"BRIGHT_BOOST_2", "7":"BASS_BOOST_1", "8":"BASS_BOOST_2"
+ },
+ "mp.ErrorType": {
+  "0":"UNSUPPORTED", "1":"FAILED", "2":"INVALID_PARAM", "3":"INVALID_NODE_ID",
+  "4":"PARAM_OUT_OF_BOUNDS", "5":"FACTORY_RESTORE_IN_PROGRESS"
+ },
+ "mp.ModalContext": {
+  "0":"SYNC_BEGIN", "1":"SYNC_END", "2":"BACKUP_BEGIN", "3":"BACKUP_END", "4":"RESTORE_BEGIN",
+  "5":"RESTORE_END", "6":"TUNER_ENABLE", "7":"TUNER_DISABLE", "8":"FACTORY_RESTORE_BEGIN",
+  "9":"FACTORY_RESTORE_END", "10":"TONE_BUSY_BEGIN", "11":"TONE_BUSY_END"
+ },
+ "mp.ModalState": {
+  "0":"OK", "1":"FAIL"
+ },
+ "mp.ResponseType": {
+  "0":"UNSOLICITED", "1":"NOT_LAST_ACK", "2":"IS_LAST_ACK"
+ }
+},
+"messages": {
+ "gt.BLEStatus": [
+  [1,"status",8,"",false,-1]
+ ],
+ "gt.BackupRestoreCompleteStatus": [
+  [1,"success",14,"gt.BackupRestoreCompleteStatus.Status",false,-1]
+ ],
+ "gt.BackupRestoreEnableStatus": [
+  [1,"enable",8,"",false,-1]
+ ],
+ "gt.BpmStatus": [
+  [1,"value",2,"",false,-1]
+ ],
+ "gt.BpmStatusRequest": [
+  [1,"request",8,"",false,-1]
+ ],
+ "gt.BtStatus": [
+  [1,"state",14,"gt.BtState",false,-1]
+ ],
+ "gt.BtStatusRequest": [
+  [1,"request",8,"",false,-1]
+ ],
+ "gt.BtStreamingStatus": [
+  [1,"status",8,"",false,-1]
+ ],
+ "gt.CloudPresetStatus": [
+  [1,"cloudPreset",8,"",false,-1]
+ ],
+ "gt.ConsoleMessage": [
+  [1,"command",9,"",false,-1], [2,"argument",9,"",false,-1]
+ ],
+ "gt.CurrentLoadedPresetIdStatus": [
+  [1,"currentLoadedPresetId",9,"",false,-1]
+ ],
+ "gt.DspUnitParameterStatus": [
+  [1,"nodeId",9,"",false,-1], [2,"parameterId",9,"",false,-1],
+  [3,"floatParameter",2,"",false,0], [4,"stringParameter",9,"",false,0],
+  [5,"sint32Parameter",17,"",false,0], [6,"boolParameter",8,"",false,0]
+ ],
+ "gt.EffectsLoopReturnStatus": [
+  [1,"leftIsConnected",8,"",false,-1], [2,"rightIsConnected",8,"",false,-1]
+ ],
+ "gt.FenderMessage": [
+  [102,"setDspUnitParameter",11,"gt.SetDspUnitParameter",false,0],
+  [106,"getDspUnitParameter",11,"gt.GetDspUnitParameter",false,0],
+  [124,"looperStatus",11,"gt.LooperStatus",false,0],
+  [126,"globalEQSync",11,"gt.GlobalEQSync",false,0],
+  [201,"nodeStatus",11,"gt.NodeStatus",false,0],
+  [203,"dspUnitParameterStatus",11,"gt.DspUnitParameterStatus",false,0],
+  [204,"currentLoadedPresetIdStatus",11,"gt.CurrentLoadedPresetIdStatus",false,0],
+  [205,"tunerNoteStatus",11,"gt.TunerNoteStatus",false,0],
+  [206,"tunerEnableStatus",11,"gt.TunerEnableStatus",false,0],
+  [207,"masterVolumeStatus",11,"gt.MasterVolumeStatus",false,0],
+  [208,"presetStatus",11,"gt.PresetStatus",false,0],
+  [209,"productIdentificationStatus",11,"gt.ProductIdentificationStatus",false,0],
+  [210,"headphonesConnectedStatus",11,"gt.HeadphonesConnectedStatus",false,0],
+  [211,"effectsLoopReturnStatus",11,"gt.EffectsLoopReturnStatus",false,0],
+  [212,"processorPercentageAvailableStatus",11,"gt.ProcessorPercentageAvailableStatus",false,0],
+  [213,"masterVolumeNotDBStatus",11,"gt.MasterVolumeNotDBStatus",false,0],
+  [214,"presetEditedStatus",11,"gt.PresetEditedStatus",false,0],
+  [215,"tunerNoteViewStatus",11,"gt.TunerNoteViewStatus",false,0],
+  [300,"rawJSON",11,"gt.RawJSON",false,0],
+  [301,"consoleMessage",11,"gt.ConsoleMessage",false,0],
+  [302,"timestampMessage",11,"gt.TimestampMessage",false,0],
+  [303,"packetBegin",11,"gt.PacketBegin",false,0], [304,"packetEnd",11,"gt.PacketEnd",false,0],
+  [305,"presetCount",11,"gt.PresetCount",false,0],
+  [306,"networkStatus",11,"gt.NetworkStatus",false,0],
+  [307,"wifiConnectToSSIDMessage",11,"gt.WifiConnectToSSIDMessage",false,0],
+  [308,"wifiConnectToSSIDResponse",11,"gt.WifiConnectToSSIDResponse",false,0],
+  [311,"wifiOnOffCmdResponse",11,"gt.WifiOnOffCmdResponse",false,0],
+  [312,"wifiScanForNetworksMessage",11,"gt.WifiScanForNetworksMessage",false,0],
+  [314,"scanCommandFailed",11,"gt.ScanCommandFailed",false,0],
+  [407,"loadPresetIfValid",11,"gt.LoadPresetIfValid",false,0],
+  [418,"movePresetComplete",11,"gt.MovePresetComplete",false,0],
+  [424,"retrievePreset",11,"gt.RetrievePreset",false,0],
+  [427,"fileTransferBegin",11,"gt.FileTransferBegin",false,0],
+  [428,"fileTransferData",11,"gt.FileTransferData",false,0],
+  [429,"fileTransferEnd",11,"gt.FileTransferEnd",false,0],
+  [430,"backupRestoreEnableStatus",11,"gt.BackupRestoreEnableStatus",false,0],
+  [431,"backupRestoreCompleteStatus",11,"gt.BackupRestoreCompleteStatus",false,0],
+  [435,"restartAmpMessage",11,"gt.RestartAmpMessage",false,0],
+  [438,"bpmStatus",11,"gt.BpmStatus",false,0],
+  [441,"globalBpmModeStatus",11,"gt.GlobalBpmModeStatus",false,0],
+  [444,"globalBpmModeStatusRequest",11,"gt.GlobalBpmModeStatusRequest",false,0],
+  [445,"bpmStatusRequest",11,"gt.BpmStatusRequest",false,0],
+  [500,"packetStartMTU",11,"gt.PacketStartMTU",false,0],
+  [501,"packetDataMTU",11,"gt.PacketDataMTU",false,0],
+  [502,"packetStopMTU",11,"gt.PacketStopMTU",false,0],
+  [503,"loopbackTest",11,"gt.LoopbackTest",false,0],
+  [602,"footswitchCommStatus",11,"gt.FootswitchCommStatus",false,0],
+  [803,"setlistStatus",11,"gt.SetlistStatus",false,0],
+  [805,"setlistManagerSync",11,"gt.SetlistManagerSync",false,0],
+  [807,"setlistViewAddMenuItemOneBeforeEnd",11,"gt.SetlistViewAddMenuItemOneBeforeEnd",false,0],
+  [821,"setlistManagerReorderPresetComplete",11,"gt.SetlistManagerReorderPresetComplete",false,0],
+  [825,"setlistSyncEnd",11,"gt.SetlistSyncEnd",false,0],
+  [850,"qAStatus",11,"gt.QAStatus",false,0],
+  [854,"qAViewAddMenuItemOneBeforeEnd",11,"gt.QAViewAddMenuItemOneBeforeEnd",false,0],
+  [901,"toneSync",11,"gt.ToneSync",false,0], [902,"systemStatus",11,"gt.SystemStatus",false,0],
+  [903,"presetInfoMessage",11,"gt.PresetInfoMessage",false,0],
+  [904,"presetJSONMessage",11,"gt.PresetJSONMessage",false,0],
+  [908,"usbGainStatus",11,"gt.UsbGainStatus",false,0],
+  [912,"btStatus",11,"gt.BtStatus",false,0],
+  [913,"btStatusRequest",11,"gt.BtStatusRequest",false,0],
+  [916,"setDownloadServerComplete",11,"gt.SetDownloadServerComplete",false,0],
+  [917,"btStreamingStatus",11,"gt.BtStreamingStatus",false,0],
+  [918,"bLEStatus",11,"gt.BLEStatus",false,0],
+  [920,"syncCurrentPresetToTone",11,"gt.SyncCurrentPresetToTone",false,0],
+  [1003,"cloudPresetStatus",11,"gt.CloudPresetStatus",false,0],
+  [1013,"saveViewGetCmdInfoStatus",11,"gt.SaveViewGetCmdInfoStatus",false,0],
+  [1023,"keyboardSaveResponse",11,"gt.KeyboardSaveResponse",false,0],
+  [1038,"globalFXAssignSync",11,"gt.GlobalFXAssignSync",false,0],
+  [1040,"globalFXAssignStatus",11,"gt.GlobalFXAssignStatus",false,0],
+  [1050,"globalFXAssignSyncMgt7",11,"gt.GlobalFXAssignSyncMgt7",false,0]
+ ],
+ "gt.FileTransferBegin": [
+  [1,"id",5,"",false,-1], [2,"numPackets",5,"",false,-1], [3,"numBytes",5,"",false,-1],
+  [4,"fileType",14,"gt.FileTransferBegin.FileType",false,-1]
+ ],
+ "gt.FileTransferData": [
+  [1,"seqNumber",5,"",false,-1], [2,"id",5,"",false,-1], [3,"data",12,"",false,-1]
+ ],
+ "gt.FileTransferEnd": [
+  [1,"id",5,"",false,-1], [2,"crcCheck",5,"",false,-1]
+ ],
+ "gt.FootswitchCommStatus": [
+  [1,"ftswProductIdMsg",14,"gt.FootswitchCommStatus.ProductID",false,-1]
+ ],
+ "gt.GetDspUnitParameter": [
+  [1,"nodeId",9,"",false,-1], [2,"parameterId",9,"",false,-1]
+ ],
+ "gt.GlobalBpmModeStatus": [
+  [1,"globalBpmOn",8,"",false,-1]
+ ],
+ "gt.GlobalBpmModeStatusRequest": [
+  [1,"request",8,"",false,-1]
+ ],
+ "gt.GlobalEQSync": [
+  [1,"sync",8,"",false,-1]
+ ],
+ "gt.GlobalFXAssignStatus": [
+  [1,"assign",9,"",false,-1]
+ ],
+ "gt.GlobalFXAssignSync": [
+  [1,"sync",8,"",false,-1]
+ ],
+ "gt.GlobalFXAssignSyncMgt7": [
+  [1,"sync",8,"",false,-1]
+ ],
+ "gt.HeadphonesConnectedStatus": [
+  [1,"isConnected",8,"",false,-1]
+ ],
+ "gt.KeyboardSaveResponse": [
+  [1,"text",9,"",false,-1]
+ ],
+ "gt.LoadPresetIfValid": [
+  [1,"slot",5,"",false,-1], [2,"sendToTone",8,"",false,-1], [3,"setlistIndex",5,"",false,-1]
+ ],
+ "gt.LoopbackTest": [
+  [1,"data",9,"",false,-1]
+ ],
+ "gt.LooperStatus": [
+  [1,"state",14,"gt.LooperState",false,-1], [2,"trackCount",5,"",false,-1]
+ ],
+ "gt.MasterVolumeNotDBStatus": [
+  [1,"value",2,"",false,-1]
+ ],
+ "gt.MasterVolumeStatus": [
+  [1,"valueDB",2,"",false,-1]
+ ],
+ "gt.MovePresetComplete": [
+  [1,"isComplete",8,"",false,-1]
+ ],
+ "gt.NetworkStatus": [
+  [1,"connectionStatus",9,"",false,-1], [2,"connectedSSID",9,"",false,-1],
+  [3,"connectedIP",9,"",false,-1], [4,"availableNetworks",11,"gt.SSIDEntry",true,-1]
+ ],
+ "gt.NodeEntry": [
+  [1,"nodeId",9,"",false,-1], [2,"fenderId",9,"",false,-1], [3,"bypass",8,"",false,-1]
+ ],
+ "gt.NodeStatus": [
+  [1,"nodeStatus",11,"gt.NodeEntry",true,-1]
+ ],
+ "gt.PacketBegin": [
+  [1,"packetType",14,"gt.PacketType",false,-1]
+ ],
+ "gt.PacketDataMTU": [
+  [1,"seqNumber",5,"",false,-1], [2,"id",5,"",false,-1], [3,"data",12,"",false,-1]
+ ],
+ "gt.PacketEnd": [
+  [1,"packetType",14,"gt.PacketType",false,-1], [2,"packetStatus",14,"gt.PacketStatus",false,-1]
+ ],
+ "gt.PacketStartMTU": [
+  [1,"numBytes",5,"",false,-1], [2,"id",5,"",false,-1]
+ ],
+ "gt.PacketStopMTU": [
+  [1,"id",5,"",false,-1], [2,"crcCheck",5,"",false,-1]
+ ],
+ "gt.PresetCount": [
+  [1,"count",17,"",false,-1]
+ ],
+ "gt.PresetEditedStatus": [
+  [1,"presetEdited",8,"",false,-1]
+ ],
+ "gt.PresetInfoMessage": [
+  [1,"slotNumber",5,"",false,-1], [2,"displayName",9,"",false,-1],
+  [3,"preset_id",9,"",false,-1], [4,"author",9,"",false,-1], [5,"timestamp",3,"",false,-1],
+  [6,"created_at",3,"",false,-1], [7,"product_id",9,"",false,-1],
+  [8,"is_factory_default",8,"",false,-1], [9,"isEmpty",8,"",false,-1],
+  [10,"source_id",9,"",false,-1]
+ ],
+ "gt.PresetJSONMessage": [
+  [1,"data",9,"",false,-1], [2,"slotIndex",5,"",false,-1]
+ ],
+ "gt.PresetStatus": [
+  [1,"slot",13,"",false,-1], [2,"displayName",9,"",false,-1], [3,"isEmpty",8,"",false,-1]
+ ],
+ "gt.ProcessorPercentageAvailableStatus": [
+  [1,"percent",2,"",false,-1]
+ ],
+ "gt.ProductIdentificationStatus": [
+  [1,"id",9,"",false,-1]
+ ],
+ "gt.QAStatus": [
+  [1,"qa1",13,"",false,-1], [2,"qa2",13,"",false,-1], [3,"qa3",13,"",false,-1]
+ ],
+ "gt.QAViewAddMenuItemOneBeforeEnd": [
+  [1,"displayText",9,"",false,-1]
+ ],
+ "gt.RawJSON": [
+  [1,"data",9,"",false,-1]
+ ],
+ "gt.RestartAmpMessage": [
+  [1,"bRestart",8,"",false,-1]
+ ],
+ "gt.RetrievePreset": [
+  [1,"slot",5,"",false,-1]
+ ],
+ "gt.SSIDEntry": [
+  [1,"ssid",9,"",false,-1], [2,"protocol",14,"gt.SSIDEntry.Protocol",false,-1],
+  [3,"inSupplicant",8,"",false,-1], [4,"signalStrength",5,"",false,-1]
+ ],
+ "gt.SaveViewGetCmdInfoStatus": [
+  [1,"cmdInfo",9,"",false,-1]
+ ],
+ "gt.ScanCommandFailed": [
+  [1,"hackSoItGens",8,"",false,-1]
+ ],
+ "gt.SetDownloadServerComplete": [
+  [1,"complete",8,"",false,-1]
+ ],
+ "gt.SetDspUnitParameter": [
+  [1,"nodeId",9,"",false,-1], [2,"parameterId",9,"",false,-1],
+  [3,"floatParameter",2,"",false,0], [4,"stringParameter",9,"",false,0],
+  [5,"sint32Parameter",17,"",false,0], [6,"boolParameter",8,"",false,0]
+ ],
+ "gt.SetlistManagerReorderPresetComplete": [
+  [1,"isComplete",8,"",false,-1]
+ ],
+ "gt.SetlistManagerSync": [
+ ],
+ "gt.SetlistStatus": [
+  [1,"slot",13,"",false,-1], [2,"displayName",9,"",false,-1], [3,"setlist",13,"",true,-1],
+  [4,"Ids",9,"",true,-1]
+ ],
+ "gt.SetlistSyncEnd": [
+  [1,"successful",8,"",false,-1]
+ ],
+ "gt.SetlistViewAddMenuItemOneBeforeEnd": [
+  [1,"displayText",9,"",false,-1]
+ ],
+ "gt.SyncCurrentPresetToTone": [
+  [1,"value",8,"",false,-1]
+ ],
+ "gt.SystemStatus": [
+  [1,"address",9,"",false,-1], [2,"firmwareVersion",9,"",false,-1],
+  [3,"wifiState",9,"",false,-1], [4,"btName",9,"",false,-1], [5,"productId",9,"",false,-1]
+ ],
+ "gt.TimestampMessage": [
+  [1,"seconds",5,"",false,-1], [2,"nanoseconds",5,"",false,-1]
+ ],
+ "gt.ToneSync": [
+  [1,"hackSoItGens",8,"",false,-1]
+ ],
+ "gt.TunerEnableStatus": [
+  [1,"enable",8,"",false,-1]
+ ],
+ "gt.TunerNoteStatus": [
+  [1,"midiNoteNumberIndex",17,"",false,-1], [2,"midiNoteNumberCents",2,"",false,-1]
+ ],
+ "gt.TunerNoteViewStatus": [
+  [1,"midiNoteNumberIndex",17,"",false,-1], [2,"midiNoteNumberCents",2,"",false,-1]
+ ],
+ "gt.UsbGainStatus": [
+  [1,"valueDB",2,"",false,-1]
+ ],
+ "gt.WifiConnectToSSIDMessage": [
+  [1,"ssidToConnect",9,"",false,-1],
+  [2,"protocol",14,"gt.WifiConnectToSSIDMessage.Protocol",false,-1],
+  [3,"password",9,"",false,-1]
+ ],
+ "gt.WifiConnectToSSIDResponse": [
+  [1,"responseCode",14,"gt.WifiConnectToSSIDResponse.ResponseCode",false,-1]
+ ],
+ "gt.WifiOnOffCmdResponse": [
+  [1,"powerOn",8,"",false,-1]
+ ],
+ "gt.WifiScanForNetworksMessage": [
+  [1,"hackSoItGens",8,"",false,-1]
+ ],
+ "ltx.ClearPresetStatus": [
+  [1,"presetIndex",13,"",false,-1], [2,"dummyField",8,"",false,-1]
+ ],
+ "ltx.ConnectionStatus": [
+  [1,"isConnected",8,"",false,-1], [2,"dummyField",8,"",false,-1]
+ ],
+ "ltx.ConnectionStatusRequest": [
+  [1,"dummyField",8,"",false,-1]
+ ],
+ "ltx.CurrentPresetDataStatus": [
+  [1,"compressedPresetJson",12,"",false,-1]
+ ],
+ "ltx.CurrentPresetRequest": [
+  [1,"requestPresetData",8,"",false,-1], [2,"dummyField",8,"",false,-1]
+ ],
+ "ltx.CurrentPresetStatus": [
+  [1,"presetIndex",13,"",false,-1], [2,"isDirty",8,"",false,-1],
+  [3,"isAuditioning",8,"",false,-1], [4,"dummyField",8,"",false,-1]
+ ],
+ "ltx.FirmwareVersionRequest": [
+  [1,"dummyField",8,"",false,-1]
+ ],
+ "ltx.FirmwareVersionStatus": [
+  [1,"version",9,"",false,-1]
+ ],
+ "ltx.FtswBrightnessRequest": [
+  [1,"dummyField",8,"",false,-1]
+ ],
+ "ltx.FtswBrightnessStatus": [
+  [1,"ftswBrightness",13,"",false,-1]
+ ],
+ "ltx.FtswUpdateStatus": [
+  [1,"dummyField",8,"",false,-1], [2,"inProgress",8,"",false,-1]
+ ],
+ "ltx.FtswVersionRequest": [
+  [1,"dummyField",8,"",false,-1]
+ ],
+ "ltx.FtswVersionStatus": [
+  [1,"version",9,"",false,-1]
+ ],
+ "ltx.Heartbeat": [
+  [1,"dummyField",8,"",false,-1]
+ ],
+ "ltx.LoadPresetRequest": [
+  [1,"newPresetIndex",13,"",false,-1], [2,"dummyField",8,"",false,-1]
+ ],
+ "ltx.LoopbackTest": [
+  [1,"data",9,"",false,-1]
+ ],
+ "ltx.ModalStatusMessage": [
+  [1,"context",14,"ltx.ModalContext",false,-1], [2,"state",14,"ltx.ModalState",false,-1],
+  [3,"dummyField",8,"",false,-1]
+ ],
+ "ltx.MoveNodeStatus": [
+  [1,"nodeIdToMove",9,"",false,-1], [2,"nodeIdInsertLocation",9,"",false,-1]
+ ],
+ "ltx.MovePresetStatus": [
+  [1,"success",8,"",false,-1]
+ ],
+ "ltx.MustangLtxAmpStatus": [
+  [1,"responseType",14,"ltx.ResponseType",false,-1],
+  [2,"clearPresetStatus",11,"ltx.ClearPresetStatus",false,0],
+  [3,"connectionStatus",11,"ltx.ConnectionStatus",false,0],
+  [4,"currentPresetDataStatus",11,"ltx.CurrentPresetDataStatus",false,0],
+  [5,"currentPresetStatus",11,"ltx.CurrentPresetStatus",false,0],
+  [6,"firmwareVersionStatus",11,"ltx.FirmwareVersionStatus",false,0],
+  [7,"moveNodeStatus",11,"ltx.MoveNodeStatus",false,0],
+  [8,"parameterStatus",11,"ltx.ParameterStatus",false,0],
+  [9,"presetDataStatus",11,"ltx.PresetDataStatus",false,0],
+  [10,"presetNameStatus",11,"ltx.PresetNameStatus",false,0],
+  [11,"presetNamesStatus",11,"ltx.PresetNamesStatus",false,0],
+  [12,"presetSavedStatus",11,"ltx.PresetSavedStatus",false,0],
+  [13,"replaceNodeStatus",11,"ltx.ReplaceNodeStatus",false,0],
+  [14,"unsupportedMessageStatus",11,"ltx.UnsupportedMessageStatus",false,0],
+  [15,"usbAndLineOutGainStatus",11,"ltx.UsbAndLineOutGainStatus",false,0],
+  [16,"tunerStatus",11,"ltx.TunerStatus",false,0],
+  [17,"productIdStatus",11,"ltx.ProductIdStatus",false,0],
+  [18,"outputPowerStatus",11,"ltx.OutputPowerStatus",false,0],
+  [19,"presetModeStatus",11,"ltx.PresetModeStatus",false,0],
+  [21,"ftswBrightnessStatus",11,"ltx.FtswBrightnessStatus",false,0],
+  [22,"ftswVersionStatus",11,"ltx.FtswVersionStatus",false,0],
+  [23,"movePresetStatus",11,"ltx.MovePresetStatus",false,0],
+  [24,"ftswUpdateStatus",11,"ltx.FtswUpdateStatus",false,0]
+ ],
+ "ltx.MustangLtxLoopback": [
+  [1,"responseType",14,"ltx.ResponseType",false,-1],
+  [2,"loopbackTest",11,"ltx.LoopbackTest",false,-1]
+ ],
+ "ltx.MustangLtxToneMessage": [
+  [1,"toneRequest",11,"ltx.MustangLtxToneRequest",false,0],
+  [2,"ampStatus",11,"ltx.MustangLtxAmpStatus",false,0],
+  [3,"modalStatus",11,"ltx.ModalStatusMessage",false,0],
+  [4,"loopback",11,"ltx.MustangLtxLoopback",false,0]
+ ],
+ "ltx.MustangLtxToneRequest": [
+  [3,"connectionStatusRequest",11,"ltx.ConnectionStatusRequest",false,0],
+  [4,"currentPresetRequest",11,"ltx.CurrentPresetRequest",false,0],
+  [7,"firmwareVersionRequest",11,"ltx.FirmwareVersionRequest",false,0],
+  [8,"heartbeat",11,"ltx.Heartbeat",false,0],
+  [9,"loadPresetRequest",11,"ltx.LoadPresetRequest",false,0],
+  [11,"parameterRequest",11,"ltx.ParameterRequest",false,0],
+  [12,"presetDataRequest",11,"ltx.PresetDataRequest",false,0],
+  [14,"presetNamesRequest",11,"ltx.PresetNamesRequest",false,0],
+  [18,"setParameterRequest",11,"ltx.SetParameterRequest",false,0],
+  [21,"usbAndLineOutGainRequest",11,"ltx.UsbAndLineOutGainRequest",false,0],
+  [23,"productIdRequest",11,"ltx.ProductIdRequest",false,0],
+  [24,"outputPowerRequest",11,"ltx.OutputPowerRequest",false,0],
+  [26,"presetModeRequest",11,"ltx.PresetModeRequest",false,0],
+  [29,"ftswBrightnessRequest",11,"ltx.FtswBrightnessRequest",false,0],
+  [30,"ftswVersionRequest",11,"ltx.FtswVersionRequest",false,0]
+ ],
+ "ltx.OutputPowerRequest": [
+  [1,"dummyField",8,"",false,-1]
+ ],
+ "ltx.OutputPowerStatus": [
+  [1,"outputPower",14,"ProtobufOutputPower",false,-1]
+ ],
+ "ltx.ParameterRequest": [
+  [1,"nodeId",9,"",false,-1], [2,"parameterId",9,"",false,-1]
+ ],
+ "ltx.ParameterStatus": [
+  [1,"nodeId",9,"",false,-1], [2,"parameterId",9,"",false,-1],
+  [3,"floatParameter",2,"",false,0], [4,"stringParameter",9,"",false,0],
+  [5,"sint32Parameter",17,"",false,0], [6,"boolParameter",8,"",false,0]
+ ],
+ "ltx.PresetDataRequest": [
+  [1,"presetIndex",13,"",false,-1], [2,"dummyField",8,"",false,-1]
+ ],
+ "ltx.PresetDataStatus": [
+  [1,"presetIndex",13,"",false,-1], [2,"compressedPresetJson",12,"",false,-1]
+ ],
+ "ltx.PresetModeRequest": [
+  [1,"dummyField",8,"",false,-1]
+ ],
+ "ltx.PresetModeStatus": [
+  [1,"presetMode",14,"ProtobufPresetMode",false,-1]
+ ],
+ "ltx.PresetNameStatus": [
+  [1,"presetIndex",13,"",false,-1], [2,"presetName",9,"",false,-1]
+ ],
+ "ltx.PresetNamesRequest": [
+  [1,"dummyField",8,"",false,-1]
+ ],
+ "ltx.PresetNamesStatus": [
+  [1,"presetName",9,"",true,-1]
+ ],
+ "ltx.PresetSavedStatus": [
+  [1,"presetIndex",13,"",false,-1], [2,"presetName",9,"",false,-1]
+ ],
+ "ltx.ProductIdRequest": [
+  [1,"dummyField",8,"",false,-1]
+ ],
+ "ltx.ProductIdStatus": [
+  [1,"productId",14,"ProtobufProductId",false,-1]
+ ],
+ "ltx.ReplaceNodeStatus": [
+  [1,"nodeIdToReplace",9,"",false,-1], [2,"fenderIdToReplaceWith",9,"",false,-1]
+ ],
+ "ltx.SetParameterRequest": [
+  [1,"nodeId",9,"",false,-1], [2,"parameterId",9,"",false,-1],
+  [3,"floatParameter",2,"",false,0], [4,"stringParameter",9,"",false,0],
+  [5,"sint32Parameter",17,"",false,0], [6,"boolParameter",8,"",false,0]
+ ],
+ "ltx.TunerStatus": [
+  [1,"dummyField",8,"",false,-1], [2,"active",8,"",false,-1]
+ ],
+ "ltx.UnsupportedMessageStatus": [
+  [1,"status",14,"ltx.ErrorType",false,-1], [2,"dummyField",8,"",false,-1]
+ ],
+ "ltx.UsbAndLineOutGainRequest": [
+  [1,"dummyField",8,"",false,-1]
+ ],
+ "ltx.UsbAndLineOutGainStatus": [
+  [1,"valueDB",2,"",false,-1]
+ ],
+ "mp.AttenuatorRequest": [
+  [1,"dummyField",8,"",false,-1]
+ ],
+ "mp.AttenuatorStatus": [
+  [1,"attenuatorIsOn",8,"",false,-1], [2,"dummyField",8,"",false,-1]
+ ],
+ "mp.ClearPresetStatus": [
+  [1,"presetIndex",13,"",false,-1], [2,"dummyField",8,"",false,-1]
+ ],
+ "mp.ConnectionStatus": [
+  [1,"isConnected",8,"",false,-1], [2,"dummyField",8,"",false,-1]
+ ],
+ "mp.ConnectionStatusRequest": [
+  [1,"dummyField",8,"",false,-1]
+ ],
+ "mp.CurrentPresetDataStatus": [
+  [1,"compressedPresetJson",12,"",false,-1]
+ ],
+ "mp.CurrentPresetRequest": [
+  [1,"requestPresetData",8,"",false,-1], [2,"dummyField",8,"",false,-1]
+ ],
+ "mp.CurrentPresetStatus": [
+  [1,"presetIndex",13,"",false,-1], [2,"isDirty",8,"",false,-1],
+  [3,"isAuditioning",8,"",false,-1], [4,"dummyField",8,"",false,-1]
+ ],
+ "mp.EqRequest": [
+  [1,"dummyField",8,"",false,-1]
+ ],
+ "mp.EqStatus": [
+  [1,"dummyField",8,"",false,-1], [2,"eqPreset",14,"EqPreset",false,-1]
+ ],
+ "mp.FirmwareVersionRequest": [
+  [1,"dummyField",8,"",false,-1]
+ ],
+ "mp.FirmwareVersionStatus": [
+  [1,"version",9,"",false,-1]
+ ],
+ "mp.Heartbeat": [
+  [1,"dummyField",8,"",false,-1]
+ ],
+ "mp.InputPadRequest": [
+  [1,"dummyField",8,"",false,-1]
+ ],
+ "mp.InputPadStatus": [
+  [1,"isOn",8,"",false,-1], [2,"dummyField",8,"",false,-1]
+ ],
+ "mp.LoadPresetRequest": [
+  [1,"newPresetIndex",13,"",false,-1], [2,"dummyField",8,"",false,-1]
+ ],
+ "mp.LoopbackTest": [
+  [1,"data",9,"",false,-1]
+ ],
+ "mp.ModalStatusMessage": [
+  [1,"context",14,"mp.ModalContext",false,-1], [2,"state",14,"mp.ModalState",false,-1],
+  [3,"dummyField",8,"",false,-1]
+ ],
+ "mp.ModifiableParameterRequest": [
+  [1,"dummyField",8,"",false,-1]
+ ],
+ "mp.ModifiableParameterStatus": [
+  [1,"nodeId",9,"",false,-1], [2,"parameterId",9,"",false,-1]
+ ],
+ "mp.MoveNodeStatus": [
+  [1,"nodeIdToMove",9,"",false,-1], [2,"nodeIdInsertLocation",9,"",false,-1]
+ ],
+ "mp.MovePresetStatus": [
+  [1,"success",8,"",false,-1]
+ ],
+ "mp.MustangLtxAmpStatus": [
+  [1,"responseType",14,"mp.ResponseType",false,-1],
+  [2,"clearPresetStatus",11,"mp.ClearPresetStatus",false,0],
+  [3,"connectionStatus",11,"mp.ConnectionStatus",false,0],
+  [4,"currentPresetDataStatus",11,"mp.CurrentPresetDataStatus",false,0],
+  [5,"currentPresetStatus",11,"mp.CurrentPresetStatus",false,0],
+  [6,"firmwareVersionStatus",11,"mp.FirmwareVersionStatus",false,0],
+  [7,"modifiableParameterStatus",11,"mp.ModifiableParameterStatus",false,0],
+  [8,"moveNodeStatus",11,"mp.MoveNodeStatus",false,0],
+  [9,"parameterStatus",11,"mp.ParameterStatus",false,0],
+  [10,"presetDataStatus",11,"mp.PresetDataStatus",false,0],
+  [11,"presetNameStatus",11,"mp.PresetNameStatus",false,0],
+  [12,"presetNamesStatus",11,"mp.PresetNamesStatus",false,0],
+  [13,"presetSavedStatus",11,"mp.PresetSavedStatus",false,0],
+  [14,"productIdentificationStatus",11,"mp.ProductIdentificationStatus",false,0],
+  [15,"replaceNodeStatus",11,"mp.ReplaceNodeStatus",false,0],
+  [17,"unsupportedMessageStatus",11,"mp.UnsupportedMessageStatus",false,0],
+  [18,"usbAudioGainInfoStatus",11,"mp.UsbAudioGainInfoStatus",false,0],
+  [19,"eqStatus",11,"mp.EqStatus",false,0],
+  [20,"tapTempoStatus",11,"mp.TapTempoStatus",false,0],
+  [21,"tunerStatus",11,"mp.TunerStatus",false,0],
+  [22,"attenuatorStatus",11,"mp.AttenuatorStatus",false,0],
+  [23,"movePresetStatus",11,"mp.MovePresetStatus",false,0],
+  [24,"muteDetectEnableStatus",11,"mp.MuteDetectEnableStatus",false,0],
+  [25,"inputPadStatus",11,"mp.InputPadStatus",false,0]
+ ],
+ "mp.MustangLtxAppMessage": [
+  [1,"toneRequest",11,"mp.MustangLtxToneRequest",false,0],
+  [2,"ampStatus",11,"mp.MustangLtxAmpStatus",false,0],
+  [3,"modalStatus",11,"mp.ModalStatusMessage",false,0],
+  [4,"loopback",11,"mp.MustangLtxLoopback",false,0]
+ ],
+ "mp.MustangLtxLoopback": [
+  [1,"responseType",14,"mp.ResponseType",false,-1],
+  [2,"loopbackTest",11,"mp.LoopbackTest",false,-1]
+ ],
+ "mp.MustangLtxToneRequest": [
+  [3,"connectionStatusRequest",11,"mp.ConnectionStatusRequest",false,0],
+  [4,"currentPresetRequest",11,"mp.CurrentPresetRequest",false,0],
+  [7,"firmwareVersionRequest",11,"mp.FirmwareVersionRequest",false,0],
+  [8,"loadPresetRequest",11,"mp.LoadPresetRequest",false,0],
+  [9,"modifiableParameterRequest",11,"mp.ModifiableParameterRequest",false,0],
+  [11,"parameterRequest",11,"mp.ParameterRequest",false,0],
+  [12,"presetDataRequest",11,"mp.PresetDataRequest",false,0],
+  [14,"presetNamesRequest",11,"mp.PresetNamesRequest",false,0],
+  [15,"productIdentificationRequest",11,"mp.ProductIdentificationRequest",false,0],
+  [20,"setParameterRequest",11,"mp.SetParameterRequest",false,0],
+  [22,"usbAudioGainInfoRequest",11,"mp.UsbAudioGainInfoRequest",false,0],
+  [24,"heartbeat",11,"mp.Heartbeat",false,0], [25,"eqRequest",11,"mp.EqRequest",false,0],
+  [28,"tapTempoRequest",11,"mp.TapTempoRequest",false,0],
+  [31,"attenuatorRequest",11,"mp.AttenuatorRequest",false,0],
+  [33,"muteDetectEnableRequest",11,"mp.MuteDetectEnableRequest",false,0],
+  [35,"inputPadRequest",11,"mp.InputPadRequest",false,0]
+ ],
+ "mp.MuteDetectEnableRequest": [
+  [1,"dummyField",8,"",false,-1]
+ ],
+ "mp.MuteDetectEnableStatus": [
+  [1,"enable",8,"",false,-1], [2,"dummyField",8,"",false,-1]
+ ],
+ "mp.ParameterRequest": [
+  [1,"nodeId",9,"",false,-1], [2,"parameterId",9,"",false,-1]
+ ],
+ "mp.ParameterStatus": [
+  [1,"nodeId",9,"",false,-1], [2,"parameterId",9,"",false,-1],
+  [3,"floatParameter",2,"",false,0], [4,"stringParameter",9,"",false,0],
+  [5,"sint32Parameter",17,"",false,0], [6,"boolParameter",8,"",false,0]
+ ],
+ "mp.PresetDataRequest": [
+  [1,"presetIndex",13,"",false,-1], [2,"dummyField",8,"",false,-1]
+ ],
+ "mp.PresetDataStatus": [
+  [1,"presetIndex",13,"",false,-1], [2,"compressedPresetJson",12,"",false,-1]
+ ],
+ "mp.PresetNameStatus": [
+  [1,"presetIndex",13,"",false,-1], [2,"presetName",9,"",false,-1]
+ ],
+ "mp.PresetNamesRequest": [
+  [1,"dummyField",8,"",false,-1]
+ ],
+ "mp.PresetNamesStatus": [
+  [1,"presetName",9,"",true,-1]
+ ],
+ "mp.PresetSavedStatus": [
+  [1,"presetIndex",13,"",false,-1], [2,"presetName",9,"",false,-1]
+ ],
+ "mp.ProductIdentificationRequest": [
+  [1,"dummyField",8,"",false,-1]
+ ],
+ "mp.ProductIdentificationStatus": [
+  [1,"id",9,"",false,-1]
+ ],
+ "mp.ReplaceNodeStatus": [
+  [1,"nodeIdToReplace",9,"",false,-1], [2,"fenderIdToReplaceWith",9,"",false,-1]
+ ],
+ "mp.SetParameterRequest": [
+  [1,"nodeId",9,"",false,-1], [2,"parameterId",9,"",false,-1],
+  [3,"floatParameter",2,"",false,0], [4,"stringParameter",9,"",false,0],
+  [5,"sint32Parameter",17,"",false,0], [6,"boolParameter",8,"",false,0]
+ ],
+ "mp.TapTempoRequest": [
+  [1,"dummyField",8,"",false,-1]
+ ],
+ "mp.TapTempoStatus": [
+  [1,"dummyField",8,"",false,-1], [2,"bpm",13,"",false,-1]
+ ],
+ "mp.TunerStatus": [
+  [1,"dummyField",8,"",false,-1], [2,"active",8,"",false,-1]
+ ],
+ "mp.UnsupportedMessageStatus": [
+  [1,"status",14,"mp.ErrorType",false,-1], [2,"dummyField",8,"",false,-1]
+ ],
+ "mp.UsbAudioGainInfoRequest": [
+  [1,"dummyField",8,"",false,-1]
+ ],
+ "mp.UsbAudioGainInfoStatus": [
+  [1,"valueDB",2,"",false,-1], [2,"dummyField",8,"",false,-1]
+ ]
+}
+}/*SCHEMA-END*/;
+const MSG = SCHEMA.messages || {}, ENUM = SCHEMA.enums || {};
+
+const UUID = {
+  request: '820a7e34-4e0a-4f90-8520-04ebce35a3a1',
+  response: '1017adcc-dcbc-4387-a59f-2546b2ea5bb0',
+  mp: '90559580-b707-11ee-acb1-7b7e30f1af54',
+  ltx: '90559580-b707-11ee-acb1-7b7e30f12dcd',
+  gt: '82107b48-5a47-4067-bcc1-319844c8f1e8',
+  gtReversed: 'e8f1c844-9831-c1bc-6740-475a487b1082',
+};
+const FAMILY_BY_SERVICE = { [UUID.mp]: 'mp', [UUID.ltx]: 'ltx', [UUID.gt]: 'gt', [UUID.gtReversed]: 'gt' };
+const FAMILIES = {
+  gt: { label: 'Mustang GT / GTX / Rumble ("gt" messages)', envelope: 'gt.FenderMessage', framed: false },
+  ltx: { label: 'Mustang LTX ("ltx" messages)', envelope: 'ltx.MustangLtxToneMessage', framed: true },
+  mp: { label: 'Mustang Micro Plus ("mp" messages)', envelope: 'mp.MustangLtxAppMessage', framed: true },
+};
+const DEVICE_INFO = {
+  '00002a29-0000-1000-8000-00805f9b34fb': 'manufacturer',
+  '00002a24-0000-1000-8000-00805f9b34fb': 'model number',
+  '00002a27-0000-1000-8000-00805f9b34fb': 'hardware revision',
+  '00002a26-0000-1000-8000-00805f9b34fb': 'firmware revision',
+  '00002a28-0000-1000-8000-00805f9b34fb': 'software revision',
+  '00002a50-0000-1000-8000-00805f9b34fb': 'PnP id',
+};
+const FRAME_PAYLOAD = 117, FRAME_GAP = 20, HEARTBEAT = 250;
+
+// Durations in ms; tests shrink them with setSpeed().
+let SPEED = 1;
+function setSpeed(f) { SPEED = f; }
+const sleep = ms => new Promise(r => setTimeout(r, ms * SPEED));
+
+// ---- bytes ----------------------------------------------------------------------------
+const hex = b => Array.from(b, x => x.toString(16).padStart(2, '0')).join('');
+const fromHex = s => Uint8Array.from((s.replace(/\s+/g, '').match(/../g) || []).map(h => parseInt(h, 16)));
+function concat(...parts) {
+  const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+  let o = 0; for (const p of parts) { out.set(p, o); o += p.length; }
+  return out;
+}
+const utf8 = s => new TextEncoder().encode(s);
+const fromUtf8 = b => new TextDecoder('utf-8').decode(b);
+
+function varint(n) {
+  if (!(n >= 0)) throw new Error('negative varint');
+  const out = [];
+  while (n >= 128) { out.push((n % 128) | 128); n = Math.floor(n / 128); }
+  out.push(n);
+  return Uint8Array.from(out);
+}
+function readVarint(b, o) {
+  let v = 0, mul = 1;
+  for (let i = 0; i < 10; i++) {
+    if (o >= b.length) throw new Error('truncated varint');
+    const x = b[o++]; v += (x & 127) * mul; mul *= 128;
+    if (x < 128) return [v, o];
+  }
+  throw new Error('varint too long');
+}
+function parseFields(b) {
+  const out = []; let o = 0;
+  while (o < b.length) {
+    let tag; [tag, o] = readVarint(b, o);
+    const no = Math.floor(tag / 8), wire = tag % 8;
+    if (no === 0) throw new Error('field number 0');
+    let value;
+    if (wire === 0) [value, o] = readVarint(b, o);
+    else if (wire === 2) {
+      let n; [n, o] = readVarint(b, o);
+      if (o + n > b.length) throw new Error('truncated field');
+      value = b.subarray(o, o + n); o += n;
+    } else if (wire === 5 || wire === 1) {
+      const n = wire === 5 ? 4 : 8;
+      if (o + n > b.length) throw new Error('truncated field');
+      value = b.subarray(o, o + n); o += n;
+    } else throw new Error('unsupported wire type ' + wire);
+    out.push({ no, wire, value });
+  }
+  return out;
+}
+const f32 = b => new DataView(b.buffer, b.byteOffset, 4).getFloat32(0, true);
+const f64 = b => new DataView(b.buffer, b.byteOffset, 8).getFloat64(0, true);
+const round = x => Number.isFinite(x) ? Number(x.toPrecision(7)) : x;
+const signed64 = v => v >= 2 ** 63 ? v - 2 ** 64 : v;
+const zigzag = v => (v % 2 ? -(v + 1) / 2 : v / 2);
+
+// LZ4 block (no frame header), as used for the Micro Plus preset JSON.
+function lz4Block(src, max = 1 << 21) {
+  const out = []; let i = 0;
+  while (i < src.length) {
+    const token = src[i++]; let lit = token >> 4;
+    if (lit === 15) { let b; do { b = src[i++]; lit += b; } while (b === 255); }
+    for (let k = 0; k < lit; k++) out.push(src[i++]);
+    if (i >= src.length) break;
+    const off = src[i] | (src[i + 1] << 8); i += 2;
+    if (!off || off > out.length) throw new Error('bad LZ4 offset');
+    let ml = token & 15;
+    if (ml === 15) { let b; do { b = src[i++]; ml += b; } while (b === 255); }
+    ml += 4;
+    const start = out.length - off;
+    for (let k = 0; k < ml; k++) out.push(out[start + k]);
+    if (out.length > max) throw new Error('LZ4 output too large');
+  }
+  return Uint8Array.from(out);
+}
+
+// ---- schema ---------------------------------------------------------------------------
+function resolve(name, family) {
+  if (!name) return null;
+  if (MSG[name] || ENUM[name]) return name;
+  const alt = family + '.' + name;
+  return (MSG[alt] || ENUM[alt]) ? alt : null;
+}
+function fieldSpec(type, key) {
+  const spec = MSG[type];
+  if (!spec) throw new Error('unknown message type ' + type);
+  const f = typeof key === 'number' ? spec.find(x => x[0] === key) : spec.find(x => x[1] === key);
+  return f || null;
+}
+function fieldNumber(type, name) {
+  const f = fieldSpec(type, name);
+  if (!f) throw new Error(type + ' has no field ' + name);
+  return f[0];
+}
+function hasField(type, name) { return !!(MSG[type] && fieldSpec(type, name)); }
+function enumNumber(type, v) {
+  if (typeof v === 'number') return v;
+  const e = ENUM[type] || {};
+  for (const [k, n] of Object.entries(e)) if (n === v) return Number(k);
+  throw new Error(`${type} has no value ${v}`);
+}
+
+// ---- encoder --------------------------------------------------------------------------
+function tag(no, wire) { return varint(no * 8 + wire); }
+function encodeField(no, t, tn, v, family) {
+  switch (t) {
+    case 11: { const body = encodeMsg(tn, v, family); return concat(tag(no, 2), varint(body.length), body); }
+    case 9: { const b = utf8(v); return concat(tag(no, 2), varint(b.length), b); }
+    case 12: return concat(tag(no, 2), varint(v.length), v);
+    case 2: { const b = new Uint8Array(4); new DataView(b.buffer).setFloat32(0, v, true); return concat(tag(no, 5), b); }
+    case 1: { const b = new Uint8Array(8); new DataView(b.buffer).setFloat64(0, v, true); return concat(tag(no, 1), b); }
+    case 8: return concat(tag(no, 0), varint(v ? 1 : 0));
+    case 14: return concat(tag(no, 0), varint(enumNumber(tn, v)));
+    case 17: case 18: return concat(tag(no, 0), varint(v < 0 ? -2 * v - 1 : 2 * v));
+    case 7: case 15: { const b = new Uint8Array(4); new DataView(b.buffer).setUint32(0, v >>> 0, true); return concat(tag(no, 5), b); }
+    default: return concat(tag(no, 0), varint(v));
+  }
+}
+function isDefault(t, tn, v) {
+  if (t === 11) return false;
+  if (t === 14) return enumNumber(tn, v) === 0;
+  return v === 0 || v === false || v === '' || v == null || (v instanceof Uint8Array && !v.length);
+}
+function encodeMsg(type, obj, family) {
+  family = family || type.split('.')[0];
+  const parts = [];
+  for (const [key, val] of Object.entries(obj || {})) {
+    const f = fieldSpec(type, key);
+    if (!f) throw new Error(`${type} has no field ${key}`);
+    const [no, , t, tn, rep, oneof] = f;
+    const rt = resolve(tn, family);
+    for (const v of (rep ? val : [val])) {
+      if (!rep && oneof < 0 && isDefault(t, rt, v)) continue;   // proto3: defaults are not sent
+      parts.push(encodeField(no, t, rt, v, family));
+    }
+  }
+  return concat(...parts);
+}
+
+// ---- privacy --------------------------------------------------------------------------
+// Fields that are removed (or replaced by a neutral id) before anything is stored.
+const PRIVATE = {
+  'gt.SystemStatus.address': ['remove', "the amp's Bluetooth address"],
+  'gt.NetworkStatus.connectedSSID': ['remove', 'the Wi-Fi network name'],
+  'gt.NetworkStatus.connectedIP': ['remove', 'the IP address'],
+  'gt.SSIDEntry.ssid': ['remove', 'names of nearby Wi-Fi networks'],
+  'gt.WifiConnectToSSIDMessage.ssidToConnect': ['remove', 'the Wi-Fi network name'],
+  'gt.WifiConnectToSSIDMessage.password': ['remove', 'a Wi-Fi password'],
+  'gt.ConfirmPasskey.passkey': ['remove', 'a pairing passkey'],
+  'gt.PresetInfoMessage.author': ['author', 'preset authors (other than Fender)'],
+  'gt.PresetInfoMessage.preset_id': ['pseudo', 'preset and cloud ids (replaced by id-1, id-2, ...)'],
+  'gt.PresetInfoMessage.source_id': ['pseudo', 'preset and cloud ids (replaced by id-1, id-2, ...)'],
+  'gt.CurrentLoadedPresetIdStatus.currentLoadedPresetId': ['pseudo', 'preset and cloud ids (replaced by id-1, id-2, ...)'],
+  'gt.LoadPreset.presetId': ['pseudo', 'preset and cloud ids (replaced by id-1, id-2, ...)'],
+  'gt.SetlistStatus.Ids': ['remove', 'the preset ids in setlists'],
+};
+const NETS = [
+  [/\b[0-9A-Fa-f]{2}([:-])[0-9A-Fa-f]{2}(?:\1[0-9A-Fa-f]{2}){4}\b/g, 'a hardware address (MAC)'],
+  [/(?<![0-9A-Fa-f])[0-9A-Fa-f]{2}(?:_[0-9A-Fa-f]{2}){5}(?![0-9A-Fa-f])/g, 'a hardware address (MAC)'],   // BlueZ paths: dev_AA_BB_...
+  [/\bDEV_[0-9A-Fa-f]{12}\b/gi, 'a hardware address (MAC)'],   // Windows device ids: BTHENUM\DEV_123456789ABC
+  [/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g, 'an email address'],
+  [/\b(?:25[0-5]|2[0-4]\d|1?\d?\d)(?:\.(?:25[0-5]|2[0-4]\d|1?\d?\d)){3}\b/g, 'an IP address'],
+];
+const JSON_REMOVE = /^(author|authorName|user|userName|username|email|owner|account|createdBy|created_by)$/i;
+const JSON_PSEUDO = /^(preset_id|presetId|source_id|sourceId|cloud_id|cloudId|uuid|user_id|userId)$/i;
+
+class Privacy {
+  constructor() { this.reasons = new Set(); this.ids = new Map(); }
+  pseudo(s) { if (!this.ids.has(s)) this.ids.set(s, 'id-' + (this.ids.size + 1)); return this.ids.get(s); }
+  scrub(s, key) {
+    let t = s;
+    for (const [re, label] of NETS) {
+      if (label === 'an IP address' && /version/i.test(key || '')) continue;
+      const r = t.replace(re, '[removed]');
+      if (r !== t) { this.reasons.add(label); t = r; }
+    }
+    return t;
+  }
+  json(value) {   // returns [value, changed]
+    let changed = false;
+    const walk = (v, key) => {
+      if (Array.isArray(v)) return v.map(x => walk(x, key));
+      if (v && typeof v === 'object') {
+        const o = {};
+        for (const [k, x] of Object.entries(v)) {
+          if (typeof x === 'string' && x && JSON_REMOVE.test(k) && !/^fender\b/i.test(x)) {
+            o[k] = '[removed]'; this.reasons.add('preset authors (other than Fender)'); changed = true;
+          } else if (typeof x === 'string' && x && JSON_PSEUDO.test(k)) {
+            o[k] = this.pseudo(x); this.reasons.add('preset and cloud ids (replaced by id-1, id-2, ...)'); changed = true;
+          } else o[k] = walk(x, k);
+        }
+        return o;
+      }
+      if (typeof v === 'string') { const t = this.scrub(v, key); if (t !== v) changed = true; return t; }
+      return v;
+    };
+    return [walk(value, ''), changed];
+  }
+}
+
+// ---- decoder --------------------------------------------------------------------------
+// ctx: { family, root (the whole message, for byte ranges), masks: [[start, end]], privacy, unknown }
+function maskOf(ctx, view) {
+  const s = view.byteOffset - ctx.root.byteOffset;
+  if (view.buffer === ctx.root.buffer && s >= 0) ctx.masks.push([s, s + view.length]);
+}
+function decodeString(ctx, key, view) {
+  const s = fromUtf8(view);
+  const rule = PRIVATE[key];
+  if (rule && s) {
+    const [kind, label] = rule;
+    if (kind === 'author' && /^fender\b/i.test(s)) return s;
+    ctx.privacy.reasons.add(label); maskOf(ctx, view);
+    return kind === 'pseudo' ? ctx.privacy.pseudo(s) : '[removed]';
+  }
+  if (/^\s*[{[]/.test(s)) {
+    try {
+      const [v, changed] = ctx.privacy.json(JSON.parse(s));
+      if (changed) maskOf(ctx, view);
+      return { json: v };
+    } catch (e) { /* not JSON */ }
+  }
+  const t = ctx.privacy.scrub(s, key);
+  if (t !== s) maskOf(ctx, view);
+  return t;
+}
+const hidden = (o, k, v) => Object.defineProperty(o, k, { value: v, enumerable: false });
+function decodeBytes(ctx, key, view) {
+  if (/(PacketDataMTU|FileTransferData)\.data$/.test(key)) {
+    // pieces of a transferred preset or backup: shown only after joining and filtering
+    // (assembleTransfer), so the raw pieces are masked and kept out of the report text
+    maskOf(ctx, view); ctx.privacy.reasons.add('raw pieces of transferred presets (shown joined and filtered instead)');
+    return hidden({ bytes: view.length }, 'hex', hex(view));
+  }
+  if (/compressedPresetJson$/.test(key)) {
+    try {
+      const [v, changed] = ctx.privacy.json(JSON.parse(fromUtf8(lz4Block(view))));
+      if (changed) maskOf(ctx, view);
+      return { lz4Json: v, compressedBytes: view.length };
+    } catch (e) { return { hex: hex(view), error: 'not LZ4 JSON: ' + e.message }; }
+  }
+  return { hex: hex(view) };
+}
+function convert(ctx, f, t, tn, key) {
+  const { wire, value } = f;
+  const want = { 1: 1, 2: 5, 6: 1, 7: 5, 15: 5, 16: 1, 9: 2, 11: 2, 12: 2 }[t] ?? 0;
+  if (wire !== want) return generic(ctx, f, key);
+  switch (t) {
+    case 1: return round(f64(value));
+    case 2: return round(f32(value));
+    case 3: case 5: return signed64(value);
+    case 8: return !!value;
+    case 9: return decodeString(ctx, key, value);
+    case 11: return tn ? decodeMsg(ctx, tn, value) : generic(ctx, f, key);
+    case 12: return decodeBytes(ctx, key, value);
+    case 14: return (ENUM[tn] || {})[String(value)] ?? value;
+    case 17: case 18: return zigzag(value);
+    case 7: return new DataView(value.buffer, value.byteOffset, 4).getUint32(0, true);
+    case 15: return new DataView(value.buffer, value.byteOffset, 4).getInt32(0, true);
+    default: return value;
+  }
+}
+function generic(ctx, f, key) {
+  if (f.wire === 0) return f.value;
+  if (f.wire === 5) return { float: round(f32(f.value)), uint32: new DataView(f.value.buffer, f.value.byteOffset, 4).getUint32(0, true) };
+  if (f.wire === 1) return { double: round(f64(f.value)) };
+  try {
+    const inner = parseFields(f.value);
+    if (inner.length && inner.every(x => x.no < 4096)) {
+      const o = {};
+      for (const x of inner) { const v = generic(ctx, x, key + '.#' + x.no); const k = '#' + x.no; o[k] = k in o ? [].concat(o[k], [v]) : v; }
+      return o;
+    }
+  } catch (e) { /* not a message */ }
+  const s = fromUtf8(f.value);
+  if (/^[\x20-\x7e -￿\t\r\n]*$/.test(s) && !s.includes('�')) return decodeString(ctx, key, f.value);
+  return { hex: hex(f.value) };
+}
+function decodeMsg(ctx, type, bytes) {
+  const out = {};
+  for (const f of parseFields(bytes)) {
+    const spec = fieldSpec(type, f.no);
+    if (!spec) {
+      (ctx.unknown[type] = ctx.unknown[type] || new Set()).add(f.no);
+      const k = '#' + f.no; const v = generic(ctx, f, type + '.#' + f.no);
+      out[k] = k in out ? [].concat(out[k], [v]) : v;
+      continue;
+    }
+    const [, name, t, tn, rep] = spec;
+    const v = convert(ctx, f, t, resolve(tn, ctx.family), type + '.' + name);
+    if (rep) (out[name] = out[name] || []).push(v); else out[name] = v;
+  }
+  return out;
+}
+// Decode one complete message of a family; returns { name, value, responseType?, masks, error? }.
+function decodeMessage(family, bytes, privacy, unknown) {
+  const ctx = { family, root: bytes, masks: [], privacy, unknown };
+  try {
+    const v = decodeMsg(ctx, FAMILIES[family].envelope, bytes);
+    let name, value, responseType;
+    if (family === 'gt') {
+      const keys = Object.keys(v); name = keys.join('+') || '(empty)'; value = v[keys[0]];
+    } else if (v.ampStatus) {
+      responseType = v.ampStatus.responseType;
+      const keys = Object.keys(v.ampStatus).filter(k => k !== 'responseType');
+      name = keys[0] || 'ampStatus'; value = keys[0] ? v.ampStatus[keys[0]] : v.ampStatus;
+    } else if (v.toneRequest) {
+      const k = Object.keys(v.toneRequest)[0]; name = 'request:' + k; value = v.toneRequest[k];
+    } else { const k = Object.keys(v)[0]; name = k || '(empty)'; value = v[k]; }
+    return { name, value, responseType, masks: ctx.masks };
+  } catch (e) {
+    return { name: '(undecodable)', value: { hex: hex(bytes) }, masks: [], error: e.message };
+  }
+}
+
+// ---- framing (Micro Plus style) -------------------------------------------------------
+function toFrames(payload) {
+  const chunks = [];
+  for (let i = 0; i < payload.length; i += FRAME_PAYLOAD) chunks.push(payload.subarray(i, i + FRAME_PAYLOAD));
+  if (!chunks.length) chunks.push(new Uint8Array());
+  return chunks.map((c, n) => concat(Uint8Array.of(n === chunks.length - 1 ? 0x35 : (n === 0 ? 0x33 : 0x34), 0, c.length), c));
+}
+
+// ---- session: one connection, its traffic log and decoded messages ---------------------
+class Session {
+  constructor(family, transport, clock) {
+    this.family = family; this.transport = transport;
+    this.clock = clock || (() => (typeof performance !== 'undefined' ? performance.now() : Date.now()));
+    this.t0 = this.clock();
+    this.log = []; this.messages = []; this.waiters = [];
+    this.privacy = new Privacy(); this.unknown = {};
+    this.assembly = null; this.unframed = 0; this.dropped = 0; this.twice = 0; this.lastRx = null;
+    this.queue = Promise.resolve(); this.heartbeatTimer = null; this.events = [];
+  }
+  now() { return Math.round(this.clock() - this.t0); }
+  event(text) { this.events.push({ t: this.now(), text }); }
+  framed() { return FAMILIES[this.family] && FAMILIES[this.family].framed; }
+
+  onData(data) {
+    const entry = { t: this.now(), dir: 'rx', raw: Uint8Array.from(data), mask: [] };
+    this.log.push(entry);
+    // the same bytes again within 30 ms: a second program receives the amp's replies too
+    if (this.lastRx && entry.t - this.lastRx.t < 30 && hex(this.lastRx.raw) === hex(entry.raw)) this.twice++;
+    this.lastRx = entry;
+    if (!FAMILIES[this.family]) return;
+    if (this.framed()) return this.feedFrame(entry);
+    // gt: one ATT value is one message; join with a pending piece if it was cut off
+    const pieces = [{ entry, msgStart: 0, rawStart: 0, len: entry.raw.length }];
+    if (this.assembly) {
+      const joined = concat(this.assembly.bytes, entry.raw);
+      const prev = this.assembly; this.assembly = null;
+      if (parses(joined)) return this.complete(joined, prev.pieces.concat([{ entry, msgStart: prev.bytes.length, rawStart: 0, len: entry.raw.length }]));
+      if (!parses(entry.raw) && joined.length < 65536) { this.assembly = { bytes: joined, pieces: prev.pieces.concat([{ entry, msgStart: prev.bytes.length, rawStart: 0, len: entry.raw.length }]) }; return; }
+    }
+    if (parses(entry.raw)) return this.complete(entry.raw, pieces);
+    this.assembly = { bytes: entry.raw, pieces };
+  }
+  feedFrame(entry) {
+    const d = entry.raw;
+    const ok = d.length >= 3 && [0x33, 0x34, 0x35].includes(d[0]) && d[1] === 0 && d[2] === d.length - 3;
+    if (!ok) {
+      // not a frame: maybe this family doesn't use frames at all
+      if (parses(d)) { this.unframed++; return this.complete(d, [{ entry, msgStart: 0, rawStart: 0, len: d.length }]); }
+      this.dropped++; entry.note = 'not a valid frame'; this.assembly = null; return;
+    }
+    if (d[0] === 0x33) this.assembly = { bytes: new Uint8Array(), pieces: [] };
+    else if (!this.assembly) { if (d[0] === 0x35) this.assembly = { bytes: new Uint8Array(), pieces: [] }; else { this.dropped++; entry.note = 'continuation without start'; return; } }
+    const a = this.assembly;
+    a.pieces.push({ entry, msgStart: a.bytes.length, rawStart: 3, len: d.length - 3 });
+    a.bytes = concat(a.bytes, d.subarray(3));
+    if (d[0] === 0x35) { this.assembly = null; this.complete(a.bytes, a.pieces); }
+  }
+  complete(bytes, pieces) {
+    const m = { t: pieces[pieces.length - 1].entry.t, raw: bytes, pieces };
+    this.decodeInto(m);
+    this.messages.push(m);
+    for (const w of this.waiters.slice()) if (w.pred(m)) { w.resolve(m); this.waiters.splice(this.waiters.indexOf(w), 1); }
+  }
+  decodeInto(m) {
+    const d = decodeMessage(this.family, m.raw, this.privacy, this.unknown);
+    Object.assign(m, { name: d.name, value: d.value, responseType: d.responseType, error: d.error });
+    for (const p of m.pieces) p.entry.mask = [];
+    for (const [s, e] of d.masks) for (const p of m.pieces) {
+      const a = Math.max(s, p.msgStart), b = Math.min(e, p.msgStart + p.len);
+      if (a < b) p.entry.mask.push([p.rawStart + a - p.msgStart, p.rawStart + b - p.msgStart]);
+    }
+  }
+  redecode(family) { this.family = family; this.unknown = {}; for (const m of this.messages) this.decodeInto(m); }
+
+  send(payload, label) {
+    const frames = this.framed() ? toFrames(payload) : [payload];
+    const job = this.queue.then(async () => {
+      for (let i = 0; i < frames.length; i++) {
+        this.log.push({ t: this.now(), dir: 'tx', raw: frames[i], label, mask: [] });
+        await this.transport.write(frames[i]);
+        if (i < frames.length - 1) await sleep(FRAME_GAP);
+      }
+    });
+    this.queue = job.catch(() => {});
+    return job;
+  }
+  since(mark) { return this.messages.slice(mark); }
+  waitFor(pred, ms, mark = 0) {
+    const hit = this.messages.slice(mark).find(pred);
+    if (hit) return Promise.resolve(hit);
+    return new Promise(resolve => {
+      const w = { pred, resolve };
+      this.waiters.push(w);
+      setTimeout(() => { const i = this.waiters.indexOf(w); if (i >= 0) { this.waiters.splice(i, 1); resolve(null); } }, ms * SPEED);
+    });
+  }
+  startHeartbeat(payload) {
+    this.stopHeartbeat();
+    this.heartbeatTimer = setInterval(() => { this.send(payload, 'heartbeat').catch(() => {}); }, HEARTBEAT * SPEED);
+  }
+  stopHeartbeat() { if (this.heartbeatTimer) clearInterval(this.heartbeatTimer); this.heartbeatTimer = null; }
+}
+function parses(b) { try { return parseFields(b).length > 0; } catch (e) { return false; } }
+
+// ---- results --------------------------------------------------------------------------
+class Results {
+  constructor(onChange) { this.checks = []; this.data = {}; this.onChange = onChange || (() => {}); }
+  check(id, title, status, detail) {
+    const c = { id, title, status, detail: detail || '' };
+    const i = this.checks.findIndex(x => x.id === id);
+    if (i >= 0) this.checks[i] = c; else this.checks.push(c);
+    this.onChange(c); return c;
+  }
+}
+function summarize(msgs) {
+  const counts = new Map();
+  for (const m of msgs) counts.set(m.name, (counts.get(m.name) || 0) + 1);
+  return [...counts].map(([k, n]) => n > 1 ? `${k} ×${n}` : k).join(', ') || 'nothing';
+}
+const by = (msgs, name) => msgs.filter(m => m.name === name);
+const lastOf = (msgs, name) => by(msgs, name).pop();
+const near = (a, b) => Math.abs(a - b) < 0.011 + Math.abs(b) * 1e-4;
+
+// ---- GT family scripts ----------------------------------------------------------------
+function gtMsg(name, body) { return encodeMsg('gt.FenderMessage', { [name]: body || {} }, 'gt'); }
+function queryBody(type) {   // a request whose only content is a "please answer" flag
+  const o = {};
+  for (const k of ['request', 'sync', 'dummyField']) if (hasField(type, k)) o[k] = true;
+  return o;
+}
+function gtType(name) { return resolve(fieldSpec('gt.FenderMessage', name)[3], 'gt'); }
+const GT_EXTRA_READS = [
+  ['btStatusRequest', 'Bluetooth state (913)'],
+  ['globalEQSync', 'global EQ (126)'],
+  ['globalFXAssignSync', 'global effect assignment (1038)'],
+  ['globalFXAssignSyncMgt7', 'global effect assignment, other models (1050)'],
+  ['bpmStatusRequest', 'tempo (445)'],
+  ['globalBpmModeStatusRequest', 'global tempo mode (444)'],
+  ['setlistManagerSync', 'setlists (805)'],
+];
+
+async function gtCurrent(s, mark0) {
+  const mark = s.messages.length;
+  await s.send(gtMsg('syncCurrentPresetToTone'), 'syncCurrentPresetToTone');
+  const end = await s.waitFor(m => m.name === 'packetEnd' && m.value.packetType === 'SYNC_CURRRENT_PRESET_TONE', 8000, mark);
+  const got = s.since(mark);
+  const info = lastOf(got, 'presetInfoMessage');
+  const edited = lastOf(got, 'presetEditedStatus');
+  const nodes = by(got, 'nodeStatus').flatMap(m => (m.value && m.value.nodeStatus) || []);
+  const params = by(got, 'dspUnitParameterStatus').map(m => m.value);
+  return { end, got, slot: info ? (info.value.slotNumber || 0) : null, name: info && info.value.displayName,
+    edited: edited ? !!edited.value.presetEdited : null, nodes, params };
+}
+
+async function gtRead(s, r) {
+  let mark = s.messages.length;
+  await sleep(2500);
+  r.check('listen', 'What the amp sends by itself (2.5 s)', 'info', summarize(s.since(mark)));
+
+  mark = s.messages.length;
+  await s.send(gtMsg('toneSync'), 'toneSync');
+  const end = await s.waitFor(m => m.name === 'packetEnd' && m.value.packetType === 'TONE_SYNC', 20000, mark);
+  let got = s.since(mark);
+  const sys = lastOf(got, 'systemStatus');
+  const presets = by(got, 'presetInfoMessage').map(m => m.value);
+  r.data.system = sys && sys.value;
+  r.data.presets = presets;
+  r.data.productId = lastOf(got, 'productIdentificationStatus');
+  r.check('toneSync', 'Session start (901): firmware, model, preset list',
+    end && sys ? 'ok' : (got.length ? 'partial' : 'noanswer'),
+    sys ? `firmware ${sys.value.firmwareVersion || '?'}, product ${sys.value.productId || '?'}, ${presets.length} presets. Replies: ${summarize(got)}`
+      : `Replies: ${summarize(got)}`);
+
+  const cur = await gtCurrent(s);
+  r.data.current = cur;
+  r.check('current', 'Current preset (920): signal chain and knob values',
+    cur.end ? 'ok' : (cur.got.length ? 'partial' : 'noanswer'),
+    `slot ${cur.slot ?? '?'} "${cur.name ?? '?'}", ${cur.nodes.length} blocks, ${cur.params.length} values, ` +
+    `unsaved changes: ${cur.edited == null ? '?' : (cur.edited ? 'yes' : 'no')}. Replies: ${summarize(cur.got)}`);
+
+  for (const [name, title] of GT_EXTRA_READS) {
+    if (!hasField('gt.FenderMessage', name)) continue;
+    mark = s.messages.length;
+    await s.send(gtMsg(name, queryBody(gtType(name))), name);
+    await sleep(1500);
+    got = s.since(mark).filter(m => m.name !== 'networkStatus');
+    r.check('x-' + name, 'Ask for ' + title, got.length ? 'ok' : 'noanswer', summarize(got));
+  }
+
+  mark = s.messages.length;
+  await s.send(gtMsg('loopbackTest', { data: 'maneline-probe' }), 'loopbackTest');
+  await sleep(1500);
+  got = s.since(mark).filter(m => m.name !== 'networkStatus');
+  r.check('x-loopback', 'Loopback test (503)', got.length ? 'ok' : 'noanswer', summarize(got));
+
+  const p = cur.params.find(x => typeof x.floatParameter === 'number');
+  if (p) {
+    mark = s.messages.length;
+    await s.send(gtMsg('getDspUnitParameter', { nodeId: p.nodeId, parameterId: p.parameterId }), 'getDspUnitParameter');
+    const a = await s.waitFor(m => m.name === 'dspUnitParameterStatus' && m.value.parameterId === p.parameterId, 2500, mark);
+    r.check('x-getparam', `Read one knob (106): ${p.nodeId} ${p.parameterId}`, a ? 'ok' : 'noanswer',
+      a ? `value ${a.value.floatParameter} (920 said ${p.floatParameter})` : summarize(s.since(mark)));
+  }
+
+  // The preset in transfer form (500-502 or 904). Only for the current slot, and only
+  // without unsaved changes, in case "retrieve" also loads it.
+  if (cur.slot != null && cur.edited === false) {
+    mark = s.messages.length;
+    await s.send(gtMsg('retrievePreset', { slot: cur.slot }), 'retrievePreset');
+    await s.waitFor(m => m.name === 'packetStopMTU' || m.name === 'presetJSONMessage', 6000, mark);
+    await sleep(500);
+    got = s.since(mark).filter(m => m.name !== 'networkStatus');
+    r.data.transfer = assembleTransfer(got);
+    r.check('x-retrieve', `Preset data of slot ${cur.slot} (424)`, got.length ? 'ok' : 'noanswer',
+      `${summarize(got)}${r.data.transfer ? '; ' + r.data.transfer.summary : ''}`);
+  } else {
+    r.check('x-retrieve', 'Preset data (424)', 'skipped', cur.edited ? 'current preset has unsaved changes' : 'current preset unknown');
+  }
+}
+
+function assembleTransfer(msgs) {
+  const start = lastOf(msgs, 'packetStartMTU'), data = by(msgs, 'packetDataMTU');
+  const json = lastOf(msgs, 'presetJSONMessage');
+  if (json) return { summary: 'preset as JSON (904)', json: json.value.data };
+  if (!start && !data.length) return null;
+  const parts = data.map(m => m.value).sort((a, b) => (a.seqNumber || 0) - (b.seqNumber || 0));
+  const bytes = concat(...parts.map(p => fromHex((p.data && p.data.hex) || '')));
+  const out = { summary: `${parts.length} chunks, ${bytes.length} bytes (start said ${start ? start.value.numBytes : '?'})` };
+  const tryJson = b => { const p = new Privacy(); const [v] = p.json(JSON.parse(fromUtf8(b))); return v; };
+  try { out.json = tryJson(bytes); out.summary += ', plain JSON'; } catch (e) {
+    try { out.json = tryJson(lz4Block(bytes)); out.summary += ', LZ4-compressed JSON'; } catch (e2) {
+      // unknown format: only the first 16 bytes, enough to recognise a format signature
+      out.summary += ', format unknown'; out.head = hex(bytes.subarray(0, 16));
+    }
+  }
+  return out;
+}
+
+function pickTarget(list, current) {
+  const ok = list.filter(x => x.slot !== current && !x.empty);
+  return (ok.find(x => x.slot > current) || ok[0] || {}).slot;
+}
+function pickParam(params) {
+  const floats = params.filter(p => typeof p.value === 'number');
+  return floats.find(p => p.parameterId === 'gain' && p.value >= 0 && p.value <= 1)
+    || floats.find(p => p.parameterId === 'gain') || floats.find(p => p.parameterId === 'volume') || floats[0];
+}
+function nudge(v) { return v >= 0 && v <= 1 ? round(v <= 0.85 ? v + 0.1 : v - 0.1) : round(v + (v <= 9 ? 1 : -1)); }
+
+async function gtControl(s, r) {
+  const cur = r.data.current;
+  if (!cur || cur.slot == null) return r.check('c-switch', 'Switch preset and back', 'skipped', 'current preset unknown');
+  if (cur.edited !== false) return r.check('c-switch', 'Switch preset and back', 'skipped', 'the current preset may have unsaved changes; not touched');
+  const list = (r.data.presets || []).map(p => ({ slot: p.slotNumber || 0, empty: !!p.isEmpty }));
+  const target = pickTarget(list, cur.slot);
+  if (target == null) return r.check('c-switch', 'Switch preset and back', 'skipped', 'no other preset found');
+  const loaded = slot => m => (m.name === 'presetInfoMessage' && (m.value.slotNumber || 0) === slot)
+    || (m.name === 'packetEnd' && m.value.packetType === 'LOAD_PRESET_IF_VALID');
+  let mark = s.messages.length;
+  await s.send(gtMsg('loadPresetIfValid', { slot: target }), 'loadPresetIfValid');
+  const a = await s.waitFor(loaded(target), 5000, mark);
+  await sleep(400);
+  const there = s.since(mark);
+  await sleep(2000);
+  mark = s.messages.length;
+  await s.send(gtMsg('loadPresetIfValid', { slot: cur.slot }), 'loadPresetIfValid');
+  const b = await s.waitFor(loaded(cur.slot), 5000, mark);
+  await sleep(400);
+  const back = s.since(mark);
+  const check = await gtCurrent(s);
+  r.check('c-switch', `Switch to slot ${target} and back to ${cur.slot} (407)`,
+    check.slot === cur.slot && a && b ? 'ok' : (a || b ? 'partial' : 'failed'),
+    `there: ${summarize(there)}; back: ${summarize(back)}; now on slot ${check.slot ?? '?'}`);
+  if (check.slot !== cur.slot) return r.check('c-knob', 'Turn a knob and back', 'skipped', 'not back on the original preset');
+
+  const p = pickParam(check.params.map(x => ({ nodeId: x.nodeId, parameterId: x.parameterId, value: x.floatParameter })));
+  if (!p) return r.check('c-knob', 'Turn a knob and back', 'skipped', 'no knob value found');
+  const v2 = nudge(p.value);
+  const read = async () => {
+    const m0 = s.messages.length;
+    await s.send(gtMsg('getDspUnitParameter', { nodeId: p.nodeId, parameterId: p.parameterId }), 'getDspUnitParameter');
+    const m = await s.waitFor(x => x.name === 'dspUnitParameterStatus' && x.value.parameterId === p.parameterId && x.value.nodeId === p.nodeId, 2500, m0);
+    return m ? m.value.floatParameter : null;
+  };
+  const set = async v => {
+    const m0 = s.messages.length;
+    await s.send(gtMsg('setDspUnitParameter', { nodeId: p.nodeId, parameterId: p.parameterId, floatParameter: v }), 'setDspUnitParameter');
+    await sleep(600);
+    return s.since(m0);
+  };
+  const r1 = await set(v2);
+  const after = await read();
+  await sleep(2000);
+  const r2 = await set(p.value);
+  const restored = await read();
+  mark = s.messages.length;
+  await s.send(gtMsg('loadPresetIfValid', { slot: cur.slot }), 'loadPresetIfValid');   // drops the edit flag
+  await s.waitFor(loaded(cur.slot), 5000, mark);
+  const fin = await gtCurrent(s);
+  const okSet = after != null && near(after, v2), okBack = restored != null && near(restored, p.value);
+  r.check('c-knob', `Set ${p.nodeId} ${p.parameterId} ${p.value} → ${v2} and back (102)`,
+    okSet && okBack && fin.edited === false ? 'ok' : (okSet || okBack ? 'partial' : 'failed'),
+    `read back ${after ?? 'nothing'} then ${restored ?? 'nothing'}; replies to set: ${summarize(r1)} / ${summarize(r2)}; ` +
+    `after reloading the preset: unsaved changes ${fin.edited == null ? '?' : (fin.edited ? 'yes' : 'no')}`);
+}
+
+// ---- Micro Plus / LTX scripts ---------------------------------------------------------
+function toneMsg(family, name, body) {
+  return encodeMsg(FAMILIES[family].envelope, { toneRequest: { [name]: body || {} } }, family);
+}
+// Requests that maneline sends to the Micro Plus with an empty body, and that work so.
+// Others get dummyField = true: exitAuditionRequest is ignored without it.
+const PROVEN_EMPTY = new Set(['firmwareVersionRequest', 'presetNamesRequest', 'usbAudioGainInfoRequest', 'eqRequest', 'heartbeat']);
+function requestBody(family, name, extra) {
+  const type = resolve(fieldSpec(FAMILIES[family].envelope.replace(/\.[^.]+$/, '.MustangLtxToneRequest'), name)[3], family);
+  return Object.assign(PROVEN_EMPTY.has(name) ? {} : queryBody(type), extra || {});
+}
+function modal(family, context) { return encodeMsg(FAMILIES[family].envelope, { modalStatus: { context } }, family); }
+function statusNumbers(m) {   // field numbers inside ampStatus, read from the raw bytes
+  try {
+    const st = parseFields(m.raw).find(f => f.no === 2 && f.wire === 2);
+    return st ? parseFields(st.value).map(f => f.no) : [];
+  } catch (e) { return []; }
+}
+const MP_READS = ['currentPresetRequest', 'usbAudioGainInfoRequest', 'eqRequest', 'productIdentificationRequest',
+  'connectionStatusRequest', 'modifiableParameterRequest', 'tapTempoRequest', 'attenuatorRequest',
+  'muteDetectEnableRequest', 'inputPadRequest'];
+const LTX_READS = ['currentPresetRequest', 'productIdRequest', 'usbAndLineOutGainRequest', 'outputPowerRequest',
+  'presetModeRequest', 'ftswBrightnessRequest', 'ftswVersionRequest', 'connectionStatusRequest'];
+
+async function framedRead(s, r, serviceFamily) {
+  // 7 (firmware) and 14 (preset names) mean the same in "mp" and "ltx"; the reply to 14
+  // is status 12 on a Micro Plus and 11 on an LTX. Nothing else is sent before that.
+  let mark = s.messages.length;
+  await s.send(modal('mp', 'SYNC_BEGIN'), 'modal SYNC_BEGIN');
+  await s.send(toneMsg('mp', 'firmwareVersionRequest'), 'firmwareVersionRequest');
+  await s.send(toneMsg('mp', 'presetNamesRequest'), 'presetNamesRequest');
+  const names = await s.waitFor(m => { const n = statusNumbers(m); return n.includes(11) || n.includes(12); }, 6000, mark);
+  let family = serviceFamily;
+  if (names) family = statusNumbers(names).includes(12) ? 'mp' : 'ltx';
+  if (family !== s.family) s.redecode(family);
+  r.data.family = family;
+  r.check('family', 'Which message numbers the amp uses', names ? (family === serviceFamily ? 'ok' : 'warn') : 'noanswer',
+    names ? `"${family}" numbering (Bluetooth service says "${serviceFamily}")${s.unframed ? `; ${s.unframed} replies came without frame header` : ''}`
+      : `no answer to the preset name request. Replies: ${summarize(s.since(mark))}`);
+  if (!names) return;
+  s.startHeartbeat(toneMsg(family, 'heartbeat'));
+  s.event(`heartbeat every ${HEARTBEAT} ms started`);
+
+  const reads = family === 'mp' ? MP_READS : LTX_READS;
+  for (const name of reads) {
+    if (!hasField(FAMILIES[family].envelope.replace(/\.[^.]+$/, '.MustangLtxToneRequest'), name)) continue;
+    const extra = name === 'currentPresetRequest' ? { requestPresetData: true } : {};
+    await s.send(toneMsg(family, name, requestBody(family, name, extra)), name);
+    await sleep(150);
+  }
+  await s.send(modal(family, 'SYNC_END'), 'modal SYNC_END');
+  await sleep(2500);
+  const got = s.since(mark);
+  const fw = lastOf(got, 'firmwareVersionStatus');
+  const nm = by(got, 'presetNamesStatus').pop();
+  const cur = lastOf(got, 'currentPresetStatus');
+  const data = lastOf(got, 'currentPresetDataStatus');
+  r.data.firmware = fw && fw.value.version;
+  r.data.names = nm ? [].concat(nm.value.presetName || []) : [];
+  r.data.current = cur ? { index: cur.value.presetIndex || 0, dirty: !!cur.value.isDirty, auditioning: !!cur.value.isAuditioning } : null;
+  r.data.presetJson = data && data.value.compressedPresetJson && data.value.compressedPresetJson.lz4Json;
+  r.data.other = got.filter(m => !['firmwareVersionStatus', 'presetNamesStatus', 'currentPresetStatus', 'currentPresetDataStatus'].includes(m.name));
+  r.check('handshake', 'Firmware, preset names and current preset',
+    fw && nm && cur ? 'ok' : 'partial',
+    `firmware ${r.data.firmware || '?'}, ${r.data.names.length} names, current ${cur ? (r.data.current.index + 1) : '?'}` +
+    `${r.data.current && r.data.current.dirty ? ' (unsaved changes)' : ''}. Replies: ${summarize(got)}`);
+
+  if (cur) {
+    mark = s.messages.length;
+    await s.send(toneMsg(family, 'presetDataRequest', requestBody(family, 'presetDataRequest', { presetIndex: r.data.current.index })), 'presetDataRequest');
+    const st = await s.waitFor(m => m.name === 'presetDataStatus', 4000, mark);
+    r.data.storedJson = st && st.value.compressedPresetJson && st.value.compressedPresetJson.lz4Json;
+    r.check('stored', `Stored form of preset ${r.data.current.index + 1} (12)`, st ? 'ok' : 'noanswer',
+      st ? `${st.value.compressedPresetJson.compressedBytes || '?'} compressed bytes` : summarize(s.since(mark)));
+  }
+  mark = s.messages.length;
+  await sleep(3000);
+  r.check('listen', 'Messages during 3 s with heartbeat only', 'info', summarize(s.since(mark)));
+}
+
+function jsonParams(preset) {
+  const nodes = (preset && preset.audioGraph && preset.audioGraph.nodes) || [];
+  const out = [];
+  for (const n of nodes) for (const [k, v] of Object.entries(n.dspUnitParameters || {}))
+    out.push({ nodeId: n.nodeId, parameterId: k, value: v });
+  return out;
+}
+
+async function framedControl(s, r) {
+  const family = r.data.family, cur = r.data.current;
+  if (!family || !cur) return r.check('c-switch', 'Switch preset and back', 'skipped', 'current preset unknown');
+  if (cur.dirty || cur.auditioning) return r.check('c-switch', 'Switch preset and back', 'skipped', 'the current preset has unsaved changes; not touched');
+  const list = r.data.names.map((n, i) => ({ slot: i, empty: /^\s*empty\s*$/i.test(n) }));
+  const target = pickTarget(list.length ? list : [{ slot: cur.index + 1 }], cur.index);
+  const load = async index => {
+    const m0 = s.messages.length;
+    await s.send(toneMsg(family, 'loadPresetRequest', requestBody(family, 'loadPresetRequest', { newPresetIndex: index })), 'loadPresetRequest');
+    const m = await s.waitFor(x => x.name === 'currentPresetStatus' && (x.value.presetIndex || 0) === index, 4000, m0);
+    await sleep(300);
+    return [m, s.since(m0)];
+  };
+  const [a, there] = await load(target);
+  await sleep(2000);
+  const [b, back] = await load(cur.index);
+  r.check('c-switch', `Switch to ${target + 1} and back to ${cur.index + 1} (load preset)`, a && b ? 'ok' : (a || b ? 'partial' : 'failed'),
+    `there: ${summarize(there)}; back: ${summarize(back)}`);
+  if (!b) return r.check('c-knob', 'Turn a knob and back', 'skipped', 'not back on the original preset');
+
+  const p = pickParam(jsonParams(r.data.presetJson).filter(x => x.nodeId === 'amp')) || pickParam(jsonParams(r.data.presetJson));
+  if (!p) return r.check('c-knob', 'Turn a knob and back', 'skipped', 'no knob value found in the preset');
+  const read = async () => {
+    const m0 = s.messages.length;
+    await s.send(toneMsg(family, 'parameterRequest', { nodeId: p.nodeId, parameterId: p.parameterId }), 'parameterRequest');
+    const m = await s.waitFor(x => x.name === 'parameterStatus' && x.value.parameterId === p.parameterId, 2500, m0);
+    return m ? m.value.floatParameter : null;
+  };
+  const set = async v => {
+    const m0 = s.messages.length;
+    await s.send(toneMsg(family, 'setParameterRequest', { nodeId: p.nodeId, parameterId: p.parameterId, floatParameter: v }), 'setParameterRequest');
+    await sleep(600);
+    return s.since(m0);
+  };
+  const before = await read();
+  const v2 = nudge(p.value);
+  const r1 = await set(v2);
+  const after = await read();
+  await sleep(2000);
+  const r2 = await set(p.value);
+  const restored = await read();
+  const [c, reload] = await load(cur.index);   // drops the unsaved-change flag
+  const dirty = c ? !!c.value.isDirty : null;
+  const okSet = after != null && near(after, v2), okBack = restored != null && near(restored, p.value);
+  r.check('c-knob', `Set ${p.nodeId} ${p.parameterId} ${p.value} → ${v2} and back (set parameter)`,
+    okSet && okBack && dirty === false ? 'ok' : (okSet || okBack ? 'partial' : 'failed'),
+    `read before ${before ?? 'nothing'}, after ${after ?? 'nothing'}, restored ${restored ?? 'nothing'}; ` +
+    `replies to set: ${summarize(r1)} / ${summarize(r2)}; after reload: unsaved changes ${dirty == null ? '?' : (dirty ? 'yes' : 'no')}`);
+}
+
+// ---- report ---------------------------------------------------------------------------
+const STATUS_TEXT = { ok: 'OK', partial: 'partly', noanswer: 'no answer', failed: 'failed', skipped: 'skipped', info: 'info', warn: 'check' };
+const cell = v => String(v ?? '').replace(/\|/g, '\\|').replace(/\n/g, ' ');
+
+// Linux: shell lines that free the amp's LE link before connecting, and that undo it.
+// A web page never learns the device's address, but it knows the name the tester chose,
+// so the lines look the amp up among the paired devices: by that name, else by a Fender
+// control service in its UUIDs. They keep its address and the old preference in
+// ~/amp-check-bearer.txt for the cleanup. The copied text is one `bash -c '...'` command
+// without single quotes or backslash pairs inside, so bash, zsh and fish all pass it on
+// unchanged (fish can't run bash syntax itself).
+const BEARER_FILE = '~/amp-check-bearer.txt';
+function linuxPrepCommands(name) {
+  // a name with ' or \ would need shell-specific quoting: then only the service lookup is used
+  const arg = /['\\]/.test(name || '') ? '' : name || '';
+  const services = [UUID.mp, UUID.ltx, UUID.gt, UUID.gtReversed].join('|');
+  return [
+    "bash -c '",
+    'AMP=$(bluetoothctl devices Paired | awk -v n="$1" "n != \\"\\" && substr(\\$0, 26) == n {print \\$2; exit}")',
+    'if [ -z "$AMP" ]; then',
+    '  for d in $(bluetoothctl devices Paired | cut -d" " -f2); do',
+    `    bluetoothctl info "$d" | grep -qiE "${services}" && { AMP=$d; break; }`,
+    '  done',
+    'fi',
+    'if [ -n "$AMP" ]; then',
+    '  DEV=/org/bluez/hci0/dev_${AMP//:/_}',
+    `  [ -f ${BEARER_FILE} ] || { echo "$AMP"; busctl --system get-property org.bluez $DEV org.bluez.Device1 PreferredBearer | cut -d\\" -f2; } > ${BEARER_FILE}`,
+    '  bluetoothctl disconnect "$AMP" >/dev/null',
+    '  busctl --system set-property org.bluez $DEV org.bluez.Device1 PreferredBearer s le',
+    '  echo "Done: the amp ($AMP) now uses its LE link. Back in the browser, click Connect."',
+    'else',
+    '  echo "No amp is paired with this computer: nothing to change. Back in the browser, click Connect."',
+    'fi',
+    `' amp-check '${arg}'`].join('\n');
+}
+function linuxCleanupCommands() {
+  return [
+    "bash -c '",
+    `F=${BEARER_FILE}`,
+    'if [ -f "$F" ]; then',
+    '  AMP=$(sed -n 1p "$F"); OLD=$(sed -n 2p "$F")',
+    '  busctl --system set-property org.bluez /org/bluez/hci0/dev_${AMP//:/_} org.bluez.Device1 PreferredBearer s "${OLD:-last-used}" &&',
+    '    rm "$F" && echo "Put back: the amp ($AMP) prefers ${OLD:-last-used} again."',
+    '  bluetoothctl connect "$AMP" >/dev/null && echo "Audio link reconnected."',
+    'else',
+    '  echo "Nothing to put back."',
+    'fi',
+    "'"].join('\n');
+}
+
+// Renders the report's Markdown for printing. Covers exactly what buildReport writes:
+// headings, "- " lists, "> " quotes, tables, ``` blocks, `code` and **bold**.
+// Everything is escaped first, so text from the amp or the tester can't become markup.
+function mdToHtml(md) {
+  const esc = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const inline = t => esc(t).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+  const cells = row => row.trim().replace(/^\|/, '').replace(/\|$/, '').split(/(?<!\\)\|/).map(c => c.trim().replace(/\\\|/g, '|'));
+  const lines = md.split('\n'), out = [];
+  for (let i = 0; i < lines.length;) {
+    const line = lines[i];
+    if (line.startsWith('```')) {
+      const body = [];
+      for (i++; i < lines.length && !lines[i].startsWith('```'); i++) body.push(lines[i]);
+      i++; out.push('<pre>' + esc(body.join('\n')) + '</pre>');
+    } else if (/^#{1,3} /.test(line)) {
+      const n = line.match(/^#+/)[0].length;
+      out.push(`<h${n}>${inline(line.slice(n + 1))}</h${n}>`); i++;
+    } else if (line.startsWith('|') && /^\|[\s|:-]+\|$/.test(lines[i + 1] || '')) {
+      const head = cells(line); i += 2;
+      const rows = [];
+      while (i < lines.length && lines[i].startsWith('|')) rows.push(cells(lines[i++]));
+      out.push('<table><thead><tr>' + head.map(c => `<th>${inline(c)}</th>`).join('') + '</tr></thead><tbody>'
+        + rows.map(r => '<tr>' + r.map(c => `<td>${inline(c)}</td>`).join('') + '</tr>').join('') + '</tbody></table>');
+    } else if (/^- /.test(line)) {
+      const items = [];
+      while (i < lines.length && /^- /.test(lines[i])) items.push(lines[i++].slice(2));
+      out.push('<ul>' + items.map(t => `<li>${inline(t)}</li>`).join('') + '</ul>');
+    } else if (line.startsWith('>')) {
+      const q = [];
+      while (i < lines.length && lines[i].startsWith('>')) q.push(lines[i++].replace(/^> ?/, ''));
+      out.push('<blockquote>' + q.map(inline).join('<br>') + '</blockquote>');
+    } else if (line.trim()) {
+      const p = [];
+      while (i < lines.length && lines[i].trim() && !/^(```|#{1,3} |- |>|\|)/.test(lines[i])) p.push(lines[i++]);
+      if (!p.length) p.push(lines[i++]);
+      out.push('<p>' + p.map(inline).join(' ') + '</p>');
+    } else i++;
+  }
+  return out.join('\n');
+}
+const oneLine = (v, n = 400) => { const t = JSON.stringify(v); return t && t.length > n ? t.slice(0, n) + ' …' : t; };
+
+function rawLine(e) {
+  const masked = Array.from(e.raw, (b, i) => e.mask.some(([s, t]) => i >= s && i < t) ? '..' : b.toString(16).padStart(2, '0')).join('');
+  return `${('+' + (e.t / 1000).toFixed(3)).padStart(9)}s ${e.dir} ${masked}${e.label ? '  ' + e.label : ''}${e.note ? '  (' + e.note + ')' : ''}`;
+}
+function trafficLog(log, maxLines = 6000) {
+  const lines = [], seen = new Map(); let beats = 0, skipped = 0;
+  for (const e of log) {
+    if (e.label === 'heartbeat' && ++beats > 3) continue;
+    const key = e.dir + hex(e.raw);
+    const n = (seen.get(key) || 0) + 1; seen.set(key, n);
+    if (e.dir === 'rx' && n > 3) { skipped++; continue; }
+    if (lines.length < maxLines) lines.push(rawLine(e));
+  }
+  if (beats > 3) lines.push(`(${beats - 3} more heartbeats not shown)`);
+  if (skipped) lines.push(`(${skipped} repeated identical notifications not shown)`);
+  if (lines.length >= maxLines) lines.push(`(log cut at ${maxLines} lines)`);
+  return lines.join('\n');
+}
+
+function buildReport(st) {
+  const L = [], r = st.results, s = st.session, d = r.data;
+  const push = (...x) => L.push(...x);
+  // Texts that come from the system rather than from decoded messages (error messages,
+  // device names) go through the same filter; an error can name the amp's address.
+  const meta = new Privacy();
+  const clean = text => meta.scrub(String(text), /firmware|version/i.test(text) ? 'version' : '');
+  push('# Fender amp check report', '',
+    `- Tool: amp-probe ${PROBE_VERSION} (${st.tool || 'web page'})`,
+    `- Date: ${st.date}`,
+    `- Computer: ${st.system || 'unknown'}`,
+    `- Device: "${clean(st.device && st.device.name || '?')}"`,
+    `- Family: ${st.family ? `${st.family} (${(FAMILIES[st.family] || {}).label || '?'}), from Bluetooth service ${st.serviceUuid}` : 'not a known Fender service'}`);
+  if (d.family && d.family !== st.family) push(`- Message numbering seen: ${d.family}`);
+  push('', '## Results', '', '| Check | Result | Details |', '| --- | --- | --- |');
+  for (const c of r.checks) push(`| ${cell(c.title)} | ${STATUS_TEXT[c.status] || c.status} | ${cell(clean(c.detail))} |`);
+  if (!r.checks.length) push('| (nothing was checked) | | |');
+
+  push('', '## From the tester', '');
+  const a = st.answers || {};
+  for (const [k, v] of Object.entries(a)) push(`- ${k}: ${v || '(no answer)'}`);
+  if (st.notes) push('', '> ' + st.notes.replace(/\n/g, '\n> '));
+
+  if (st.gatt && st.gatt.length) {
+    push('', '## Bluetooth services', '', '| Service | Characteristic | Properties |', '| --- | --- | --- |');
+    for (const sv of st.gatt) {
+      if (!sv.chars.length) push(`| ${sv.uuid} | | ${cell(clean(sv.error || ''))} |`);
+      for (const c of sv.chars) push(`| ${sv.uuid} | ${c.uuid} | ${c.props.join(', ')}${c.descriptors && c.descriptors.length ? '; descriptors ' + c.descriptors.join(', ') : ''} |`);
+    }
+  }
+  if (st.deviceInfo && Object.keys(st.deviceInfo).length) {
+    push('', '## Device information service', '');
+    for (const [k, v] of Object.entries(st.deviceInfo)) push(`- ${k}: ${v}`);
+  }
+  if (st.extra) push('', st.extra);
+
+  if (d.system) {
+    push('', '## Amp', '');
+    for (const [k, v] of Object.entries(d.system)) push(`- ${k}: ${typeof v === 'object' ? oneLine(v) : v}`);
+  }
+  if (d.firmware) push('', '## Amp', '', `- firmware: ${d.firmware}`);
+  if (d.presets && d.presets.length) {
+    push('', `## Presets (${d.presets.length})`, '', '| Slot | Name | Factory | Empty | Made for | Author |', '| --- | --- | --- | --- | --- | --- |');
+    for (const p of d.presets) push(`| ${p.slotNumber || 0} | ${cell(p.displayName)} | ${p.is_factory_default ? 'yes' : ''} | ${p.isEmpty ? 'yes' : ''} | ${cell(p.product_id)} | ${cell(p.author)} |`);
+  }
+  if (d.names && d.names.length) {
+    push('', `## Presets (${d.names.length})`, '');
+    d.names.forEach((n, i) => push(`${i + 1}. ${n}`));
+  }
+  if (d.current) {
+    push('', '## Current preset', '');
+    const c = d.current;
+    if (c.nodes) {
+      push(`Slot ${c.slot ?? '?'} "${c.name ?? '?'}", unsaved changes: ${c.edited == null ? '?' : (c.edited ? 'yes' : 'no')}`, '',
+        '| Block | Model | Bypassed |', '| --- | --- | --- |');
+      for (const n of c.nodes) push(`| ${cell(n.nodeId)} | ${cell(n.fenderId)} | ${n.bypass ? 'yes' : ''} |`);
+      push('', '| Block | Knob | Value |', '| --- | --- | --- |');
+      for (const p of c.params) {
+        const v = ['floatParameter', 'stringParameter', 'sint32Parameter', 'boolParameter'].find(k => k in p);
+        push(`| ${cell(p.nodeId)} | ${cell(p.parameterId)} | ${cell(v ? p[v] : '(default)')} |`);
+      }
+    } else {
+      push(`Preset ${c.index + 1}, unsaved changes: ${c.dirty ? 'yes' : 'no'}, auditioning: ${c.auditioning ? 'yes' : 'no'}`);
+    }
+  }
+  if (d.presetJson) push('', '### Current preset as loaded (JSON)', '', '```json', JSON.stringify(d.presetJson, null, 1).slice(0, 20000), '```');
+  if (d.storedJson) push('', '### Current preset as stored (JSON)', '', '```json', JSON.stringify(d.storedJson, null, 1).slice(0, 20000), '```');
+  if (d.transfer) {
+    push('', '### Preset transfer (500-502 / 904)', '', `- ${d.transfer.summary}`);
+    if (d.transfer.head) push(`- first bytes: ${d.transfer.head}`);
+    if (d.transfer.json) push('', '```json', JSON.stringify(d.transfer.json, null, 1).slice(0, 20000), '```');
+  }
+
+  if (s) {
+    const skip = new Set(['presetInfoMessage', 'dspUnitParameterStatus', 'nodeStatus', 'presetNamesStatus', 'currentPresetDataStatus', 'presetDataStatus']);
+    const groups = new Map();
+    for (const m of s.messages) { if (!skip.has(m.name)) { const g = groups.get(m.name) || []; g.push(m); groups.set(m.name, g); } }
+    push('', '## Other message types received', '', 'Preset names and preset data are in their own sections above.', '',
+      '| Message | Count | First value | Last value |', '| --- | --- | --- | --- |');
+    for (const [name, g] of groups) push(`| ${cell(name)} | ${g.length} | ${cell(oneLine(g[0].value, 300))} | ${g.length > 1 ? cell(oneLine(g[g.length - 1].value, 300)) : ''} |`);
+    const unk = Object.entries(s.unknown).map(([t, set]) => `${t}: ${[...set].join(', ')}`);
+    const bad = s.messages.filter(m => m.error);
+    if (unk.length || bad.length || s.dropped || s.twice) {
+      push('', '## Not understood', '');
+      for (const u of unk) push(`- fields not in the app's definitions: ${u}`);
+      const firstTx = s.log.find(e => e.dir === 'tx');
+      for (const m of bad.slice(0, 20)) {
+        // before the amp could answer anything: the end of a reply to an earlier connection
+        const early = firstTx && m.t <= firstTx.t + 50;
+        push(`- could not decode (${m.error}): ${hex(m.raw).slice(0, 200)}`
+          + (early ? ' (arrived before the first answer could: left over from before this connection, harmless)' : ''));
+      }
+      if (s.dropped) push(`- ${s.dropped} notifications were not valid frames`);
+      if (s.twice) push(`- ${s.twice} notifications arrived twice in a row: probably another program on this computer received the amp's replies too`);
+    }
+    if (s.events.length) { push('', '## Events', ''); for (const e of s.events) push(`- +${(e.t / 1000).toFixed(3)} s: ${clean(e.text)}`); }
+    push('', '## Traffic (hex; ".." marks bytes removed for privacy)', '', '```', trafficLog(s.log), '```');
+  }
+  const reasons = [...new Set([...((s && s.privacy.reasons) || []), ...(st.removed || []),
+    ...[...meta.reasons].map(x => x + ' (in an error message or device name)')])];
+  st.reportReasons = reasons;
+  push('', '## Removed for privacy', '', reasons.length ? reasons.map(x => '- ' + x).join('\n') : '- nothing needed removing');
+  return L.join('\n') + '\n';
+}
+
+if (typeof module === 'object' && module.exports) {
+  module.exports = { PROBE_VERSION, CONFIG, SCHEMA, UUID, FAMILIES, FAMILY_BY_SERVICE, setSpeed, hex, fromHex, concat,
+    varint, parseFields, encodeMsg, decodeMessage, lz4Block, Privacy, Session, Results, toFrames,
+    gtMsg, toneMsg, modal, gtRead, gtControl, framedRead, framedControl, buildReport, trafficLog, mdToHtml, linuxPrepCommands, linuxCleanupCommands };
+}
+</script>
+
+<script id="probe-ui">
+'use strict';
+(function () {
+  if (typeof document === 'undefined') return;
+  const $ = id => document.getElementById(id);
+  $('version').textContent = PROBE_VERSION;
+  $('email').hidden = $('gmail').hidden = $('email-help').hidden = !CONFIG.email;
+  const state = { results: new Results(renderCheck), date: new Date().toISOString().slice(0, 10), removed: [] };
+  let device = null, session = null, family = null, reportText = '';
+
+  const UA = navigator.userAgent;
+  // iPadOS reports itself as a Mac; a touch screen tells them apart.
+  const OS = /iPhone|iPad|iPod/.test(UA) || (/Macintosh/.test(UA) && navigator.maxTouchPoints > 1) ? 'iOS'
+    : /Windows/.test(UA) ? 'Windows' : /Android/.test(UA) ? 'Android' : /Mac OS X|Macintosh/.test(UA) ? 'macOS'
+    : /CrOS/.test(UA) ? 'ChromeOS' : /Linux/.test(UA) ? 'Linux' : 'other';
+  const isLinux = OS === 'Linux';
+  function systemName() {
+    const m = UA.match(/(Edg[A-Za-z]*|SamsungBrowser|OPR|CriOS|FxiOS|Firefox|Chrome|Version)\/(\d+)/);
+    const names = { Edg: 'Edge', EdgA: 'Edge', EdgiOS: 'Edge', OPR: 'Opera', CriOS: 'Chrome', FxiOS: 'Firefox',
+      SamsungBrowser: 'Samsung Internet', Version: 'Safari' };
+    const browser = m ? (names[m[1]] || m[1]) + ' ' + m[2] : 'unknown browser';
+    return `${OS}, ${browser}`;
+  }
+  state.system = systemName();
+  // Said whenever Bluetooth isn't available, so the tester knows where to go instead.
+  const WHAT_WORKS = 'What works: <b>Chrome</b> or <b>Edge</b> on a Windows or Mac computer, <b>Chrome</b> or '
+    + '<b>Chromium</b> on Linux (after one setting), or <b>Chrome</b> on an Android phone or tablet. '
+    + 'Then open this same page there.';
+  $('linux-tip').hidden = !isLinux;
+  $('linux-after').hidden = !isLinux;
+  $('linux-after-cmd').textContent = linuxCleanupCommands();
+  for (const b of document.querySelectorAll('.copy-cmd')) {
+    b.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText($(b.dataset.from).textContent); b.textContent = 'Copied'; }
+      catch (e) { b.textContent = 'Copying did not work: select the lines and copy them'; }
+      setTimeout(() => { b.textContent = 'Copy these commands'; }, 4000);
+    });
+  }
+  $('more').hidden = OS === 'iOS' || OS === 'Android';   // the Python program needs a computer
+  if (location.protocol === 'file:') {
+    // A downloaded copy: say so, and fetch the program from the online page, where the
+    // download link works (another site's file would only be shown as text).
+    $('offline').innerHTML = '';
+    $('offline').append(`You are using a downloaded copy of this page (version ${PROBE_VERSION}). The newest version is at `,
+      Object.assign(document.createElement('a'), { href: CONFIG.home, textContent: CONFIG.home, target: '_blank', rel: 'noopener' }), '.');
+    Object.assign($('py-link'), { href: CONFIG.home + '#more', textContent: 'Download the program from the online page' });
+    $('py-link').removeAttribute('download');
+  } else if (OS === 'iOS' || OS === 'Android') $('offline').hidden = true;
+  // Shown with a failed connection on Linux: the two BlueZ problems seen with the Micro Plus.
+  const LINUX_HINT = ' On Linux: (1) the browser probably used the amp\'s audio link instead of its LE control link: '
+    + 'run the lines shown under step 1 (or check their output), reload the page and try again, or use the Python program, which does that for you; '
+    + '(2) if connecting hangs for about 30 seconds, BlueZ is waiting for an answer the amp never sends. '
+    + 'The fix is step 3 of the BlueZ setup in maneline\'s docs/MUSTANG_MICRO_PLUS_LINUX.md.';
+
+  function setStep(n) { for (let i = 1; i <= 5; i++) $('step' + i).classList.toggle('off', i > n); }
+  function renderCheck(c) {
+    let li = document.querySelector(`#checks li[data-id="${c.id}"]`);
+    if (!li) { li = document.createElement('li'); li.dataset.id = c.id; $('checks').appendChild(li); }
+    li.innerHTML = '';
+    const b = document.createElement('span'); b.className = 'badge b-' + c.status; b.textContent = STATUS_TEXT[c.status] || c.status;
+    const t = document.createElement('div');
+    const strong = document.createElement('div'); strong.textContent = c.title;
+    const det = document.createElement('div'); det.className = 'detail'; det.textContent = c.detail;
+    t.append(strong, det); li.append(b, t);
+  }
+
+  async function browserCheck() {
+    const el = $('browser-check');
+    if (!navigator.bluetooth) {
+      const chromeLike = /Chrome\//.test(UA);
+      el.innerHTML = OS === 'iOS'
+        ? '<span class="error">This doesn\'t work on an iPhone or iPad.</span> Apple doesn\'t let any browser there '
+          + '(Safari, Chrome, Edge or Firefox) talk to Bluetooth devices from a web page. ' + WHAT_WORKS
+        : isLinux && chromeLike
+        ? '<span class="error">On Linux, Chrome, Chromium and Edge have Bluetooth for web pages switched off.</span> Switch it on: '
+          + 'type <code>chrome://flags/#enable-experimental-web-platform-features</code> into the address bar, '
+          + 'set <b>Experimental Web Platform features</b> to <b>Enabled</b>, click <b>Relaunch</b>, then come back here. '
+          + 'Or start the browser once with <code>chromium --enable-features=WebBluetooth</code> '
+          + '(or <code>google-chrome --enable-features=WebBluetooth</code>), with all its windows closed before.'
+        : OS === 'Android'
+        ? '<span class="error">This browser can\'t talk to Bluetooth devices.</span> On Android, please open this '
+          + 'same page in <b>Chrome</b>.'
+        : !window.isSecureContext
+        ? '<span class="error">Bluetooth only works when this page is opened over https.</span> ' + WHAT_WORKS
+        : `<span class="error">This browser can't talk to Bluetooth devices${/Firefox|FxiOS/.test(UA) ? ' (Firefox has no Bluetooth for web pages)'
+          : OS === 'macOS' && !chromeLike ? ' (Safari has no Bluetooth for web pages)' : ''}.</span> ` + WHAT_WORKS;
+      // Shown first, above the steps: nothing below works without it.
+      el.classList.add('blocker'); el.setAttribute('role', 'alert');
+      $('step0').before(el);
+      $('connect').disabled = true; return;
+    }
+    try {
+      if (navigator.bluetooth.getAvailability && !(await navigator.bluetooth.getAvailability()))
+        el.innerHTML = `<span class="error">Bluetooth seems to be off or missing on this ${OS === 'Android' ? 'phone or tablet' : 'computer'}. `
+          + 'Switch it on, then reload this page.</span>';
+      else el.textContent = 'Your browser can use Bluetooth. Good.'
+        + (OS === 'Android' ? ' When Chrome asks for "Nearby devices" (or location) access, allow it: Android needs that to find the amp.' : '');
+    } catch (e) { el.textContent = ''; }
+  }
+
+  const withTimeout = (p, ms, what) => Promise.race([p, new Promise((_, no) => setTimeout(() => no(new Error(what + ' took too long')), ms))]);
+
+  async function connect() {
+    release();   // a device from an earlier try in this tab
+    const status = $('connect-status');
+    $('connect').disabled = true; $('make-report').disabled = true;
+    const services = [UUID.mp, UUID.ltx, UUID.gt, UUID.gtReversed];
+    const optionalServices = [...services, 'device_information', 'battery_service'];
+    const options = $('show-all').checked ? { acceptAllDevices: true, optionalServices }
+      : { filters: [...['Mustang', 'Rumble', 'Tone Master', 'Fender', 'GTX', 'LTX'].map(namePrefix => ({ namePrefix })),
+          ...services.map(s => ({ services: [s] }))], optionalServices };
+    try {
+      status.textContent = 'Choose your amp in the window that opened…';
+      device = await navigator.bluetooth.requestDevice(options);
+    } catch (e) {
+      status.innerHTML = '';
+      const msg = /cancel/i.test(e.message) || e.name === 'NotFoundError'
+        ? 'No amp was chosen. If your amp was not in the list, tick "show all Bluetooth devices" and try again.'
+        : 'Bluetooth error: ' + e.message;
+      status.append(Object.assign(document.createElement('span'), { className: 'error', textContent: msg }));
+      state.results.check('connect', 'Choose the amp', 'failed', e.name + ': ' + e.message);
+      $('connect').disabled = false; $('make-report').disabled = false; setStep(4); return;
+    }
+    state.device = { name: device.name || '(no name)' };
+    if (isLinux) {   // first the terminal lines, then "Connect" calls connectChosen()
+      $('prep-name').textContent = state.device.name;
+      $('linux-prep-cmd').textContent = linuxPrepCommands(device.name || '');
+      $('linux-prep').hidden = false; $('connect-now').disabled = false;
+      status.textContent = 'Now run the lines below in a terminal, then click Connect.';
+      return;
+    }
+    await connectChosen();
+  }
+
+  async function connectChosen() {
+    const status = $('connect-status');
+    $('connect-now').disabled = true;
+    device.addEventListener('gattserverdisconnected', () => {
+      if (session) { session.event('the amp closed the Bluetooth connection'); session.stopHeartbeat(); }
+      status.textContent = 'The connection to the amp has ended.';
+    });
+    setStep(2);
+    try {
+      status.textContent = `Connecting to ${state.device.name}…`;
+      const t0 = performance.now();
+      const server = await withTimeout(device.gatt.connect(), 20000, 'Connecting');
+      state.results.check('connect', 'Connect over Bluetooth', 'ok', `"${state.device.name}" in ${Math.round(performance.now() - t0)} ms`);
+      await discover(server);
+      status.textContent = `Connected to ${state.device.name}.`;
+      await readAmp();
+    } catch (e) {
+      state.results.check('connect', 'Connect over Bluetooth', 'failed', e.name + ': ' + e.message);
+      status.textContent = 'Could not finish reading. You can still make and send the report.' + (isLinux ? LINUX_HINT : '');
+    }
+    if (!family && isLinux) status.textContent += LINUX_HINT;
+    $('make-report').disabled = false;
+    if (session && family && session.messages.length) { $('control').disabled = false; $('skip-control').disabled = false; setStep(3); }
+    else if (session && family) {
+      // nothing came back: a control test could neither be confirmed nor undone safely
+      state.results.check('control', 'Control test', 'skipped', 'the amp did not answer the reading, so the control test was not run');
+      $('control-status').textContent = 'The amp did not answer, so the control test is skipped.';
+      setStep(4);
+    }
+    else setStep(4);
+  }
+
+  async function discover(server) {
+    state.gatt = [];
+    let list = [];
+    try { list = await server.getPrimaryServices(); } catch (e) { state.results.check('services', 'List Bluetooth services', 'failed', e.message); return; }
+    let req = null, resp = null;
+    for (const sv of list) {
+      const entry = { uuid: sv.uuid, chars: [] };
+      state.gatt.push(entry);
+      if (!family && FAMILY_BY_SERVICE[sv.uuid]) { family = FAMILY_BY_SERVICE[sv.uuid]; state.serviceUuid = sv.uuid; }
+      let chars = [];
+      try { chars = await sv.getCharacteristics(); } catch (e) { entry.error = e.message; }
+      for (const c of chars) {
+        const props = Object.entries({ broadcast: 0, read: 0, writeWithoutResponse: 0, write: 0, notify: 0, indicate: 0, authenticatedSignedWrites: 0, reliableWrite: 0, writableAuxiliaries: 0 })
+          .map(([k]) => k).filter(k => c.properties[k]);
+        const ch = { uuid: c.uuid, props, descriptors: [] };
+        try { ch.descriptors = (await c.getDescriptors()).map(d => d.uuid.replace(/^0000(....)-0000-1000-8000-00805f9b34fb$/, '0x$1')); } catch (e) { /* none or not allowed */ }
+        entry.chars.push(ch);
+        if (FAMILY_BY_SERVICE[sv.uuid] && c.uuid === UUID.request) req = c;
+        if (FAMILY_BY_SERVICE[sv.uuid] && c.uuid === UUID.response) resp = c;
+        if (DEVICE_INFO[c.uuid] && c.properties.read) {
+          try {
+            const v = await c.readValue(); const b = new Uint8Array(v.buffer, v.byteOffset, v.byteLength);
+            (state.deviceInfo = state.deviceInfo || {})[DEVICE_INFO[c.uuid]] = DEVICE_INFO[c.uuid] === 'PnP id' ? hex(b) : new Privacy().scrub(fromUtf8(b).replace(/\0+$/, ''));
+          } catch (e) { /* not readable */ }
+        }
+      }
+    }
+    state.family = family;
+    state.results.check('services', 'Bluetooth services', family ? 'ok' : 'warn',
+      `${list.length} service${list.length === 1 ? '' : 's'}; ${family ? 'Fender control service found: ' + FAMILIES[family].label : 'no known Fender control service'}` +
+      (family && !(req && resp) ? '; but the request/response characteristics are missing' : ''));
+    if (!family || !req || !resp) { family = family && req && resp ? family : null; return; }
+    const transport = {
+      write: async bytes => {
+        if (req.properties.write && req.writeValueWithResponse) return req.writeValueWithResponse(bytes);
+        if (req.writeValueWithoutResponse) return req.writeValueWithoutResponse(bytes);
+        return req.writeValue(bytes);
+      },
+    };
+    session = new Session(family, transport);
+    state.session = session;
+    session.event(`writes ${req.properties.write ? 'with' : 'without'} response`);
+    resp.addEventListener('characteristicvaluechanged', ev => {
+      const v = ev.target.value; session.onData(new Uint8Array(v.buffer, v.byteOffset, v.byteLength));
+    });
+    await resp.startNotifications();
+  }
+
+  async function readAmp() {
+    if (!session) return;
+    try {
+      if (family === 'gt') await gtRead(session, state.results);
+      else await framedRead(session, state.results, family);
+    } catch (e) { state.results.check('read', 'Reading', 'failed', e.message); }
+  }
+
+  async function control() {
+    $('control').disabled = true; $('skip-control').disabled = true; $('make-report').disabled = true;
+    $('control-status').textContent = 'Running… watch and listen to your amp.';
+    try {
+      if (family === 'gt') await gtControl(session, state.results);
+      else await framedControl(session, state.results);
+      $('control-status').textContent = 'Done. Please answer the two questions below.';
+    } catch (e) {
+      state.results.check('control', 'Control test', 'failed', e.message);
+      $('control-status').textContent = 'The control test stopped with an error. That is useful to know, too.';
+    }
+    $('observations').hidden = false; $('make-report').disabled = false;
+    state.controlRun = true;
+    setStep(4);
+  }
+
+  function answers() {
+    const radio = n => (document.querySelector(`input[name="${n}"]:checked`) || {}).value || '';
+    const a = {
+      'Amp model (as printed on the amp)': $('n-model').value.trim(),
+      'Amp firmware (if known)': $('n-fw').value.trim(),
+      'USB cable to this computer': $('n-usb').value,
+      'Bluetooth audio playing': $('n-audio').value,
+    };
+    if (state.controlRun) {
+      a['Amp switched preset and back'] = radio('q-switch');
+      a['Sound or knob changed and came back'] = radio('q-knob');
+    } else if (session && family) a['Control test'] = 'skipped by the tester';
+    return a;
+  }
+
+  function makeReport() {
+    if (session) session.stopHeartbeat();
+    if (device && device.gatt && device.gatt.connected) { session && session.event('the page closed the connection'); device.gatt.disconnect(); }
+    state.answers = answers();
+    const now = new Date();
+    state.time = String(now.getHours()).padStart(2, '0') + String(now.getMinutes()).padStart(2, '0') + String(now.getSeconds()).padStart(2, '0');
+    const p = new Privacy();
+    state.notes = p.scrub($('n-notes').value.trim());
+    state.removed = [...p.reasons].map(x => x + ' (in your notes)');
+    reportText = buildReport(state);
+    $('report').textContent = reportText;
+    $('report-print').innerHTML = mdToHtml(reportText);   // escaped inside; shown only when printing
+    const reasons = state.reportReasons;
+    $('removed').textContent = reasons.length ? 'Removed before showing: ' + reasons.join('; ') + '.' : '';
+    for (const id of ['save', 'copy', 'print', 'github']) $(id).disabled = false;
+    for (const id of ['email', 'gmail']) { $(id).disabled = !CONFIG.email; $(id).hidden = !CONFIG.email; }
+    setStep(5);
+    $('step5').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  // date and time of the report, so that reports of several runs don't overwrite each other
+  const fileName = () => `fender-amp-report-${((state.device && state.device.name) || 'amp').replace(/[^\w-]+/g, '-')}-${state.date}-${state.time || '0000'}.md`;
+  function save() {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([reportText], { type: 'text/markdown' }));
+    a.download = fileName(); document.body.appendChild(a); a.click(); a.remove();
+    $('send-status').textContent = `Saved as ${fileName()} (usually in your Downloads folder).`;
+  }
+  function subject() { return `Fender amp check: ${(state.answers && state.answers['Amp model (as printed on the amp)']) || (state.device && state.device.name) || 'amp'}`; }
+  function summaryText() {
+    return state.results.checks.map(c => `- ${c.title}: ${STATUS_TEXT[c.status] || c.status}`).join('\n');
+  }
+  $('connect').onclick = connect;
+  $('connect-now').onclick = connectChosen;
+  $('control').onclick = control;
+  $('skip-control').onclick = () => { $('control').disabled = true; $('skip-control').disabled = true; $('control-status').textContent = 'Skipped.'; setStep(4); };
+  $('make-report').onclick = makeReport;
+  $('save').onclick = save;
+  $('copy').onclick = async () => {
+    try { await navigator.clipboard.writeText(reportText); $('send-status').textContent = 'Copied.'; }
+    catch (e) { $('send-status').textContent = 'Copying did not work; please use "Save report file".'; }
+  };
+  $('print').onclick = () => window.print();
+  // A mail or issue link can't carry the whole report (mail programs cut long links off),
+  // so both buttons copy it first and the text that opens says where to paste it.
+  async function copyReport() {
+    try { await navigator.clipboard.writeText(reportText); return true; } catch (e) { return false; }
+  }
+  function notice(text) { $('send-status').textContent = text; $('send-status').classList.add('notice'); }
+  const mailBody = copied => `Hello,\n\nhere is the report from the Fender amp check page (amp-probe ${PROBE_VERSION}).\n\n`
+    + (copied ? '>>> PASTE THE REPORT HERE: it is already copied (Ctrl+V, on a Mac Cmd+V). <<<\n'
+        + `(Or attach the saved file ${fileName()} instead.)\n\n`
+      : `>>> PLEASE ATTACH THE SAVED FILE ${fileName()} (or paste the report text) <<<\n\n`)
+    + `Summary:\n${summaryText()}\n`;
+  const mailNotice = copied => notice(copied
+    ? 'The report is copied. In the email, paste it where it says so (Ctrl+V, on a Mac ⌘V), then send.'
+      + ' If no email program opened, use "Gmail in the browser", or write to ' + CONFIG.email + ' yourself.'
+    : 'Copying did not work here. Click "Save report file" and attach that file to the email.');
+  $('email').onclick = async () => {
+    const copied = await copyReport();
+    location.href = `mailto:${CONFIG.email}?subject=${encodeURIComponent(subject())}&body=${encodeURIComponent(mailBody(copied))}`;
+    mailNotice(copied);
+  };
+  // Gmail's own "new message" address: works without any mail program or link handler set up
+  $('gmail').onclick = async () => {
+    const copied = await copyReport();
+    window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(CONFIG.email)}`
+      + `&su=${encodeURIComponent(subject())}&body=${encodeURIComponent(mailBody(copied))}`, '_blank', 'noopener');
+    mailNotice(copied);
+  };
+  $('github').onclick = async () => {
+    const copied = await copyReport();
+    const body = `Report from the Fender amp check page (amp-probe ${PROBE_VERSION}).\n\n`
+      + (copied ? '**Paste the report here: it is already copied (Ctrl+V, on a Mac Cmd+V).** '
+          + `If GitHub says it is too long, drag the saved file ${fileName()} into this box instead.\n\n`
+        : `**Please drag the saved file ${fileName()} into this box** (or paste the report text).\n\n`)
+      + `Summary:\n${summaryText()}\n`;
+    window.open(`${CONFIG.issues}?title=${encodeURIComponent(subject())}&body=${encodeURIComponent(body)}`, '_blank', 'noopener');
+    notice(copied ? 'The report is copied. On GitHub, paste it into the text box (Ctrl+V, on a Mac ⌘V), then submit.'
+      : 'Copying did not work here. Click "Save report file" and drag that file into the GitHub text box.');
+  };
+  // Chrome can keep the amp connected (and subscribed) after a page is left; another program
+  // then gets every reply twice. So always let go: on leaving and before choosing again.
+  function release() {
+    if (session) session.stopHeartbeat();
+    if (device && device.gatt && device.gatt.connected) device.gatt.disconnect();
+  }
+  window.addEventListener('pagehide', release);
+  window.addEventListener('beforeunload', release);
+  browserCheck();
+})();
+</script>
+</body>
+</html>
